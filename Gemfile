@@ -22,6 +22,8 @@ gem "bcrypt", "~> 3.1.7"
 
 # Authentication
 gem "devise"
+gem "omniauth-google-oauth2"
+gem "omniauth-rails_csrf_protection"
 
 # Encryption for sensitive fields (Gmail OAuth tokens)
 gem "lockbox"

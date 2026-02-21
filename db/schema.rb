@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_21_071024) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_21_103026) do
   create_table "activities", force: :cascade do |t|
     t.string "action"
     t.datetime "created_at", null: false
@@ -386,15 +386,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_21_071024) do
   create_table "users", force: :cascade do |t|
     t.string "branch"
     t.integer "company_id"
+    t.string "company_name"
     t.datetime "created_at", null: false
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
     t.string "locale"
     t.string "name"
+    t.string "provider"
     t.datetime "remember_created_at"
     t.datetime "reset_password_sent_at"
     t.string "reset_password_token"
     t.integer "role"
+    t.string "uid"
     t.datetime "updated_at", null: false
     t.index ["company_id"], name: "index_users_on_company_id"
     t.index ["email"], name: "index_users_on_email", unique: true
