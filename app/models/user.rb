@@ -1,6 +1,19 @@
 class User < ApplicationRecord
   devise :database_authenticatable, :registerable,
-         :recoverable, :rememberable, :validatable
+         :recoverable, :rememberable, :validatable,
+         :omniauthable, omniauth_providers: [:google_oauth2]
+
+  def self.from_omniauth(auth)
+    where(provider: auth.provider, uid: auth.uid).first_or_create do |user|
+      user.email    = auth.info.email
+      user.name     = auth.info.name
+      user.password = Devise.friendly_token[0, 20]
+      user.provider = auth.provider
+      user.uid      = auth.uid
+      # 비밀번호 검증 스킵 (OmniAuth 유저)
+      user.skip_confirmation! if user.respond_to?(:skip_confirmation!)
+    end
+  end
 
   enum :role, { viewer: 0, member: 1, manager: 2, admin: 3 }, default: :member
   enum :branch, { abu_dhabi: "abu_dhabi", seoul: "seoul" }, default: :abu_dhabi

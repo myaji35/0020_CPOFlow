@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+# Google OAuth2 설정
+# 환경변수: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+OmniAuth.config.allowed_request_methods = [:post, :get]
+
 # Assuming you have not yet modified this file, each configuration option below
 # is set to its default value. Note that some are commented out while others
 # are not: uncommented lines are intended to protect your configuration from
@@ -272,9 +276,11 @@ Devise.setup do |config|
   config.sign_out_via = :delete
 
   # ==> OmniAuth
-  # Add a new OmniAuth provider. Check the wiki for more information on setting
-  # up on your models and hooks.
-  # config.omniauth :github, 'APP_ID', 'APP_SECRET', scope: 'user,public_repo'
+  config.omniauth :google_oauth2,
+    ENV.fetch("GOOGLE_CLIENT_ID", "placeholder-client-id"),
+    ENV.fetch("GOOGLE_CLIENT_SECRET", "placeholder-client-secret"),
+    scope: "email,profile",
+    prompt: "select_account"
 
   # ==> Warden configuration
   # If you want to use other strategies, that are not supported by Devise, or
