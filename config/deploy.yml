@@ -7,7 +7,11 @@ image: myaji35/cpoflow
 # Deploy to these servers.
 servers:
   web:
-    - 158.247.235.31
+    hosts:
+      - 158.247.235.31
+    options:
+      publish:
+        - "3020:80"
 
 # Where you keep your container images.
 registry:
