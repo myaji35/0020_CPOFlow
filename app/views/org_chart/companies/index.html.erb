@@ -1,0 +1,56 @@
+<% content_for :title, "법인 목록" %>
+
+<div class="flex flex-col gap-6">
+  <%# Header %>
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <%= link_to org_chart_path, class: "text-gray-400 hover:text-gray-600" do %>
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      <% end %>
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">법인 목록</h1>
+        <p class="text-sm text-gray-500 mt-1">전체 법인 관리</p>
+      </div>
+    </div>
+    <% if current_user.manager? || current_user.admin? %>
+      <%= link_to new_org_chart_company_path, class: "inline-flex items-center gap-1.5 px-3 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors" do %>
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        법인 추가
+      <% end %>
+    <% end %>
+  </div>
+
+  <%# 법인 목록 %>
+  <% if @companies.any? %>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <% @companies.each do |company| %>
+        <%= link_to org_chart_company_path(company), class: "bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md hover:border-primary/30 transition-all block" do %>
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <svg class="w-5 h-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            </div>
+            <div class="min-w-0">
+              <p class="font-semibold text-gray-900 truncate"><%= company.name %></p>
+              <div class="flex items-center gap-2 mt-0.5">
+                <span class="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700"><%= company.company_type_label %></span>
+                <span class="text-xs text-gray-400"><%= company.country&.flag_emoji %> <%= company.country&.name %></span>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center justify-between text-xs text-gray-500">
+            <span><%= company.departments.active.count %>개 부서</span>
+            <span><%= company.employee_count %>명</span>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="bg-white rounded-xl border border-gray-200 p-12 text-center">
+      <svg class="w-12 h-12 mx-auto text-gray-200 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      <p class="text-sm text-gray-400">등록된 법인이 없습니다.</p>
+      <% if current_user.manager? || current_user.admin? %>
+        <%= link_to new_org_chart_company_path, class: "mt-3 inline-flex text-sm text-primary hover:underline" do %>법인 추가하기 →<% end %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

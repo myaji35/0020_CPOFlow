@@ -1,0 +1,69 @@
+<%= form_with model: @supplier, local: true, class: "space-y-5" do |f| %>
+  <% if @supplier.errors.any? %>
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+      <% @supplier.errors.full_messages.each do |msg| %>
+        <p class="text-sm text-red-700"><%= msg %></p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <%= f.label :name, "거래처명 *", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.text_field :name, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
+    </div>
+    <div>
+      <%= f.label :country, "국가", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.text_field :country, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-3 gap-4">
+    <div>
+      <%= f.label :credit_grade, "신용등급", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.select :credit_grade, options_for_select([["선택", ""]] + Supplier::CREDIT_GRADES.map { |g| [g, g] }, @supplier.credit_grade),
+          {}, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
+    </div>
+    <div>
+      <%= f.label :payment_terms, "결제조건", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.select :payment_terms, options_for_select([["선택", ""]] + Supplier::PAYMENT_TERMS, @supplier.payment_terms),
+          {}, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
+    </div>
+    <div>
+      <%= f.label :lead_time_days, "리드타임(일)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.number_field :lead_time_days, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <%= f.label :email, "이메일", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.email_field :email, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
+    </div>
+    <div>
+      <%= f.label :phone, "전화", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.text_field :phone, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <%= f.label :website, "웹사이트", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.url_field :website, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary", placeholder: "https://" %>
+    </div>
+    <div>
+      <%= f.label :ecount_code, "eCount 코드", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.text_field :ecount_code, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
+    </div>
+  </div>
+
+  <div>
+    <%= f.label :notes, "비고", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= f.text_area :notes, rows: 3, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
+  </div>
+
+  <div class="flex gap-3 pt-2">
+    <%= f.submit @supplier.new_record? ? "등록" : "수정", class: "bg-primary text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors cursor-pointer" %>
+    <%= link_to "취소", @supplier.new_record? ? suppliers_path : @supplier, class: "border border-gray-200 text-gray-600 px-6 py-2 rounded-lg text-sm font-medium hover:bg-gray-50" %>
+  </div>
+<% end %>

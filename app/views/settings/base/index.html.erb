@@ -1,0 +1,148 @@
+<%# Settings — main page with Gmail connection management %>
+<div class="max-w-4xl mx-auto py-8 px-4">
+
+  <%# Page header %>
+  <div class="mb-8">
+    <h1 class="text-2xl font-bold text-gray-900">Settings</h1>
+    <p class="text-sm text-gray-500 mt-1">Manage your account preferences and integrations</p>
+  </div>
+
+  <%# Flash messages %>
+  <% if notice %>
+    <div class="mb-4 rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-green-800 text-sm flex items-center gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <%= notice %>
+    </div>
+  <% end %>
+  <% if alert %>
+    <div class="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-red-800 text-sm flex items-center gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <%= alert %>
+    </div>
+  <% end %>
+
+  <%# --- Gmail Integration Section --- %>
+  <div class="bg-white rounded-xl border border-gray-200 mb-6">
+    <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <%# Gmail G icon (inline SVG) %>
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20 18H17V9.24L12 13L7 9.24V18H4V6H6.2L12 10.76L17.8 6H20V18Z" fill="#EA4335"/>
+        </svg>
+        <div>
+          <h2 class="text-base font-semibold text-gray-900">Gmail Integration</h2>
+          <p class="text-xs text-gray-500">Auto-detect RFQ emails and convert to Kanban cards</p>
+        </div>
+      </div>
+      <%= link_to gmail_oauth_authorize_path, class: "flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Connect Gmail
+      <% end %>
+    </div>
+
+    <% if @email_accounts.any? %>
+      <ul class="divide-y divide-gray-100">
+        <% @email_accounts.each do |account| %>
+          <li class="px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <%# Status dot %>
+              <span class="w-2 h-2 rounded-full <%= account.connected? ? 'bg-green-500' : 'bg-gray-300' %>"></span>
+              <div>
+                <p class="text-sm font-medium text-gray-900"><%= account.email %></p>
+                <p class="text-xs text-gray-500">
+                  <% if account.connected? %>
+                    <% if account.last_synced_at %>
+                      Last synced <%= time_ago_in_words(account.last_synced_at) %> ago
+                    <% else %>
+                      Connected — not synced yet
+                    <% end %>
+                    &nbsp;·&nbsp;
+                    <span class="text-green-600 font-medium">Active</span>
+                  <% else %>
+                    Disconnected
+                  <% end %>
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <% if account.connected? %>
+                <%# Manual sync trigger %>
+                <%= button_to "Sync Now", "#", method: :post, class: "text-xs px-3 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600 transition-colors", disabled: account.synced_recently? %>
+              <% end %>
+              <%# Disconnect %>
+              <%= link_to "Disconnect", gmail_oauth_disconnect_path(account), data: { turbo_method: :delete, turbo_confirm: "Disconnect #{account.email}?" }, class: "text-xs px-3 py-1.5 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors" %>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <div class="px-6 py-8 text-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 mx-auto text-gray-300 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        <p class="text-sm text-gray-500">No Gmail accounts connected.</p>
+        <p class="text-xs text-gray-400 mt-1">Connect your Gmail to auto-import RFQ emails.</p>
+      </div>
+    <% end %>
+  </div>
+
+  <%# --- Profile Section --- %>
+  <div class="bg-white rounded-xl border border-gray-200 mb-6">
+    <div class="px-6 py-4 border-b border-gray-100">
+      <h2 class="text-base font-semibold text-gray-900">Profile</h2>
+    </div>
+    <%= form_with url: settings_profile_path, method: :patch, class: "px-6 py-4 space-y-4" do |f| %>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Name</label>
+          <%= f.text_field :name, value: current_user.name, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Email</label>
+          <input type="text" value="<%= current_user.email %>" disabled class="w-full border border-gray-100 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-400 cursor-not-allowed" />
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Language</label>
+          <%= f.select :locale, [["English", "en"], ["한국어", "ko"], ["العربية", "ar"]], { selected: current_user.locale }, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Branch</label>
+          <input type="text" value="<%= current_user.branch.to_s.humanize %>" disabled class="w-full border border-gray-100 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-400 cursor-not-allowed" />
+        </div>
+      </div>
+      <div class="flex justify-end">
+        <%= f.submit "Save Changes", class: "px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer" %>
+      </div>
+    <% end %>
+  </div>
+
+  <%# --- Menu Permissions (Admin only) --- %>
+  <% if current_user.admin? %>
+  <div class="bg-white rounded-xl border border-gray-200 mb-6">
+    <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+      <div>
+        <h2 class="text-base font-semibold text-gray-900">메뉴 권한 관리</h2>
+        <p class="text-xs text-gray-500">역할별 메뉴 접근 및 CRUD 권한 설정</p>
+      </div>
+      <%= link_to settings_menu_permissions_path, class: "text-sm text-primary hover:underline" do %>
+        권한 설정 →
+      <% end %>
+    </div>
+  </div>
+  <% end %>
+
+  <%# --- Danger Zone --- %>
+  <div class="bg-white rounded-xl border border-red-100">
+    <div class="px-6 py-4 border-b border-red-100">
+      <h2 class="text-base font-semibold text-red-700">Danger Zone</h2>
+    </div>
+    <div class="px-6 py-4 flex items-center justify-between">
+      <div>
+        <p class="text-sm font-medium text-gray-900">Sign out of all sessions</p>
+        <p class="text-xs text-gray-500">This will sign you out from all devices</p>
+      </div>
+      <%= link_to "Sign Out", destroy_user_session_path, data: { turbo_method: :delete }, class: "px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 text-sm font-medium rounded-lg transition-colors" %>
+    </div>
+  </div>
+
+</div>

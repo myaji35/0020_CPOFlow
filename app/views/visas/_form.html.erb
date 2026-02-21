@@ -1,0 +1,49 @@
+<%= form_with model: [@employee, visa], class: "flex flex-col gap-4" do |f| %>
+  <% if visa.errors.any? %>
+    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+      <% visa.errors.full_messages.each do |msg| %><p><%= msg %></p><% end %>
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <%= f.label :visa_type, "비자 종류", class: "block text-xs font-medium text-gray-600 mb-1" %>
+      <%= f.select :visa_type, Visa::VISA_TYPES, {},
+          class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+    </div>
+    <div>
+      <%= f.label :issuing_country, "발급 국가 (ISO)", class: "block text-xs font-medium text-gray-600 mb-1" %>
+      <%= f.select :issuing_country,
+          Employee::NATIONALITIES.map { |code, label| ["#{label} (#{code})", code] },
+          { include_blank: "선택" },
+          class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+    </div>
+    <div>
+      <%= f.label :visa_number, "비자 번호", class: "block text-xs font-medium text-gray-600 mb-1" %>
+      <%= f.text_field :visa_number, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+    </div>
+    <div>
+      <%= f.label :status, "상태", class: "block text-xs font-medium text-gray-600 mb-1" %>
+      <%= f.select :status, [["활성", "active"], ["만료", "expired"], ["신청중", "pending"], ["취소", "cancelled"]], {},
+          class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+    </div>
+    <div>
+      <%= f.label :issue_date, "발급일", class: "block text-xs font-medium text-gray-600 mb-1" %>
+      <%= f.date_field :issue_date, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+    </div>
+    <div>
+      <%= f.label :expiry_date, "만료일 *", class: "block text-xs font-medium text-gray-600 mb-1" %>
+      <%= f.date_field :expiry_date, required: true, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+    </div>
+    <div class="col-span-2">
+      <%= f.label :notes, "메모", class: "block text-xs font-medium text-gray-600 mb-1" %>
+      <%= f.text_area :notes, rows: 2, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary resize-none" %>
+    </div>
+  </div>
+
+  <div class="flex justify-end gap-3">
+    <%= link_to "취소", @employee, class: "px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50" %>
+    <%= f.submit visa.new_record? ? "비자 등록" : "저장",
+        class: "px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-dark cursor-pointer" %>
+  </div>
+<% end %>

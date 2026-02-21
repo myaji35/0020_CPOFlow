@@ -1,0 +1,22 @@
+CPOFlow — Delivery Reminder
+===========================
+
+<%= @urgency %>
+
+Hi <%= @user.name %>,
+
+The following order is due <%= @days_remaining == 0 ? "TODAY" : "in #{@days_remaining} days" %>:
+
+Order:    <%= @order.title %>
+Customer: <%= @order.customer_name %>
+Due Date: <%= @order.due_date&.strftime("%d %b %Y") || "Not set" %>
+Status:   <%= Order::STATUS_LABELS[@order.status] %>
+<% if @order.item_name.present? %>
+Items:    <%= @order.item_name %>
+<% end %>
+
+View this order: <%= order_url(@order) %>
+
+---
+AtoZ2010 Inc. — CPOFlow
+Abu Dhabi, UAE

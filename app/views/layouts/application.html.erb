@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title><%= content_for(:title) || "CPOFlow" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <!-- TailwindCSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary:   { DEFAULT: '#1E3A5F', light: '#2D5282', dark: '#142844' },
+              accent:    { DEFAULT: '#00A1E0', light: '#33b5e8' },
+              danger:    '#D93025',
+              warning:   '#F4A83A',
+              success:   '#1E8E3E',
+            }
+          }
+        }
+      }
+    </script>
+
+    <!-- Alpine.js CDN -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- Line Icons CDN -->
+    <link rel="stylesheet" href="https://cdn.lineicons.com/4.0/lineicons.css" />
+
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+
+    <%= yield :head %>
+  </head>
+
+  <body class="bg-gray-50 text-gray-900 antialiased">
+    <% if user_signed_in? %>
+      <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar Navigation -->
+        <%= render "shared/sidebar" %>
+
+        <!-- Main Content -->
+        <div class="flex flex-col flex-1 overflow-hidden">
+          <!-- Top Header -->
+          <%= render "shared/header" %>
+
+          <!-- Flash Messages -->
+          <% if notice.present? %>
+            <div class="mx-6 mt-4 px-4 py-3 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm flex items-center gap-2">
+              <i class="lni lni-checkmark-circle text-green-600"></i>
+              <%= notice %>
+            </div>
+          <% end %>
+          <% if alert.present? %>
+            <div class="mx-6 mt-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm flex items-center gap-2">
+              <i class="lni lni-warning text-red-600"></i>
+              <%= alert %>
+            </div>
+          <% end %>
+
+          <!-- Page Content -->
+          <main class="flex-1 overflow-y-auto p-6">
+            <%= yield %>
+          </main>
+        </div>
+      </div>
+    <% else %>
+      <!-- Auth pages: no sidebar -->
+      <%= yield %>
+    <% end %>
+  </body>
+</html>

@@ -1,0 +1,61 @@
+<%= form_with model: [:org_chart, company], class: "space-y-4" do |f| %>
+  <% if company.errors.any? %>
+    <div class="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-red-800 text-sm">
+      <ul class="list-disc list-inside space-y-1">
+        <% company.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <label class="block text-xs font-medium text-gray-600 mb-1">법인명 (한글)</label>
+      <%= f.text_field :name, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50", placeholder: "가가호호 주식회사" %>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-gray-600 mb-1">법인명 (영문)</label>
+      <%= f.text_field :name_en, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50", placeholder: "Gagahoho Inc." %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <label class="block text-xs font-medium text-gray-600 mb-1">법인 유형</label>
+      <%= f.select :company_type,
+          Company::COMPANY_TYPES.map { |k, v| [v, k] },
+          { selected: company.company_type },
+          class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" %>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-gray-600 mb-1">국가</label>
+      <%= f.select :country_id,
+          @countries.map { |c| ["#{c.flag_emoji} #{c.name}", c.id] },
+          { selected: company.country_id, prompt: "국가 선택" },
+          class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" %>
+    </div>
+  </div>
+
+  <div>
+    <label class="block text-xs font-medium text-gray-600 mb-1">사업자등록번호</label>
+    <%= f.text_field :registration_number, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50", placeholder: "000-00-00000" %>
+  </div>
+
+  <div>
+    <label class="block text-xs font-medium text-gray-600 mb-1">주소</label>
+    <%= f.text_field :address, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" %>
+  </div>
+
+  <% if company.persisted? %>
+    <div class="flex items-center gap-2">
+      <%= f.check_box :active, class: "rounded border-gray-300" %>
+      <label class="text-sm text-gray-700">활성 법인</label>
+    </div>
+  <% end %>
+
+  <div class="flex justify-end gap-2 pt-2">
+    <%= link_to "취소", org_chart_path, class: "px-4 py-2 border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50" %>
+    <%= f.submit company.persisted? ? "저장" : "법인 추가", class: "px-4 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-medium rounded-lg cursor-pointer transition-colors" %>
+  </div>
+<% end %>

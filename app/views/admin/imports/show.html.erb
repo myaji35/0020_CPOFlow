@@ -1,0 +1,145 @@
+<%# eCount 이관 결과 상세 페이지 — 진행률 폴링 포함 %>
+<div class="max-w-4xl mx-auto py-8 px-4">
+
+  <div class="flex items-center gap-2 text-sm text-gray-500 mb-6">
+    <%= link_to "데이터 이관", admin_imports_path, class: "hover:text-gray-700" %>
+    <span>/</span>
+    <span class="text-gray-900">이관 #<%= @import.id %></span>
+  </div>
+
+  <%# 상태 헤더 카드 %>
+  <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+    <div class="flex items-start justify-between">
+      <div>
+        <div class="flex items-center gap-3 mb-2">
+          <span class="text-lg font-bold text-gray-900"><%= @import.import_type_label %> 이관</span>
+          <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold
+            <%= case @import.status
+                when 'completed'  then 'bg-green-100 text-green-700'
+                when 'processing' then 'bg-yellow-100 text-yellow-700'
+                when 'failed'     then 'bg-red-100 text-red-700'
+                else                   'bg-gray-100 text-gray-600'
+                end %>"
+            id="status-badge">
+            <%= @import.status_label %>
+          </span>
+        </div>
+        <p class="text-sm text-gray-500">파일: <strong><%= @import.filename %></strong></p>
+        <p class="text-xs text-gray-400 mt-0.5">
+          시작: <%= @import.created_at.strftime("%Y년 %m월 %d일 %H:%M") %>
+          <% if @import.completed_at %>
+            &nbsp;·&nbsp; 완료: <%= @import.completed_at.strftime("%H:%M:%S") %>
+          <% end %>
+        </p>
+      </div>
+      <% if @import.result_file_path.present? %>
+        <%= link_to download_errors_admin_import_path(@import),
+              class: "flex items-center gap-2 px-3 py-2 border border-red-200 text-red-600 hover:bg-red-50 text-sm rounded-lg transition-colors" do %>
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          오류 리포트 CSV
+        <% end %>
+      <% end %>
+    </div>
+
+    <%# 진행률 바 %>
+    <div class="mt-5">
+      <div class="flex justify-between text-xs text-gray-500 mb-1">
+        <span>진행률</span>
+        <span id="progress-pct"><%= @import.progress_percent %>%</span>
+      </div>
+      <div class="w-full bg-gray-100 rounded-full h-2">
+        <div id="progress-bar"
+             class="h-2 rounded-full transition-all duration-500
+               <%= @import.failed? ? 'bg-red-500' : 'bg-blue-600' %>"
+             style="width: <%= @import.progress_percent %>%"></div>
+      </div>
+    </div>
+
+    <%# 통계 %>
+    <div class="grid grid-cols-3 gap-4 mt-5">
+      <div class="text-center p-3 bg-gray-50 rounded-lg">
+        <p class="text-xs text-gray-500">전체 행</p>
+        <p class="text-2xl font-bold text-gray-900 mt-1" id="total-rows"><%= number_with_delimiter(@import.total_rows) %></p>
+      </div>
+      <div class="text-center p-3 bg-green-50 rounded-lg">
+        <p class="text-xs text-green-600">성공</p>
+        <p class="text-2xl font-bold text-green-700 mt-1" id="success-rows"><%= number_with_delimiter(@import.success_rows) %></p>
+      </div>
+      <div class="text-center p-3 <%= @import.error_rows.to_i > 0 ? 'bg-red-50' : 'bg-gray-50' %> rounded-lg">
+        <p class="text-xs <%= @import.error_rows.to_i > 0 ? 'text-red-600' : 'text-gray-500' %>">오류</p>
+        <p class="text-2xl font-bold <%= @import.error_rows.to_i > 0 ? 'text-red-700' : 'text-gray-500' %> mt-1" id="error-rows">
+          <%= number_with_delimiter(@import.error_rows) %>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <%# 미리보기 테이블 (첫 5행) %>
+  <% if @preview_rows.any? %>
+    <div class="bg-white rounded-xl border border-gray-200 mb-6 overflow-hidden">
+      <div class="px-5 py-3 border-b border-gray-100">
+        <h3 class="text-sm font-semibold text-gray-700">파일 미리보기 (상위 5행)</h3>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead class="bg-gray-50">
+            <tr>
+              <% @preview_rows.first.keys.each do |col| %>
+                <th class="px-3 py-2 text-left text-gray-500 font-medium"><%= col %></th>
+              <% end %>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <% @preview_rows.each do |row| %>
+              <tr>
+                <% row.values.each do |val| %>
+                  <td class="px-3 py-2 text-gray-700 max-w-xs truncate"><%= val %></td>
+                <% end %>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% end %>
+
+  <%# 오류 상세 (최대 10건) %>
+  <% if @errors_preview.any? %>
+    <div class="bg-white rounded-xl border border-red-200">
+      <div class="px-5 py-3 border-b border-red-100 flex items-center justify-between">
+        <h3 class="text-sm font-semibold text-red-700">오류 내역 (상위 10건)</h3>
+        <span class="text-xs text-red-500">전체 <%= number_with_delimiter(@import.error_rows) %>건</span>
+      </div>
+      <ul class="divide-y divide-red-50">
+        <% @errors_preview.each do |err| %>
+          <li class="px-5 py-3 text-xs">
+            <span class="text-gray-400">행 <%= err["row"] %>:</span>
+            <span class="text-gray-700 mx-2"><%= err.dig("data", "name") || err.dig("data", "ecount_code") %></span>
+            <span class="text-red-600"><%= err["error"] %></span>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+</div>
+
+<%# 처리 중일 때 자동 새로고침 (3초마다) %>
+<% if @import.pending? || @import.processing? %>
+<script>
+  setTimeout(function() { window.location.reload(); }, 3000);
+
+  // 카운트다운 표시
+  let countdown = 3;
+  const indicator = document.createElement('div');
+  indicator.className = 'fixed bottom-4 right-4 text-xs text-gray-400 bg-white border border-gray-200 px-3 py-2 rounded-lg shadow';
+  indicator.id = 'refresh-indicator';
+  document.body.appendChild(indicator);
+  const timer = setInterval(() => {
+    countdown--;
+    indicator.textContent = `${countdown}초 후 자동 새로고침...`;
+    if (countdown <= 0) clearInterval(timer);
+  }, 1000);
+  indicator.textContent = '3초 후 자동 새로고침...';
+</script>
+<% end %>

@@ -1,0 +1,13 @@
+<% content_for :title, "담당자 추가" %>
+<div class="max-w-xl">
+  <div class="mb-6">
+    <div class="flex items-center gap-2 text-sm text-gray-400 mb-1">
+      <%= link_to @contactable.name, @contactable, class: "hover:text-primary" %>
+      <span>/</span><span>담당자 추가</span>
+    </div>
+    <h1 class="text-2xl font-bold text-gray-900">담당자 추가</h1>
+  </div>
+  <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+    <%= render "form" %>
+  </div>
+</div>

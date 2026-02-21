@@ -1,0 +1,90 @@
+<% content_for :title, @country.name %>
+
+<div class="flex flex-col gap-6">
+  <%# Header %>
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <%= link_to org_chart_countries_path, class: "text-gray-400 hover:text-gray-600" do %>
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      <% end %>
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900"><%= @country.flag_emoji %> <%= @country.name %></h1>
+        <p class="text-sm text-gray-500 mt-0.5">
+          <%= @country.name_en %> · <%= @country.code %>
+          <% if @country.region.present? %>
+            · <%= @country.region %>
+          <% end %>
+        </p>
+      </div>
+    </div>
+    <% if current_user.admin? %>
+      <%= link_to edit_org_chart_country_path(@country),
+          class: "inline-flex items-center gap-1.5 px-3 py-2 border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors" do %>
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        수정
+      <% end %>
+    <% end %>
+  </div>
+
+  <%# 통계 %>
+  <div class="grid grid-cols-3 gap-4">
+    <div class="bg-white rounded-xl border border-gray-200 p-4">
+      <p class="text-xs text-gray-400">소속 법인</p>
+      <p class="text-2xl font-bold text-gray-900 mt-1"><%= @companies.count %><span class="text-sm font-normal text-gray-500 ml-1">개</span></p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-4">
+      <p class="text-xs text-gray-400">총 직원</p>
+      <p class="text-2xl font-bold text-gray-900 mt-1"><%= @country.employee_count %><span class="text-sm font-normal text-gray-500 ml-1">명</span></p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-4">
+      <p class="text-xs text-gray-400">총 부서</p>
+      <p class="text-2xl font-bold text-gray-900 mt-1"><%= @companies.sum { |c| c.departments.count } %><span class="text-sm font-normal text-gray-500 ml-1">개</span></p>
+    </div>
+  </div>
+
+  <%# 법인 목록 %>
+  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+      <h2 class="text-sm font-semibold text-gray-700">소속 법인</h2>
+      <% if current_user.manager? || current_user.admin? %>
+        <%= link_to new_org_chart_company_path(country_id: @country.id),
+            class: "inline-flex items-center gap-1 text-xs text-primary hover:underline" do %>
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          법인 추가
+        <% end %>
+      <% end %>
+    </div>
+
+    <% if @companies.empty? %>
+      <div class="p-8 text-center text-sm text-gray-400">
+        이 국가에 등록된 법인이 없습니다.
+      </div>
+    <% else %>
+      <div class="divide-y divide-gray-50">
+        <% @companies.each do |company| %>
+          <%= link_to org_chart_company_path(company), class: "flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors" do %>
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                <svg class="w-5 h-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-medium text-gray-900"><%= company.name %></span>
+                  <span class="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700"><%= company.company_type_label %></span>
+                </div>
+                <% if company.name_en.present? %>
+                  <p class="text-xs text-gray-400"><%= company.name_en %></p>
+                <% end %>
+              </div>
+            </div>
+            <div class="flex items-center gap-4">
+              <span class="text-xs text-gray-500"><%= company.employee_count %>명</span>
+              <span class="text-xs text-gray-500"><%= company.departments.active.count %>개 부서</span>
+              <svg class="w-4 h-4 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

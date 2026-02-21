@@ -1,0 +1,98 @@
+<%= form_with model: order, class: "space-y-6" do |f| %>
+  <% if order.errors.any? %>
+    <div class="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm">
+      <%= order.errors.full_messages.to_sentence %>
+    </div>
+  <% end %>
+
+  <!-- Basic Info -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="md:col-span-2">
+      <%= f.label :title, "Order Title", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.text_field :title, placeholder: "e.g. Sika Waterproofing - Barakah NPP",
+          class: "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none" %>
+    </div>
+
+    <div>
+      <%= f.label :client_id, "발주처 (Client)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.select :client_id,
+          options_for_select([["선택 안함", ""]] + Client.active.by_name.map { |c| [c.name, c.id] }, order.client_id),
+          {},
+          id: "order_client_id",
+          class: "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none" %>
+    </div>
+
+    <div>
+      <%= f.label :due_date, "Delivery Due Date", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.date_field :due_date,
+          class: "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none" %>
+    </div>
+  </div>
+
+  <!-- 거래처/현장 -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+      <%= f.label :supplier_id, "공급사 (Supplier)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.select :supplier_id,
+          options_for_select([["선택 안함", ""]] + Supplier.by_name.map { |s| [s.name, s.id] }, order.supplier_id),
+          {},
+          class: "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none" %>
+    </div>
+    <div>
+      <%= f.label :project_id, "현장/프로젝트", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.select :project_id,
+          options_for_select([["선택 안함", ""]] + Project.active.by_name.map { |p| ["#{p.name} (#{p.client.name})", p.id] }, order.project_id),
+          {},
+          class: "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none" %>
+    </div>
+  </div>
+
+  <!-- Item Info -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div>
+      <%= f.label :item_name, "Product / Item", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.text_field :item_name, placeholder: "Sika® MonoTop®-412 N",
+          class: "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none" %>
+    </div>
+    <div>
+      <%= f.label :quantity, "Quantity", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.number_field :quantity, placeholder: "5000",
+          class: "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none" %>
+    </div>
+    <div>
+      <%= f.label :estimated_value, "Estimated Value (USD)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.number_field :estimated_value, placeholder: "26000", step: "0.01",
+          class: "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none" %>
+    </div>
+  </div>
+
+  <!-- Priority + Status -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+      <%= f.label :priority, "Priority", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.select :priority, Order.priorities.keys.map { |p| [p.capitalize, p] },
+          { selected: order.priority },
+          class: "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none" %>
+    </div>
+    <div>
+      <%= f.label :tags, "Tags (comma separated)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.text_field :tags, placeholder: "nuclear,sika,UAE,waterproofing",
+          class: "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none" %>
+    </div>
+  </div>
+
+  <!-- Description -->
+  <div>
+    <%= f.label :description, "Description / Notes", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= f.text_area :description, rows: 4, placeholder: "Order details, site conditions, special requirements...",
+        class: "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none resize-none" %>
+  </div>
+
+  <!-- Actions -->
+  <div class="flex items-center gap-3 pt-4 border-t border-gray-100">
+    <%= f.submit order.new_record? ? "Create Order" : "Update Order",
+        class: "bg-accent text-white font-medium px-6 py-2.5 rounded-lg hover:bg-blue-500 transition-colors cursor-pointer text-sm" %>
+    <%= link_to "Cancel", order.new_record? ? kanban_path : order_path(order),
+        class: "text-sm text-gray-500 hover:text-gray-700" %>
+  </div>
+<% end %>

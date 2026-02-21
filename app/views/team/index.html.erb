@@ -1,0 +1,68 @@
+<% content_for :title, "팀 현황" %>
+
+<div class="flex flex-col gap-6">
+  <%# Header %>
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">팀 현황</h1>
+      <p class="text-sm text-gray-500 mt-1">팀원별 업무 및 워크로드 현황</p>
+    </div>
+  </div>
+
+  <%# 워크로드 카드 그리드 %>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <% @workloads.each do |w| %>
+      <% user = w[:user] %>
+      <%= link_to team_path(user), class: "bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md hover:border-primary/30 transition-all block" do %>
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg flex-shrink-0">
+            <%= user.name.first.upcase %>
+          </div>
+          <div class="min-w-0">
+            <p class="font-semibold text-gray-900 truncate"><%= user.name %></p>
+            <div class="flex items-center gap-2 mt-0.5">
+              <span class="text-xs px-2 py-0.5 rounded-full <%= user.role == 'admin' ? 'bg-purple-100 text-purple-700' : user.role == 'manager' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600' %>">
+                <%= { 'admin' => '관리자', 'manager' => '매니저', 'member' => '멤버' }[user.role] || user.role %>
+              </span>
+              <% if user.branch.present? %>
+                <span class="text-xs text-gray-400"><%= user.branch %></span>
+              <% end %>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-gray-50 rounded-lg p-3 text-center">
+            <p class="text-2xl font-bold text-gray-900"><%= w[:active_orders] %></p>
+            <p class="text-xs text-gray-500 mt-0.5">진행 중 주문</p>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-3 text-center">
+            <p class="text-2xl font-bold text-gray-900"><%= w[:tasks_pending] %></p>
+            <p class="text-xs text-gray-500 mt-0.5">대기 태스크</p>
+          </div>
+        </div>
+
+        <%# 워크로드 바 %>
+        <% max_load = 10 %>
+        <% load_pct = [[w[:active_orders] * 10, 100].min, 0].max %>
+        <div class="mt-4">
+          <div class="flex justify-between text-xs text-gray-400 mb-1">
+            <span>워크로드</span>
+            <span><%= load_pct %>%</span>
+          </div>
+          <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+            <div class="h-full rounded-full transition-all <%= load_pct >= 80 ? 'bg-red-400' : load_pct >= 50 ? 'bg-yellow-400' : 'bg-green-400' %>"
+                 style="width: <%= load_pct %>%"></div>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+
+  <% if @members.empty? %>
+    <div class="bg-white rounded-xl border border-gray-200 p-12 text-center">
+      <svg class="w-12 h-12 mx-auto text-gray-200 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <p class="text-sm text-gray-400">팀원이 없습니다.</p>
+    </div>
+  <% end %>
+</div>

@@ -1,0 +1,104 @@
+<% content_for :title, "캘린더" %>
+
+<div class="flex flex-col gap-6">
+  <%# Header %>
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">캘린더</h1>
+      <p class="text-sm text-gray-500 mt-1"><%= @month.strftime("%Y년 %m월") %> 마감일 현황</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <%= link_to calendar_path(month: (@month - 1.month).strftime("%Y-%m-%d")),
+          class: "p-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors" do %>
+        <svg class="w-4 h-4 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      <% end %>
+      <span class="text-sm font-semibold text-gray-700 px-3"><%= @month.strftime("%Y년 %m월") %></span>
+      <%= link_to calendar_path(month: (@month + 1.month).strftime("%Y-%m-%d")),
+          class: "p-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors" do %>
+        <svg class="w-4 h-4 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      <% end %>
+    </div>
+  </div>
+
+  <%# 캘린더 그리드 %>
+  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <%# 요일 헤더 %>
+    <div class="grid grid-cols-7 border-b border-gray-100">
+      <% %w[일 월 화 수 목 금 토].each_with_index do |day, i| %>
+        <div class="py-3 text-center text-xs font-semibold <%= i == 0 ? 'text-red-400' : i == 6 ? 'text-blue-400' : 'text-gray-500' %>">
+          <%= day %>
+        </div>
+      <% end %>
+    </div>
+
+    <%# 날짜 그리드 %>
+    <%
+      first_day = @month.beginning_of_month
+      last_day  = @month.end_of_month
+      start_date = first_day - first_day.wday.days
+      orders_by_date = @orders.group_by { |o| o.due_date.to_date }
+    %>
+    <div class="grid grid-cols-7">
+      <% (start_date..start_date + 5.weeks + 6.days).each do |date| %>
+        <% next if date > last_day + (6 - last_day.wday).days && date.month != @month.month %>
+        <%
+          is_current_month = date.month == @month.month
+          is_today = date == Date.today
+          day_orders = orders_by_date[date] || []
+        %>
+        <div class="min-h-24 border-b border-r border-gray-50 p-2 <%= is_current_month ? 'bg-white' : 'bg-gray-50' %> <%= is_today ? 'ring-2 ring-inset ring-primary/30' : '' %>">
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-xs font-medium <%= is_today ? 'w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center' : is_current_month ? 'text-gray-700' : 'text-gray-300' %>">
+              <%= date.day %>
+            </span>
+          </div>
+          <% day_orders.first(3).each do |order| %>
+            <%= link_to order_path(order), class: "block text-xs truncate px-1.5 py-0.5 rounded mb-0.5 #{
+              case order.priority
+              when 'urgent' then 'bg-red-100 text-red-700'
+              when 'high' then 'bg-orange-100 text-orange-700'
+              else 'bg-blue-100 text-blue-700'
+              end
+            }" do %>
+              <%= order.title %>
+            <% end %>
+          <% end %>
+          <% if day_orders.size > 3 %>
+            <span class="text-xs text-gray-400">+<%= day_orders.size - 3 %> more</span>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <%# 이번 달 주문 목록 %>
+  <% if @orders.any? %>
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-100">
+        <h2 class="text-sm font-semibold text-gray-700">이번 달 마감 주문 (<%= @orders.count %>건)</h2>
+      </div>
+      <div class="divide-y divide-gray-50">
+        <% @orders.each do |order| %>
+          <div class="flex items-center justify-between px-5 py-3 hover:bg-gray-50 transition-colors">
+            <div class="flex items-center gap-3">
+              <div class="text-center w-10">
+                <p class="text-lg font-bold text-gray-900"><%= order.due_date.day %></p>
+                <p class="text-xs text-gray-400"><%= order.due_date.strftime("%a") %></p>
+              </div>
+              <div>
+                <p class="text-sm font-medium text-gray-900"><%= order.title %></p>
+                <p class="text-xs text-gray-500"><%= order.customer_name %></p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                <%= Order::STATUS_LABELS[order.status] %>
+              </span>
+              <%= link_to "보기", order_path(order), class: "text-xs text-primary hover:underline" %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>
