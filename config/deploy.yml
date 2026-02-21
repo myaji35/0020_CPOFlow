@@ -44,7 +44,7 @@ builder:
 
 # kamal-proxy: 포트 3030 (80은 nginx 점유)
 proxy:
-  host: 158.247.235.31
+  host: cpoflow.158.247.235.31.sslip.io
   app_port: 3000
   ssl: false
   forward_headers: true
