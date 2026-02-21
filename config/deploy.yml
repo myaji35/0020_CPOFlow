@@ -9,9 +9,6 @@ servers:
   web:
     hosts:
       - 158.247.235.31
-    options:
-      publish:
-        - "3020:80"
 
 # Where you keep your container images.
 registry:
@@ -44,6 +41,17 @@ asset_path: /rails/public/assets
 # Configure the image builder.
 builder:
   arch: amd64
+
+# kamal-proxy: 포트 3030 (80은 nginx 점유)
+proxy:
+  host: 158.247.235.31
+  app_port: 3000
+  ssl: false
+  forward_headers: true
+  response_timeout: 60
+  healthcheck:
+    interval: 3
+    timeout: 60
 
 # Use SSH as root
 ssh:
