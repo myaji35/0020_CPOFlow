@@ -1,240 +1,49 @@
-<% content_for :page_title, @order.title %>
+<%# Drawer 모드 감지 %>
+<% is_drawer = params[:drawer].present? %>
 
-<div class="max-w-5xl mx-auto">
-  <!-- Breadcrumb + Actions -->
-  <div class="flex items-center justify-between mb-6">
-    <div class="flex items-center gap-3">
-      <%= link_to kanban_path, class: "text-gray-400 hover:text-gray-600" do %>
-        <i class="lni lni-arrow-left text-lg"></i>
-      <% end %>
-      <div>
-        <p class="text-xs text-gray-400">Kanban / <%= Order::STATUS_LABELS[@order.status] %></p>
-        <h2 class="text-lg font-semibold text-gray-900 leading-tight"><%= @order.title %></h2>
+<% if is_drawer %>
+  <%# ============================================================
+      DRAWER MODE: id="order-drawer-content" 감싸서 반환
+      layout 없이 이 div만 fetch로 추출
+  ============================================================ %>
+  <div id="order-drawer-content">
+    <%= render "orders/drawer_content", order: @order, tasks: @tasks, comments: @comments, activities: @activities, team_members: @team_members %>
+  </div>
+<% else %>
+  <%# ============================================================
+      FULL PAGE MODE
+  ============================================================ %>
+  <% content_for :page_title, @order.title %>
+  <div class="max-w-5xl mx-auto">
+    <%# Breadcrumb + Actions %>
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-3">
+        <%= link_to kanban_path, class: "text-gray-400 hover:text-gray-600" do %>
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        <% end %>
+        <div>
+          <p class="text-xs text-gray-400">Kanban / <%= Order::STATUS_LABELS[@order.status] %></p>
+          <h2 class="text-lg font-semibold text-gray-900 leading-tight"><%= @order.title %></h2>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <% if can_update?("orders") %>
+          <%= link_to edit_order_path(@order), class: "flex items-center gap-1.5 text-sm text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50" do %>
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            수정
+          <% end %>
+        <% end %>
       </div>
     </div>
-    <div class="flex items-center gap-2">
-      <%= link_to edit_order_path(@order), class: "flex items-center gap-1 text-sm text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50" do %>
-        <i class="lni lni-pencil text-sm"></i> Edit
-      <% end %>
-      <!-- Move Status -->
-      <div class="relative" data-controller="dropdown">
-        <button class="flex items-center gap-1 text-sm bg-accent text-white px-3 py-1.5 rounded-lg hover:bg-blue-500">
-          <i class="lni lni-arrows-horizontal text-sm"></i>
-          Move Status
-        </button>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="lg:col-span-2">
+        <%= render "orders/drawer_content", order: @order, tasks: @tasks, comments: @comments, activities: @activities, team_members: @team_members %>
+      </div>
+      <%# 우측 사이드바 %>
+      <div class="space-y-4">
+        <%= render "orders/sidebar_panel", order: @order %>
       </div>
     </div>
   </div>
-
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Main Column -->
-    <div class="lg:col-span-2 space-y-5">
-
-      <!-- Order Info Card -->
-      <div class="bg-white rounded-xl border border-gray-200 p-5">
-        <div class="flex items-start justify-between mb-4">
-          <div class="flex items-center gap-2 flex-wrap">
-            <%= status_badge(@order) %>
-            <%= priority_badge(@order) %>
-            <% if @order.due_date %>
-              <%= due_badge(@order) %>
-            <% end %>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Customer</p>
-            <p class="font-medium text-gray-900"><%= @order.customer_name %></p>
-          </div>
-          <div>
-            <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Due Date</p>
-            <p class="font-medium text-gray-900"><%= @order.due_date&.strftime("%B %d, %Y") || "—" %></p>
-          </div>
-          <% if @order.item_name.present? %>
-          <div>
-            <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Item</p>
-            <p class="font-medium text-gray-900"><%= @order.item_name %> <%= "× #{@order.quantity}" if @order.quantity %></p>
-          </div>
-          <% end %>
-          <% if @order.estimated_value.present? %>
-          <div>
-            <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Est. Value</p>
-            <p class="font-medium text-gray-900"><%= number_to_currency(@order.estimated_value, unit: "$ ") %></p>
-          </div>
-          <% end %>
-        </div>
-
-        <% if @order.description.present? %>
-          <div class="mt-4 pt-4 border-t border-gray-100">
-            <p class="text-xs text-gray-400 uppercase tracking-wide mb-2">Description</p>
-            <p class="text-sm text-gray-700 leading-relaxed"><%= @order.description %></p>
-          </div>
-        <% end %>
-
-        <!-- Tags -->
-        <% if @order.tags_array.any? %>
-          <div class="mt-4 flex flex-wrap gap-1">
-            <% @order.tags_array.each do |tag| %>
-              <span class="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full"><%= tag %></span>
-            <% end %>
-          </div>
-        <% end %>
-      </div>
-
-      <!-- Tasks -->
-      <div class="bg-white rounded-xl border border-gray-200 p-5">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="font-semibold text-gray-900 text-sm">Tasks</h3>
-          <span class="text-xs text-gray-400"><%= @order.task_progress[:done] %>/<%= @order.task_progress[:total] %> done</span>
-        </div>
-
-        <!-- Progress bar -->
-        <% if @order.tasks.any? %>
-          <div class="mb-4">
-            <div class="w-full bg-gray-100 rounded-full h-1.5">
-              <% pct = @order.task_progress[:total] > 0 ? (@order.task_progress[:done].to_f / @order.task_progress[:total] * 100).round : 0 %>
-              <div class="bg-accent h-1.5 rounded-full" style="width: <%= pct %>%"></div>
-            </div>
-          </div>
-        <% end %>
-
-        <!-- Task list -->
-        <div class="space-y-2 mb-4">
-          <% @tasks.each do |task| %>
-            <div class="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-gray-50 group">
-              <%= form_with url: order_task_path(@order, task), method: :patch, class: "flex items-center gap-3 flex-1" do |f| %>
-                <%= f.check_box :completed, checked: task.completed,
-                    onchange: "this.form.submit()",
-                    class: "rounded border-gray-300 text-accent cursor-pointer" %>
-                <%= f.hidden_field :completed, value: task.completed ? "0" : "1" %>
-              <% end %>
-              <div class="flex-1 min-w-0">
-                <p class="text-sm <%= task.completed ? 'line-through text-gray-400' : 'text-gray-900' %>"><%= task.title %></p>
-                <% if task.assignee %>
-                  <p class="text-xs text-gray-400"><%= task.assignee.display_name %></p>
-                <% end %>
-              </div>
-              <% if task.due_date %>
-                <span class="text-xs text-gray-400"><%= task.due_date.strftime("%b %d") %></span>
-              <% end %>
-            </div>
-          <% end %>
-        </div>
-
-        <!-- Add task form -->
-        <%= form_with url: order_tasks_path(@order), method: :post, class: "flex gap-2" do |f| %>
-          <%= f.text_field :title, placeholder: "Add a task...",
-              class: "flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-accent outline-none" %>
-          <%= f.submit "Add", class: "bg-gray-100 text-gray-700 text-sm px-3 py-2 rounded-lg hover:bg-gray-200 cursor-pointer" %>
-        <% end %>
-      </div>
-
-      <!-- Comments -->
-      <div class="bg-white rounded-xl border border-gray-200 p-5">
-        <h3 class="font-semibold text-gray-900 text-sm mb-4">Comments</h3>
-
-        <div class="space-y-4 mb-5">
-          <% @comments.each do |comment| %>
-            <div class="flex gap-3">
-              <div class="w-7 h-7 rounded-full bg-primary text-white text-xs flex items-center justify-center font-medium shrink-0 mt-0.5">
-                <%= comment.user.initials %>
-              </div>
-              <div class="flex-1">
-                <div class="flex items-center gap-2 mb-1">
-                  <span class="text-sm font-medium text-gray-900"><%= comment.user.display_name %></span>
-                  <span class="text-xs text-gray-400"><%= comment.created_at.strftime("%b %d, %H:%M") %></span>
-                </div>
-                <p class="text-sm text-gray-700 leading-relaxed"><%= comment.body %></p>
-              </div>
-            </div>
-          <% end %>
-          <% if @comments.empty? %>
-            <p class="text-sm text-gray-400 text-center py-4">No comments yet</p>
-          <% end %>
-        </div>
-
-        <%= form_with url: order_comments_path(@order), method: :post, class: "flex gap-2" do |f| %>
-          <div class="w-7 h-7 rounded-full bg-primary text-white text-xs flex items-center justify-center font-medium shrink-0">
-            <%= current_user.initials %>
-          </div>
-          <div class="flex-1 flex gap-2">
-            <%= f.text_area :body, placeholder: "Add a comment...", rows: 2,
-                class: "flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-accent outline-none resize-none" %>
-            <%= f.submit "Post", class: "bg-accent text-white text-sm px-3 py-2 rounded-lg hover:bg-blue-500 cursor-pointer self-end" %>
-          </div>
-        <% end %>
-      </div>
-    </div>
-
-    <!-- Right Sidebar -->
-    <div class="space-y-4">
-      <!-- Assignees -->
-      <div class="bg-white rounded-xl border border-gray-200 p-4">
-        <h4 class="text-sm font-semibold text-gray-900 mb-3">Assignees</h4>
-        <div class="space-y-2">
-          <% @order.assignees.each do |u| %>
-            <div class="flex items-center gap-2">
-              <div class="w-7 h-7 rounded-full bg-primary text-white text-xs flex items-center justify-center font-medium">
-                <%= u.initials %>
-              </div>
-              <div>
-                <p class="text-sm font-medium text-gray-900"><%= u.display_name %></p>
-                <p class="text-xs text-gray-400"><%= u.role.capitalize %></p>
-              </div>
-            </div>
-          <% end %>
-        </div>
-      </div>
-
-      <!-- Activity Log -->
-      <div class="bg-white rounded-xl border border-gray-200 p-4">
-        <h4 class="text-sm font-semibold text-gray-900 mb-3">Activity</h4>
-        <div class="space-y-2">
-          <% @activities.first(8).each do |act| %>
-            <div class="flex gap-2 text-xs text-gray-500">
-              <i class="lni lni-arrow-right text-gray-300 mt-0.5 shrink-0"></i>
-              <div>
-                <span class="font-medium text-gray-700"><%= act.user.display_name %></span>
-                <%= act.action.humanize.downcase %>
-                <span class="text-gray-400 block"><%= act.created_at.strftime("%b %d, %H:%M") %></span>
-              </div>
-            </div>
-          <% end %>
-          <% if @activities.empty? %>
-            <p class="text-xs text-gray-400">No activity yet</p>
-          <% end %>
-        </div>
-      </div>
-
-      <!-- Move Status -->
-      <div class="bg-white rounded-xl border border-gray-200 p-4">
-        <h4 class="text-sm font-semibold text-gray-900 mb-3">Move to Stage</h4>
-        <div class="space-y-1">
-          <% Order::KANBAN_COLUMNS.each do |status| %>
-            <% is_current = @order.status == status %>
-            <%= form_with url: move_status_order_path(@order), method: :patch do |f| %>
-              <%= f.hidden_field :status, value: status %>
-              <%= f.submit Order::STATUS_LABELS[status],
-                  disabled: is_current,
-                  class: "w-full text-left text-xs py-2 px-3 rounded-lg cursor-pointer transition-colors #{is_current ? 'bg-accent text-white font-semibold' : 'bg-gray-50 text-gray-700 hover:bg-gray-100'}" %>
-            <% end %>
-          <% end %>
-        </div>
-      </div>
-
-      <!-- Source Email -->
-      <% if @order.original_email_from.present? %>
-        <div class="bg-white rounded-xl border border-gray-200 p-4">
-          <h4 class="text-sm font-semibold text-gray-900 mb-3">Source Email</h4>
-          <p class="text-xs text-gray-500 mb-1">From</p>
-          <p class="text-xs font-medium text-gray-700 mb-2"><%= @order.original_email_from %></p>
-          <% if @order.original_email_subject.present? %>
-            <p class="text-xs text-gray-500 mb-1">Subject</p>
-            <p class="text-xs text-gray-700"><%= @order.original_email_subject %></p>
-          <% end %>
-        </div>
-      <% end %>
-    </div>
-  </div>
-</div>
+<% end %>

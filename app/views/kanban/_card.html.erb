@@ -1,5 +1,7 @@
-<div class="bg-white rounded-lg border border-gray-200 p-3 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow"
-     data-order-id="<%= order.id %>">
+<div class="bg-white rounded-lg border border-gray-200 p-3 cursor-pointer shadow-sm hover:shadow-md hover:border-accent/40 transition-all group"
+     data-order-id="<%= order.id %>"
+     onclick="openOrderDrawer(<%= order.id %>, <%= order.title.to_json %>, '<%= order_path(order) %>')"
+     title="클릭하여 상세 보기">
 
   <!-- Card Header: Priority + Due badge -->
   <div class="flex items-center justify-between mb-2">
@@ -10,11 +12,9 @@
   </div>
 
   <!-- Title -->
-  <%= link_to order_path(order), class: "block" do %>
-    <h4 class="text-sm font-semibold text-gray-900 leading-snug hover:text-accent transition-colors mb-1">
-      <%= order.title %>
-    </h4>
-  <% end %>
+  <h4 class="text-sm font-semibold text-gray-900 leading-snug group-hover:text-accent transition-colors mb-1">
+    <%= order.title %>
+  </h4>
 
   <!-- 발주처 / 현장 -->
   <div class="flex flex-wrap items-center gap-1.5 mb-2">
