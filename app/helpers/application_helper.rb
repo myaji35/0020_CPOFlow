@@ -8,7 +8,7 @@ module ApplicationHelper
 
     content_tag(:div, class: active ? active_class : inactive_class) do
       concat link_to(path, class: "flex items-center gap-3 flex-1 overflow-hidden") {
-        concat content_tag(:i, "", class: "#{icon} text-lg shrink-0")
+        concat content_tag(:i, "", class: "#{icon} text-xl shrink-0 w-5 text-center")
         concat content_tag(:span, label, class: "whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 truncate")
         capture(&block) if block
       }
