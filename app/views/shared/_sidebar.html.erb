@@ -10,39 +10,39 @@
 
   <!-- Nav Items -->
   <div class="flex flex-col flex-1 py-4 gap-1 overflow-hidden">
-    <%= nav_link_to dashboard_path, icon: "lni-dashboard", label: "Dashboard" %>
-    <%= nav_link_to inbox_path, icon: "lni-envelope", label: "Inbox" do %>
+    <%= nav_link_to dashboard_path, icon: "lni lni-grid-alt", label: "Dashboard" %>
+    <%= nav_link_to inbox_path, icon: "lni lni-envelope", label: "Inbox" do %>
       <% rfq_count = Order.inbox.count %>
       <% if rfq_count > 0 %>
         <span class="ml-auto bg-accent text-white text-xs rounded-full px-1.5 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity"><%= rfq_count %></span>
       <% end %>
     <% end %>
-    <%= nav_link_to kanban_path, icon: "lni-layout", label: "Kanban" %>
-    <%= nav_link_to orders_path, icon: "lni-list", label: "Orders" %>
-    <%= nav_link_to calendar_path, icon: "lni-calendar", label: "Calendar" %>
-    <%= nav_link_to team_index_path, icon: "lni-users", label: "Team" %>
+    <%= nav_link_to kanban_path, icon: "lni lni-layout", label: "Kanban" %>
+    <%= nav_link_to orders_path, icon: "lni lni-clipboard", label: "Orders" %>
+    <%= nav_link_to calendar_path, icon: "lni lni-calendar", label: "Calendar" %>
+    <%= nav_link_to team_index_path, icon: "lni lni-users", label: "Team" %>
 
     <!-- 거래처 섹션 구분선 -->
-    <div class="my-2 mx-3 border-t border-primary-light opacity-40"></div>
-    <%= nav_link_to clients_path, icon: "lni-briefcase", label: "발주처" %>
-    <%= nav_link_to suppliers_path, icon: "lni-package", label: "거래처" %>
-    <%= nav_link_to projects_path, icon: "lni-construction", label: "현장" %>
-    <%= nav_link_to employees_path, icon: "lni-user", label: "직원 관리" %>
-    <%= nav_link_to org_chart_path, icon: "lni-network", label: "조직도" %>
+    <div class="my-2 mx-3 border-t border-white/20"></div>
+    <%= nav_link_to clients_path, icon: "lni lni-briefcase", label: "발주처" %>
+    <%= nav_link_to suppliers_path, icon: "lni lni-delivery", label: "거래처" %>
+    <%= nav_link_to projects_path, icon: "lni lni-map-marker", label: "현장" %>
+    <%= nav_link_to employees_path, icon: "lni lni-user", label: "직원 관리" %>
+    <%= nav_link_to org_chart_path, icon: "lni lni-graph", label: "조직도" %>
 
     <% if current_user.manager? || current_user.admin? %>
       <!-- Admin 섹션 구분선 -->
-      <div class="my-2 mx-3 border-t border-primary-light opacity-40"></div>
-      <%= nav_link_to admin_imports_path, icon: "lni-upload", label: "eCount Import" %>
+      <div class="my-2 mx-3 border-t border-white/20"></div>
+      <%= nav_link_to admin_imports_path, icon: "lni lni-upload", label: "eCount Import" %>
     <% end %>
     <% if current_user.admin? %>
-      <%= nav_link_to settings_menu_permissions_path, icon: "lni-lock", label: "메뉴 권한" %>
+      <%= nav_link_to settings_menu_permissions_path, icon: "lni lni-shield", label: "메뉴 권한" %>
     <% end %>
   </div>
 
   <!-- Bottom: Settings + User -->
   <div class="py-4 border-t border-primary-light overflow-hidden">
-    <%= nav_link_to settings_root_path, icon: "lni-cog", label: "Settings" %>
+    <%= nav_link_to settings_root_path, icon: "lni lni-cog", label: "Settings" %>
 
     <!-- User avatar -->
     <div class="flex items-center px-3 py-2 mt-2 gap-3 overflow-hidden">
