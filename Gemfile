@@ -30,7 +30,7 @@ gem "lockbox"
 gem "blind_index"
 
 # Pagination
-gem "pagy", "~> 9.0"
+gem "pagy", "~> 43.3"
 
 # Google APIs (Gmail + Sheets integration)
 gem "google-apis-gmail_v1"
