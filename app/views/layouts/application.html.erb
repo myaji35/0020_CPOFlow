@@ -67,6 +67,86 @@
           </main>
         </div>
       </div>
+
+      <%# ===== Order Detail Drawer ===== %>
+      <div id="order-drawer-backdrop"
+           class="fixed inset-0 bg-black/40 z-40 hidden transition-opacity duration-300 opacity-0"
+           onclick="closeOrderDrawer()"></div>
+
+      <div id="order-drawer"
+           class="fixed top-0 right-0 h-full w-full max-w-2xl bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
+        <%# Drawer Header %>
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0 bg-white">
+          <div id="drawer-title" class="text-sm font-semibold text-gray-900 truncate pr-4"></div>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <a id="drawer-open-link" href="#"
+               class="flex items-center gap-1.5 text-xs text-gray-500 border border-gray-200 px-2.5 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              전체 화면
+            </a>
+            <button onclick="closeOrderDrawer()"
+                    class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+        </div>
+        <%# Drawer Body %>
+        <div id="order-drawer-body" class="flex-1 overflow-y-auto">
+          <div class="flex items-center justify-center h-32 text-gray-200">
+            <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        function openOrderDrawer(orderId, orderTitle, orderPath) {
+          const drawer   = document.getElementById('order-drawer');
+          const backdrop = document.getElementById('order-drawer-backdrop');
+          const body     = document.getElementById('order-drawer-body');
+          const title    = document.getElementById('drawer-title');
+          const openLink = document.getElementById('drawer-open-link');
+
+          title.textContent = orderTitle || 'Order Detail';
+          openLink.href = orderPath || '#';
+
+          body.innerHTML = '<div class="flex items-center justify-center h-40"><svg class="w-6 h-6 text-gray-300 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg></div>';
+
+          backdrop.classList.remove('hidden');
+          requestAnimationFrame(() => {
+            backdrop.classList.remove('opacity-0');
+            drawer.classList.remove('translate-x-full');
+          });
+          document.body.style.overflow = 'hidden';
+
+          fetch(orderPath + '?drawer=1', {
+            headers: { 'Accept': 'text/html', 'X-Requested-With': 'XMLHttpRequest' }
+          })
+          .then(r => r.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const doc    = parser.parseFromString(html, 'text/html');
+            const el     = doc.getElementById('order-drawer-content');
+            body.innerHTML = el ? el.innerHTML : '<div class="p-6 text-sm text-red-400">내용을 불러올 수 없습니다.</div>';
+          })
+          .catch(() => {
+            body.innerHTML = '<div class="p-6 text-sm text-red-400">네트워크 오류가 발생했습니다.</div>';
+          });
+        }
+
+        function closeOrderDrawer() {
+          const drawer   = document.getElementById('order-drawer');
+          const backdrop = document.getElementById('order-drawer-backdrop');
+          drawer.classList.add('translate-x-full');
+          backdrop.classList.add('opacity-0');
+          setTimeout(() => {
+            backdrop.classList.add('hidden');
+            document.body.style.overflow = '';
+          }, 300);
+        }
+
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeOrderDrawer(); });
+      </script>
+
     <% else %>
       <!-- Auth pages: no sidebar -->
       <%= yield %>

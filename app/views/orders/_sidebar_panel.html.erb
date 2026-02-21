@@ -1,0 +1,122 @@
+<%# ============================================================
+    주문 상세 우측 사이드바 (Full page mode 전용)
+============================================================ %>
+
+<%# ── 메타 요약 카드 ─────────────────────────────────── %>
+<div class="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
+  <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wide">주문 정보</h4>
+
+  <dl class="space-y-2 text-sm">
+    <div class="flex justify-between items-center">
+      <dt class="text-gray-400">상태</dt>
+      <dd><%= status_badge(order) %></dd>
+    </div>
+    <div class="flex justify-between items-center">
+      <dt class="text-gray-400">우선순위</dt>
+      <dd><%= priority_badge(order) %></dd>
+    </div>
+    <% if order.due_date %>
+      <div class="flex justify-between items-center">
+        <dt class="text-gray-400">마감일</dt>
+        <dd class="font-medium text-gray-900 text-xs"><%= order.due_date.strftime("%Y. %m. %d") %></dd>
+      </div>
+    <% end %>
+    <% if order.estimated_value.present? %>
+      <div class="flex justify-between items-center">
+        <dt class="text-gray-400">예상 금액</dt>
+        <dd class="font-medium text-gray-900 text-xs">
+          <%= number_to_currency(order.estimated_value, unit: order.currency.presence || "$", format: "%u %n") %>
+        </dd>
+      </div>
+    <% end %>
+    <div class="flex justify-between items-center">
+      <dt class="text-gray-400">생성일</dt>
+      <dd class="text-gray-600 text-xs"><%= order.created_at.strftime("%Y. %m. %d") %></dd>
+    </div>
+    <% if order.updated_at != order.created_at %>
+      <div class="flex justify-between items-center">
+        <dt class="text-gray-400">최근 수정</dt>
+        <dd class="text-gray-600 text-xs"><%= order.updated_at.strftime("%Y. %m. %d %H:%M") %></dd>
+      </div>
+    <% end %>
+  </dl>
+</div>
+
+<%# ── 담당자 카드 ──────────────────────────────────────── %>
+<div class="bg-white rounded-xl border border-gray-200 p-4">
+  <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">담당자</h4>
+  <% if order.assignees.any? %>
+    <div class="space-y-2">
+      <% order.assignees.each do |u| %>
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold shrink-0">
+            <%= u.initials %>
+          </div>
+          <div class="min-w-0">
+            <p class="text-sm font-medium text-gray-900 truncate"><%= u.display_name %></p>
+            <p class="text-xs text-gray-400"><%= u.email %></p>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="text-xs text-gray-400">배정된 담당자 없음</p>
+  <% end %>
+</div>
+
+<%# ── 스테이지 이동 카드 ──────────────────────────────── %>
+<div class="bg-white rounded-xl border border-gray-200 p-4">
+  <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">스테이지 이동</h4>
+  <div class="space-y-1">
+    <% Order::KANBAN_COLUMNS.each do |status| %>
+      <% is_current = order.status == status %>
+      <%= form_with url: move_status_order_path(order), method: :patch do |f| %>
+        <%= f.hidden_field :status, value: status %>
+        <%= f.submit Order::STATUS_LABELS[status],
+            disabled: is_current,
+            class: "w-full text-left text-xs py-2 px-3 rounded-lg cursor-pointer transition-colors #{is_current ? 'bg-accent text-white font-semibold' : 'bg-gray-50 text-gray-700 hover:bg-gray-100 disabled:cursor-default'}" %>
+      <% end %>
+    <% end %>
+  </div>
+</div>
+
+<%# ── 관련 링크 카드 ──────────────────────────────────── %>
+<div class="bg-white rounded-xl border border-gray-200 p-4 space-y-2">
+  <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">관련 항목</h4>
+
+  <% if order.client %>
+    <div class="flex items-center gap-2 text-sm">
+      <svg class="w-4 h-4 text-gray-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+      <%= link_to order.client.name, client_path(order.client), class: "text-accent hover:underline truncate" %>
+    </div>
+  <% end %>
+
+  <% if order.project %>
+    <div class="flex items-center gap-2 text-sm">
+      <svg class="w-4 h-4 text-gray-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      <%= link_to order.project.name, project_path(order.project), class: "text-accent hover:underline truncate" %>
+    </div>
+  <% end %>
+
+  <% if order.supplier %>
+    <div class="flex items-center gap-2 text-sm">
+      <svg class="w-4 h-4 text-gray-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      <%= link_to order.supplier.name, supplier_path(order.supplier), class: "text-accent hover:underline truncate" %>
+    </div>
+  <% end %>
+
+  <% if !order.client && !order.project && !order.supplier %>
+    <p class="text-xs text-gray-400">연결된 항목 없음</p>
+  <% end %>
+</div>
+
+<%# ── 수정 버튼 ───────────────────────────────────────── %>
+<% if can_update?("orders") %>
+  <%= link_to edit_order_path(order),
+      class: "block w-full text-center text-sm font-medium text-white bg-accent hover:bg-accent/90 px-4 py-2.5 rounded-xl transition-colors" do %>
+    <span class="flex items-center justify-center gap-2">
+      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      주문 수정
+    </span>
+  <% end %>
+<% end %>
