@@ -1,0 +1,13 @@
+<% content_for :title, "새 거래처 등록" %>
+<div class="max-w-2xl">
+  <div class="mb-6">
+    <div class="flex items-center gap-2 text-sm text-gray-400 mb-1">
+      <%= link_to "거래처 관리", suppliers_path, class: "hover:text-primary" %>
+      <span>/</span><span>새 거래처 등록</span>
+    </div>
+    <h1 class="text-2xl font-bold text-gray-900">새 거래처 등록</h1>
+  </div>
+  <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+    <%= render "form" %>
+  </div>
+</div>

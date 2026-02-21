@@ -1,0 +1,99 @@
+<% content_for :page_title, "Kanban Board" %>
+<% content_for :head do %>
+  <!-- SortableJS for drag-and-drop -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<% end %>
+
+<div class="flex items-center justify-between mb-5">
+  <div class="flex items-center gap-2">
+    <h2 class="text-lg font-semibold text-gray-900">Procurement Board</h2>
+    <span class="text-sm text-gray-400">— AtoZ2010 Inc.</span>
+  </div>
+  <%= link_to new_order_path, class: "flex items-center gap-2 bg-accent text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-500 transition-colors" do %>
+    <i class="lni lni-plus"></i>
+    New Order
+  <% end %>
+</div>
+
+<!-- Kanban Board -->
+<div class="flex gap-4 overflow-x-auto pb-4 min-h-[calc(100vh-200px)]" id="kanban-board">
+  <% Order::KANBAN_COLUMNS.each do |status| %>
+    <% orders = @columns[status] || [] %>
+    <% label = Order::STATUS_LABELS[status] %>
+
+    <div class="kanban-column flex flex-col w-72 shrink-0" data-status="<%= status %>">
+      <!-- Column Header -->
+      <div class="flex items-center justify-between mb-3 px-1">
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-semibold text-gray-700"><%= label %></span>
+          <span class="text-xs font-medium bg-gray-100 text-gray-600 rounded-full px-2 py-0.5"><%= orders.count %></span>
+        </div>
+        <% if status == "inbox" %>
+          <%= link_to inbox_path, class: "text-xs text-accent hover:underline" do %>
+            <i class="lni lni-envelope text-sm"></i>
+          <% end %>
+        <% end %>
+      </div>
+
+      <!-- Cards Container -->
+      <div class="kanban-cards flex flex-col gap-3 flex-1 min-h-[60px] p-2 bg-gray-100 rounded-xl"
+           data-status="<%= status %>"
+           id="column-<%= status %>">
+        <% orders.each do |order| %>
+          <%= render "kanban/card", order: order %>
+        <% end %>
+
+        <!-- Empty state -->
+        <% if orders.empty? %>
+          <div class="flex-1 flex items-center justify-center text-xs text-gray-400 py-8">
+            <div class="text-center">
+              <i class="lni lni-inbox text-2xl block mb-1 opacity-50"></i>
+              No orders
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const columns = document.querySelectorAll('.kanban-cards');
+  columns.forEach(function(column) {
+    new Sortable(column, {
+      group: 'kanban',
+      animation: 150,
+      ghostClass: 'opacity-50',
+      chosenClass: 'ring-2 ring-accent',
+      onEnd: function(evt) {
+        const cardEl = evt.item;
+        const orderId = cardEl.dataset.orderId;
+        const newStatus = evt.to.dataset.status;
+
+        fetch(`/orders/${orderId}/move`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+          },
+          body: JSON.stringify({ status: newStatus })
+        })
+        .then(r => r.json())
+        .then(data => {
+          if (!data.success) {
+            console.error('Move failed:', data.errors);
+            // revert on failure
+            evt.from.insertBefore(cardEl, evt.from.children[evt.oldIndex]);
+          }
+          // Update column counts
+          document.querySelectorAll('.kanban-column').forEach(col => {
+            const cards = col.querySelectorAll('[data-order-id]').length;
+            col.querySelector('.kanban-column span:last-child').textContent = cards;
+          });
+        });
+      }
+    });
+  });
+});
+</script>

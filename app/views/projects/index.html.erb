@@ -1,0 +1,146 @@
+<% content_for :title, "프로젝트 관리" %>
+
+<div class="flex flex-col gap-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">현장/프로젝트 관리</h1>
+      <p class="text-sm text-gray-500 mt-1">원전·수력·터널·GTX 현장별 예산 집행률 관리</p>
+    </div>
+    <%= link_to new_project_path, class: "inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors" do %>
+      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      새 프로젝트
+    <% end %>
+  </div>
+
+  <!-- 카테고리 필터 -->
+  <div class="flex gap-2 flex-wrap">
+    <%= link_to "전체", projects_path, class: "px-4 py-2 text-sm rounded-full #{params[:category].blank? ? 'bg-primary text-white' : 'bg-white border border-gray-200 text-gray-600 hover:border-primary'}" %>
+    <% Project::SITE_CATEGORIES.each do |cat| %>
+      <% label = { "nuclear"=>"원전","hydro"=>"수력","tunnel"=>"터널","gtx"=>"GTX","general"=>"일반" }[cat] || cat %>
+      <%= link_to label, projects_path(category: cat), class: "px-4 py-2 text-sm rounded-full #{params[:category] == cat ? 'bg-primary text-white' : 'bg-white border border-gray-200 text-gray-600 hover:border-primary'}" %>
+    <% end %>
+  </div>
+
+  <!-- 현장 유형별 발주 비중 파이차트 -->
+  <% category_stats = Project::SITE_CATEGORIES.map do |cat|
+    projs = @projects.select { |p| p.site_category == cat }
+    { cat: cat, label: { "nuclear"=>"원전","hydro"=>"수력","tunnel"=>"터널","gtx"=>"GTX","general"=>"일반" }[cat],
+      count: projs.sum { |p| p.orders.count },
+      value: projs.sum { |p| p.budget_utilized } }
+  end.select { |s| s[:count] > 0 } %>
+  <% total_orders = category_stats.sum { |s| s[:count] }; total_value = category_stats.sum { |s| s[:value] } %>
+
+  <% if total_orders > 0 %>
+    <div class="grid grid-cols-2 gap-4">
+      <!-- 파이차트 (SVG) -->
+      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+        <h3 class="text-sm font-semibold text-gray-700 mb-4">현장 유형별 발주 비중</h3>
+        <%
+          colors = ["#1E3A5F","#00A1E0","#38BDF8","#7DD3FC","#BAE6FD"]
+          cumulative = 0
+          pie_segments = category_stats.each_with_index.map do |s, i|
+            pct = total_orders > 0 ? (s[:count].to_f / total_orders) : 0
+            seg = { pct: pct, color: colors[i % colors.size], label: s[:label], count: s[:count], value: s[:value], start: cumulative }
+            cumulative += pct
+            seg
+          end
+        %>
+        <div class="flex items-center gap-6">
+          <svg viewBox="0 0 100 100" class="w-32 h-32 shrink-0 -rotate-90">
+            <% radius = 40; cx = 50; cy = 50; stroke = 20 %>
+            <% angle = 0 %>
+            <% pie_segments.each do |seg| %>
+              <% start_angle = angle * 2 * Math::PI
+                 sweep = seg[:pct] * 2 * Math::PI
+                 x1 = cx + radius * Math.cos(start_angle); y1 = cy + radius * Math.sin(start_angle)
+                 x2 = cx + radius * Math.cos(start_angle + sweep); y2 = cy + radius * Math.sin(start_angle + sweep)
+                 large = sweep > Math::PI ? 1 : 0
+                 angle += seg[:pct] %>
+              <path d="M <%= cx %> <%= cy %> L <%= x1.round(2) %> <%= y1.round(2) %> A <%= radius %> <%= radius %> 0 <%= large %> 1 <%= x2.round(2) %> <%= y2.round(2) %> Z"
+                    fill="<%= seg[:color] %>" opacity="0.9"/>
+            <% end %>
+            <circle cx="<%= cx %>" cy="<%= cy %>" r="20" fill="white"/>
+          </svg>
+          <!-- 범례 -->
+          <div class="space-y-2 flex-1">
+            <% pie_segments.each_with_index do |seg, i| %>
+              <div class="flex items-center justify-between text-xs">
+                <div class="flex items-center gap-2">
+                  <div class="w-3 h-3 rounded-sm shrink-0" style="background-color: <%= seg[:color] %>"></div>
+                  <span class="text-gray-600"><%= seg[:label] %></span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="font-medium text-gray-900"><%= seg[:count] %>건</span>
+                  <span class="text-gray-400"><%= (seg[:pct] * 100).round(1) %>%</span>
+                </div>
+              </div>
+            <% end %>
+            <div class="pt-2 border-t border-gray-100 flex justify-between text-xs font-semibold text-gray-700">
+              <span>합계</span><span><%= total_orders %>건 | $<%= number_with_delimiter(total_value.round.to_i) %></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 현장 유형별 발주 현황 카드 -->
+      <div class="grid grid-cols-2 gap-3 content-start">
+        <% category_stats.each_with_index do |s, i| %>
+          <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+            <div class="flex items-center gap-2 mb-2">
+              <div class="w-3 h-3 rounded-sm" style="background-color: <%= colors[i % colors.size] %>"></div>
+              <span class="text-xs font-semibold text-gray-600"><%= s[:label] %></span>
+            </div>
+            <p class="text-xl font-bold text-gray-900"><%= s[:count] %>건</p>
+            <p class="text-xs text-gray-500">$<%= number_with_delimiter(s[:value].round.to_i) %></p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- 테이블 -->
+  <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+    <table class="w-full">
+      <thead class="bg-gray-50 border-b border-gray-100">
+        <tr>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">프로젝트명</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">발주처</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">현장 유형</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">상태</th>
+          <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">오더 건수</th>
+          <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">발주 금액</th>
+          <th class="px-4 py-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        <% @projects.each do |proj| %>
+          <tr class="hover:bg-gray-50 transition-colors">
+            <td class="px-4 py-3">
+              <div class="font-medium text-gray-900"><%= proj.name %></div>
+              <div class="text-xs text-gray-400"><%= proj.location %></div>
+            </td>
+            <td class="px-4 py-3 text-sm text-gray-600"><%= proj.client.name %></td>
+            <td class="px-4 py-3">
+              <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full bg-blue-50 text-blue-700"><%= proj.site_category_label %></span>
+            </td>
+            <td class="px-4 py-3">
+              <% status_class = { "active"=>"bg-green-50 text-green-700","planning"=>"bg-yellow-50 text-yellow-700","completed"=>"bg-gray-100 text-gray-600","suspended"=>"bg-red-50 text-red-700" }[proj.status] %>
+              <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full <%= status_class %>"><%= proj.status_label %></span>
+            </td>
+            <td class="px-4 py-3 text-right text-sm font-medium text-gray-900"><%= proj.orders.count %>건</td>
+            <td class="px-4 py-3 text-right text-sm font-medium text-primary">
+              $<%= number_with_delimiter(proj.budget_utilized.round.to_i) %>
+            </td>
+            <td class="px-4 py-3 text-right">
+              <%= link_to "상세", proj, class: "text-xs text-primary hover:underline" %>
+            </td>
+          </tr>
+        <% end %>
+        <% if @projects.empty? %>
+          <tr><td colspan="7" class="px-4 py-12 text-center text-gray-400 text-sm">등록된 프로젝트가 없습니다.</td></tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

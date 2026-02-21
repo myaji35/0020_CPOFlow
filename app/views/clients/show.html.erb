@@ -1,0 +1,188 @@
+<% content_for :title, @client.name %>
+
+<div class="flex flex-col gap-6">
+  <!-- Header -->
+  <div class="flex items-start justify-between">
+    <div>
+      <div class="flex items-center gap-2 text-sm text-gray-400 mb-1">
+        <%= link_to "발주처 관리", clients_path, class: "hover:text-primary" %>
+        <span>/</span>
+        <span><%= @client.name %></span>
+      </div>
+      <h1 class="text-2xl font-bold text-gray-900"><%= @client.name %></h1>
+      <div class="flex items-center gap-3 mt-2 text-sm text-gray-500">
+        <span><%= @client.country %></span>
+        <% if @client.industry.present? %><span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full bg-blue-50 text-blue-700"><%= @client.industry_label %></span><% end %>
+        <% if @client.credit_grade.present? %><span class="inline-flex px-2 py-0.5 text-xs font-bold rounded-full bg-green-50 text-green-700"><%= @client.credit_grade %>등급</span><% end %>
+        <% if @client.payment_terms.present? %><span><%= @client.payment_terms %></span><% end %>
+        <span><%= @client.currency %></span>
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <%= link_to edit_client_path(@client), class: "inline-flex items-center gap-1 border border-gray-200 text-gray-600 px-3 py-2 rounded-lg text-sm hover:bg-gray-50" do %>
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        수정
+      <% end %>
+      <% if current_user.manager? || current_user.admin? %>
+        <%= link_to client_path(@client), data: { turbo_method: :delete, turbo_confirm: "발주처를 삭제하시겠습니까?" },
+            class: "inline-flex items-center gap-1 border border-red-200 text-red-600 px-3 py-2 rounded-lg text-sm hover:bg-red-50" do %>
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6m4-6v6"/><path d="M9 6V4h6v2"/></svg>
+          삭제
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- KPI 카드 -->
+  <div class="grid grid-cols-4 gap-4">
+    <div class="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+      <p class="text-xs text-gray-500">총 오더</p>
+      <p class="text-2xl font-bold text-gray-900 mt-1"><%= @client.orders.count %></p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+      <p class="text-xs text-gray-500">총 거래금액</p>
+      <p class="text-xl font-bold text-primary mt-1">$<%= number_with_delimiter(@client.total_order_value.round.to_i) %></p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+      <p class="text-xs text-gray-500">활성 오더</p>
+      <p class="text-2xl font-bold text-gray-900 mt-1"><%= @client.active_orders_count %></p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+      <p class="text-xs text-gray-500">프로젝트</p>
+      <p class="text-2xl font-bold text-gray-900 mt-1"><%= @projects.count %></p>
+    </div>
+  </div>
+
+  <!-- 탭 -->
+  <div x-data="{ tab: 'contacts' }" class="bg-white rounded-xl border border-gray-100 shadow-sm">
+    <div class="border-b border-gray-100 px-4">
+      <nav class="flex gap-6">
+        <button @click="tab='contacts'" :class="tab==='contacts' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'"
+            class="py-3 border-b-2 text-sm font-medium transition-colors">
+          담당자 (<%= @contact_persons.count %>)
+        </button>
+        <button @click="tab='projects'" :class="tab==='projects' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'"
+            class="py-3 border-b-2 text-sm font-medium transition-colors">
+          프로젝트 (<%= @projects.count %>)
+        </button>
+        <button @click="tab='orders'" :class="tab==='orders' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'"
+            class="py-3 border-b-2 text-sm font-medium transition-colors">
+          거래이력 (<%= @orders.count %>)
+        </button>
+      </nav>
+    </div>
+
+    <!-- 담당자 탭 -->
+    <div x-show="tab==='contacts'" class="p-4">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="font-medium text-gray-900">담당자 목록</h3>
+        <%= link_to new_client_contact_person_path(@client), class: "inline-flex items-center gap-1 text-sm text-primary hover:underline" do %>
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          담당자 추가
+        <% end %>
+      </div>
+      <div class="space-y-3">
+        <% @contact_persons.each do |cp| %>
+          <div class="flex items-start justify-between p-3 border border-gray-100 rounded-lg hover:border-primary/30 transition-colors">
+            <div class="flex items-start gap-3">
+              <div class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm shrink-0">
+                <%= cp.name.first.upcase %>
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-medium text-gray-900 text-sm"><%= cp.display_name %></span>
+                  <% if cp.language.present? %>
+                    <span class="text-xs text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded"><%= cp.language_label %></span>
+                  <% end %>
+                </div>
+                <p class="text-xs text-gray-500 mt-0.5"><%= cp.title %></p>
+                <div class="flex items-center gap-3 mt-1">
+                  <% if cp.email.present? %>
+                    <a href="mailto:<%= cp.email %>" class="text-xs text-primary hover:underline"><%= cp.email %></a>
+                  <% end %>
+                  <% if cp.phone.present? %>
+                    <span class="text-xs text-gray-400"><%= cp.phone %></span>
+                  <% end %>
+                  <% if cp.whatsapp.present? %>
+                    <span class="text-xs text-green-600">WhatsApp: <%= cp.whatsapp %></span>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+            <div class="flex gap-2">
+              <%= link_to edit_client_contact_person_path(@client, cp), class: "text-xs text-gray-400 hover:text-primary" do %>수정<% end %>
+              <%= link_to client_contact_person_path(@client, cp), data: { turbo_method: :delete, turbo_confirm: "담당자를 삭제하시겠습니까?" },
+                  class: "text-xs text-gray-400 hover:text-red-500" do %>삭제<% end %>
+            </div>
+          </div>
+        <% end %>
+        <% if @contact_persons.empty? %>
+          <p class="text-center text-gray-400 text-sm py-8">등록된 담당자가 없습니다.</p>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- 프로젝트 탭 -->
+    <div x-show="tab==='projects'" class="p-4">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="font-medium text-gray-900">프로젝트 목록</h3>
+        <%= link_to new_project_path(client_id: @client.id), class: "inline-flex items-center gap-1 text-sm text-primary hover:underline" do %>
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          프로젝트 추가
+        <% end %>
+      </div>
+      <div class="space-y-3">
+        <% @projects.each do |proj| %>
+          <div class="flex items-center justify-between p-3 border border-gray-100 rounded-lg hover:border-primary/30">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-medium text-gray-900 text-sm"><%= proj.name %></span>
+                <span class="text-xs px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700"><%= proj.site_category_label %></span>
+                <span class="text-xs px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600"><%= proj.status_label %></span>
+              </div>
+              <% if proj.budget.present? %>
+                <div class="mt-1.5 flex items-center gap-2">
+                  <div class="flex-1 max-w-xs bg-gray-100 rounded-full h-1.5">
+                    <div class="bg-primary rounded-full h-1.5" style="width: <%= [proj.utilization_rate, 100].min %>%"></div>
+                  </div>
+                  <span class="text-xs text-gray-500"><%= proj.utilization_rate %>% 집행</span>
+                </div>
+              <% end %>
+            </div>
+            <%= link_to "상세", proj, class: "text-xs text-primary hover:underline" %>
+          </div>
+        <% end %>
+        <% if @projects.empty? %>
+          <p class="text-center text-gray-400 text-sm py-8">등록된 프로젝트가 없습니다.</p>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- 거래이력 탭 -->
+    <div x-show="tab==='orders'" class="p-4">
+      <h3 class="font-medium text-gray-900 mb-4">최근 거래이력</h3>
+      <div class="space-y-2">
+        <% @orders.each do |order| %>
+          <div class="flex items-center justify-between p-3 border border-gray-100 rounded-lg hover:border-primary/30">
+            <div>
+              <span class="text-sm font-medium text-gray-900"><%= order.title %></span>
+              <% if order.due_date.present? %>
+                <span class="text-xs text-gray-400 ml-2">납기: <%= order.due_date.strftime("%Y-%m-%d") %></span>
+              <% end %>
+            </div>
+            <div class="flex items-center gap-3">
+              <% if order.estimated_value.present? %>
+                <span class="text-sm font-medium text-gray-700">$<%= number_with_delimiter(order.estimated_value.round.to_i) %></span>
+              <% end %>
+              <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600"><%= order.status %></span>
+              <%= link_to "상세", order, class: "text-xs text-primary hover:underline" %>
+            </div>
+          </div>
+        <% end %>
+        <% if @orders.empty? %>
+          <p class="text-center text-gray-400 text-sm py-8">거래이력이 없습니다.</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

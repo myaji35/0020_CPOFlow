@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>CPOFlow — Sign In</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: { extend: { colors: {
+          primary: { DEFAULT: '#1E3A5F' },
+          accent:  { DEFAULT: '#00A1E0' }
+        }}}
+      }
+    </script>
+    <link rel="stylesheet" href="https://cdn.lineicons.com/4.0/lineicons.css" />
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+  <body class="bg-gray-50 min-h-screen flex items-center justify-center">
+    <div class="w-full max-w-md">
+      <!-- Logo -->
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-14 h-14 bg-primary rounded-2xl mb-4 shadow-lg">
+          <span class="text-white font-bold text-xl">CF</span>
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900">CPOFlow</h1>
+        <p class="text-sm text-gray-500 mt-1">AtoZ2010 Inc. — Procurement Management</p>
+      </div>
+
+      <!-- Flash -->
+      <% if notice.present? %>
+        <div class="mb-4 px-4 py-3 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm"><%= notice %></div>
+      <% end %>
+      <% if alert.present? %>
+        <div class="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm"><%= alert %></div>
+      <% end %>
+
+      <%= yield %>
+    </div>
+  </body>
+</html>

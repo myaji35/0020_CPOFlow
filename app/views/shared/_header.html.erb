@@ -1,0 +1,31 @@
+<header class="flex items-center justify-between h-14 bg-white border-b border-gray-200 px-6 shrink-0">
+  <!-- Page Title -->
+  <div>
+    <h1 class="text-base font-semibold text-gray-900"><%= content_for(:page_title) { "CPOFlow" } %></h1>
+  </div>
+
+  <!-- Right: Search + Alerts + User -->
+  <div class="flex items-center gap-4">
+    <!-- Search -->
+    <%= form_with url: orders_path, method: :get, class: "relative" do |f| %>
+      <i class="lni lni-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+      <%= f.text_field :q, placeholder: "Search orders...",
+          class: "pl-9 pr-4 py-1.5 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-1 focus:ring-accent w-56" %>
+    <% end %>
+
+    <!-- Urgent count badge -->
+    <% urgent = Order.urgent.count %>
+    <% if urgent > 0 %>
+      <%= link_to kanban_path, class: "relative flex items-center" do %>
+        <i class="lni lni-alarm text-gray-500 text-lg"></i>
+        <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold"><%= urgent %></span>
+      <% end %>
+    <% end %>
+
+    <!-- Sign out -->
+    <%= link_to destroy_user_session_path, data: { turbo_method: :delete },
+        class: "text-gray-400 hover:text-gray-600 transition-colors" do %>
+      <i class="lni lni-exit text-lg"></i>
+    <% end %>
+  </div>
+</header>

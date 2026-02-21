@@ -1,0 +1,16 @@
+<% content_for :title, "#{@department.name} 수정" %>
+
+<div class="max-w-2xl mx-auto py-8 px-4">
+  <div class="flex items-center gap-2 text-sm text-gray-400 mb-6">
+    <%= link_to "조직도", org_chart_path, class: "hover:text-primary" %>
+    <span>/</span>
+    <span><%= @company.name %></span>
+    <span>/</span>
+    <span><%= @department.name %> 수정</span>
+  </div>
+
+  <div class="bg-white rounded-xl border border-gray-200 p-6">
+    <h1 class="text-lg font-semibold text-gray-900 mb-6">부서 수정</h1>
+    <%= render "form", department: @department %>
+  </div>
+</div>

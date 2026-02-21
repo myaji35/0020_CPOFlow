@@ -1,0 +1,46 @@
+# Name of your application. Used to uniquely configure containers.
+service: cpoflow
+
+# Name of the container image.
+image: myaji35/cpoflow
+
+# Deploy to these servers.
+servers:
+  web:
+    - 158.247.235.31
+
+# Where you keep your container images.
+registry:
+  server: ghcr.io
+  username: myaji35
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+# Inject ENV variables into containers (secrets come from .kamal/secrets).
+env:
+  secret:
+    - RAILS_MASTER_KEY
+  clear:
+    SOLID_QUEUE_IN_PUMA: true
+
+# Aliases
+aliases:
+  console: app exec --interactive --reuse "bin/rails console"
+  shell: app exec --interactive --reuse "bash"
+  logs: app logs -f
+  dbc: app exec --interactive --reuse "bin/rails dbconsole --include-password"
+
+# Use a persistent storage volume for sqlite database files and local Active Storage files.
+volumes:
+  - "cpoflow_storage:/rails/storage"
+
+# Bridge fingerprinted assets between versions.
+asset_path: /rails/public/assets
+
+# Configure the image builder.
+builder:
+  arch: amd64
+
+# Use SSH as root
+ssh:
+  user: root

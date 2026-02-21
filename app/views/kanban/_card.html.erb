@@ -1,0 +1,91 @@
+<div class="bg-white rounded-lg border border-gray-200 p-3 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow"
+     data-order-id="<%= order.id %>">
+
+  <!-- Card Header: Priority + Due badge -->
+  <div class="flex items-center justify-between mb-2">
+    <%= priority_badge(order) %>
+    <% if order.due_date %>
+      <%= due_badge(order) %>
+    <% end %>
+  </div>
+
+  <!-- Title -->
+  <%= link_to order_path(order), class: "block" do %>
+    <h4 class="text-sm font-semibold text-gray-900 leading-snug hover:text-accent transition-colors mb-1">
+      <%= order.title %>
+    </h4>
+  <% end %>
+
+  <!-- 발주처 / 현장 -->
+  <div class="flex flex-wrap items-center gap-1.5 mb-2">
+    <% if order.client %>
+      <span class="text-xs bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded-full flex items-center gap-1">
+        <i class="lni lni-briefcase text-xs"></i>
+        <%= order.client.name %>
+      </span>
+    <% elsif order.customer_name.present? %>
+      <span class="text-xs text-gray-500 flex items-center gap-1">
+        <i class="lni lni-user text-xs"></i>
+        <%= order.customer_name %>
+      </span>
+    <% end %>
+    <% if order.project %>
+      <span class="text-xs bg-green-50 text-green-700 px-1.5 py-0.5 rounded-full flex items-center gap-1">
+        <i class="lni lni-construction text-xs"></i>
+        <%= order.project.name %>
+      </span>
+    <% end %>
+  </div>
+
+  <!-- Item name if present -->
+  <% if order.item_name.present? %>
+    <p class="text-xs text-gray-400 mb-2 flex items-center gap-1">
+      <i class="lni lni-package text-xs"></i>
+      <%= order.item_name %> <%= "× #{order.quantity}" if order.quantity %>
+    </p>
+  <% end %>
+
+  <!-- Tags -->
+  <% if order.tags_array.any? %>
+    <div class="flex flex-wrap gap-1 mb-2">
+      <% order.tags_array.first(3).each do |tag| %>
+        <span class="text-xs bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded"><%= tag %></span>
+      <% end %>
+    </div>
+  <% end %>
+
+  <!-- Task progress -->
+  <% prog = order.task_progress %>
+  <% if prog[:total] > 0 %>
+    <div class="mb-2">
+      <%= task_progress_bar(order) %>
+    </div>
+  <% end %>
+
+  <!-- Footer: Assignees + Meta -->
+  <div class="flex items-center justify-between pt-2 border-t border-gray-50">
+    <!-- Assignee avatars -->
+    <div class="flex -space-x-1">
+      <% order.assignees.first(3).each do |u| %>
+        <div class="w-5 h-5 rounded-full bg-primary text-white text-xs flex items-center justify-center border border-white font-medium"
+             title="<%= u.display_name %>">
+          <%= u.initials %>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Meta icons -->
+    <div class="flex items-center gap-2 text-xs text-gray-400">
+      <% if order.comments.any? %>
+        <span class="flex items-center gap-0.5">
+          <i class="lni lni-comments"></i>
+          <%= order.comments.count %>
+        </span>
+      <% end %>
+      <span class="flex items-center gap-0.5">
+        <i class="lni lni-calendar"></i>
+        <%= order.due_date&.strftime("%b %d") || "—" %>
+      </span>
+    </div>
+  </div>
+</div>

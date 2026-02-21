@@ -1,0 +1,46 @@
+# examples:
+#   periodic_cleanup:
+#     class: CleanSoftDeletedRecordsJob
+#     queue: background
+#     args: [ 1000, { batch_size: 500 } ]
+#     schedule: every hour
+#   periodic_cleanup_with_command:
+#     command: "SoftDeletedRecord.due.delete_all"
+#     priority: 2
+#     schedule: at 5am every day
+
+production:
+  clear_solid_queue_finished_jobs:
+    command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
+    schedule: every hour at minute 12
+
+  # Sync Gmail for all connected accounts every 15 minutes
+  gmail_sync_all:
+    class: EmailSyncJob
+    queue: default
+    schedule: every 15 minutes
+
+  # HR expiry notifications (visa/contract) at 08:00 daily
+  hr_expiry_notifications:
+    class: HrExpiryNotificationJob
+    queue: default
+    schedule: every day at 8am
+
+development:
+  # Sync Gmail every 5 minutes in development for faster testing
+  gmail_sync_all:
+    class: EmailSyncJob
+    queue: default
+    schedule: every 5 minutes
+
+  # Due date notifications at 07:00 daily
+  due_notifications:
+    class: DueNotificationJob
+    queue: default
+    schedule: every day at 7am
+
+  # HR expiry notifications (visa/contract) at 08:00 daily
+  hr_expiry_notifications:
+    class: HrExpiryNotificationJob
+    queue: default
+    schedule: every day at 8am

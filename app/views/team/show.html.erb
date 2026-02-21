@@ -1,0 +1,56 @@
+<% content_for :title, @member.name %>
+
+<div class="flex flex-col gap-6">
+  <%# Header %>
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <%= link_to team_index_path, class: "text-gray-400 hover:text-gray-600" do %>
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      <% end %>
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
+          <%= @member.name.first.upcase %>
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900"><%= @member.name %></h1>
+          <div class="flex items-center gap-2 mt-0.5">
+            <span class="text-xs px-2 py-0.5 rounded-full <%= @member.role == 'admin' ? 'bg-purple-100 text-purple-700' : @member.role == 'manager' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600' %>">
+              <%= { 'admin' => '관리자', 'manager' => '매니저', 'member' => '멤버' }[@member.role] %>
+            </span>
+            <span class="text-sm text-gray-500"><%= @member.email %></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%# 진행 중 주문 %>
+  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div class="px-5 py-4 border-b border-gray-100">
+      <h2 class="text-sm font-semibold text-gray-700">진행 중 주문 (<%= @active_orders.count %>건)</h2>
+    </div>
+    <% if @active_orders.any? %>
+      <div class="divide-y divide-gray-50">
+        <% @active_orders.each do |order| %>
+          <div class="flex items-center justify-between px-5 py-3 hover:bg-gray-50 transition-colors">
+            <div>
+              <p class="text-sm font-medium text-gray-900"><%= order.title %></p>
+              <p class="text-xs text-gray-500"><%= order.customer_name %></p>
+            </div>
+            <div class="flex items-center gap-3">
+              <% if order.due_date %>
+                <span class="text-xs text-gray-400"><%= order.due_date.strftime("%m/%d") %></span>
+              <% end %>
+              <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                <%= Order::STATUS_LABELS[order.status] %>
+              </span>
+              <%= link_to "보기", order_path(order), class: "text-xs text-primary hover:underline" %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="p-8 text-center text-sm text-gray-400">진행 중인 주문이 없습니다.</div>
+    <% end %>
+  </div>
+</div>

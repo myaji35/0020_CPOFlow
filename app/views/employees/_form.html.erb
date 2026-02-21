@@ -1,0 +1,109 @@
+<%= form_with model: employee, class: "flex flex-col gap-6" do |f| %>
+  <% if employee.errors.any? %>
+    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+      <% employee.errors.full_messages.each do |msg| %>
+        <p><%= msg %></p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+    <h3 class="text-sm font-semibold text-gray-700 mb-4">기본 정보</h3>
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <%= f.label :name, "이름 (한글)", class: "block text-xs font-medium text-gray-600 mb-1" %>
+        <%= f.text_field :name, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary", placeholder: "홍길동" %>
+      </div>
+      <div>
+        <%= f.label :name_en, "이름 (영문)", class: "block text-xs font-medium text-gray-600 mb-1" %>
+        <%= f.text_field :name_en, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary", placeholder: "Hong Gildong" %>
+      </div>
+      <div>
+        <%= f.label :nationality, "국적", class: "block text-xs font-medium text-gray-600 mb-1" %>
+        <%= f.select :nationality,
+            Employee::NATIONALITIES.map { |code, label| ["#{label} (#{code})", code] },
+            { include_blank: "선택" },
+            class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+      </div>
+      <div>
+        <%= f.label :date_of_birth, "생년월일", class: "block text-xs font-medium text-gray-600 mb-1" %>
+        <%= f.date_field :date_of_birth, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+      </div>
+      <div>
+        <%= f.label :passport_number, "여권번호", class: "block text-xs font-medium text-gray-600 mb-1" %>
+        <%= f.text_field :passport_number, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+      </div>
+      <div>
+        <%= f.label :employment_type, "고용형태", class: "block text-xs font-medium text-gray-600 mb-1" %>
+        <%= f.select :employment_type,
+            [["정규직", "regular"], ["계약직", "contract"], ["파견", "dispatch"]],
+            {},
+            class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+    <h3 class="text-sm font-semibold text-gray-700 mb-4">연락처 정보</h3>
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <%= f.label :phone, "전화번호", class: "block text-xs font-medium text-gray-600 mb-1" %>
+        <%= f.text_field :phone, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary", placeholder: "+971-50-0000000" %>
+      </div>
+      <div></div>
+      <div>
+        <%= f.label :emergency_contact, "비상 연락처 (이름)", class: "block text-xs font-medium text-gray-600 mb-1" %>
+        <%= f.text_field :emergency_contact, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+      </div>
+      <div>
+        <%= f.label :emergency_phone, "비상 연락전화", class: "block text-xs font-medium text-gray-600 mb-1" %>
+        <%= f.text_field :emergency_phone, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+    <h3 class="text-sm font-semibold text-gray-700 mb-4">직무 정보</h3>
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <%= f.label :department, "부서", class: "block text-xs font-medium text-gray-600 mb-1" %>
+        <%= f.text_field :department, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary", placeholder: "구매팀" %>
+      </div>
+      <div>
+        <%= f.label :job_title, "직급/직책", class: "block text-xs font-medium text-gray-600 mb-1" %>
+        <%= f.text_field :job_title, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary", placeholder: "선임 구매 담당" %>
+      </div>
+      <div>
+        <%= f.label :hire_date, "입사일", class: "block text-xs font-medium text-gray-600 mb-1" %>
+        <%= f.date_field :hire_date, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+      </div>
+      <div>
+        <%= f.label :termination_date, "퇴직일", class: "block text-xs font-medium text-gray-600 mb-1" %>
+        <%= f.date_field :termination_date, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+      </div>
+      <div>
+        <%= f.label :user_id, "시스템 계정 연결 (선택)", class: "block text-xs font-medium text-gray-600 mb-1" %>
+        <%= f.select :user_id,
+            User.order(:name).map { |u| [u.display_name, u.id] },
+            { include_blank: "계정 없음" },
+            class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+      </div>
+      <div class="flex items-end">
+        <label class="inline-flex items-center gap-2 cursor-pointer">
+          <%= f.check_box :active, class: "w-4 h-4 rounded border-gray-300 text-primary" %>
+          <span class="text-sm text-gray-700">재직중</span>
+        </label>
+      </div>
+    </div>
+    <div class="mt-4">
+      <%= f.label :notes, "메모", class: "block text-xs font-medium text-gray-600 mb-1" %>
+      <%= f.text_area :notes, rows: 3, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary resize-none" %>
+    </div>
+  </div>
+
+  <div class="flex justify-end gap-3">
+    <%= link_to "취소", employees_path, class: "px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50" %>
+    <%= f.submit employee.new_record? ? "직원 등록" : "변경 저장",
+        class: "px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-dark cursor-pointer" %>
+  </div>
+<% end %>

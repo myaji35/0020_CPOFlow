@@ -1,0 +1,11 @@
+품목코드,품목명,규격,단위,품목분류,브랜드,단가,통화,사용여부
+MT-001,SikaTop 107 Plus,20kg/bag,BAG,방수재,Sika,45.00,USD,Y
+MT-002,Sikadur 31 Normal,2L/kit,KIT,에폭시 접착제,Sika,28.50,USD,Y
+MT-003,SikaGrout 212,25kg/bag,BAG,그라우팅재,Sika,32.00,USD,Y
+MT-004,Sikaflex 11 FC+,600ml/sausage,EA,실란트,Sika,12.80,USD,Y
+MT-005,ViscoCrete 5-600,20L/pail,PL,콘크리트 혼화제,Sika,78.00,USD,Y
+MT-006,MonoTop 612N,25kg/bag,BAG,콘크리트 보수재,Sika,38.50,USD,Y
+MT-007,Sikaplan WP 1100-20,20m²/roll,ROLL,방수시트,Sika,185.00,USD,Y
+MT-008,Igolflex N,20kg/pail,PL,방수재 (지하),Sika,95.00,USD,Y
+MT-009,SikaTop Seal 107,25kg/bag,BAG,탄성 방수재,Sika,42.00,USD,Y
+MT-010,Sikadur 32 Normal,4kg/kit,KIT,에폭시 접착제,Sika,35.00,USD,N

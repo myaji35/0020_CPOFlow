@@ -1,0 +1,139 @@
+<% content_for :title, @project.name %>
+
+<div class="flex flex-col gap-6">
+  <!-- Header -->
+  <div class="flex items-start justify-between">
+    <div>
+      <div class="flex items-center gap-2 text-sm text-gray-400 mb-1">
+        <%= link_to "프로젝트", projects_path, class: "hover:text-primary" %>
+        <span>/</span>
+        <span><%= @project.name %></span>
+      </div>
+      <h1 class="text-2xl font-bold text-gray-900"><%= @project.name %></h1>
+      <div class="flex items-center gap-3 mt-2 text-sm text-gray-500">
+        <%= link_to @project.client.name, @project.client, class: "text-primary hover:underline" %>
+        <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full bg-blue-50 text-blue-700"><%= @project.site_category_label %></span>
+        <% status_class = { "active"=>"bg-green-50 text-green-700","planning"=>"bg-yellow-50 text-yellow-700","completed"=>"bg-gray-100 text-gray-600","suspended"=>"bg-red-50 text-red-700" }[@project.status] %>
+        <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full <%= status_class %>"><%= @project.status_label %></span>
+        <% if @project.location.present? %><span><%= @project.location %></span><% end %>
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <%= link_to edit_project_path(@project), class: "inline-flex items-center gap-1 border border-gray-200 text-gray-600 px-3 py-2 rounded-lg text-sm hover:bg-gray-50" do %>
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        수정
+      <% end %>
+    </div>
+  </div>
+
+  <!-- 예산 집행률 카드 -->
+  <% if @project.budget.present? && @project.budget > 0 %>
+    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+      <div class="flex justify-between mb-3">
+        <div>
+          <p class="text-xs text-gray-500">총 예산</p>
+          <p class="text-xl font-bold text-gray-900">$<%= number_with_delimiter(@project.budget.round.to_i) %></p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500">집행 금액</p>
+          <p class="text-xl font-bold text-primary">$<%= number_with_delimiter(@project.budget_utilized.round.to_i) %></p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500">잔여 금액</p>
+          <p class="text-xl font-bold text-gray-700">$<%= number_with_delimiter(@project.budget_remaining.round.to_i) %></p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500">집행률</p>
+          <p class="text-2xl font-bold text-gray-900"><%= @project.utilization_rate %>%</p>
+        </div>
+      </div>
+      <div class="bg-gray-100 rounded-full h-3">
+        <div class="bg-primary rounded-full h-3 transition-all" style="width: <%= [@project.utilization_rate, 100].min %>%"></div>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- 탭: 오더 + 투입 인력 -->
+  <% @employee_assignments = @project.employee_assignments.active.includes(:employee) %>
+  <div x-data="{ tab: 'orders' }" class="bg-white rounded-xl border border-gray-100 shadow-sm">
+    <div class="border-b border-gray-100 px-4">
+      <nav class="flex gap-6">
+        <button @click="tab='orders'" :class="tab==='orders' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'"
+            class="py-3 border-b-2 text-sm font-medium transition-colors">
+          관련 오더 (<%= @orders.count %>)
+        </button>
+        <button @click="tab='employees'" :class="tab==='employees' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'"
+            class="py-3 border-b-2 text-sm font-medium transition-colors">
+          투입 인력 (<%= @employee_assignments.count %>)
+        </button>
+      </nav>
+    </div>
+
+    <!-- 오더 탭 -->
+    <div x-show="tab==='orders'">
+      <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+        <h3 class="font-medium text-gray-900">관련 오더</h3>
+        <%= link_to new_order_path(project_id: @project.id), class: "inline-flex items-center gap-1 text-sm text-primary hover:underline" do %>
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          오더 추가
+        <% end %>
+      </div>
+      <div class="divide-y divide-gray-50">
+        <% @orders.each do |order| %>
+          <div class="flex items-center justify-between px-4 py-3 hover:bg-gray-50">
+            <div>
+              <span class="text-sm font-medium text-gray-900"><%= order.title %></span>
+              <% if order.due_date.present? %><span class="text-xs text-gray-400 ml-2">납기: <%= order.due_date.strftime("%Y-%m-%d") %></span><% end %>
+            </div>
+            <div class="flex items-center gap-3">
+              <% if order.estimated_value.present? %><span class="text-sm text-gray-700">$<%= number_with_delimiter(order.estimated_value.round.to_i) %></span><% end %>
+              <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600"><%= order.status %></span>
+              <%= link_to "상세", order, class: "text-xs text-primary hover:underline" %>
+            </div>
+          </div>
+        <% end %>
+        <% if @orders.empty? %>
+          <p class="text-center text-gray-400 text-sm py-8">관련 오더가 없습니다.</p>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- 투입 인력 탭 -->
+    <div x-show="tab==='employees'" class="p-4">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="font-medium text-gray-900">현재 투입 인력</h3>
+      </div>
+      <div class="space-y-3">
+        <% @employee_assignments.each do |asgn| %>
+          <div class="flex items-center justify-between p-3 border border-gray-100 rounded-lg hover:border-primary/30">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm shrink-0">
+                <%= asgn.employee.name.first.upcase %>
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-medium text-sm text-gray-900"><%= asgn.employee.name %></span>
+                  <% if asgn.employee.name_en.present? %>
+                    <span class="text-xs text-gray-400"><%= asgn.employee.name_en %></span>
+                  <% end %>
+                  <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full bg-blue-50 text-blue-700">
+                    <%= asgn.employee.nationality_label %>
+                  </span>
+                </div>
+                <p class="text-xs text-gray-400 mt-0.5">
+                  <%= asgn.role.presence || "역할 미지정" %> |
+                  <%= asgn.start_date.strftime("%Y.%m.%d") %> ~
+                  <%= asgn.end_date&.strftime("%Y.%m.%d") || "현재" %>
+                </p>
+              </div>
+            </div>
+            <%= link_to "상세", asgn.employee, class: "text-xs text-primary hover:underline" %>
+          </div>
+        <% end %>
+        <% if @employee_assignments.empty? %>
+          <p class="text-center text-gray-400 text-sm py-8">배정된 인력이 없습니다.</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

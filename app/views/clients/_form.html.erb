@@ -1,0 +1,93 @@
+<%= form_with model: @client, local: true, class: "space-y-6" do |f| %>
+  <% if @client.errors.any? %>
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+      <ul class="text-sm text-red-700 space-y-1">
+        <% @client.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <%= f.label :name, "회사명 *", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.text_field :name, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary", placeholder: "예: ENEC" %>
+    </div>
+    <div>
+      <%= f.label :code, "코드 *", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.text_field :code, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary", placeholder: "예: CL-001" %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <%= f.label :country, "국가 *", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.text_field :country, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary", placeholder: "예: AE, KR, US" %>
+    </div>
+    <div>
+      <%= f.label :industry, "산업군", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.select :industry,
+          options_for_select([["선택하세요", ""]] + Client::INDUSTRIES.map { |i| [{ "nuclear"=>"원전","hydro"=>"수력","tunnel"=>"터널","gtx"=>"GTX","construction"=>"건설","general"=>"일반" }[i] || i, i] }, @client.industry),
+          {}, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-3 gap-4">
+    <div>
+      <%= f.label :credit_grade, "신용등급", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.select :credit_grade,
+          options_for_select([["선택하세요", ""]] + Client::CREDIT_GRADES.map { |g| [g + "등급", g] }, @client.credit_grade),
+          {}, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
+    </div>
+    <div>
+      <%= f.label :payment_terms, "결제조건", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.select :payment_terms,
+          options_for_select([["선택하세요", ""]] + Client::PAYMENT_TERMS, @client.payment_terms),
+          {}, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
+    </div>
+    <div>
+      <%= f.label :currency, "통화", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.select :currency,
+          options_for_select(["USD", "KRW", "EUR", "AED", "CHF"].map { |c| [c, c] }, @client.currency || "USD"),
+          {}, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <%= f.label :address, "주소", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.text_field :address, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
+    </div>
+    <div>
+      <%= f.label :website, "웹사이트", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.url_field :website, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary", placeholder: "https://" %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <%= f.label :contract_start_date, "계약 시작일", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.date_field :contract_start_date, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
+    </div>
+    <div>
+      <%= f.label :ecount_code, "eCount 코드", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.text_field :ecount_code, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
+    </div>
+  </div>
+
+  <div>
+    <%= f.label :notes, "비고", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= f.text_area :notes, rows: 3, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
+  </div>
+
+  <div class="flex items-center gap-2">
+    <%= f.check_box :active, class: "rounded border-gray-300 text-primary focus:ring-primary" %>
+    <%= f.label :active, "활성", class: "text-sm font-medium text-gray-700" %>
+  </div>
+
+  <div class="flex gap-3 pt-2">
+    <%= f.submit @client.new_record? ? "등록" : "수정", class: "bg-primary text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors cursor-pointer" %>
+    <%= link_to "취소", @client.new_record? ? clients_path : @client, class: "border border-gray-200 text-gray-600 px-6 py-2 rounded-lg text-sm font-medium hover:bg-gray-50" %>
+  </div>
+<% end %>

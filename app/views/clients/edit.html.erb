@@ -1,0 +1,18 @@
+<% content_for :title, "발주처 수정 - #{@client.name}" %>
+
+<div class="max-w-2xl">
+  <div class="mb-6">
+    <div class="flex items-center gap-2 text-sm text-gray-400 mb-1">
+      <%= link_to "발주처 관리", clients_path, class: "hover:text-primary" %>
+      <span>/</span>
+      <%= link_to @client.name, @client, class: "hover:text-primary" %>
+      <span>/</span>
+      <span>수정</span>
+    </div>
+    <h1 class="text-2xl font-bold text-gray-900">발주처 수정</h1>
+  </div>
+
+  <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+    <%= render "form" %>
+  </div>
+</div>

@@ -1,0 +1,9 @@
+거래처코드,거래처명,국가,이메일,연락처,비고,사용여부
+SP-001,Sika AG,CH,info@sika.com,+41-58-436-4040,스위스 본사,Y
+SP-002,Sika Gulf,AE,gulf@sika.com,+971-4-815-9400,아부다비/두바이,Y
+SP-003,Sika Korea,KR,korea@sika.com,+82-2-508-2100,한국 법인,Y
+SP-004,Gulf Construction Materials,AE,sales@gcm.ae,+971-2-123-4567,,Y
+SP-005,Korea Construction Supply,KR,supply@kcs.co.kr,+82-2-345-6789,,Y
+SP-006,ENEC Procurement,AE,proc@enec.gov.ae,+971-2-697-0000,UAE 원자력공사,Y
+SP-007,KEPCO E&C,KR,ec@kepco.co.kr,+82-2-2105-8000,한국전력기술,Y
+SP-008,Seoul Metro,KR,supply@seoulmetro.or.kr,+82-2-6311-2000,서울지하철 GTX 발주처,Y

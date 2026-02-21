@@ -1,0 +1,37 @@
+<%= form_with model: [@employee, certification], class: "flex flex-col gap-4" do |f| %>
+  <% if certification.errors.any? %>
+    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+      <% certification.errors.full_messages.each do |msg| %><p><%= msg %></p><% end %>
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div class="col-span-2">
+      <%= f.label :name, "자격증명 *", class: "block text-xs font-medium text-gray-600 mb-1" %>
+      <%= f.text_field :name, required: true, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary", placeholder: "산업안전산업기사" %>
+    </div>
+    <div>
+      <%= f.label :issuing_body, "발급 기관", class: "block text-xs font-medium text-gray-600 mb-1" %>
+      <%= f.text_field :issuing_body, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+    </div>
+    <div></div>
+    <div>
+      <%= f.label :issued_date, "취득일", class: "block text-xs font-medium text-gray-600 mb-1" %>
+      <%= f.date_field :issued_date, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+    </div>
+    <div>
+      <%= f.label :expiry_date, "만료일", class: "block text-xs font-medium text-gray-600 mb-1" %>
+      <%= f.date_field :expiry_date, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+    </div>
+    <div class="col-span-2">
+      <%= f.label :notes, "메모", class: "block text-xs font-medium text-gray-600 mb-1" %>
+      <%= f.text_area :notes, rows: 2, class: "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary resize-none" %>
+    </div>
+  </div>
+
+  <div class="flex justify-end gap-3">
+    <%= link_to "취소", @employee, class: "px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50" %>
+    <%= f.submit certification.new_record? ? "자격증 등록" : "저장",
+        class: "px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-dark cursor-pointer" %>
+  </div>
+<% end %>

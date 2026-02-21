@@ -1,0 +1,92 @@
+<% content_for :title, "발주처 관리" %>
+
+<div class="flex flex-col gap-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">발주처 관리</h1>
+      <p class="text-sm text-gray-500 mt-1">발주처별 거래 현황 및 담당자 관리</p>
+    </div>
+    <%= link_to new_client_path, class: "inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors" do %>
+      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      새 발주처 등록
+    <% end %>
+  </div>
+
+  <!-- 검색/필터 -->
+  <%= form_with url: clients_path, method: :get, local: true, class: "flex gap-3 items-center" do |f| %>
+    <div class="relative flex-1 max-w-xs">
+      <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <%= f.text_field :q, placeholder: "회사명, 코드 검색...", value: params[:q],
+          class: "w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
+    </div>
+    <%= f.select :country, options_for_select([["전체 국가", ""], ["AE", "AE"], ["KR", "KR"], ["CH", "CH"], ["US", "US"]], params[:country]),
+        {}, class: "border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
+    <%= f.select :industry, options_for_select([["전체 산업", ""]] + Client::INDUSTRIES.map { |i| [{ "nuclear"=>"원전","hydro"=>"수력","tunnel"=>"터널","gtx"=>"GTX","construction"=>"건설","general"=>"일반" }[i] || i, i] }, params[:industry]),
+        {}, class: "border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
+    <%= f.submit "검색", class: "bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 cursor-pointer" %>
+  <% end %>
+
+  <!-- 통계 카드 -->
+  <div class="grid grid-cols-3 gap-4">
+    <div class="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+      <p class="text-xs text-gray-500 font-medium">총 발주처</p>
+      <p class="text-2xl font-bold text-gray-900 mt-1"><%= @clients.count %></p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+      <p class="text-xs text-gray-500 font-medium">총 거래금액</p>
+      <p class="text-2xl font-bold text-primary mt-1">$<%= number_with_delimiter(@total_value.round.to_i) %></p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+      <p class="text-xs text-gray-500 font-medium">활성 오더</p>
+      <p class="text-2xl font-bold text-gray-900 mt-1"><%= @clients.sum(&:active_orders_count) %></p>
+    </div>
+  </div>
+
+  <!-- 테이블 -->
+  <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+    <table class="w-full">
+      <thead class="bg-gray-50 border-b border-gray-100">
+        <tr>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">회사명</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">국가</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">산업</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">등급</th>
+          <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">오더</th>
+          <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">거래금액</th>
+          <th class="px-4 py-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        <% @clients.each do |client| %>
+          <tr class="hover:bg-gray-50 transition-colors">
+            <td class="px-4 py-3">
+              <div class="font-medium text-gray-900"><%= client.name %></div>
+              <div class="text-xs text-gray-400"><%= client.code %></div>
+            </td>
+            <td class="px-4 py-3 text-sm text-gray-600"><%= client.country %></td>
+            <td class="px-4 py-3">
+              <% if client.industry.present? %>
+                <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full bg-blue-50 text-blue-700"><%= client.industry_label %></span>
+              <% end %>
+            </td>
+            <td class="px-4 py-3">
+              <% if client.credit_grade.present? %>
+                <% grade_class = { "A" => "bg-green-50 text-green-700", "B" => "bg-blue-50 text-blue-700", "C" => "bg-yellow-50 text-yellow-700", "D" => "bg-red-50 text-red-700" }[client.credit_grade] || "bg-gray-50 text-gray-700" %>
+                <span class="inline-flex px-2 py-0.5 text-xs font-bold rounded-full <%= grade_class %>"><%= client.credit_grade %>등급</span>
+              <% end %>
+            </td>
+            <td class="px-4 py-3 text-right text-sm text-gray-700"><%= client.orders.count %></td>
+            <td class="px-4 py-3 text-right text-sm font-medium text-gray-900">$<%= number_with_delimiter(client.total_order_value.round.to_i) %></td>
+            <td class="px-4 py-3 text-right">
+              <%= link_to "상세", client, class: "text-xs text-primary hover:underline" %>
+            </td>
+          </tr>
+        <% end %>
+        <% if @clients.empty? %>
+          <tr><td colspan="7" class="px-4 py-12 text-center text-gray-400 text-sm">등록된 발주처가 없습니다.</td></tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
