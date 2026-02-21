@@ -95,6 +95,7 @@ Rails.application.routes.draw do
     resources :email_accounts, only: %i[index new create destroy]
     patch "profile", to: "profile#update"
     patch "locale", to: "profile#update_locale", as: :update_locale
+    patch "theme",  to: "profile#update_theme",  as: :update_theme
     get  "menu_permissions",    to: "menu_permissions#index",     as: :menu_permissions
     patch "menu_permissions",   to: "menu_permissions#update_all", as: :update_menu_permissions
   end

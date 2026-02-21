@@ -17,10 +17,18 @@ module Settings
       redirect_back fallback_location: root_path
     end
 
+    def update_theme
+      theme = params[:theme]
+      if User::THEMES.include?(theme)
+        current_user.update!(theme: theme)
+      end
+      redirect_back fallback_location: root_path
+    end
+
     private
 
     def profile_params
-      params.require(:user).permit(:name, :locale, :branch)
+      params.require(:user).permit(:name, :locale, :branch, :theme)
     end
   end
 end

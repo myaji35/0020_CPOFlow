@@ -1,15 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= user_signed_in? ? current_user.preferred_locale : 'en' %>"
+      data-theme="<%= user_signed_in? ? current_user.preferred_theme : 'light' %>">
   <head>
     <title><%= content_for(:title) || "CPOFlow" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
-    <!-- TailwindCSS CDN -->
+    <!-- TailwindCSS CDN (dark mode via class strategy) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
+        darkMode: 'class',
         theme: {
           extend: {
             colors: {
@@ -22,6 +24,19 @@
           }
         }
       }
+    </script>
+    <!-- Dark mode initializer (prevent flash) -->
+    <script>
+      (function() {
+        var theme = document.documentElement.getAttribute('data-theme');
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else if (theme === 'system') {
+          if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+          }
+        }
+      })();
     </script>
 
     <!-- Alpine.js CDN -->
@@ -36,7 +51,7 @@
     <%= yield :head %>
   </head>
 
-  <body class="bg-gray-50 text-gray-900 antialiased">
+  <body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 antialiased transition-colors duration-200">
     <% if user_signed_in? %>
       <div class="flex h-screen overflow-hidden">
         <!-- Sidebar Navigation -->
@@ -62,7 +77,7 @@
           <% end %>
 
           <!-- Page Content -->
-          <main class="flex-1 overflow-y-auto p-6">
+          <main class="flex-1 overflow-y-auto p-6 bg-gray-50 dark:bg-gray-950">
             <%= yield %>
           </main>
         </div>

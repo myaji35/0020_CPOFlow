@@ -19,6 +19,7 @@ class User < ApplicationRecord
   enum :branch, { abu_dhabi: "abu_dhabi", seoul: "seoul" }, default: :abu_dhabi
 
   LOCALES = %w[en ko ar].freeze
+  THEMES  = %w[light dark system].freeze
 
   belongs_to :company, optional: true
 
@@ -32,6 +33,7 @@ class User < ApplicationRecord
 
   validates :name, presence: true
   validates :locale, inclusion: { in: LOCALES }, allow_blank: true
+  validates :theme,  inclusion: { in: THEMES },  allow_blank: true
 
   def display_name
     name.presence || email.split("@").first
@@ -47,5 +49,13 @@ class User < ApplicationRecord
 
   def preferred_locale
     locale.presence || "en"
+  end
+
+  def preferred_theme
+    theme.presence || "light"
+  end
+
+  def dark_mode?
+    preferred_theme == "dark"
   end
 end
