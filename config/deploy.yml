@@ -51,9 +51,10 @@ proxy:
   ssl: false
   forward_headers: true
   response_timeout: 60
+  deploy_timeout: 120
   healthcheck:
-    interval: 3
-    timeout: 60
+    interval: 5
+    timeout: 120
 
 # Use SSH as root
 ssh:
