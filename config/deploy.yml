@@ -51,7 +51,6 @@ proxy:
   ssl: false
   forward_headers: true
   response_timeout: 60
-  deploy_timeout: 120
   healthcheck:
     interval: 5
     timeout: 120
