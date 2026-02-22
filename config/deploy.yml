@@ -55,6 +55,9 @@ proxy:
     interval: 5
     timeout: 120
 
+# Deploy timeout (seconds) - Rails+SolidQueue boot can take ~15s
+deploy_timeout: 120
+
 # Use SSH as root
 ssh:
   user: root
