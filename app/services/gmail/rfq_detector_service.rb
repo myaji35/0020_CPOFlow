@@ -51,9 +51,33 @@ module Gmail
     end
 
     def detect
+      keyword_result = keyword_detect
+      llm_result     = LlmRfqAnalyzerService.new(@email).analyze
+
+      # Hybrid 점수: 키워드 40% + LLM 60%
+      hybrid_score = (keyword_result[:score] * 0.4 + llm_result[:score] * 0.6).round
+
+      {
+        is_rfq:           hybrid_score >= 30 || llm_result[:is_rfq],
+        score:            hybrid_score,
+        confidence:       llm_result[:confidence],
+        reason:           llm_result[:reason],
+        subject_matches:  keyword_result[:subject_matches],
+        body_matches:     keyword_result[:body_matches],
+        due_date:         llm_result[:due_date] || keyword_result[:due_date],
+        customer_name:    llm_result[:customer_name] || keyword_result[:customer_name],
+        item_hints:       llm_result[:items]&.join(", ") || keyword_result[:item_hints],
+        quantities:       llm_result[:quantities],
+        project_name:     llm_result[:project_name],
+        urgency:          llm_result[:urgency],
+        llm_raw:          llm_result[:raw]
+      }
+    end
+
+    def keyword_detect
       subject_score = score_subject
       body_score    = score_body
-      total_score   = [subject_score * 2 + body_score, 100].min
+      total_score   = [ subject_score * 2 + body_score, 100 ].min
 
       {
         is_rfq:           total_score >= 30,
@@ -72,13 +96,13 @@ module Gmail
     def score_subject
       return 0 if @subject.blank?
       matched = SUBJECT_KEYWORDS.count { |kw| @subject.include?(kw.downcase) }
-      [matched * 25, 50].min
+      [ matched * 25, 50 ].min
     end
 
     def score_body
       return 0 if @body.blank?
       matched = BODY_KEYWORDS.count { |kw| @body.include?(kw.downcase) }
-      [matched * 5, 50].min
+      [ matched * 5, 50 ].min
     end
 
     def matched_subject_keywords

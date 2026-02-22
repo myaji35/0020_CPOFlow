@@ -2,10 +2,14 @@ class OrdersController < ApplicationController
   before_action :set_order, only: %i[show edit update destroy move_status]
 
   def index
-    @orders = Order.all.includes(:assignees, :tasks, :user).by_due_date
+    @orders = Order.all.includes(:assignees, :tasks, :user, :client, :project).by_due_date
     @orders = @orders.where(status: params[:status]) if params[:status].present?
     @orders = @orders.where("title LIKE ? OR customer_name LIKE ?",
                             "%#{params[:q]}%", "%#{params[:q]}%") if params[:q].present?
+    @total_count = @orders.count
+    @orders = @orders.limit(50).offset((params[:page].to_i > 0 ? params[:page].to_i - 1 : 0) * 50)
+    @current_page = [ params[:page].to_i, 1 ].max
+    @total_pages = (@total_count / 50.0).ceil
   end
 
   def show

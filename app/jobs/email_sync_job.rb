@@ -14,7 +14,7 @@ class EmailSyncJob < ApplicationJob
   discard_on ActiveRecord::RecordNotFound
 
   def perform(account_id: nil)
-    accounts = account_id ? [EmailAccount.find(account_id)] : connected_accounts
+    accounts = account_id ? [ EmailAccount.find(account_id) ] : connected_accounts
 
     accounts.each do |account|
       sync_account(account)
@@ -53,7 +53,20 @@ class EmailSyncJob < ApplicationJob
       next unless detection[:is_rfq]
 
       order = Gmail::EmailToOrderService.new(account, parsed, detection).create_order!
-      new_rfq_count += 1 if order
+
+      if order
+        # 첨부파일 및 링크 추출
+        Gmail::EmailAttachmentExtractorService.new(svc, msg, order).extract_and_attach!
+
+        # LLM 분석 결과 저장
+        order.update_columns(
+          rfq_confidence:  detection[:confidence],
+          rfq_score:       detection[:score],
+          llm_analysis:    detection[:llm_raw].to_json,
+          llm_analyzed_at: Time.current
+        )
+        new_rfq_count += 1
+      end
     end
 
     account.mark_synced!

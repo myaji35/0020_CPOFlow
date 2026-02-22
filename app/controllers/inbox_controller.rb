@@ -1,17 +1,34 @@
 class InboxController < ApplicationController
   def index
-    # All orders that came from emails, sorted newest first
-    @all_orders  = Order.where.not(original_email_from: [nil, ""])
-                        .order(created_at: :desc)
-                        .includes(:user, :assignees)
-                        .limit(100)
+    base_scope = Order.where.not(original_email_from: [ nil, "" ])
+                      .includes(:user, :assignees, :client, :supplier, :project)
 
-    # Subset: only inbox-stage orders that have an email source (for body pane)
-    @rfq_orders  = Order.where(status: :inbox)
-                        .where.not(original_email_from: [nil, ""])
-                        .by_due_date
-                        .includes(:user, :assignees)
-                        .limit(50)
+    # Filter support: all (default), rfq (inbox only), converted (non-inbox)
+    @current_filter = params[:filter].presence || "all"
+    case @current_filter
+    when "rfq"
+      base_scope = base_scope.where(status: :inbox)
+    when "converted"
+      base_scope = base_scope.where.not(status: :inbox)
+    end
+
+    # Search support
+    @search_query = params[:q].to_s.strip
+    if @search_query.present?
+      search_term = "%#{@search_query}%"
+      base_scope = base_scope.where(
+        "original_email_subject LIKE :q OR original_email_from LIKE :q OR customer_name LIKE :q OR title LIKE :q",
+        q: search_term
+      )
+    end
+
+    @all_orders = base_scope.order(created_at: :desc).limit(100)
+
+    # Counts for sidebar badges (unfiltered, unsearched)
+    email_scope = Order.where.not(original_email_from: [ nil, "" ])
+    @count_all       = email_scope.count
+    @count_rfq       = email_scope.where(status: :inbox).count
+    @count_converted = email_scope.where.not(status: :inbox).count
   end
 
   def show

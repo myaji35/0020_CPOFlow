@@ -20,7 +20,7 @@ module Gmail
       order = Order.new(
         title:                  build_title,
         customer_name:          @detection[:customer_name].presence || "Unknown",
-        description:            @email[:snippet],
+        description:            build_description,
         status:                 :inbox,
         priority:               infer_priority,
         due_date:               @detection[:due_date],
@@ -29,6 +29,10 @@ module Gmail
         original_email_body:    @email[:body].to_s.truncate(10_000),
         original_email_from:    @email[:from],
         item_name:              @detection[:item_hints],
+        rfq_confidence:         @detection[:confidence],
+        rfq_score:              @detection[:score],
+        llm_analysis:           @detection[:llm_raw].to_json,
+        llm_analyzed_at:        Time.current,
         tags:                   build_tags,
         user:                   @account.user
       )
@@ -57,6 +61,13 @@ module Gmail
       "RFQ from #{@detection[:customer_name]}"
     end
 
+    def build_description
+      parts = [ @email[:snippet] ]
+      parts << "프로젝트: #{@detection[:project_name]}" if @detection[:project_name].present?
+      parts << "수량: #{@detection[:quantities].join(", ")}" if @detection[:quantities]&.any?
+      parts.compact.join("\n")
+    end
+
     def infer_priority
       due = @detection[:due_date]
       return :medium unless due
@@ -70,7 +81,7 @@ module Gmail
     end
 
     def build_tags
-      tags = ["rfq", "auto-import"]
+      tags = [ "rfq", "auto-import" ]
       tags << "sika" if @detection[:item_hints].present?
       tags << "urgent" if @detection[:score] >= 70
       tags.join(",")
