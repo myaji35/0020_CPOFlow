@@ -1,6 +1,6 @@
 <% content_for :page_title, "주문 목록" %>
 
-<div class="flex flex-col gap-6">
+<div class="flex flex-col gap-6" data-controller="bulk-select">
   <%# Header %>
   <div class="flex items-center justify-between">
     <div>
@@ -28,6 +28,7 @@
           class: "text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" %>
       <%= f.submit "검색", class: "px-4 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer" %>
     <% end %>
+    <span class="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap"><%= @total_count %>건</span>
   </div>
 
   <%# 주문 목록 %>
@@ -36,8 +37,15 @@
       <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
         <thead class="bg-gray-50 dark:bg-gray-700/50">
           <tr>
+            <th class="px-4 py-3 w-10">
+              <input type="checkbox"
+                     data-bulk-select-target="selectAll"
+                     data-action="change->bulk-select#toggleAll"
+                     class="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary/30 cursor-pointer">
+            </th>
             <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">주문명</th>
-            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">고객사</th>
+            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">발주처</th>
+            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">현장</th>
             <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">상태</th>
             <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">우선순위</th>
             <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">마감일</th>
@@ -47,16 +55,35 @@
         </thead>
         <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
           <% @orders.each do |order| %>
-            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors" data-bulk-select-target="row">
+              <td class="px-4 py-3">
+                <input type="checkbox"
+                       value="<%= order.id %>"
+                       data-bulk-select-target="checkbox"
+                       data-action="change->bulk-select#updateCount"
+                       class="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary/30 cursor-pointer">
+              </td>
               <td class="px-5 py-3">
                 <div>
-                  <p class="text-sm font-medium text-gray-900 dark:text-white truncate max-w-xs"><%= order.title %></p>
+                  <div class="flex items-center gap-2">
+                    <p class="text-sm font-medium text-gray-900 dark:text-white truncate max-w-xs"><%= order.title %></p>
+                    <%= risk_dot(order) %>
+                  </div>
                   <% if order.item_name.present? %>
                     <p class="text-xs text-gray-400 dark:text-gray-500"><%= order.item_name %></p>
                   <% end %>
                 </div>
               </td>
-              <td class="px-5 py-3 text-sm text-gray-600 dark:text-gray-400"><%= order.customer_name %></td>
+              <td class="px-5 py-3 text-sm text-gray-600 dark:text-gray-400">
+                <% if order.client %>
+                  <%= link_to order.client.name, client_path(order.client), class: "hover:text-primary hover:underline" %>
+                <% else %>
+                  <%= order.customer_name || "-" %>
+                <% end %>
+              </td>
+              <td class="px-5 py-3 text-sm text-gray-500 dark:text-gray-400 hidden md:table-cell">
+                <%= order.project&.name&.truncate(20) || "-" %>
+              </td>
               <td class="px-5 py-3">
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                   <%= case order.status
@@ -86,8 +113,15 @@
                   <span class="text-xs text-gray-400 dark:text-gray-500">보통</span>
                 <% end %>
               </td>
-              <td class="px-5 py-3 text-sm text-gray-600 dark:text-gray-400">
-                <%= order.due_date&.strftime("%m/%d") || "-" %>
+              <td class="px-5 py-3 text-sm">
+                <% if order.due_date %>
+                  <% days_left = (order.due_date - Date.today).to_i %>
+                  <span class="<%= days_left < 0 ? 'text-red-600 dark:text-red-400 font-semibold' : days_left <= 7 ? 'text-red-500 dark:text-red-400' : days_left <= 14 ? 'text-orange-500 dark:text-orange-400' : 'text-gray-600 dark:text-gray-400' %>">
+                    <%= order.due_date.strftime("%m/%d") %>
+                  </span>
+                <% else %>
+                  <span class="text-gray-400">-</span>
+                <% end %>
               </td>
               <td class="px-5 py-3">
                 <div class="flex -space-x-1">
@@ -116,4 +150,63 @@
       </div>
     <% end %>
   </div>
+
+  <%# 일괄 처리 액션 바 (하단 고정) %>
+  <div data-bulk-select-target="actionBar"
+       class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-30 bg-gray-900 dark:bg-gray-700 text-white rounded-2xl shadow-2xl px-5 py-3 flex items-center gap-4 min-w-72">
+    <span class="text-sm font-medium">
+      <span data-bulk-select-target="count">0</span>건 선택됨
+    </span>
+    <div class="h-4 w-px bg-white/20"></div>
+    <%# 상태 변경 %>
+    <select data-bulk-select-target="statusSelect"
+            class="text-xs bg-white/10 border border-white/20 rounded-lg px-2 py-1 text-white focus:outline-none focus:ring-1 focus:ring-white/40">
+      <option value="">상태 변경...</option>
+      <% Order::STATUS_LABELS.each do |status, label| %>
+        <option value="<%= status %>"><%= label %></option>
+      <% end %>
+    </select>
+    <button data-action="click->bulk-select#bulkAction"
+            data-url="<%= orders_bulk_path %>"
+            class="text-xs bg-accent hover:bg-accent/80 px-3 py-1.5 rounded-lg transition-colors font-medium">
+      적용
+    </button>
+    <div class="h-4 w-px bg-white/20"></div>
+    <%# CSV 내보내기 %>
+    <button data-action="click->bulk-select#exportCsv"
+            data-url="<%= export_csv_orders_bulk_path %>"
+            class="text-xs text-white/70 hover:text-white flex items-center gap-1.5 transition-colors">
+      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      CSV
+    </button>
+    <button data-action="click->bulk-select#clearAll"
+            class="ml-1 text-white/50 hover:text-white/80 transition-colors text-xs">
+      취소
+    </button>
+  </div>
+
+  <%# 페이지네이션 %>
+  <% if @total_pages > 1 %>
+    <div class="flex items-center justify-between px-2">
+      <p class="text-xs text-gray-400 dark:text-gray-500">
+        총 <%= @total_count %>건 중 <%= [(@current_page - 1) * 50 + 1, @total_count].min %>–<%= [@current_page * 50, @total_count].min %>건
+      </p>
+      <div class="flex items-center gap-1">
+        <% if @current_page > 1 %>
+          <%= link_to orders_path(q: params[:q], status: params[:status], page: @current_page - 1),
+              class: "px-3 py-1.5 text-xs text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700" do %>이전<% end %>
+        <% end %>
+        <% ([1, @current_page - 1].max..[@total_pages, @current_page + 1].min).each do |pg| %>
+          <%= link_to orders_path(q: params[:q], status: params[:status], page: pg),
+              class: "px-3 py-1.5 text-xs rounded-lg #{pg == @current_page ? 'bg-primary text-white' : 'text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'}" do %>
+            <%= pg %>
+          <% end %>
+        <% end %>
+        <% if @current_page < @total_pages %>
+          <%= link_to orders_path(q: params[:q], status: params[:status], page: @current_page + 1),
+              class: "px-3 py-1.5 text-xs text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700" do %>다음<% end %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
 </div>

@@ -33,6 +33,7 @@
     <% if current_user.manager? || current_user.admin? %>
       <!-- Admin 섹션 구분선 -->
       <div class="my-2 mx-3 border-t border-white/20"></div>
+      <%= nav_link_to reports_path, icon: "lni lni-bar-chart", label: "경영 리포트" %>
       <%= nav_link_to admin_imports_path, icon: "lni lni-upload", label: "eCount Import" %>
     <% end %>
     <% if current_user.admin? %>

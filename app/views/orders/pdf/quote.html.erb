@@ -1,0 +1,76 @@
+<div class="header-row">
+  <div>
+    <h1>견적서 (QUOTATION)</h1>
+    <p style="color:#6b7280;font-size:10pt;margin-top:4px">No. QT-<%= @order.id %>-<%= Date.today.strftime("%Y%m%d") %></p>
+  </div>
+  <div class="company-info">
+    <strong>AtoZ2010 Inc.</strong><br>
+    Abu Dhabi, UAE<br>
+    www.atoz2010.com
+  </div>
+</div>
+
+<h2>발주처 정보</h2>
+<div class="info-grid">
+  <div class="info-item">
+    <span class="info-label">발주처</span>
+    <span class="info-value"><%= @order.client&.name || @order.customer_name %></span>
+  </div>
+  <div class="info-item">
+    <span class="info-label">견적 유효일</span>
+    <span class="info-value"><%= (Date.today + 30.days).strftime("%Y-%m-%d") %></span>
+  </div>
+  <div class="info-item">
+    <span class="info-label">현장</span>
+    <span class="info-value"><%= @order.project&.name || "-" %></span>
+  </div>
+  <div class="info-item">
+    <span class="info-label">납기 요청일</span>
+    <span class="info-value"><%= @order.due_date&.strftime("%Y-%m-%d") || "-" %></span>
+  </div>
+</div>
+
+<h2>견적 품목</h2>
+<table>
+  <thead>
+    <tr>
+      <th width="40%">품목명</th>
+      <th width="15%">수량</th>
+      <th width="20%">단가 (USD)</th>
+      <th width="25%">금액 (USD)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><%= @order.item_name.presence || @order.title %></td>
+      <td><%= number_with_delimiter(@order.quantity) || 1 %></td>
+      <td>
+        <% if @order.estimated_value.present? && @order.quantity.to_i > 0 %>
+          <%= number_with_delimiter((@order.estimated_value / @order.quantity).round(2)) %>
+        <% else %>
+          -
+        <% end %>
+      </td>
+      <td><%= number_with_delimiter(@order.estimated_value) || "-" %></td>
+    </tr>
+    <tr class="total-row">
+      <td colspan="3" style="text-align:right">합계 (VAT 별도)</td>
+      <td>USD <%= number_with_delimiter(@order.estimated_value&.round(2)) || "-" %></td>
+    </tr>
+  </tbody>
+</table>
+
+<% if @order.description.present? %>
+  <h2>비고</h2>
+  <p style="font-size:10pt;color:#374151;line-height:1.6"><%= @order.description %></p>
+<% end %>
+
+<h2>결제 조건</h2>
+<p style="font-size:10pt;color:#374151">
+  <% if @order.supplier %>
+    결제 조건: <%= @order.supplier.payment_terms || "NET 30" %> ·
+    통화: <%= @order.currency || "USD" %>
+  <% else %>
+    결제 조건: T/T 30일 · 통화: USD
+  <% end %>
+</p>

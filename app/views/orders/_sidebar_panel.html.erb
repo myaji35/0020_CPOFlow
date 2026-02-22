@@ -2,6 +2,39 @@
     주문 상세 우측 사이드바 (Full page mode 전용)
 ============================================================ %>
 
+<%# ── 납기 위험도 배지 ──────────────────────────────── %>
+<% risk_level = order.risk_level.presence || "none" %>
+<% unless risk_level == "none" %>
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+    <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">납기 위험도</h4>
+    <div class="flex items-center justify-between">
+      <%= risk_badge(order) %>
+      <% if order.risk_score %>
+        <span class="text-xs text-gray-400 dark:text-gray-500">점수: <%= order.risk_score %></span>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<%# ── PDF 문서 생성 ─────────────────────────────────── %>
+<% if can_update?("orders") %>
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+    <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">문서 출력</h4>
+    <div class="space-y-2">
+      <%= link_to pdf_quote_order_path(order), target: "_blank",
+          class: "flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors" do %>
+        <svg class="w-4 h-4 text-gray-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        견적서 PDF
+      <% end %>
+      <%= link_to pdf_purchase_order_order_path(order), target: "_blank",
+          class: "flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors" do %>
+        <svg class="w-4 h-4 text-gray-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="9" y2="17"/><line x1="12" y1="13" x2="12" y2="17"/><line x1="15" y1="13" x2="15" y2="17"/></svg>
+        발주서 PDF
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
 <%# ── 메타 요약 카드 ─────────────────────────────────── %>
 <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 space-y-3">
   <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">주문 정보</h4>
@@ -107,6 +140,62 @@
 
   <% if !order.client && !order.project && !order.supplier %>
     <p class="text-xs text-gray-400 dark:text-gray-500">연결된 항목 없음</p>
+  <% end %>
+</div>
+
+<%# ── 견적 비교 ────────────────────────────────────────── %>
+<div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+  <div class="flex items-center justify-between mb-3">
+    <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">견적 비교</h4>
+    <% if can_update?("orders") %>
+      <%= link_to new_order_order_quote_path(order),
+          class: "text-xs text-accent hover:underline flex items-center gap-1" do %>
+        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        견적 추가
+      <% end %>
+    <% end %>
+  </div>
+  <% quotes = order.order_quotes.order(created_at: :asc) %>
+  <% if quotes.any? %>
+    <div class="space-y-2">
+      <% quotes.each do |quote| %>
+        <div class="flex items-start gap-2 p-2 rounded-lg border <%= quote.selected? ? 'border-accent bg-accent/5 dark:bg-accent/10' : 'border-gray-100 dark:border-gray-700' %>">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-1.5">
+              <% if quote.selected? %>
+                <span class="text-accent text-xs">✓</span>
+              <% end %>
+              <p class="text-xs font-medium text-gray-800 dark:text-white truncate">
+                <%= quote.supplier&.name || "거래처 미지정" %>
+              </p>
+            </div>
+            <p class="text-xs text-gray-500 dark:text-gray-400">
+              <%= number_to_currency(quote.unit_price, unit: quote.currency.presence || "$", format: "%u %n") %>
+              <% if quote.lead_time_days %>
+                · <%= quote.lead_time_days %>일
+              <% end %>
+            </p>
+          </div>
+          <% if can_update?("orders") && !quote.selected? %>
+            <%= button_to select_order_order_quote_path(order, quote), method: :patch,
+                class: "shrink-0 text-xs text-gray-400 hover:text-accent transition-colors bg-transparent border-0 cursor-pointer px-1 py-0.5",
+                title: "이 견적 선택" do %>
+              선택
+            <% end %>
+          <% end %>
+          <% if can_update?("orders") %>
+            <%= button_to order_order_quote_path(order, quote), method: :delete,
+                data: { turbo_confirm: "이 견적을 삭제하시겠습니까?" },
+                class: "shrink-0 text-gray-300 hover:text-red-400 transition-colors bg-transparent border-0 cursor-pointer p-0.5",
+                title: "삭제" do %>
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <% end %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="text-xs text-gray-400 dark:text-gray-500">아직 등록된 견적이 없습니다.</p>
   <% end %>
 </div>
 

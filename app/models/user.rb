@@ -30,6 +30,7 @@ class User < ApplicationRecord
   has_many :tasks, foreign_key: :assignee_id, dependent: :nullify
   has_many :comments, dependent: :nullify
   has_many :activities, dependent: :nullify
+  has_many :notifications, dependent: :destroy
 
   validates :name, presence: true
   validates :locale, inclusion: { in: LOCALES }, allow_blank: true

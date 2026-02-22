@@ -8,6 +8,8 @@ class Order < ApplicationRecord
   has_many :activities, dependent: :destroy
   has_many :assignments, dependent: :destroy
   has_many :assignees, through: :assignments, source: :user
+  has_many :order_quotes, dependent: :destroy
+  has_many :notifications, as: :notifiable, dependent: :destroy
 
   enum :status, {
     inbox: 0,

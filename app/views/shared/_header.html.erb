@@ -6,26 +6,36 @@
 
   <!-- Right: Search + Alerts + User -->
   <div class="flex items-center gap-4">
-    <!-- Search -->
-    <%= form_with url: orders_path, method: :get, class: "relative" do |f| %>
-      <i class="lni lni-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-      <%= f.text_field :q, placeholder: "Search orders...",
-          class: "pl-9 pr-4 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 dark:text-gray-200 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-accent w-56" %>
-    <% end %>
+    <!-- Search (Cmd+K 힌트 버튼) -->
+    <button onclick="document.querySelector('[data-controller=command-palette] [data-command-palette-target=input]')?.closest('[data-command-palette-target=modal]')?.classList.remove('hidden') || document.querySelector('[data-controller=command-palette]')?._controller?.open()"
+            class="hidden sm:flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:border-gray-300 dark:hover:border-gray-500 transition-colors w-48">
+      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <span class="flex-1 text-left text-xs">검색...</span>
+      <kbd class="text-xs border border-gray-200 dark:border-gray-600 rounded px-1">⌘K</kbd>
+    </button>
 
     <!-- Urgent count badge -->
     <% urgent = Order.urgent.count %>
     <% if urgent > 0 %>
       <%= link_to kanban_path, class: "relative flex items-center" do %>
-        <i class="lni lni-alarm text-gray-500 dark:text-gray-400 text-lg"></i>
+        <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold"><%= urgent %></span>
+      <% end %>
+    <% end %>
+
+    <!-- 알림 배지 -->
+    <% unread_count = current_user.notifications.unread.count rescue 0 %>
+    <%= link_to notifications_path, class: "relative flex items-center text-gray-500 dark:text-gray-400 hover:text-primary transition-colors", title: "알림" do %>
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <% if unread_count > 0 %>
+        <span class="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold leading-none"><%= [unread_count, 9].min %><%= unread_count > 9 ? "+" : "" %></span>
       <% end %>
     <% end %>
 
     <!-- Sign out -->
     <%= link_to destroy_user_session_path, data: { turbo_method: :delete },
         class: "text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors" do %>
-      <i class="lni lni-exit text-lg"></i>
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
     <% end %>
   </div>
 </header>

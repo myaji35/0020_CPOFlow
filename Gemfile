@@ -40,6 +40,9 @@ gem "googleauth"
 # HTTP client
 gem "faraday"
 
+# Anthropic Claude API for LLM-based RFQ analysis
+gem "anthropic"
+
 # Translation: use faraday directly with Google Translate API or LibreTranslate
 
 # Avatar / file uploads
@@ -48,6 +51,13 @@ gem "active_storage_validations"
 # eCountERP data import: CSV/XLSX parsing
 gem "roo"
 gem "rubyzip"
+
+# PDF generation
+gem "wicked_pdf"
+gem "wkhtmltopdf-binary"
+
+# Monthly/weekly grouping for reports
+gem "groupdate"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]

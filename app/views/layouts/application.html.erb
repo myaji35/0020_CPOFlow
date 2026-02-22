@@ -83,6 +83,41 @@
         </div>
       </div>
 
+      <%# ===== Command Palette (Cmd+K) ===== %>
+      <div data-controller="command-palette">
+        <div data-command-palette-target="modal"
+             class="hidden fixed inset-0 z-50 flex items-start justify-center pt-20 px-4"
+             data-action="click->command-palette#closeOnBackdrop">
+          <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+          <div class="relative w-full max-w-xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <%# 검색 입력 %>
+            <div class="flex items-center gap-3 px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+              <svg class="w-4 h-4 text-gray-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input data-command-palette-target="input"
+                     data-action="input->command-palette#search keydown->command-palette#handleKeydown"
+                     type="text"
+                     placeholder="주문, 발주처, 거래처, 직원, 현장 검색..."
+                     class="flex-1 bg-transparent text-sm text-gray-900 dark:text-white placeholder-gray-400 outline-none">
+              <kbd class="hidden sm:inline-flex px-1.5 py-0.5 text-xs text-gray-400 dark:text-gray-500 border border-gray-200 dark:border-gray-600 rounded">ESC</kbd>
+            </div>
+            <%# 결과 목록 %>
+            <div data-command-palette-target="results"
+                 class="max-h-80 overflow-y-auto py-1">
+              <div class="px-4 py-6 text-center">
+                <p class="text-sm text-gray-400 dark:text-gray-500">검색어를 2자 이상 입력하세요</p>
+                <p class="text-xs text-gray-300 dark:text-gray-600 mt-1">주문 · 발주처 · 거래처 · 직원 · 현장 통합 검색</p>
+              </div>
+            </div>
+            <%# 푸터 %>
+            <div class="px-4 py-2 border-t border-gray-100 dark:border-gray-700 flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
+              <span><kbd class="px-1 py-0.5 border border-gray-200 dark:border-gray-600 rounded text-xs">↑↓</kbd> 탐색</span>
+              <span><kbd class="px-1 py-0.5 border border-gray-200 dark:border-gray-600 rounded text-xs">↵</kbd> 이동</span>
+              <span><kbd class="px-1 py-0.5 border border-gray-200 dark:border-gray-600 rounded text-xs">⌘K</kbd> 열기</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <%# ===== Order Detail Drawer ===== %>
       <div id="order-drawer-backdrop"
            class="fixed inset-0 bg-black/40 z-40 hidden transition-opacity duration-300 opacity-0"

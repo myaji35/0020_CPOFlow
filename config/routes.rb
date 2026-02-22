@@ -26,8 +26,13 @@ Rails.application.routes.draw do
     resources :tasks, only: %i[create update destroy]
     resources :comments, only: %i[create destroy]
     resources :assignments, only: %i[create destroy]
+    resources :order_quotes, only: %i[new create destroy] do
+      member { patch :select }
+    end
     member do
       patch :move_status
+      get  "pdf/quote",          to: "orders/pdf#quote",           as: :pdf_quote
+      get  "pdf/purchase_order", to: "orders/pdf#purchase_order",  as: :pdf_purchase_order
     end
   end
 
@@ -89,6 +94,33 @@ Rails.application.routes.draw do
     resources :employment_contracts, only: %i[new create edit update destroy]
     resources :employee_assignments, only: %i[new create edit update destroy]
     resources :certifications,       only: %i[new create edit update destroy]
+  end
+
+  # 통합 검색 (Command Palette)
+  get "/search", to: "search#index", as: :search
+
+  # 경영 리포트
+  get "/reports", to: "reports#index", as: :reports
+
+  # 알림 센터
+  resources :notifications, only: %i[index] do
+    collection { patch :read_all }
+    member     { patch :read }
+  end
+
+  # 주문 일괄 처리 (Bulk Actions)
+  namespace :orders do
+    resource :bulk, only: [] do
+      post :update
+      get  :export_csv
+    end
+  end
+
+  # 견적 비교 (Order Quotes)
+  resources :orders do
+    resources :order_quotes, only: %i[new create destroy] do
+      member { patch :select }
+    end
   end
 
   # Settings

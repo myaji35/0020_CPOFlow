@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_21_230031) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_22_025103) do
   create_table "activities", force: :cascade do |t|
     t.string "action"
     t.datetime "created_at", null: false
@@ -253,7 +253,34 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_21_230031) do
     t.index ["role", "menu_key"], name: "index_menu_permissions_on_role_and_menu_key", unique: true
   end
 
+  create_table "notifications", force: :cascade do |t|
+    t.text "body"
+    t.datetime "created_at", null: false
+    t.integer "notifiable_id"
+    t.string "notifiable_type"
+    t.string "notification_type"
+    t.datetime "read_at"
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.integer "user_id"
+  end
+
+  create_table "order_quotes", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "currency"
+    t.integer "lead_time_days"
+    t.text "notes"
+    t.integer "order_id"
+    t.boolean "selected"
+    t.datetime "submitted_at"
+    t.integer "supplier_id"
+    t.decimal "unit_price"
+    t.datetime "updated_at", null: false
+    t.date "validity_date"
+  end
+
   create_table "orders", force: :cascade do |t|
+    t.text "attachment_urls"
     t.integer "client_id"
     t.datetime "created_at", null: false
     t.string "currency", default: "USD"
@@ -261,13 +288,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_21_230031) do
     t.text "description"
     t.date "due_date"
     t.decimal "estimated_value", precision: 12, scale: 2
+    t.text "extracted_links"
     t.string "item_name"
+    t.text "llm_analysis"
+    t.datetime "llm_analyzed_at"
     t.text "original_email_body"
     t.string "original_email_from"
     t.string "original_email_subject"
     t.integer "priority", default: 1, null: false
     t.integer "project_id"
     t.integer "quantity"
+    t.string "rfq_confidence", default: "none"
+    t.integer "rfq_score", default: 0
+    t.string "risk_level"
+    t.integer "risk_score"
+    t.datetime "risk_updated_at"
     t.string "source_email_id"
     t.integer "status", default: 0, null: false
     t.integer "supplier_id"

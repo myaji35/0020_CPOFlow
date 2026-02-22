@@ -66,8 +66,11 @@
     <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">직무 정보</h3>
     <div class="grid grid-cols-2 gap-4">
       <div>
-        <%= f.label :department, "부서", class: "block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1" %>
-        <%= f.text_field :department, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary", placeholder: "구매팀" %>
+        <%= f.label :department_id, "부서", class: "block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1" %>
+        <%= f.select :department_id,
+            Department.active.by_sort.map { |d| [d.full_name, d.id] },
+            { include_blank: "부서 선택" },
+            class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
       </div>
       <div>
         <%= f.label :job_title, "직급/직책", class: "block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1" %>

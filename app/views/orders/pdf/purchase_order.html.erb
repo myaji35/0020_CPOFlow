@@ -1,0 +1,95 @@
+<div class="header-row">
+  <div>
+    <h1>발주서 (PURCHASE ORDER)</h1>
+    <p style="color:#6b7280;font-size:10pt;margin-top:4px">No. PO-<%= @order.id %>-<%= Date.today.strftime("%Y%m%d") %></p>
+  </div>
+  <div class="company-info">
+    <strong>AtoZ2010 Inc.</strong><br>
+    Abu Dhabi, UAE<br>
+    www.atoz2010.com
+  </div>
+</div>
+
+<h2>공급사 정보</h2>
+<div class="info-grid">
+  <div class="info-item">
+    <span class="info-label">공급사 (Supplier)</span>
+    <span class="info-value"><%= @order.supplier&.name || "-" %></span>
+  </div>
+  <div class="info-item">
+    <span class="info-label">발주일</span>
+    <span class="info-value"><%= Date.today.strftime("%Y-%m-%d") %></span>
+  </div>
+  <div class="info-item">
+    <span class="info-label">납품 현장</span>
+    <span class="info-value"><%= @order.project&.name || "-" %></span>
+  </div>
+  <div class="info-item">
+    <span class="info-label">납기 요청일</span>
+    <span class="info-value" style="color:<%= @order.due_date && @order.due_date < Date.today ? '#dc2626' : '#1a1a1a' %>">
+      <%= @order.due_date&.strftime("%Y-%m-%d") || "-" %>
+    </span>
+  </div>
+</div>
+
+<h2>발주 품목</h2>
+<table>
+  <thead>
+    <tr>
+      <th width="40%">품목명</th>
+      <th width="15%">수량</th>
+      <th width="20%">단가</th>
+      <th width="25%">금액</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% selected_quote = @order.order_quotes.find_by(selected: true) %>
+    <tr>
+      <td><%= @order.item_name.presence || @order.title %></td>
+      <td><%= number_with_delimiter(@order.quantity) || 1 %></td>
+      <td>
+        <% if selected_quote %>
+          <%= selected_quote.currency %> <%= number_with_delimiter(selected_quote.unit_price) %>
+        <% elsif @order.estimated_value.present? && @order.quantity.to_i > 0 %>
+          USD <%= number_with_delimiter((@order.estimated_value / @order.quantity).round(2)) %>
+        <% else %>
+          -
+        <% end %>
+      </td>
+      <td>USD <%= number_with_delimiter(@order.estimated_value&.round(2)) || "-" %></td>
+    </tr>
+    <tr class="total-row">
+      <td colspan="3" style="text-align:right">합계</td>
+      <td>USD <%= number_with_delimiter(@order.estimated_value&.round(2)) || "-" %></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>배송 조건</h2>
+<div class="info-grid">
+  <div class="info-item">
+    <span class="info-label">납품지</span>
+    <span class="info-value"><%= @order.project&.name || "To Be Confirmed" %></span>
+  </div>
+  <div class="info-item">
+    <span class="info-label">결제 조건</span>
+    <span class="info-value"><%= @order.supplier&.payment_terms || "NET 30" %></span>
+  </div>
+</div>
+
+<% if @order.description.present? %>
+  <h2>특기사항</h2>
+  <p style="font-size:10pt;color:#374151;line-height:1.6"><%= @order.description %></p>
+<% end %>
+
+<div style="margin-top:32px;display:flex;justify-content:space-between">
+  <div style="text-align:center;width:120px">
+    <div style="border-top:1px solid #374151;padding-top:4px;font-size:9pt">담당자</div>
+  </div>
+  <div style="text-align:center;width:120px">
+    <div style="border-top:1px solid #374151;padding-top:4px;font-size:9pt">확인</div>
+  </div>
+  <div style="text-align:center;width:120px">
+    <div style="border-top:1px solid #374151;padding-top:4px;font-size:9pt">승인</div>
+  </div>
+</div>

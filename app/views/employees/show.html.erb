@@ -113,7 +113,7 @@
         <div><dt class="text-gray-500 dark:text-gray-400">전화번호</dt><dd class="font-medium text-gray-900 dark:text-white mt-1"><%= @employee.phone.presence || "-" %></dd></div>
         <div><dt class="text-gray-500 dark:text-gray-400">비상 연락처</dt><dd class="font-medium text-gray-900 dark:text-white mt-1"><%= @employee.emergency_contact.presence || "-" %></dd></div>
         <div><dt class="text-gray-500 dark:text-gray-400">비상 연락전화</dt><dd class="font-medium text-gray-900 dark:text-white mt-1"><%= @employee.emergency_phone.presence || "-" %></dd></div>
-        <div><dt class="text-gray-500 dark:text-gray-400">부서</dt><dd class="font-medium text-gray-900 dark:text-white mt-1"><%= @employee.department.presence || "-" %></dd></div>
+        <div><dt class="text-gray-500 dark:text-gray-400">부서</dt><dd class="font-medium text-gray-900 dark:text-white mt-1"><%= @employee.department&.name || "-" %></dd></div>
         <div><dt class="text-gray-500 dark:text-gray-400">직급</dt><dd class="font-medium text-gray-900 dark:text-white mt-1"><%= @employee.job_title.presence || "-" %></dd></div>
         <div><dt class="text-gray-500 dark:text-gray-400">고용형태</dt><dd class="font-medium text-gray-900 dark:text-white mt-1"><%= @employee.employment_type_label %></dd></div>
         <div><dt class="text-gray-500 dark:text-gray-400">입사일</dt><dd class="font-medium text-gray-900 dark:text-white mt-1"><%= @employee.hire_date&.strftime("%Y-%m-%d") || "-" %></dd></div>
