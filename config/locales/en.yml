@@ -1,31 +1,263 @@
-# Files in the config/locales directory are used for internationalization and
-# are automatically loaded by Rails. If you want to use locales other than
-# English, add the necessary files in this directory.
-#
-# To use the locales, use `I18n.t`:
-#
-#     I18n.t "hello"
-#
-# In views, this is aliased to just `t`:
-#
-#     <%= t("hello") %>
-#
-# To use a different locale, set it with `I18n.locale`:
-#
-#     I18n.locale = :es
-#
-# This would use the information in config/locales/es.yml.
-#
-# To learn more about the API, please read the Rails Internationalization guide
-# at https://guides.rubyonrails.org/i18n.html.
-#
-# Be aware that YAML interprets the following case-insensitive strings as
-# booleans: `true`, `false`, `on`, `off`, `yes`, `no`. Therefore, these strings
-# must be quoted to be interpreted as strings. For example:
-#
-#     en:
-#       "yes": yup
-#       enabled: "ON"
-
 en:
-  hello: "Hello world"
+  # ── General ───────────────────────────────────────────────────────
+  app_name: "CPOFlow"
+  actions:
+    save: "Save"
+    cancel: "Cancel"
+    edit: "Edit"
+    delete: "Delete"
+    create: "Create"
+    update: "Update"
+    back: "Back"
+    search: "Search"
+    filter: "Filter"
+    confirm: "Confirm"
+    submit: "Submit"
+    close: "Close"
+    new: "New"
+    view_all: "View All"
+    sign_out: "Sign Out"
+
+  # ── Navigation ────────────────────────────────────────────────────
+  nav:
+    dashboard: "Dashboard"
+    inbox: "Inbox"
+    kanban: "Kanban"
+    orders: "Orders"
+    calendar: "Calendar"
+    team: "Team"
+    clients: "Clients"
+    suppliers: "Suppliers"
+    projects: "Projects"
+    employees: "Employees"
+    org_chart: "Org Chart"
+    settings: "Settings"
+    import: "eCount Import"
+    menu_permissions: "Menu Permissions"
+
+  # ── Dashboard ─────────────────────────────────────────────────────
+  dashboard:
+    title: "Dashboard"
+    active_orders: "Active Orders"
+    overdue: "Overdue"
+    urgent: "Urgent (D-7)"
+    delivered: "Delivered"
+    in_progress: "In progress"
+    past_due: "Past due date"
+    due_within_7: "Due within 7 days"
+    this_month: "This month"
+    pipeline_overview: "Pipeline Overview"
+    urgent_deliveries: "Urgent Deliveries"
+    recent_orders: "Recent Orders"
+    no_urgent_orders: "No urgent orders"
+    sheets:
+      title: "Google Sheets Dashboard"
+      mock_mode: "Mock Mode"
+      last_sync: "Last sync"
+      in_progress: "In progress"
+      sync_now: "Sync Now"
+      no_sync: "No sync history yet."
+      orders_count: "%{count} orders"
+      projects_count: "%{count} projects"
+      employees_count: "%{count} employees"
+      visas_count: "%{count} visas"
+      error: "Error"
+      mock_guide: "Running in mock mode. To connect real Google Sheets, register your credentials."
+    sync_started: "Google Sheets sync has been started."
+
+  # ── Orders ────────────────────────────────────────────────────────
+  orders:
+    title: "Orders"
+    new: "New Order"
+    edit: "Edit Order"
+    status:
+      inbox: "Inbox"
+      reviewing: "Reviewing"
+      quoted: "Quoted"
+      confirmed: "Confirmed"
+      procuring: "Procuring"
+      qa: "QA"
+      delivered: "Delivered"
+    priority:
+      low: "Low"
+      medium: "Medium"
+      high: "High"
+      urgent: "Urgent"
+    fields:
+      title: "Order Title"
+      client: "Client"
+      supplier: "Supplier"
+      project: "Project / Site"
+      due_date: "Delivery Due Date"
+      item: "Product / Item"
+      quantity: "Quantity"
+      value: "Estimated Value (USD)"
+      priority: "Priority"
+      tags: "Tags"
+      description: "Description / Notes"
+    create_success: "Order created successfully."
+    update_success: "Order updated successfully."
+    delete_success: "Order deleted successfully."
+    status_updated: "Status updated to %{status}."
+
+  # ── Kanban ────────────────────────────────────────────────────────
+  kanban:
+    title: "Kanban Board"
+    new_order: "New Order"
+
+  # ── Clients ───────────────────────────────────────────────────────
+  clients:
+    title: "Clients"
+    new: "New Client"
+    edit: "Edit Client"
+    create_success: "Client created successfully."
+    update_success: "Client updated successfully."
+    delete_success: "Client deleted successfully."
+
+  # ── Suppliers ─────────────────────────────────────────────────────
+  suppliers:
+    title: "Suppliers"
+    new: "New Supplier"
+    edit: "Edit Supplier"
+    create_success: "Supplier created successfully."
+    update_success: "Supplier updated successfully."
+
+  # ── Projects ──────────────────────────────────────────────────────
+  projects:
+    title: "Projects"
+    new: "New Project"
+    edit: "Edit Project"
+    create_success: "Project created successfully."
+    update_success: "Project updated successfully."
+    delete_success: "Project deleted successfully."
+
+  # ── Employees ─────────────────────────────────────────────────────
+  employees:
+    title: "Employees"
+    new: "New Employee"
+    edit: "Edit Employee"
+    create_success: "Employee created successfully."
+    update_success: "Employee updated successfully."
+    delete_success: "Employee deleted successfully."
+    status:
+      active: "Active"
+      inactive: "Inactive"
+
+  # ── Team ──────────────────────────────────────────────────────────
+  team:
+    title: "Team"
+
+  # ── Inbox ─────────────────────────────────────────────────────────
+  inbox:
+    title: "Inbox"
+    sync: "Sync"
+    convert: "Convert to Order"
+    convert_success: "Order moved to Kanban — Under Review."
+
+  # ── Calendar ──────────────────────────────────────────────────────
+  calendar:
+    title: "Delivery Calendar"
+
+  # ── Settings ──────────────────────────────────────────────────────
+  settings:
+    title: "Settings"
+    profile: "Profile"
+    language: "Language"
+    theme: "Theme"
+    preferences: "Preferences"
+    preferences_desc: "Set your language and display theme"
+    language_desc: "Select the interface display language"
+    theme_desc: "Light, dark, or follow system settings"
+    theme_light: "Light"
+    theme_dark: "Dark"
+    theme_system: "System"
+    save_success: "Settings saved."
+    danger_zone: "Danger Zone"
+    sign_out_all: "Sign out of all sessions"
+    sign_out_all_desc: "This will sign you out from all devices"
+    gmail:
+      title: "Gmail Integration"
+      desc: "Auto-detect RFQ emails and convert to Kanban cards"
+      connect: "Connect Gmail"
+      disconnect: "Disconnect"
+      sync_now: "Sync Now"
+      no_accounts: "No Gmail accounts connected."
+      connect_success: "Email account connected."
+      disconnect_success: "Email account removed."
+    menu_permissions:
+      title: "Menu Permission Management"
+      desc: "Set menu access and CRUD permissions by role"
+      link: "Configure Permissions →"
+      save_success: "Permissions saved."
+
+  # ── Devise ────────────────────────────────────────────────────────
+  devise:
+    sessions:
+      signed_in: "Signed in successfully."
+      signed_out: "Signed out successfully."
+      already_signed_out: "Signed out successfully."
+    registrations:
+      signed_up: "Welcome! You have signed up successfully."
+      updated: "Your account has been updated successfully."
+      destroyed: "Bye! Your account has been successfully cancelled."
+    passwords:
+      send_instructions: "You will receive an email with instructions on how to reset your password."
+      updated: "Your password has been changed successfully. You are now signed in."
+    failure:
+      invalid: "Invalid email or password."
+      unauthenticated: "You need to sign in before continuing."
+      already_authenticated: "You are already signed in."
+      timeout: "Your session expired. Please sign in again."
+      not_found_in_database: "Invalid email or password."
+    omniauth_callbacks:
+      success: "Successfully authenticated from Google account."
+      failure: "Could not authenticate from Google. (%{reason})"
+
+  # ── Visas / Contracts / Assignments / Certifications ──────────────
+  visas:
+    create_success: "Visa added successfully."
+    update_success: "Visa updated successfully."
+    delete_success: "Visa deleted successfully."
+  employment_contracts:
+    create_success: "Contract added successfully."
+    update_success: "Contract updated successfully."
+    delete_success: "Contract deleted successfully."
+  employee_assignments:
+    create_success: "Assignment added successfully."
+    update_success: "Assignment updated successfully."
+    delete_success: "Assignment deleted successfully."
+  certifications:
+    create_success: "Certification added successfully."
+    update_success: "Certification updated successfully."
+    delete_success: "Certification deleted successfully."
+  contact_persons:
+    create_success: "Contact added successfully."
+    update_success: "Contact updated successfully."
+    delete_success: "Contact deleted successfully."
+
+  # ── Org Chart ─────────────────────────────────────────────────────
+  org_chart:
+    countries:
+      create_success: "Country added."
+      update_success: "Country updated."
+      delete_success: "Country deleted."
+    companies:
+      create_success: "Company added."
+      update_success: "Company updated."
+      delete_success: "Company deleted."
+    departments:
+      create_success: "Department added."
+      update_success: "Department updated."
+      delete_success: "Department deleted."
+
+  # ── Admin ─────────────────────────────────────────────────────────
+  admin:
+    imports:
+      create_success: "Import started. Please check the results shortly."
+
+  # ── Errors ────────────────────────────────────────────────────────
+  errors:
+    messages:
+      not_saved:
+        one: "1 error prohibited this record from being saved:"
+        other: "%{count} errors prohibited this record from being saved:"

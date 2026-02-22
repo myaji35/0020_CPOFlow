@@ -12,7 +12,7 @@ class CertificationsController < ApplicationController
   def create
     @certification = @employee.certifications.new(certification_params)
     if @certification.save
-      redirect_to @employee, notice: "자격증이 등록되었습니다."
+      redirect_to @employee, notice: t("certifications.create_success")
     else
       render :new, status: :unprocessable_entity
     end
@@ -20,7 +20,7 @@ class CertificationsController < ApplicationController
 
   def update
     if @certification.update(certification_params)
-      redirect_to @employee, notice: "자격증이 수정되었습니다."
+      redirect_to @employee, notice: t("certifications.update_success")
     else
       render :edit, status: :unprocessable_entity
     end
@@ -28,7 +28,7 @@ class CertificationsController < ApplicationController
 
   def destroy
     @certification.destroy
-    redirect_to @employee, notice: "자격증이 삭제되었습니다."
+    redirect_to @employee, notice: t("certifications.delete_success")
   end
 
   private

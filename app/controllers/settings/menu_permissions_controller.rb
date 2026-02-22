@@ -25,7 +25,7 @@ module Settings
         )
       end
 
-      redirect_to settings_menu_permissions_path(role: role), notice: "권한이 저장되었습니다."
+      redirect_to settings_menu_permissions_path(role: role), notice: t("settings.menu_permissions.save_success")
     end
 
     private

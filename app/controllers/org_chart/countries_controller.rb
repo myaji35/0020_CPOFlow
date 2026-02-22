@@ -20,7 +20,7 @@ module OrgChart
     def create
       @country = Country.new(country_params)
       if @country.save
-        redirect_to org_chart_path, notice: "국가가 추가되었습니다."
+        redirect_to org_chart_path, notice: t("org_chart.countries.create_success")
       else
         render :new, status: :unprocessable_entity
       end
@@ -30,7 +30,7 @@ module OrgChart
 
     def update
       if @country.update(country_params)
-        redirect_to org_chart_path, notice: "국가 정보가 수정되었습니다."
+        redirect_to org_chart_path, notice: t("org_chart.countries.update_success")
       else
         render :edit, status: :unprocessable_entity
       end
@@ -38,7 +38,7 @@ module OrgChart
 
     def destroy
       @country.destroy
-      redirect_to org_chart_path, notice: "국가가 삭제되었습니다."
+      redirect_to org_chart_path, notice: t("org_chart.countries.delete_success")
     end
 
     private

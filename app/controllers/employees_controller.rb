@@ -37,7 +37,7 @@ class EmployeesController < ApplicationController
   def create
     @employee = Employee.new(employee_params)
     if @employee.save
-      redirect_to @employee, notice: "직원이 등록되었습니다."
+      redirect_to @employee, notice: t("employees.create_success")
     else
       render :new, status: :unprocessable_entity
     end
@@ -47,7 +47,7 @@ class EmployeesController < ApplicationController
 
   def update
     if @employee.update(employee_params)
-      redirect_to @employee, notice: "직원 정보가 수정되었습니다."
+      redirect_to @employee, notice: t("employees.update_success")
     else
       render :edit, status: :unprocessable_entity
     end
@@ -55,7 +55,7 @@ class EmployeesController < ApplicationController
 
   def destroy
     @employee.destroy
-    redirect_to employees_path, notice: "직원이 삭제되었습니다."
+    redirect_to employees_path, notice: t("employees.delete_success")
   end
 
   private

@@ -4,8 +4,8 @@
     <%= link_to @employee.name, @employee, class: "hover:text-primary" %>
     <span>/</span><span>배정 수정</span>
   </div>
-  <h1 class="text-2xl font-bold text-gray-900">현장 배정 수정</h1>
-  <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+  <h1 class="text-2xl font-bold text-gray-900 dark:text-white">현장 배정 수정</h1>
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-6">
     <%= render "form", assignment: @assignment %>
   </div>
 </div>

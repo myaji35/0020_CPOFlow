@@ -15,7 +15,7 @@ class EmploymentContractsController < ApplicationController
   def create
     @contract = @employee.employment_contracts.new(contract_params)
     if @contract.save
-      redirect_to @employee, notice: "계약이 등록되었습니다."
+      redirect_to @employee, notice: t("employment_contracts.create_success")
     else
       @projects = Project.by_name
       render :new, status: :unprocessable_entity
@@ -24,7 +24,7 @@ class EmploymentContractsController < ApplicationController
 
   def update
     if @contract.update(contract_params)
-      redirect_to @employee, notice: "계약이 수정되었습니다."
+      redirect_to @employee, notice: t("employment_contracts.update_success")
     else
       @projects = Project.by_name
       render :edit, status: :unprocessable_entity
@@ -33,7 +33,7 @@ class EmploymentContractsController < ApplicationController
 
   def destroy
     @contract.destroy
-    redirect_to @employee, notice: "계약이 삭제되었습니다."
+    redirect_to @employee, notice: t("employment_contracts.delete_success")
   end
 
   private

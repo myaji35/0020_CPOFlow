@@ -24,7 +24,7 @@ class ClientsController < ApplicationController
   def create
     @client = Client.new(client_params)
     if @client.save
-      redirect_to @client, notice: "발주처가 등록되었습니다."
+      redirect_to @client, notice: t("clients.create_success")
     else
       render :new, status: :unprocessable_entity
     end
@@ -34,7 +34,7 @@ class ClientsController < ApplicationController
 
   def update
     if @client.update(client_params)
-      redirect_to @client, notice: "발주처 정보가 수정되었습니다."
+      redirect_to @client, notice: t("clients.update_success")
     else
       render :edit, status: :unprocessable_entity
     end
@@ -42,7 +42,7 @@ class ClientsController < ApplicationController
 
   def destroy
     @client.destroy
-    redirect_to clients_path, notice: "발주처가 삭제되었습니다."
+    redirect_to clients_path, notice: t("clients.delete_success")
   end
 
   private

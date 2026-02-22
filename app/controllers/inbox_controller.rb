@@ -17,13 +17,15 @@ class InboxController < ApplicationController
   def show
     @order = Order.find_by(source_email_id: params[:id]) ||
              Order.find(params[:id])
+  rescue ActiveRecord::RecordNotFound
+    redirect_to inbox_path, alert: "해당 이메일을 찾을 수 없습니다."
   end
 
   def convert_to_order
     @order = Order.find(params[:id])
     if @order.update(status: :reviewing)
       Activity.create!(order: @order, user: current_user, action: "moved_to_kanban")
-      redirect_to kanban_path, notice: "Order moved to Kanban — Under Review."
+      redirect_to kanban_path, notice: t("inbox.convert_success")
     else
       redirect_back fallback_location: inbox_path, alert: "Failed to convert."
     end

@@ -1,0 +1,263 @@
+ar:
+  # ── عام ───────────────────────────────────────────────────────────
+  app_name: "CPOFlow"
+  actions:
+    save: "حفظ"
+    cancel: "إلغاء"
+    edit: "تعديل"
+    delete: "حذف"
+    create: "إنشاء"
+    update: "تحديث"
+    back: "رجوع"
+    search: "بحث"
+    filter: "تصفية"
+    confirm: "تأكيد"
+    submit: "إرسال"
+    close: "إغلاق"
+    new: "جديد"
+    view_all: "عرض الكل"
+    sign_out: "تسجيل الخروج"
+
+  # ── التنقل ────────────────────────────────────────────────────────
+  nav:
+    dashboard: "لوحة التحكم"
+    inbox: "البريد الوارد"
+    kanban: "كانبان"
+    orders: "الطلبات"
+    calendar: "التقويم"
+    team: "الفريق"
+    clients: "العملاء"
+    suppliers: "الموردون"
+    projects: "المشاريع"
+    employees: "الموظفون"
+    org_chart: "الهيكل التنظيمي"
+    settings: "الإعدادات"
+    import: "استيراد eCount"
+    menu_permissions: "صلاحيات القائمة"
+
+  # ── لوحة التحكم ───────────────────────────────────────────────────
+  dashboard:
+    title: "لوحة التحكم"
+    active_orders: "الطلبات النشطة"
+    overdue: "متأخر"
+    urgent: "عاجل (D-7)"
+    delivered: "تم التسليم هذا الشهر"
+    in_progress: "قيد التنفيذ"
+    past_due: "تجاوز الموعد"
+    due_within_7: "خلال 7 أيام"
+    this_month: "هذا الشهر"
+    pipeline_overview: "نظرة عامة على المسار"
+    urgent_deliveries: "التسليمات العاجلة"
+    recent_orders: "الطلبات الأخيرة"
+    no_urgent_orders: "لا توجد طلبات عاجلة"
+    sheets:
+      title: "لوحة Google Sheets"
+      mock_mode: "وضع تجريبي"
+      last_sync: "آخر مزامنة"
+      in_progress: "جارٍ"
+      sync_now: "مزامنة الآن"
+      no_sync: "لا يوجد سجل مزامنة بعد."
+      orders_count: "%{count} طلب"
+      projects_count: "%{count} مشروع"
+      employees_count: "%{count} موظف"
+      visas_count: "%{count} تأشيرة"
+      error: "خطأ"
+      mock_guide: "يعمل في الوضع التجريبي. لربط Google Sheets الفعلي، يرجى تسجيل بيانات الاعتماد."
+    sync_started: "بدأت مزامنة Google Sheets."
+
+  # ── الطلبات ───────────────────────────────────────────────────────
+  orders:
+    title: "قائمة الطلبات"
+    new: "طلب جديد"
+    edit: "تعديل الطلب"
+    status:
+      inbox: "وارد"
+      reviewing: "قيد المراجعة"
+      quoted: "تم التسعير"
+      confirmed: "مؤكد"
+      procuring: "قيد الشراء"
+      qa: "فحص الجودة"
+      delivered: "تم التسليم"
+    priority:
+      low: "منخفض"
+      medium: "متوسط"
+      high: "مرتفع"
+      urgent: "عاجل"
+    fields:
+      title: "عنوان الطلب"
+      client: "العميل"
+      supplier: "المورد"
+      project: "المشروع/الموقع"
+      due_date: "تاريخ التسليم"
+      item: "المنتج/الصنف"
+      quantity: "الكمية"
+      value: "القيمة التقديرية (USD)"
+      priority: "الأولوية"
+      tags: "الوسوم"
+      description: "الوصف/الملاحظات"
+    create_success: "تم إنشاء الطلب بنجاح."
+    update_success: "تم تحديث الطلب بنجاح."
+    delete_success: "تم حذف الطلب بنجاح."
+    status_updated: "تم تحديث الحالة إلى %{status}."
+
+  # ── كانبان ────────────────────────────────────────────────────────
+  kanban:
+    title: "لوحة كانبان"
+    new_order: "طلب جديد"
+
+  # ── العملاء ───────────────────────────────────────────────────────
+  clients:
+    title: "قائمة العملاء"
+    new: "إضافة عميل"
+    edit: "تعديل العميل"
+    create_success: "تم إضافة العميل بنجاح."
+    update_success: "تم تحديث بيانات العميل بنجاح."
+    delete_success: "تم حذف العميل بنجاح."
+
+  # ── الموردون ──────────────────────────────────────────────────────
+  suppliers:
+    title: "قائمة الموردين"
+    new: "إضافة مورد"
+    edit: "تعديل المورد"
+    create_success: "تم إضافة المورد بنجاح."
+    update_success: "تم تحديث بيانات المورد بنجاح."
+
+  # ── المشاريع ──────────────────────────────────────────────────────
+  projects:
+    title: "قائمة المشاريع"
+    new: "إضافة مشروع"
+    edit: "تعديل المشروع"
+    create_success: "تم إضافة المشروع بنجاح."
+    update_success: "تم تحديث بيانات المشروع بنجاح."
+    delete_success: "تم حذف المشروع بنجاح."
+
+  # ── الموظفون ──────────────────────────────────────────────────────
+  employees:
+    title: "إدارة الموظفين"
+    new: "إضافة موظف"
+    edit: "تعديل بيانات الموظف"
+    create_success: "تم إضافة الموظف بنجاح."
+    update_success: "تم تحديث بيانات الموظف بنجاح."
+    delete_success: "تم حذف الموظف بنجاح."
+    status:
+      active: "نشط"
+      inactive: "غير نشط"
+
+  # ── الفريق ───────────────────────────────────────────────────────
+  team:
+    title: "الفريق"
+
+  # ── البريد الوارد ─────────────────────────────────────────────────
+  inbox:
+    title: "البريد الوارد"
+    sync: "مزامنة"
+    convert: "تحويل إلى طلب"
+    convert_success: "تم نقل الطلب إلى كانبان — قيد المراجعة."
+
+  # ── التقويم ───────────────────────────────────────────────────────
+  calendar:
+    title: "جدول التسليم"
+
+  # ── الإعدادات ─────────────────────────────────────────────────────
+  settings:
+    title: "الإعدادات"
+    profile: "الملف الشخصي"
+    language: "اللغة"
+    theme: "المظهر"
+    preferences: "التفضيلات"
+    preferences_desc: "اضبط لغة الواجهة ومظهر الشاشة"
+    language_desc: "اختر لغة عرض الواجهة"
+    theme_desc: "فاتح، داكن، أو حسب إعدادات النظام"
+    theme_light: "فاتح"
+    theme_dark: "داكن"
+    theme_system: "النظام"
+    save_success: "تم حفظ الإعدادات بنجاح."
+    danger_zone: "منطقة الخطر"
+    sign_out_all: "تسجيل الخروج من جميع الجلسات"
+    sign_out_all_desc: "سيتم تسجيل خروجك من جميع الأجهزة"
+    gmail:
+      title: "تكامل Gmail"
+      desc: "الكشف التلقائي عن رسائل طلب عروض الأسعار وتحويلها إلى بطاقات كانبان"
+      connect: "ربط Gmail"
+      disconnect: "قطع الاتصال"
+      sync_now: "مزامنة الآن"
+      no_accounts: "لا توجد حسابات Gmail مرتبطة."
+      connect_success: "تم ربط حساب البريد الإلكتروني."
+      disconnect_success: "تم إزالة حساب البريد الإلكتروني."
+    menu_permissions:
+      title: "إدارة صلاحيات القائمة"
+      desc: "ضبط صلاحيات الوصول والعمليات حسب الدور"
+      link: "إعداد الصلاحيات ←"
+      save_success: "تم حفظ الصلاحيات."
+
+  # ── Devise ────────────────────────────────────────────────────────
+  devise:
+    sessions:
+      signed_in: "تم تسجيل الدخول بنجاح."
+      signed_out: "تم تسجيل الخروج بنجاح."
+      already_signed_out: "تم تسجيل الخروج بنجاح."
+    registrations:
+      signed_up: "مرحباً! تم إنشاء حسابك بنجاح."
+      updated: "تم تحديث بيانات حسابك بنجاح."
+      destroyed: "تم حذف حسابك بنجاح."
+    passwords:
+      send_instructions: "تم إرسال تعليمات إعادة تعيين كلمة المرور إلى بريدك الإلكتروني."
+      updated: "تم تغيير كلمة المرور بنجاح. تم تسجيل دخولك."
+    failure:
+      invalid: "البريد الإلكتروني أو كلمة المرور غير صحيحة."
+      unauthenticated: "يرجى تسجيل الدخول للمتابعة."
+      already_authenticated: "أنت مسجل الدخول بالفعل."
+      timeout: "انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى."
+      not_found_in_database: "البريد الإلكتروني أو كلمة المرور غير صحيحة."
+    omniauth_callbacks:
+      success: "تم تسجيل الدخول باستخدام حساب Google بنجاح."
+      failure: "فشل تسجيل الدخول بـ Google. (%{reason})"
+
+  # ── تأشيرات / عقود / مهام / شهادات ──────────────────────────────
+  visas:
+    create_success: "تمت إضافة التأشيرة."
+    update_success: "تم تحديث التأشيرة."
+    delete_success: "تم حذف التأشيرة."
+  employment_contracts:
+    create_success: "تمت إضافة العقد."
+    update_success: "تم تحديث العقد."
+    delete_success: "تم حذف العقد."
+  employee_assignments:
+    create_success: "تمت إضافة التعيين."
+    update_success: "تم تحديث التعيين."
+    delete_success: "تم حذف التعيين."
+  certifications:
+    create_success: "تمت إضافة الشهادة."
+    update_success: "تم تحديث الشهادة."
+    delete_success: "تم حذف الشهادة."
+  contact_persons:
+    create_success: "تمت إضافة جهة الاتصال."
+    update_success: "تم تحديث جهة الاتصال."
+    delete_success: "تم حذف جهة الاتصال."
+
+  # ── الهيكل التنظيمي ───────────────────────────────────────────────
+  org_chart:
+    countries:
+      create_success: "تمت إضافة الدولة."
+      update_success: "تم تحديث الدولة."
+      delete_success: "تم حذف الدولة."
+    companies:
+      create_success: "تمت إضافة الشركة."
+      update_success: "تم تحديث الشركة."
+      delete_success: "تم حذف الشركة."
+    departments:
+      create_success: "تمت إضافة القسم."
+      update_success: "تم تحديث القسم."
+      delete_success: "تم حذف القسم."
+
+  # ── الإدارة ───────────────────────────────────────────────────────
+  admin:
+    imports:
+      create_success: "بدأ الاستيراد. يرجى التحقق من النتائج قريباً."
+
+  # ── الأخطاء ───────────────────────────────────────────────────────
+  errors:
+    messages:
+      not_saved:
+        one: "خطأ واحد منع الحفظ:"
+        other: "%{count} أخطاء منعت الحفظ:"

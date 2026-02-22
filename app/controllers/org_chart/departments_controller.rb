@@ -18,7 +18,7 @@ module OrgChart
     def create
       @department = @company.departments.build(department_params)
       if @department.save
-        redirect_to org_chart_company_path(@company), notice: "부서가 추가되었습니다."
+        redirect_to org_chart_company_path(@company), notice: t("org_chart.departments.create_success")
       else
         @parent_departments = @company.departments.active.root_level.by_sort
         render :new, status: :unprocessable_entity
@@ -31,7 +31,7 @@ module OrgChart
 
     def update
       if @department.update(department_params)
-        redirect_to org_chart_company_path(@company), notice: "부서 정보가 수정되었습니다."
+        redirect_to org_chart_company_path(@company), notice: t("org_chart.departments.update_success")
       else
         @parent_departments = @company.departments.active.root_level.where.not(id: @department.id).by_sort
         render :edit, status: :unprocessable_entity
@@ -40,7 +40,7 @@ module OrgChart
 
     def destroy
       @department.destroy
-      redirect_to org_chart_company_path(@company), notice: "부서가 삭제되었습니다."
+      redirect_to org_chart_company_path(@company), notice: t("org_chart.departments.delete_success")
     end
 
     private

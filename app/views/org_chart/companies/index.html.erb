@@ -8,8 +8,8 @@
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
       <% end %>
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">법인 목록</h1>
-        <p class="text-sm text-gray-500 mt-1">전체 법인 관리</p>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">법인 목록</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">전체 법인 관리</p>
       </div>
     </div>
     <% if current_user.manager? || current_user.admin? %>
@@ -24,20 +24,20 @@
   <% if @companies.any? %>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <% @companies.each do |company| %>
-        <%= link_to org_chart_company_path(company), class: "bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md hover:border-primary/30 transition-all block" do %>
+        <%= link_to org_chart_company_path(company), class: "bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md hover:border-primary/30 transition-all block" do %>
           <div class="flex items-center gap-3 mb-3">
             <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
               <svg class="w-5 h-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
             </div>
             <div class="min-w-0">
-              <p class="font-semibold text-gray-900 truncate"><%= company.name %></p>
+              <p class="font-semibold text-gray-900 dark:text-white truncate"><%= company.name %></p>
               <div class="flex items-center gap-2 mt-0.5">
                 <span class="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700"><%= company.company_type_label %></span>
-                <span class="text-xs text-gray-400"><%= company.country&.flag_emoji %> <%= company.country&.name %></span>
+                <span class="text-xs text-gray-400 dark:text-gray-500"><%= company.country&.flag_emoji %> <%= company.country&.name %></span>
               </div>
             </div>
           </div>
-          <div class="flex items-center justify-between text-xs text-gray-500">
+          <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
             <span><%= company.departments.active.count %>개 부서</span>
             <span><%= company.employee_count %>명</span>
           </div>
@@ -45,7 +45,7 @@
       <% end %>
     </div>
   <% else %>
-    <div class="bg-white rounded-xl border border-gray-200 p-12 text-center">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-12 text-center">
       <svg class="w-12 h-12 mx-auto text-gray-200 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
       <p class="text-sm text-gray-400">등록된 법인이 없습니다.</p>
       <% if current_user.manager? || current_user.admin? %>

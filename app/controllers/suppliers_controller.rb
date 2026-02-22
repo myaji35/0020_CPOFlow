@@ -22,7 +22,7 @@ class SuppliersController < ApplicationController
   def create
     @supplier = Supplier.new(supplier_params)
     if @supplier.save
-      redirect_to @supplier, notice: "거래처가 등록되었습니다."
+      redirect_to @supplier, notice: t("suppliers.create_success")
     else
       render :new, status: :unprocessable_entity
     end
@@ -32,7 +32,7 @@ class SuppliersController < ApplicationController
 
   def update
     if @supplier.update(supplier_params)
-      redirect_to @supplier, notice: "거래처 정보가 수정되었습니다."
+      redirect_to @supplier, notice: t("suppliers.update_success")
     else
       render :edit, status: :unprocessable_entity
     end

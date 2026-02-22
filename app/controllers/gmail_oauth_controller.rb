@@ -39,7 +39,7 @@ class GmailOauthController < ApplicationController
       )
       account.save!
 
-      redirect_to settings_root_path, notice: "Gmail account '#{email}' connected successfully!"
+      redirect_to settings_root_path, notice: t("settings.gmail.connect_success")
     rescue Signet::AuthorizationError => e
       Rails.logger.error "[GmailOauth] Token exchange failed: #{e.message}"
       redirect_to settings_root_path, alert: "Failed to connect Gmail. Please try again."
@@ -53,7 +53,7 @@ class GmailOauthController < ApplicationController
   def disconnect
     account = current_user.email_accounts.find(params[:id])
     account.update!(connected: false, gmail_access_token: nil)
-    redirect_to settings_root_path, notice: "Gmail account disconnected."
+    redirect_to settings_root_path, notice: t("settings.gmail.disconnect_success")
   rescue ActiveRecord::RecordNotFound
     redirect_to settings_root_path, alert: "Account not found."
   end

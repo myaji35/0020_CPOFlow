@@ -12,7 +12,7 @@ class VisasController < ApplicationController
   def create
     @visa = @employee.visas.new(visa_params)
     if @visa.save
-      redirect_to @employee, notice: "비자가 등록되었습니다."
+      redirect_to @employee, notice: t("visas.create_success")
     else
       render :new, status: :unprocessable_entity
     end
@@ -20,7 +20,7 @@ class VisasController < ApplicationController
 
   def update
     if @visa.update(visa_params)
-      redirect_to @employee, notice: "비자가 수정되었습니다."
+      redirect_to @employee, notice: t("visas.update_success")
     else
       render :edit, status: :unprocessable_entity
     end
@@ -28,7 +28,7 @@ class VisasController < ApplicationController
 
   def destroy
     @visa.destroy
-    redirect_to @employee, notice: "비자가 삭제되었습니다."
+    redirect_to @employee, notice: t("visas.delete_success")
   end
 
   private

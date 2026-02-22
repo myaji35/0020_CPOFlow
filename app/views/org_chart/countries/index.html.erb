@@ -8,7 +8,7 @@
         <span>/</span>
         <span>국가 관리</span>
       </div>
-      <h1 class="text-xl font-bold text-gray-900">국가 관리</h1>
+      <h1 class="text-xl font-bold text-gray-900 dark:text-white">국가 관리</h1>
     </div>
     <%= link_to new_org_chart_country_path, class: "inline-flex items-center gap-1.5 px-3 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90" do %>
       <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -16,30 +16,30 @@
     <% end %>
   </div>
 
-  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
     <% if @countries.empty? %>
-      <p class="text-center text-gray-400 text-sm py-12">등록된 국가가 없습니다.</p>
+      <p class="text-center text-gray-400 dark:text-gray-500 text-sm py-12">등록된 국가가 없습니다.</p>
     <% else %>
       <table class="w-full text-sm">
-        <thead class="bg-gray-50 border-b border-gray-100">
+        <thead class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
           <tr>
-            <th class="text-left px-4 py-3 text-xs font-medium text-gray-500">국가</th>
-            <th class="text-left px-4 py-3 text-xs font-medium text-gray-500">지역</th>
-            <th class="text-left px-4 py-3 text-xs font-medium text-gray-500">법인 수</th>
+            <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400">국가</th>
+            <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400">지역</th>
+            <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400">법인 수</th>
             <th class="px-4 py-3"></th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-50">
+        <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
           <% @countries.each do |country| %>
-            <tr class="hover:bg-gray-50">
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
               <td class="px-4 py-3">
                 <span class="mr-2"><%= country.flag_emoji %></span>
-                <span class="font-medium text-gray-900"><%= country.name %></span>
-                <span class="text-gray-400 ml-1"><%= country.name_en %></span>
-                <span class="text-xs text-gray-400 ml-1">(<%= country.code %>)</span>
+                <span class="font-medium text-gray-900 dark:text-white"><%= country.name %></span>
+                <span class="text-gray-400 dark:text-gray-500 ml-1"><%= country.name_en %></span>
+                <span class="text-xs text-gray-400 dark:text-gray-500 ml-1">(<%= country.code %>)</span>
               </td>
-              <td class="px-4 py-3 text-gray-500"><%= country.region %></td>
-              <td class="px-4 py-3 text-gray-500"><%= country.companies.count %>개</td>
+              <td class="px-4 py-3 text-gray-500 dark:text-gray-400"><%= country.region %></td>
+              <td class="px-4 py-3 text-gray-500 dark:text-gray-400"><%= country.companies.count %>개</td>
               <td class="px-4 py-3 text-right">
                 <%= link_to "수정", edit_org_chart_country_path(country), class: "text-xs text-primary hover:underline mr-3" %>
                 <%= link_to "삭제", org_chart_country_path(country),

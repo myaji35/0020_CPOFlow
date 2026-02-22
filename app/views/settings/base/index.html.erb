@@ -164,8 +164,99 @@
     </div>
   </div>
 
-  <%# --- Menu Permissions (Admin only) --- %>
+  <%# --- Admin Only Section --- %>
   <% if current_user.admin? %>
+
+  <%# Google Sheets 연동 설정 (Admin Only) %>
+  <% sheets_url = AppConfig.sheets_spreadsheet_url %>
+  <% sheets_id  = AppConfig.sheets_spreadsheet_id %>
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 mb-6">
+    <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
+      <%# Google Sheets 아이콘 %>
+      <svg class="w-5 h-5 text-green-600 dark:text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="18" height="18" rx="2"/>
+        <path d="M3 9h18M3 15h18M9 3v18"/>
+      </svg>
+      <div>
+        <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">Google Sheets 연동 <span class="text-xs font-normal text-gray-400 dark:text-gray-500 ml-1">Admin only</span></h2>
+        <p class="text-xs text-gray-500 dark:text-gray-400">경영진용 데이터 대시보드 스프레드시트 연결</p>
+      </div>
+    </div>
+
+    <div class="px-6 py-5">
+      <%# 현재 연동 상태 %>
+      <% if sheets_id.present? %>
+        <div class="flex items-center gap-2 mb-4 px-3 py-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
+          <svg class="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-medium text-green-800 dark:text-green-300">연동됨</p>
+            <p class="text-xs text-green-600 dark:text-green-400 font-mono truncate">ID: <%= sheets_id %></p>
+          </div>
+          <% if sheets_url.present? %>
+            <a href="<%= sheets_url %>" target="_blank" rel="noopener"
+               class="flex items-center gap-1 text-xs text-green-700 dark:text-green-400 hover:underline flex-shrink-0">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              Sheets 열기
+            </a>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="flex items-center gap-2 mb-4 px-3 py-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+          <svg class="w-4 h-4 text-gray-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <p class="text-xs text-gray-500 dark:text-gray-400">아직 연동된 Spreadsheet가 없습니다.</p>
+        </div>
+      <% end %>
+
+      <%# URL 입력 폼 %>
+      <%= form_with url: admin_sheets_config_path, method: :patch, class: "space-y-3" do |f| %>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+            Google Sheets URL
+          </label>
+          <div class="flex gap-2">
+            <input type="url" name="spreadsheet_url"
+                   value="<%= sheets_url %>"
+                   placeholder="https://docs.google.com/spreadsheets/d/..."
+                   class="flex-1 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-mono placeholder:font-sans placeholder:text-gray-400" />
+            <button type="submit"
+                    class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap">
+              저장
+            </button>
+          </div>
+          <p class="mt-1.5 text-xs text-gray-400 dark:text-gray-500">
+            구글 드라이브에서 스프레드시트를 열고 주소창의 URL 전체를 붙여넣으세요.
+            Service Account 이메일을 <strong>편집자</strong>로 추가해야 동기화가 됩니다.
+          </p>
+        </div>
+      <% end %>
+
+      <%# 초기화 버튼 (연동된 경우만 표시) %>
+      <% if sheets_id.present? %>
+        <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
+          <p class="text-xs text-gray-400 dark:text-gray-500">연동을 해제하고 초기화합니다.</p>
+          <%= button_to admin_sheets_config_clear_path, method: :delete,
+              data: { turbo_confirm: "Google Sheets 연동을 초기화하시겠습니까?" },
+              class: "text-xs px-3 py-1.5 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-colors" do %>
+            연동 초기화
+          <% end %>
+        </div>
+      <% end %>
+
+      <%# Service Account 안내 %>
+      <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+        <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">Service Account 설정 안내</p>
+        <ol class="text-xs text-gray-500 dark:text-gray-400 space-y-1 list-decimal list-inside">
+          <li>Google Cloud Console → Service Account 생성</li>
+          <li>JSON 키 다운로드</li>
+          <li><code class="bg-gray-100 dark:bg-gray-700 px-1 rounded font-mono">bin/rails credentials:edit</code> 에서 <code class="bg-gray-100 dark:bg-gray-700 px-1 rounded font-mono">google.service_account</code> 등록</li>
+          <li>스프레드시트 → 공유 → Service Account 이메일을 <strong>편집자</strong>로 추가</li>
+          <li>위 URL 입력창에 스프레드시트 URL 붙여넣기 → 저장</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <%# 메뉴 권한 관리 %>
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 mb-6">
     <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
       <div>
@@ -177,6 +268,7 @@
       <% end %>
     </div>
   </div>
+
   <% end %>
 
   <%# --- Danger Zone --- %>

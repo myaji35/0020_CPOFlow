@@ -11,7 +11,7 @@ module Settings
     def create
       @email_account = current_user.email_accounts.build(email_account_params)
       if @email_account.save
-        redirect_to settings_root_path, notice: "Email account connected."
+        redirect_to settings_root_path, notice: t("settings.gmail.connect_success")
       else
         render :new, status: :unprocessable_entity
       end
@@ -19,7 +19,7 @@ module Settings
 
     def destroy
       current_user.email_accounts.find(params[:id]).destroy
-      redirect_to settings_root_path, notice: "Email account removed."
+      redirect_to settings_root_path, notice: t("settings.gmail.disconnect_success")
     end
 
     private

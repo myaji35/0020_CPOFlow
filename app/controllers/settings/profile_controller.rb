@@ -2,7 +2,7 @@ module Settings
   class ProfileController < ApplicationController
     def update
       if current_user.update(profile_params)
-        redirect_to settings_root_path, notice: "Profile updated."
+        redirect_to settings_root_path, notice: t("settings.save_success")
       else
         redirect_to settings_root_path, alert: current_user.errors.full_messages.to_sentence
       end

@@ -2,7 +2,8 @@ class Task < ApplicationRecord
   belongs_to :order
   belongs_to :assignee, class_name: "User", optional: true
 
-  validates :title, presence: true
+  validates :title, presence: true, length: { maximum: 255 }
+  validates :order, presence: true
 
   scope :pending, -> { where(completed: false) }
   scope :done, -> { where(completed: true) }

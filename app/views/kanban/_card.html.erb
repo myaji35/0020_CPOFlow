@@ -1,4 +1,4 @@
-<div class="bg-white rounded-lg border border-gray-200 p-3 cursor-pointer shadow-sm hover:shadow-md hover:border-accent/40 transition-all group"
+<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 cursor-pointer shadow-sm hover:shadow-md hover:border-accent/40 dark:hover:border-accent/40 transition-all group"
      data-order-id="<%= order.id %>"
      onclick="openOrderDrawer(<%= order.id %>, <%= order.title.to_json %>, '<%= order_path(order) %>')"
      title="클릭하여 상세 보기">
@@ -12,25 +12,25 @@
   </div>
 
   <!-- Title -->
-  <h4 class="text-sm font-semibold text-gray-900 leading-snug group-hover:text-accent transition-colors mb-1">
+  <h4 class="text-sm font-semibold text-gray-900 dark:text-white leading-snug group-hover:text-accent transition-colors mb-1">
     <%= order.title %>
   </h4>
 
   <!-- 발주처 / 현장 -->
   <div class="flex flex-wrap items-center gap-1.5 mb-2">
     <% if order.client %>
-      <span class="text-xs bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded-full flex items-center gap-1">
+      <span class="text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-1.5 py-0.5 rounded-full flex items-center gap-1">
         <i class="lni lni-briefcase text-xs"></i>
         <%= order.client.name %>
       </span>
     <% elsif order.customer_name.present? %>
-      <span class="text-xs text-gray-500 flex items-center gap-1">
+      <span class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
         <i class="lni lni-user text-xs"></i>
         <%= order.customer_name %>
       </span>
     <% end %>
     <% if order.project %>
-      <span class="text-xs bg-green-50 text-green-700 px-1.5 py-0.5 rounded-full flex items-center gap-1">
+      <span class="text-xs bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-1.5 py-0.5 rounded-full flex items-center gap-1">
         <i class="lni lni-construction text-xs"></i>
         <%= order.project.name %>
       </span>
@@ -39,7 +39,7 @@
 
   <!-- Item name if present -->
   <% if order.item_name.present? %>
-    <p class="text-xs text-gray-400 mb-2 flex items-center gap-1">
+    <p class="text-xs text-gray-400 dark:text-gray-500 mb-2 flex items-center gap-1">
       <i class="lni lni-package text-xs"></i>
       <%= order.item_name %> <%= "× #{order.quantity}" if order.quantity %>
     </p>
@@ -49,7 +49,7 @@
   <% if order.tags_array.any? %>
     <div class="flex flex-wrap gap-1 mb-2">
       <% order.tags_array.first(3).each do |tag| %>
-        <span class="text-xs bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded"><%= tag %></span>
+        <span class="text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded"><%= tag %></span>
       <% end %>
     </div>
   <% end %>
@@ -63,11 +63,11 @@
   <% end %>
 
   <!-- Footer: Assignees + Meta -->
-  <div class="flex items-center justify-between pt-2 border-t border-gray-50">
+  <div class="flex items-center justify-between pt-2 border-t border-gray-50 dark:border-gray-700">
     <!-- Assignee avatars -->
     <div class="flex -space-x-1">
       <% order.assignees.first(3).each do |u| %>
-        <div class="w-5 h-5 rounded-full bg-primary text-white text-xs flex items-center justify-center border border-white font-medium"
+        <div class="w-5 h-5 rounded-full bg-primary text-white text-xs flex items-center justify-center border border-white dark:border-gray-800 font-medium"
              title="<%= u.display_name %>">
           <%= u.initials %>
         </div>
@@ -75,7 +75,7 @@
     </div>
 
     <!-- Meta icons -->
-    <div class="flex items-center gap-2 text-xs text-gray-400">
+    <div class="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
       <% if order.comments.any? %>
         <span class="flex items-center gap-0.5">
           <i class="lni lni-comments"></i>

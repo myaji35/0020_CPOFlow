@@ -27,7 +27,7 @@ class OrdersController < ApplicationController
 
     if @order.save
       Activity.create!(order: @order, user: current_user, action: "created")
-      redirect_to kanban_path, notice: "Order created and added to Inbox."
+      redirect_to kanban_path, notice: t("orders.create_success")
     else
       render :new, status: :unprocessable_entity
     end
@@ -38,7 +38,7 @@ class OrdersController < ApplicationController
   def update
     if @order.update(order_params)
       Activity.create!(order: @order, user: current_user, action: "updated")
-      redirect_to @order, notice: "Order updated."
+      redirect_to @order, notice: t("orders.update_success")
     else
       render :edit, status: :unprocessable_entity
     end
@@ -46,7 +46,7 @@ class OrdersController < ApplicationController
 
   def destroy
     @order.destroy
-    redirect_to kanban_path, notice: "Order removed."
+    redirect_to kanban_path, notice: t("orders.delete_success")
   end
 
   def move_status
@@ -61,7 +61,7 @@ class OrdersController < ApplicationController
         from_status: Order.statuses[old_status],
         to_status: Order.statuses[@order.status]
       )
-      redirect_back fallback_location: kanban_path, notice: "Status updated to #{Order::STATUS_LABELS[new_status]}."
+      redirect_back fallback_location: kanban_path, notice: t("orders.status_updated", status: t("orders.status.#{new_status}", default: new_status))
     else
       redirect_back fallback_location: kanban_path, alert: "Failed to update status."
     end

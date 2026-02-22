@@ -4,8 +4,8 @@
   <!-- Header -->
   <div class="flex items-center justify-between">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900">직원 관리</h1>
-      <p class="text-sm text-gray-500 mt-1">비자/근무조건 선제 관리</p>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">직원 관리</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">비자/근무조건 선제 관리</p>
     </div>
     <%= link_to new_employee_path, class: "inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors" do %>
       <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -15,85 +15,85 @@
 
   <!-- 통계 카드 -->
   <div class="grid grid-cols-4 gap-4">
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-      <p class="text-xs text-gray-500">총 직원</p>
-      <p class="text-2xl font-bold text-gray-900 mt-1"><%= @stats[:total] %></p>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-4">
+      <p class="text-xs text-gray-500 dark:text-gray-400">총 직원</p>
+      <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><%= @stats[:total] %></p>
     </div>
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-      <p class="text-xs text-gray-500">현재 파견중</p>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-4">
+      <p class="text-xs text-gray-500 dark:text-gray-400">현재 파견중</p>
       <p class="text-2xl font-bold text-primary mt-1"><%= @stats[:dispatched] %></p>
     </div>
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 <%= @stats[:visa_expiring] > 0 ? 'border-yellow-200' : '' %>">
-      <p class="text-xs text-gray-500">비자 만료 임박 (60일)</p>
-      <p class="text-2xl font-bold <%= @stats[:visa_expiring] > 0 ? 'text-yellow-600' : 'text-gray-900' %> mt-1"><%= @stats[:visa_expiring] %></p>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-4 <%= @stats[:visa_expiring] > 0 ? 'border-yellow-200 dark:border-yellow-800' : '' %>">
+      <p class="text-xs text-gray-500 dark:text-gray-400">비자 만료 임박 (60일)</p>
+      <p class="text-2xl font-bold <%= @stats[:visa_expiring] > 0 ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-900 dark:text-white' %> mt-1"><%= @stats[:visa_expiring] %></p>
     </div>
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 <%= @stats[:contract_expiring] > 0 ? 'border-orange-200' : '' %>">
-      <p class="text-xs text-gray-500">계약 만료 임박 (30일)</p>
-      <p class="text-2xl font-bold <%= @stats[:contract_expiring] > 0 ? 'text-orange-600' : 'text-gray-900' %> mt-1"><%= @stats[:contract_expiring] %></p>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-4 <%= @stats[:contract_expiring] > 0 ? 'border-orange-200 dark:border-orange-800' : '' %>">
+      <p class="text-xs text-gray-500 dark:text-gray-400">계약 만료 임박 (30일)</p>
+      <p class="text-2xl font-bold <%= @stats[:contract_expiring] > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-gray-900 dark:text-white' %> mt-1"><%= @stats[:contract_expiring] %></p>
     </div>
   </div>
 
   <!-- 검색/필터 -->
   <%= form_with url: employees_path, method: :get, class: "flex gap-2 flex-wrap items-center" do |f| %>
     <%= f.text_field :q, value: params[:q], placeholder: "이름 검색...",
-        class: "border border-gray-200 rounded-lg px-3 py-2 text-sm w-48 focus:outline-none focus:border-primary" %>
+        class: "border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm w-48 focus:outline-none focus:border-primary" %>
     <%= f.select :type, [["전체 고용형태", ""], ["정규직", "regular"], ["계약직", "contract"], ["파견", "dispatch"]],
         { selected: params[:type] },
-        class: "border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
-    <label class="inline-flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer">
+        class: "border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+    <label class="inline-flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400 cursor-pointer">
       <%= f.check_box :deployed, { checked: params[:deployed] == "1" }, "1", "" %>
       파견중만
     </label>
-    <label class="inline-flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer">
+    <label class="inline-flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400 cursor-pointer">
       <%= f.check_box :show_inactive, { checked: params[:show_inactive] == "1" }, "1", "" %>
       퇴직자 포함
     </label>
     <%= f.submit "검색", class: "bg-primary text-white px-4 py-2 rounded-lg text-sm hover:bg-primary-dark cursor-pointer" %>
-    <%= link_to "초기화", employees_path, class: "text-sm text-gray-500 hover:text-gray-700 px-2 py-2" %>
+    <%= link_to "초기화", employees_path, class: "text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 px-2 py-2" %>
   <% end %>
 
   <!-- 테이블 -->
-  <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
     <table class="w-full">
-      <thead class="bg-gray-50 border-b border-gray-100">
+      <thead class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
         <tr>
-          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">이름</th>
-          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">국적/부서</th>
-          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">고용형태</th>
-          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">현재 현장</th>
-          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">비자 만료</th>
-          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">계약 만료</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">이름</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">국적/부서</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">고용형태</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">현재 현장</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">비자 만료</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">계약 만료</th>
           <th class="px-4 py-3"></th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-gray-50">
+      <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
         <% @employees.each do |emp| %>
           <%
             visa       = emp.active_visa
             contract   = emp.current_contract
             assignment = emp.current_assignment
           %>
-          <tr class="hover:bg-gray-50 transition-colors <%= emp.active? ? '' : 'opacity-50' %>">
+          <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors <%= emp.active? ? '' : 'opacity-50' %>">
             <td class="px-4 py-3">
-              <div class="font-medium text-gray-900"><%= emp.name %></div>
+              <div class="font-medium text-gray-900 dark:text-white"><%= emp.name %></div>
               <% if emp.name_en.present? %>
-                <div class="text-xs text-gray-400"><%= emp.name_en %></div>
+                <div class="text-xs text-gray-400 dark:text-gray-500"><%= emp.name_en %></div>
               <% end %>
             </td>
-            <td class="px-4 py-3 text-sm text-gray-600">
+            <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
               <div><%= emp.nationality_label %></div>
-              <div class="text-xs text-gray-400"><%= emp.department %></div>
+              <div class="text-xs text-gray-400 dark:text-gray-500"><%= emp.department %></div>
             </td>
             <td class="px-4 py-3">
-              <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full bg-blue-50 text-blue-700">
+              <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">
                 <%= emp.employment_type_label %>
               </span>
             </td>
-            <td class="px-4 py-3 text-sm text-gray-600">
+            <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
               <% if assignment %>
                 <%= assignment.project.name %>
               <% else %>
-                <span class="text-gray-300">-</span>
+                <span class="text-gray-300 dark:text-gray-600">-</span>
               <% end %>
             </td>
             <td class="px-4 py-3">
@@ -107,23 +107,23 @@
                   <% end %>
                 </span>
               <% else %>
-                <span class="text-gray-300 text-xs">-</span>
+                <span class="text-gray-300 dark:text-gray-600 text-xs">-</span>
               <% end %>
             </td>
             <td class="px-4 py-3">
               <% if contract&.end_date %>
                 <%
                   days_left = (contract.end_date - Date.today).to_i
-                  badge_class = if days_left < 0 then "bg-red-50 text-red-700"
-                                elsif days_left <= 14 then "bg-red-50 text-red-700"
-                                elsif days_left <= 30 then "bg-orange-50 text-orange-700"
-                                else "bg-green-50 text-green-700" end
+                  badge_class = if days_left < 0 then "bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                elsif days_left <= 14 then "bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                elsif days_left <= 30 then "bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
+                                else "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400" end
                 %>
                 <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full <%= badge_class %>">
                   <%= contract.end_date.strftime("%Y-%m-%d") %>
                 </span>
               <% else %>
-                <span class="text-gray-300 text-xs">-</span>
+                <span class="text-gray-300 dark:text-gray-600 text-xs">-</span>
               <% end %>
             </td>
             <td class="px-4 py-3 text-right">
@@ -132,7 +132,7 @@
           </tr>
         <% end %>
         <% if @employees.empty? %>
-          <tr><td colspan="7" class="px-4 py-12 text-center text-gray-400 text-sm">등록된 직원이 없습니다.</td></tr>
+          <tr><td colspan="7" class="px-4 py-12 text-center text-gray-400 dark:text-gray-500 text-sm">등록된 직원이 없습니다.</td></tr>
         <% end %>
       </tbody>
     </table>

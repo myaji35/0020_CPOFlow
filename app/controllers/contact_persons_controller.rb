@@ -13,7 +13,7 @@ class ContactPersonsController < ApplicationController
       if primary_params?
         @contactable.contact_persons.where.not(id: @contact_person.id).update_all(primary: false)
       end
-      redirect_to @contactable, notice: "담당자가 등록되었습니다."
+      redirect_to @contactable, notice: t("contact_persons.create_success")
     else
       render :new, status: :unprocessable_entity
     end
@@ -26,7 +26,7 @@ class ContactPersonsController < ApplicationController
       if @contact_person.primary?
         @contactable.contact_persons.where.not(id: @contact_person.id).update_all(primary: false)
       end
-      redirect_to @contactable, notice: "담당자 정보가 수정되었습니다."
+      redirect_to @contactable, notice: t("contact_persons.update_success")
     else
       render :edit, status: :unprocessable_entity
     end
@@ -34,7 +34,7 @@ class ContactPersonsController < ApplicationController
 
   def destroy
     @contact_person.destroy
-    redirect_to @contactable, notice: "담당자가 삭제되었습니다."
+    redirect_to @contactable, notice: t("contact_persons.delete_success")
   end
 
   private

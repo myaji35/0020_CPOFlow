@@ -48,6 +48,8 @@ Rails.application.routes.draw do
     resources :imports, only: %i[index new create show] do
       member { get :download_errors }
     end
+    patch "sheets_config",       to: "sheets_config#update", as: :sheets_config
+    delete "sheets_config/clear", to: "sheets_config#clear",  as: :sheets_config_clear
   end
 
   # Gmail OAuth2
@@ -62,8 +64,8 @@ Rails.application.routes.draw do
     resources :contact_persons, only: %i[new create edit update destroy]
   end
 
-  # 거래처 (Suppliers)
-  resources :suppliers do
+  # 거래처 (Suppliers) - destroy 제외 (발주 이력 보존)
+  resources :suppliers, except: [:destroy] do
     resources :contact_persons, only: %i[new create edit update destroy]
     resources :supplier_products, only: %i[create destroy]
   end

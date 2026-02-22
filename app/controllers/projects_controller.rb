@@ -22,7 +22,7 @@ class ProjectsController < ApplicationController
   def create
     @project = Project.new(project_params)
     if @project.save
-      redirect_to @project, notice: "프로젝트가 등록되었습니다."
+      redirect_to @project, notice: t("projects.create_success")
     else
       render :new, status: :unprocessable_entity
     end
@@ -32,7 +32,7 @@ class ProjectsController < ApplicationController
 
   def update
     if @project.update(project_params)
-      redirect_to @project, notice: "프로젝트 정보가 수정되었습니다."
+      redirect_to @project, notice: t("projects.update_success")
     else
       render :edit, status: :unprocessable_entity
     end
@@ -40,7 +40,7 @@ class ProjectsController < ApplicationController
 
   def destroy
     @project.destroy
-    redirect_to projects_path, notice: "프로젝트가 삭제되었습니다."
+    redirect_to projects_path, notice: t("projects.delete_success")
   end
 
   private

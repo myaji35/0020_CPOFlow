@@ -15,7 +15,7 @@ class EmployeeAssignmentsController < ApplicationController
   def create
     @assignment = @employee.employee_assignments.new(assignment_params)
     if @assignment.save
-      redirect_to @employee, notice: "현장 배정이 등록되었습니다."
+      redirect_to @employee, notice: t("employee_assignments.create_success")
     else
       @projects = Project.active.by_name
       render :new, status: :unprocessable_entity
@@ -24,7 +24,7 @@ class EmployeeAssignmentsController < ApplicationController
 
   def update
     if @assignment.update(assignment_params)
-      redirect_to @employee, notice: "현장 배정이 수정되었습니다."
+      redirect_to @employee, notice: t("employee_assignments.update_success")
     else
       @projects = Project.by_name
       render :edit, status: :unprocessable_entity
@@ -33,7 +33,7 @@ class EmployeeAssignmentsController < ApplicationController
 
   def destroy
     @assignment.destroy
-    redirect_to @employee, notice: "현장 배정이 삭제되었습니다."
+    redirect_to @employee, notice: t("employee_assignments.delete_success")
   end
 
   private

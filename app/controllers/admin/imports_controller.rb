@@ -49,7 +49,7 @@ module Admin
       EcountImportJob.perform_later(@import.id)
 
       redirect_to admin_import_path(@import),
-                  notice: "이관이 시작되었습니다. 잠시 후 결과를 확인하세요."
+                  notice: t("admin.imports.create_success")
     end
 
     # GET /admin/imports/:id

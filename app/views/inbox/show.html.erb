@@ -1,0 +1,202 @@
+<%# Inbox Email Detail — Full Page View %>
+<% content_for :page_title, @order.original_email_subject.presence || @order.title %>
+
+<div class="max-w-4xl mx-auto">
+
+  <%# ── Breadcrumb ─────────────────────────────────────────── %>
+  <div class="flex items-center gap-3 mb-6">
+    <%= link_to inbox_path, class: "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300" do %>
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    <% end %>
+    <div>
+      <p class="text-xs text-gray-400 dark:text-gray-500">받은편지함 / 이메일 상세</p>
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-white leading-tight truncate max-w-xl">
+        <%= @order.original_email_subject.presence || @order.title %>
+      </h2>
+    </div>
+  </div>
+
+  <%# ── Main Email Card ─────────────────────────────────────── %>
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
+
+    <%# Email Header %>
+    <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700">
+      <div class="flex items-start justify-between gap-4">
+        <div class="flex-1 min-w-0">
+          <h1 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
+            <%= @order.original_email_subject.presence || @order.title %>
+          </h1>
+          <div class="flex flex-wrap items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+            <div class="flex items-center gap-1.5">
+              <div class="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                <%= @order.original_email_from.presence&.first&.upcase || "?" %>
+              </div>
+              <div>
+                <span class="font-medium text-gray-700 dark:text-gray-300">
+                  <%= @order.original_email_from.presence || @order.customer_name %>
+                </span>
+              </div>
+            </div>
+            <span class="text-gray-300 dark:text-gray-600">·</span>
+            <span><%= @order.created_at.strftime("%Y년 %m월 %d일 %H:%M") %></span>
+          </div>
+        </div>
+
+        <%# Action Buttons %>
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <%= status_badge(@order) %>
+          <% if @order.status.to_s == "inbox" %>
+            <%= button_to convert_email_to_order_path(@order),
+                data: { turbo_confirm: "칸반 보드로 이동하시겠습니까?" },
+                class: "flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors" do %>
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              칸반으로 이동
+            <% end %>
+          <% else %>
+            <%= link_to order_path(@order), class: "flex items-center gap-1.5 px-4 py-2 bg-accent hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors" do %>
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              발주 상세 보기
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+
+      <%# Meta Chips %>
+      <div class="flex flex-wrap items-center gap-2 mt-4">
+        <%= priority_badge(@order) %>
+        <% if @order.due_date %>
+          <%= due_badge(@order) %>
+          <span class="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border border-orange-100 dark:border-orange-800/50">
+            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            납기 <%= @order.due_date.strftime("%Y/%m/%d") %>
+          </span>
+        <% end %>
+        <% if @order.source_email_id.present? %>
+          <span class="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 border border-purple-100 dark:border-purple-800/50">
+            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            Gmail 수신 · ID: <%= @order.source_email_id %>
+          </span>
+        <% end %>
+        <% @order.tags_array.each do |tag| %>
+          <span class="text-xs px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">#<%= tag %></span>
+        <% end %>
+      </div>
+    </div>
+
+    <%# Key Info Grid %>
+    <% if @order.item_name.present? || @order.estimated_value.present? || @order.client || @order.project %>
+      <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700/30 border-b border-gray-100 dark:border-gray-700">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <% if @order.client %>
+            <div>
+              <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-0.5">발주처</dt>
+              <dd class="font-medium text-gray-900 dark:text-white"><%= @order.client.name %></dd>
+            </div>
+          <% end %>
+          <% if @order.item_name.present? %>
+            <div>
+              <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-0.5">품목</dt>
+              <dd class="font-medium text-gray-900 dark:text-white"><%= @order.item_name %><%= " × #{@order.quantity}" if @order.quantity %></dd>
+            </div>
+          <% end %>
+          <% if @order.estimated_value.present? %>
+            <div>
+              <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-0.5">예상 금액</dt>
+              <dd class="font-medium text-gray-900 dark:text-white">
+                <%= number_to_currency(@order.estimated_value, unit: @order.currency.presence || "$", format: "%u %n") %>
+              </dd>
+            </div>
+          <% end %>
+          <% if @order.project %>
+            <div>
+              <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-0.5">현장</dt>
+              <dd class="font-medium text-gray-900 dark:text-white"><%= @order.project.name %></dd>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <%# Email Body %>
+    <div class="px-6 py-6">
+      <% body = @order.original_email_body.presence || @order.description %>
+      <% if body.present? %>
+        <div class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap font-mono bg-gray-50 dark:bg-gray-800/50 rounded-lg p-5 border border-gray-100 dark:border-gray-700 max-h-96 overflow-y-auto">
+          <%= body %>
+        </div>
+      <% else %>
+        <div class="flex flex-col items-center justify-center py-12 text-center">
+          <svg class="w-10 h-10 text-gray-200 dark:text-gray-600 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <p class="text-xs text-gray-400 dark:text-gray-500">이메일 본문이 없습니다</p>
+        </div>
+      <% end %>
+    </div>
+
+    <%# Footer %>
+    <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/20 flex items-center justify-between">
+      <p class="text-xs text-gray-400 dark:text-gray-500">
+        발주 #<%= @order.id %> · <%= time_ago_in_words(@order.created_at) %> 전 생성
+      </p>
+      <%= link_to order_path(@order), class: "text-sm text-accent hover:underline flex items-center gap-1" do %>
+        발주 상세 전체 보기
+        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      <% end %>
+    </div>
+  </div>
+
+  <%# ── Related Orders from Same Sender ─────────────────────── %>
+  <% if @order.original_email_from.present? %>
+    <% same_sender = Order.where(original_email_from: @order.original_email_from)
+                          .where.not(id: @order.id)
+                          .order(created_at: :desc).limit(5) %>
+    <% if same_sender.any? %>
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 mb-6">
+        <h3 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-3">
+          <svg class="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          같은 발신자의 다른 이메일
+        </h3>
+        <ul class="space-y-1">
+          <% same_sender.each do |o| %>
+            <li>
+              <%= link_to inbox_email_path(o), class: "flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group" do %>
+                <span class="text-sm text-gray-900 dark:text-white group-hover:text-accent truncate flex-1">
+                  <%= o.original_email_subject.presence || o.title %>
+                </span>
+                <%= status_badge(o) %>
+                <span class="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0"><%= o.created_at.strftime("%m/%d") %></span>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+  <% end %>
+
+  <%# ── Quick Actions ────────────────────────────────────────── %>
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+    <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">빠른 액션</h3>
+    <div class="flex flex-wrap gap-3">
+      <% if @order.status.to_s == "inbox" %>
+        <%= button_to convert_email_to_order_path(@order),
+            data: { turbo_confirm: "칸반 보드로 이동하시겠습니까?" },
+            class: "flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors" do %>
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          칸반으로 이동
+        <% end %>
+      <% end %>
+      <%= link_to order_path(@order), class: "flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium rounded-lg transition-colors" do %>
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        발주 상세
+      <% end %>
+      <%= link_to kanban_path, class: "flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium rounded-lg transition-colors" do %>
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        칸반 보드
+      <% end %>
+      <%= link_to inbox_path, class: "flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium rounded-lg transition-colors" do %>
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+        받은편지함
+      <% end %>
+    </div>
+  </div>
+
+</div>
