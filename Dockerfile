@@ -36,13 +36,14 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Install application gems
+# --mount=type=cache: gem 다운로드 캐시 재사용으로 반복 배포 시 bundle install 단축
 COPY vendor/* ./vendor/
 COPY Gemfile Gemfile.lock ./
 
-RUN bundle install && \
+RUN --mount=type=cache,id=bundle-cache,target=/usr/local/bundle/cache \
+    bundle install && \
     rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git && \
-    # -j 1 disable parallel compilation to avoid a QEMU bug: https://github.com/rails/bootsnap/issues/495
-    bundle exec bootsnap precompile -j 1 --gemfile
+    bundle exec bootsnap precompile --gemfile
 
 # Copy application code
 COPY . .
@@ -51,8 +52,8 @@ COPY . .
 RUN chmod +x bin/*
 
 # Precompile bootsnap code for faster boot times.
-# -j 1 disable parallel compilation to avoid a QEMU bug: https://github.com/rails/bootsnap/issues/495
-RUN bundle exec bootsnap precompile -j 1 app/ lib/
+# 원격 빌드(AMD64 Native)에서는 병렬 컴파일 사용 가능 (-j 1 제거)
+RUN bundle exec bootsnap precompile app/ lib/
 
 # Precompiling assets for production without requiring secret RAILS_MASTER_KEY
 RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile

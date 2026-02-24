@@ -41,8 +41,13 @@ volumes:
 asset_path: /rails/public/assets
 
 # Configure the image builder.
+# 원격 빌드: 서버(AMD64)에서 직접 빌드 → QEMU 크로스 컴파일 제거 → 빌드 속도 3~5배 향상
 builder:
+  remote: ssh://root@158.247.235.31
   arch: amd64
+  cache:
+    type: registry
+    image: ghcr.io/myaji35/cpoflow-build-cache
 
 # kamal-proxy: 포트 3030 (80은 nginx 점유)
 proxy:
@@ -55,8 +60,8 @@ proxy:
     interval: 5
     timeout: 120
 
-# Deploy timeout (seconds) - Rails+SolidQueue boot can take ~15s
-deploy_timeout: 120
+# Deploy timeout (seconds) - 원격 빌드로 부팅 시간 단축됨
+deploy_timeout: 60
 
 # Use SSH as root
 ssh:
