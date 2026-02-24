@@ -4,12 +4,12 @@ class AssignmentsController < ApplicationController
   def create
     @assignment = @order.assignments.find_or_initialize_by(user_id: params[:user_id])
     @assignment.save
-    redirect_to @order
+    redirect_back fallback_location: order_path(@order)
   end
 
   def destroy
     @order.assignments.find(params[:id]).destroy
-    redirect_to @order
+    redirect_back fallback_location: order_path(@order)
   end
 
   private
