@@ -141,14 +141,14 @@
           </span>
           <div class="flex items-center gap-2">
             <span class="text-xs text-gray-400 dark:text-gray-500"><%= @all_orders.count %>건</span>
-            <% if current_user.email_accounts.where(connected: true).any? %>
-              <span id="auto-sync-countdown" class="text-xs text-gray-400 dark:text-gray-500 tabular-nums"></span>
-              <button onclick="triggerSync()" id="sync-btn"
-                      class="text-xs px-3 py-1.5 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 flex items-center gap-1 transition-colors">
-                <svg id="sync-icon" xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-                동기화
-              </button>
-            <% end %>
+            <span id="auto-sync-countdown"
+                  data-has-account="<%= current_user.email_accounts.where(connected: true).any? %>"
+                  class="text-xs text-gray-400 dark:text-gray-500 tabular-nums"></span>
+            <button onclick="triggerSync()" id="sync-btn"
+                    class="text-xs px-3 py-1.5 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 flex items-center gap-1 transition-colors">
+              <svg id="sync-icon" xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              동기화
+            </button>
           </div>
         </div>
 
@@ -1239,8 +1239,9 @@
   // --- 5분 자동 동기화 ---
   (function initAutoSync() {
     const countdownEl = document.getElementById('auto-sync-countdown');
-    if (!countdownEl) return; // 연결된 계정 없으면 skip
+    if (!countdownEl) return;
 
+    const hasAccount = countdownEl.dataset.hasAccount === 'true';
     const INTERVAL = 5 * 60; // 300초
     let remaining = INTERVAL;
     let countdownTimer = null;
@@ -1259,9 +1260,13 @@
         remaining -= 1;
         if (remaining <= 0) {
           clearInterval(countdownTimer);
-          countdownEl.textContent = '동기화 중...';
-          triggerSync();
-          // triggerSync → reload 이후 카운트다운 자동 재시작됨
+          if (hasAccount) {
+            countdownEl.textContent = '동기화 중...';
+            triggerSync(); // triggerSync → reload 이후 카운트다운 자동 재시작
+          } else {
+            // 계정 미연결 시 페이지만 새로고침
+            window.location.reload();
+          }
         } else {
           countdownEl.textContent = formatTime(remaining);
         }
