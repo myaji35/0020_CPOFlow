@@ -25,8 +25,8 @@
       <!-- Column Header -->
       <div class="flex items-center justify-between mb-3 px-1">
         <div class="flex items-center gap-2">
-          <span class="text-sm font-semibold text-gray-700 dark:text-gray-300"><%= label %></span>
-          <span class="text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full px-2 py-0.5"><%= orders.count %></span>
+          <span class="column-name text-sm font-semibold text-gray-700 dark:text-gray-300"><%= label %></span>
+          <span class="column-count text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full px-2 py-0.5"><%= orders.count %></span>
         </div>
         <% if status == "inbox" %>
           <%= link_to inbox_path, class: "text-xs text-accent hover:underline" do %>
@@ -44,14 +44,12 @@
         <% end %>
 
         <!-- Empty state -->
-        <% if orders.empty? %>
-          <div class="flex-1 flex items-center justify-center text-xs text-gray-400 dark:text-gray-500 py-8">
-            <div class="text-center">
-              <i class="lni lni-inbox text-2xl block mb-1 opacity-50"></i>
-              No orders
-            </div>
+        <div class="empty-state flex-1 flex items-center justify-center text-xs text-gray-400 dark:text-gray-500 py-8<%= orders.any? ? ' hidden' : '' %>">
+          <div class="text-center">
+            <i class="lni lni-inbox text-2xl block mb-1 opacity-50"></i>
+            No orders
           </div>
-        <% end %>
+        </div>
       </div>
     </div>
   <% end %>
@@ -59,41 +57,125 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  const columns = document.querySelectorAll('.kanban-cards');
-  columns.forEach(function(column) {
-    new Sortable(column, {
-      group: 'kanban',
-      animation: 150,
-      ghostClass: 'opacity-50',
-      chosenClass: 'ring-2 ring-accent',
-      onEnd: function(evt) {
-        const cardEl = evt.item;
-        const orderId = cardEl.dataset.orderId;
-        const newStatus = evt.to.dataset.status;
+  const CSRF = document.querySelector('meta[name="csrf-token"]').content;
 
-        fetch(`/orders/${orderId}/move`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
-          },
-          body: JSON.stringify({ status: newStatus })
+  // 컬럼 카운트 배지 업데이트
+  function updateCounts() {
+    document.querySelectorAll('.kanban-column').forEach(function(col) {
+      const count = col.querySelectorAll('[data-order-id]').length;
+      const badge = col.querySelector('.column-count');
+      if (badge) badge.textContent = count;
+
+      // 빈 칼럼 empty-state 토글
+      const cards  = col.querySelector('.kanban-cards');
+      const empty  = col.querySelector('.empty-state');
+      if (!cards || !empty) return;
+      const hasCards = cards.querySelectorAll('[data-order-id]').length > 0;
+      empty.style.display = hasCards ? 'none' : '';
+    });
+  }
+
+  // 드래그 중 타겟 컬럼 하이라이트
+  function highlightColumn(el, on) {
+    if (!el) return;
+    el.classList.toggle('ring-2', on);
+    el.classList.toggle('ring-accent', on);
+    el.classList.toggle('ring-inset', on);
+    el.classList.toggle('bg-blue-50/60', on);
+    el.classList.toggle('dark:bg-blue-900/20', on);
+  }
+
+  // 이동 성공 토스트
+  function showToast(msg, ok) {
+    const old = document.getElementById('kanban-toast');
+    if (old) old.remove();
+    const t = document.createElement('div');
+    t.id = 'kanban-toast';
+    t.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl text-sm font-medium shadow-lg transition-all duration-300 flex items-center gap-2 '
+      + (ok ? 'bg-green-500 text-white' : 'bg-red-500 text-white');
+    t.innerHTML = (ok
+      ? '<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>'
+      : '<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>')
+      + msg;
+    document.body.appendChild(t);
+    setTimeout(function() { t.style.opacity = '0'; setTimeout(function() { t.remove(); }, 300); }, 2500);
+  }
+
+  // 각 컬럼에 SortableJS 적용
+  document.querySelectorAll('.kanban-cards').forEach(function(column) {
+    new Sortable(column, {
+      group:       'kanban',
+      animation:   180,
+      easing:      'cubic-bezier(0.25, 1, 0.5, 1)',
+      handle:      '.drag-handle',   // 핸들 아이콘으로만 드래그
+      ghostClass:  'kanban-ghost',
+      dragClass:   'kanban-dragging',
+      chosenClass: 'kanban-chosen',
+
+      onStart: function(evt) {
+        document.querySelectorAll('.kanban-cards').forEach(function(c) {
+          if (c !== evt.from) highlightColumn(c, true);
+        });
+      },
+
+      onEnd: function(evt) {
+        // 모든 하이라이트 해제
+        document.querySelectorAll('.kanban-cards').forEach(function(c) {
+          highlightColumn(c, false);
+        });
+
+        const cardEl   = evt.item;
+        const orderId  = cardEl.dataset.orderId;
+        const newCol   = evt.to;
+        const oldCol   = evt.from;
+        const newStatus = newCol.dataset.status;
+        const oldStatus = oldCol.dataset.status;
+
+        // 같은 컬럼 내 재정렬 → 서버 호출 불필요
+        if (newStatus === oldStatus) return;
+
+        // 낙관적 UI: 카드 컬럼명 배지 즉시 업데이트
+        const statusBadge = cardEl.querySelector('.card-status-badge');
+        if (statusBadge) statusBadge.textContent = newCol.closest('.kanban-column').querySelector('.column-name')?.textContent || '';
+
+        updateCounts();
+
+        fetch('/orders/' + orderId + '/move', {
+          method:  'PATCH',
+          headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF },
+          body:    JSON.stringify({ status: newStatus })
         })
-        .then(r => r.json())
-        .then(data => {
-          if (!data.success) {
-            console.error('Move failed:', data.errors);
-            // revert on failure
-            evt.from.insertBefore(cardEl, evt.from.children[evt.oldIndex]);
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.success) {
+            const colLabel = newCol.closest('.kanban-column').querySelector('.column-name')?.textContent || newStatus;
+            showToast('→ ' + colLabel + ' 이동 완료', true);
+          } else {
+            // 실패 시 원위치 복원
+            if (evt.oldIndex < oldCol.children.length) {
+              oldCol.insertBefore(cardEl, oldCol.children[evt.oldIndex]);
+            } else {
+              oldCol.appendChild(cardEl);
+            }
+            updateCounts();
+            showToast('이동 실패: ' + (data.errors || []).join(', '), false);
           }
-          // Update column counts
-          document.querySelectorAll('.kanban-column').forEach(col => {
-            const cards = col.querySelectorAll('[data-order-id]').length;
-            col.querySelector('.kanban-column span:last-child').textContent = cards;
-          });
+        })
+        .catch(function() {
+          oldCol.insertBefore(cardEl, oldCol.children[evt.oldIndex] || null);
+          updateCounts();
+          showToast('네트워크 오류가 발생했습니다.', false);
         });
       }
     });
   });
 });
 </script>
+
+<style>
+.kanban-ghost    { opacity: 0.35; border: 2px dashed #00A1E0 !important; background: #e0f2fe !important; border-radius: 0.5rem; }
+.kanban-dragging { opacity: 0.95; transform: rotate(1.5deg) scale(1.03); box-shadow: 0 12px 32px rgba(0,0,0,0.18) !important; }
+.kanban-chosen   { box-shadow: 0 0 0 2px #00A1E0; }
+.drag-handle     { cursor: grab; touch-action: none; }
+.drag-handle:active { cursor: grabbing; }
+</style>

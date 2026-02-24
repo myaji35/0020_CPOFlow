@@ -1,15 +1,30 @@
-<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 cursor-pointer shadow-sm hover:shadow-md hover:border-accent/40 dark:hover:border-accent/40 transition-all group"
+<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 shadow-sm hover:shadow-md hover:border-accent/40 dark:hover:border-accent/40 transition-all group"
      data-order-id="<%= order.id %>"
-     onclick="openOrderDrawer(<%= order.id %>, <%= order.title.to_json %>, '<%= order_path(order) %>')"
      title="클릭하여 상세 보기">
 
-  <!-- Card Header: Priority + Due badge -->
+  <!-- Card Header: drag handle + Priority + Due badge -->
   <div class="flex items-center justify-between mb-2">
-    <%= priority_badge(order) %>
-    <% if order.due_date %>
-      <%= due_badge(order) %>
-    <% end %>
+    <div class="flex items-center gap-1.5">
+      <!-- 드래그 핸들 -->
+      <span class="drag-handle text-gray-300 dark:text-gray-600 hover:text-gray-400 dark:hover:text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity -ml-1 pr-0.5"
+            title="드래그하여 이동">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="9"  cy="5"  r="1.5"/><circle cx="15" cy="5"  r="1.5"/>
+          <circle cx="9"  cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
+          <circle cx="9"  cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/>
+        </svg>
+      </span>
+      <%= priority_badge(order) %>
+    </div>
+    <div class="flex items-center gap-1">
+      <% if order.due_date %>
+        <%= due_badge(order) %>
+      <% end %>
+    </div>
   </div>
+
+  <!-- 클릭 영역 (핸들 제외) -->
+  <div onclick="openOrderDrawer(<%= order.id %>, <%= order.title.to_json %>, '<%= order_path(order) %>')" class="cursor-pointer">
 
   <!-- Title -->
   <h4 class="text-sm font-semibold text-gray-900 dark:text-white leading-snug group-hover:text-accent transition-colors mb-1">
@@ -88,4 +103,5 @@
       </span>
     </div>
   </div>
+  </div><!-- /클릭 영역 -->
 </div>
