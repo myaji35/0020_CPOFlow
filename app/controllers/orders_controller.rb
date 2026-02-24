@@ -2,10 +2,38 @@ class OrdersController < ApplicationController
   before_action :set_order, only: %i[show edit update destroy move_status]
 
   def index
-    @orders = Order.all.includes(:assignees, :tasks, :user, :client, :project).by_due_date
+    @orders = Order.all.includes(:assignees, :tasks, :user, :client, :project, :supplier).by_due_date
+
+    # 기존 필터
     @orders = @orders.where(status: params[:status]) if params[:status].present?
-    @orders = @orders.where("title LIKE ? OR customer_name LIKE ?",
+    @orders = @orders.where("orders.title LIKE ? OR orders.customer_name LIKE ?",
                             "%#{params[:q]}%", "%#{params[:q]}%") if params[:q].present?
+
+    # 거래내역 추적 필터 (FR-01)
+    @orders = @orders.where(client_id: params[:client_id])     if params[:client_id].present?
+    @orders = @orders.where(supplier_id: params[:supplier_id]) if params[:supplier_id].present?
+    @orders = @orders.where(project_id: params[:project_id])   if params[:project_id].present?
+    @orders = @orders.joins(:assignments).where(assignments: { user_id: params[:user_id] }) if params[:user_id].present?
+
+    # 기간 필터
+    case params[:period]
+    when "this_month"
+      @orders = @orders.where(created_at: Time.current.beginning_of_month..)
+    when "3months"
+      @orders = @orders.where(created_at: 3.months.ago..)
+    when "this_year"
+      @orders = @orders.where(created_at: Time.current.beginning_of_year..)
+    when "custom"
+      @orders = @orders.where(created_at: params[:date_from]..) if params[:date_from].present?
+      @orders = @orders.where(created_at: ..Date.parse(params[:date_to]).end_of_day) if params[:date_to].present?
+    end
+
+    # 필터 드롭다운용 데이터
+    @filter_clients   = Client.active.by_name
+    @filter_suppliers = Supplier.active.by_name
+    @filter_projects  = Project.active.by_name
+    @filter_users     = User.order(:name)
+
     @total_count = @orders.count
     @orders = @orders.limit(50).offset((params[:page].to_i > 0 ? params[:page].to_i - 1 : 0) * 50)
     @current_page = [ params[:page].to_i, 1 ].max

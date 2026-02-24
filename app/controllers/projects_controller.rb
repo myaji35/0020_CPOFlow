@@ -12,7 +12,16 @@ class ProjectsController < ApplicationController
   end
 
   def show
-    @orders = @project.orders.by_due_date.limit(20)
+    # FR-04: 관련 오더 탭 강화
+    orders_scope = @project.orders
+    case params[:period]
+    when "this_month" then orders_scope = orders_scope.where(created_at: Time.current.beginning_of_month..)
+    when "3months"    then orders_scope = orders_scope.where(created_at: 3.months.ago..)
+    when "this_year"  then orders_scope = orders_scope.where(created_at: Time.current.beginning_of_year..)
+    end
+
+    @orders              = orders_scope.by_due_date.includes(:client, :supplier, :assignees)
+    @order_status_counts = @project.orders.group(:status).count
   end
 
   def new

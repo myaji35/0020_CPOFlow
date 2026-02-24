@@ -14,7 +14,29 @@ class ClientsController < ApplicationController
   def show
     @contact_persons = @client.contact_persons.primary_first
     @projects        = @client.projects.order(created_at: :desc)
-    @orders          = @client.orders.by_due_date.limit(20)
+
+    # FR-02: 거래이력 탭 강화
+    orders_scope = @client.orders
+    case params[:period]
+    when "this_month" then orders_scope = orders_scope.where(created_at: Time.current.beginning_of_month..)
+    when "3months"    then orders_scope = orders_scope.where(created_at: 3.months.ago..)
+    when "this_year"  then orders_scope = orders_scope.where(created_at: Time.current.beginning_of_year..)
+    end
+    orders_scope = orders_scope.where(project_id: params[:project_id]) if params[:project_id].present?
+
+    sort = params[:sort] || "due_date"
+    orders_scope = case sort
+                   when "value"   then orders_scope.order(estimated_value: :desc)
+                   when "recent"  then orders_scope.order(created_at: :desc)
+                   else                orders_scope.by_due_date
+                   end
+
+    @orders           = orders_scope.includes(:project, :supplier)
+    @order_status_counts = @client.orders.group(:status).count
+    @delivered_count  = @client.orders.where(status: :delivered).count
+    total             = @client.orders.where.not(due_date: nil).count
+    overdue           = @client.orders.where("due_date < ? AND status != ?", Date.today, Order.statuses[:delivered]).count
+    @on_time_rate     = total > 0 ? ((total - overdue).to_f / total * 100).round(1) : nil
   end
 
   def new

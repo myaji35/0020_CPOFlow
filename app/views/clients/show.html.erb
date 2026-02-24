@@ -158,23 +158,74 @@
       </div>
     </div>
 
-    <!-- 거래이력 탭 -->
+    <!-- 거래이력 탭 (FR-02 강화) -->
     <div x-show="tab==='orders'" class="p-4">
-      <h3 class="font-medium text-gray-900 dark:text-white mb-4">최근 거래이력</h3>
+      <%# 상태별 분포 바 %>
+      <% if @order_status_counts.any? %>
+        <div class="mb-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">상태별 현황</span>
+            <% if @on_time_rate %>
+              <span class="text-xs text-gray-500 dark:text-gray-400">
+                납기준수율 <span class="font-bold <%= @on_time_rate >= 80 ? 'text-green-600 dark:text-green-400' : @on_time_rate >= 60 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400' %>"><%= @on_time_rate %>%</span>
+              </span>
+            <% end %>
+          </div>
+          <div class="flex gap-1 flex-wrap">
+            <% Order::STATUS_LABELS.each do |status, label| %>
+              <% count = @order_status_counts[status] || 0 %>
+              <% next if count == 0 %>
+              <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400">
+                <%= label %> <span class="font-bold text-primary"><%= count %></span>
+              </span>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <%# 필터 + 정렬 %>
+      <div class="flex flex-wrap items-center gap-2 mb-4">
+        <%= form_with url: client_path(@client), method: :get, class: "flex flex-wrap items-center gap-2" do |f| %>
+          <%= f.hidden_field :tab, value: "orders" %>
+          <%= f.select :period, [["전체 기간", ""], ["이번달", "this_month"], ["최근 3개월", "3months"], ["올해", "this_year"]],
+              { selected: params[:period] },
+              class: "text-xs border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg px-2 py-1.5" %>
+          <%= f.select :project_id, [["전체 현장", ""], *@projects.map { |p| [p.name, p.id] }],
+              { selected: params[:project_id] },
+              class: "text-xs border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg px-2 py-1.5" %>
+          <%= f.select :sort, [["납기일순", "due_date"], ["금액순", "value"], ["최신순", "recent"]],
+              { selected: params[:sort] || "due_date" },
+              class: "text-xs border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg px-2 py-1.5" %>
+          <%= f.submit "적용", class: "text-xs px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 cursor-pointer" %>
+        <% end %>
+        <span class="text-xs text-gray-400 dark:text-gray-500 ml-auto"><%= @orders.count %>건</span>
+      </div>
+
+      <%# 거래이력 목록 %>
       <div class="space-y-2">
         <% @orders.each do |order| %>
-          <div class="flex items-center justify-between p-3 border border-gray-100 dark:border-gray-700 rounded-lg hover:border-primary/30">
-            <div>
-              <span class="text-sm font-medium text-gray-900 dark:text-white"><%= order.title %></span>
-              <% if order.due_date.present? %>
-                <span class="text-xs text-gray-400 dark:text-gray-500 ml-2">납기: <%= order.due_date.strftime("%Y-%m-%d") %></span>
+          <% days = order.due_date ? (order.due_date - Date.today).to_i : nil %>
+          <% due_class = days ? (days < 0 ? 'text-red-600 dark:text-red-400 font-semibold' : days <= 7 ? 'text-red-500 dark:text-red-400' : days <= 14 ? 'text-yellow-600 dark:text-yellow-400' : 'text-green-600 dark:text-green-400') : 'text-gray-400 dark:text-gray-500' %>
+          <div class="flex items-center justify-between p-3 border border-gray-100 dark:border-gray-700 rounded-lg hover:border-primary/30 transition-colors">
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-sm font-medium text-gray-900 dark:text-white truncate"><%= order.title %></span>
+                <% if order.project %>
+                  <span class="text-xs bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-1.5 py-0.5 rounded-full"><%= order.project.name %></span>
+                <% end %>
+              </div>
+              <% if order.due_date %>
+                <span class="text-xs <%= due_class %>">
+                  납기: <%= order.due_date.strftime("%Y-%m-%d") %>
+                  <% if days && days < 0 %>(D+<%= days.abs %>)<% elsif days %>  (D-<%= days %>)<% end %>
+                </span>
               <% end %>
             </div>
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 shrink-0">
               <% if order.estimated_value.present? %>
                 <span class="text-sm font-medium text-gray-700 dark:text-gray-300">$<%= number_with_delimiter(order.estimated_value.round.to_i) %></span>
               <% end %>
-              <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"><%= order.status %></span>
+              <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"><%= Order::STATUS_LABELS[order.status] || order.status %></span>
               <%= link_to "상세", order, class: "text-xs text-primary hover:underline" %>
             </div>
           </div>

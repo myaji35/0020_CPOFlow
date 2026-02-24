@@ -103,19 +103,99 @@
     </div>
 
     <div x-show="tab==='orders'" class="p-4">
-      <h3 class="font-medium text-gray-900 dark:text-white mb-4">최근 납품 이력</h3>
+      <!-- FR-03: 상태별 분포 + 납기준수율 -->
+      <div class="flex flex-wrap items-center gap-3 mb-4">
+        <!-- 상태별 뱃지 바 -->
+        <% status_colors = { "inbox"=>"bg-gray-400","reviewing"=>"bg-blue-400","quoted"=>"bg-yellow-400","confirmed"=>"bg-indigo-400","procuring"=>"bg-orange-400","qa"=>"bg-purple-400","delivered"=>"bg-green-500" } %>
+        <% status_labels = { "inbox"=>"접수","reviewing"=>"검토중","quoted"=>"견적","confirmed"=>"확정","procuring"=>"조달","qa"=>"QA","delivered"=>"납품" } %>
+        <div class="flex flex-wrap gap-1.5">
+          <% @order_status_counts.each do |status, cnt| %>
+            <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full text-white <%= status_colors[status] || 'bg-gray-400' %>">
+              <%= status_labels[status] || status %> <strong><%= cnt %></strong>
+            </span>
+          <% end %>
+        </div>
+        <!-- 납기준수율 -->
+        <% if @on_time_rate %>
+          <% rate_cls = @on_time_rate >= 90 ? 'text-green-600 dark:text-green-400' : @on_time_rate >= 75 ? 'text-orange-500 dark:text-orange-400' : 'text-red-500 dark:text-red-400' %>
+          <div class="ml-auto flex items-center gap-1.5 bg-gray-50 dark:bg-gray-700/50 rounded-lg px-3 py-1">
+            <svg class="w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <span class="text-xs text-gray-500 dark:text-gray-400">납기준수율</span>
+            <span class="text-sm font-bold <%= rate_cls %>"><%= @on_time_rate %>%</span>
+          </div>
+        <% end %>
+      </div>
+
+      <!-- 기간/정렬 필터 -->
+      <%= form_with url: supplier_path(@supplier), method: :get, local: true, class: "flex flex-wrap gap-2 mb-4" do |f| %>
+        <select name="period" onchange="this.form.submit()" class="text-xs border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none">
+          <option value="" <%= params[:period].blank? ? 'selected' : '' %>>전체 기간</option>
+          <option value="this_month" <%= params[:period]=="this_month" ? 'selected' : '' %>>이번 달</option>
+          <option value="3months"    <%= params[:period]=="3months"    ? 'selected' : '' %>>최근 3개월</option>
+          <option value="this_year"  <%= params[:period]=="this_year"  ? 'selected' : '' %>>올해</option>
+        </select>
+        <select name="sort" onchange="this.form.submit()" class="text-xs border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none">
+          <option value="due_date" <%= (params[:sort].blank? || params[:sort]=="due_date") ? 'selected' : '' %>>납기일순</option>
+          <option value="value"    <%= params[:sort]=="value"    ? 'selected' : '' %>>금액순</option>
+          <option value="recent"   <%= params[:sort]=="recent"   ? 'selected' : '' %>>최신순</option>
+        </select>
+        <% if params[:period].present? || params[:sort].present? %>
+          <%= link_to "초기화", supplier_path(@supplier), class: "text-xs text-gray-400 dark:text-gray-500 hover:text-primary px-2 py-1.5" %>
+        <% end %>
+        <span class="ml-auto text-xs text-gray-400 dark:text-gray-500 self-center">총 <%= @orders.count %>건</span>
+      <% end %>
+
+      <!-- 납품 이력 목록 -->
       <div class="space-y-2">
         <% @orders.each do |order| %>
-          <div class="flex items-center justify-between p-3 border border-gray-100 dark:border-gray-700 rounded-lg hover:border-primary/30 transition-colors">
-            <span class="text-sm font-medium text-gray-900 dark:text-white"><%= order.title %></span>
-            <div class="flex items-center gap-3">
-              <% if order.estimated_value.present? %><span class="text-sm text-gray-700 dark:text-gray-300">$<%= number_with_delimiter(order.estimated_value.round.to_i) %></span><% end %>
-              <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"><%= order.status %></span>
+          <%
+            days = order.due_date ? (order.due_date - Date.today).to_i : nil
+            row_cls = if order.status == "delivered"
+                        "border-green-100 dark:border-green-900/30"
+                      elsif days && days < 0
+                        "border-red-200 dark:border-red-800/50 bg-red-50/40 dark:bg-red-900/10"
+                      elsif days && days <= 7
+                        "border-orange-200 dark:border-orange-800/50 bg-orange-50/40 dark:bg-orange-900/10"
+                      else
+                        "border-gray-100 dark:border-gray-700"
+                      end
+            due_cls = if days.nil? then "text-gray-400 dark:text-gray-500"
+                      elsif days < 0 then "text-red-600 dark:text-red-400 font-bold"
+                      elsif days <= 7 then "text-orange-600 dark:text-orange-400 font-medium"
+                      elsif days <= 14 then "text-yellow-600 dark:text-yellow-400"
+                      else "text-green-600 dark:text-green-400"
+                      end
+          %>
+          <div class="flex items-center justify-between p-3 border rounded-lg hover:border-primary/30 transition-colors <%= row_cls %>">
+            <div class="flex-1 min-w-0 mr-3">
+              <div class="text-sm font-medium text-gray-900 dark:text-white truncate"><%= order.title %></div>
+              <% if order.client.present? || order.project.present? %>
+                <div class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 truncate">
+                  <% if order.client.present? %><%= link_to order.client.name, order.client, class: "hover:text-primary" %><% end %>
+                  <% if order.project.present? %><span class="mx-1">·</span><%= order.project.name %><% end %>
+                </div>
+              <% end %>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <% if order.due_date.present? %>
+                <span class="text-xs <%= due_cls %>">
+                  <%= order.due_date.strftime("%m/%d") %>
+                  <% if days %><span class="ml-0.5"><%= days < 0 ? "D+#{-days}" : "D-#{days}" %></span><% end %>
+                </span>
+              <% end %>
+              <% if order.estimated_value.present? %>
+                <span class="text-xs font-medium text-gray-700 dark:text-gray-300">$<%= number_with_delimiter(order.estimated_value.round.to_i) %></span>
+              <% end %>
+              <span class="text-xs px-2 py-0.5 rounded-full text-white <%= status_colors[order.status] || 'bg-gray-400' %>">
+                <%= status_labels[order.status] || order.status %>
+              </span>
               <%= link_to "상세", order, class: "text-xs text-primary hover:underline" %>
             </div>
           </div>
         <% end %>
-        <% if @orders.empty? %><p class="text-center text-gray-400 dark:text-gray-500 text-sm py-8">납품 이력이 없습니다.</p><% end %>
+        <% if @orders.empty? %>
+          <p class="text-center text-gray-400 dark:text-gray-500 text-sm py-8">납품 이력이 없습니다.</p>
+        <% end %>
       </div>
     </div>
   </div>

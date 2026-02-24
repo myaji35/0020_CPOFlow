@@ -27,6 +27,18 @@ class DashboardController < ApplicationController
     # 현장 카테고리별 수주 (현황)
     @site_category_data = build_site_category_data
 
+    # FR-06: 발주처 Top5 / 거래처 Top5
+    @top_clients = Client.joins(:orders)
+                         .select("clients.id, clients.name, COUNT(orders.id) AS order_count, SUM(orders.estimated_value) AS total_value")
+                         .group("clients.id, clients.name")
+                         .order("total_value DESC NULLS LAST")
+                         .limit(5)
+    @top_suppliers = Supplier.joins(:orders)
+                             .select("suppliers.id, suppliers.name, COUNT(orders.id) AS order_count, SUM(orders.estimated_value) AS total_value")
+                             .group("suppliers.id, suppliers.name")
+                             .order("total_value DESC NULLS LAST")
+                             .limit(5)
+
     # 비자 만료 임박 (90일 이내)
     @expiring_visas = Visa.where(status: "active")
                           .where(expiry_date: Date.today..90.days.from_now)

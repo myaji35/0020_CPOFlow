@@ -15,10 +15,11 @@
     <% end %>
   </div>
 
-  <%# 검색 및 필터 %>
-  <div class="flex items-center gap-3">
-    <%= form_with url: orders_path, method: :get, class: "flex items-center gap-2 flex-1" do |f| %>
-      <div class="relative flex-1 max-w-xs">
+  <%# 검색 및 필터 (FR-01 강화) %>
+  <%= form_with url: orders_path, method: :get, class: "bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4" do |f| %>
+    <%# 1행: 검색 + 상태 + 기간 %>
+    <div class="flex flex-wrap items-center gap-2 mb-3">
+      <div class="relative flex-1 min-w-[200px] max-w-xs">
         <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <%= f.text_field :q, value: params[:q], placeholder: "주문명, 고객명 검색...",
             class: "w-full pl-9 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30" %>
@@ -26,10 +27,35 @@
       <%= f.select :status, [[" 전체 상태", ""], *Order::STATUS_LABELS.map { |k,v| [v, k] }],
           { selected: params[:status] },
           class: "text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" %>
-      <%= f.submit "검색", class: "px-4 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer" %>
-    <% end %>
-    <span class="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap"><%= @total_count %>건</span>
-  </div>
+      <%= f.select :period, [["전체 기간", ""], ["이번달", "this_month"], ["최근 3개월", "3months"], ["올해", "this_year"]],
+          { selected: params[:period] },
+          class: "text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" %>
+    </div>
+    <%# 2행: 발주처 / 거래처 / 현장 / 담당자 %>
+    <div class="flex flex-wrap items-center gap-2">
+      <%= f.select :client_id,
+          [["전체 발주처", ""], *@filter_clients.map { |c| [c.name, c.id] }],
+          { selected: params[:client_id] },
+          class: "text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" %>
+      <%= f.select :supplier_id,
+          [["전체 거래처", ""], *@filter_suppliers.map { |s| [s.name, s.id] }],
+          { selected: params[:supplier_id] },
+          class: "text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" %>
+      <%= f.select :project_id,
+          [["전체 현장", ""], *@filter_projects.map { |p| [p.name, p.id] }],
+          { selected: params[:project_id] },
+          class: "text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" %>
+      <%= f.select :user_id,
+          [["전체 담당자", ""], *@filter_users.map { |u| [u.display_name, u.id] }],
+          { selected: params[:user_id] },
+          class: "text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" %>
+      <%= f.submit "검색", class: "px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 cursor-pointer transition-colors" %>
+      <% if [ :q, :status, :period, :client_id, :supplier_id, :project_id, :user_id ].any? { |k| params[k].present? } %>
+        <%= link_to "필터 초기화", orders_path, class: "text-sm text-gray-400 dark:text-gray-500 hover:text-red-500 transition-colors" %>
+      <% end %>
+      <span class="ml-auto text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap"><%= @total_count %>건</span>
+    </div>
+  <% end %>
 
   <%# 주문 목록 %>
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
