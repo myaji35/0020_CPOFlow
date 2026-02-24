@@ -106,18 +106,20 @@ module Gmail
       end
 
       {
-        is_rfq:        parsed["is_rfq"] == true,
-        confidence:    parsed["confidence"] || "none",
-        score:         parsed["score"].to_i,
-        reason:        parsed["reason"],
-        customer_name: parsed.dig("extracted", "customer_name"),
-        due_date:      due_date,
-        items:         parsed.dig("extracted", "items") || [],
-        quantities:    parsed.dig("extracted", "quantities") || [],
-        project_name:  parsed.dig("extracted", "project_name"),
-        currency:      parsed.dig("extracted", "currency"),
-        urgency:       parsed.dig("extracted", "urgency") || "normal",
-        raw:           parsed
+        is_rfq:            parsed["is_rfq"] == true,
+        confidence:        parsed["confidence"] || "none",
+        score:             parsed["score"].to_i,
+        reason:            parsed["reason"],
+        customer_name:     parsed.dig("extracted", "customer_name"),
+        due_date:          due_date,
+        items:             parsed.dig("extracted", "items") || [],
+        quantities:        parsed.dig("extracted", "quantities") || [],
+        project_name:      parsed.dig("extracted", "project_name"),
+        delivery_location: parsed.dig("extracted", "delivery_location"),
+        currency:          parsed.dig("extracted", "currency"),
+        estimated_value:   parsed.dig("extracted", "estimated_value"),
+        urgency:           parsed.dig("extracted", "urgency") || "normal",
+        raw:               parsed
       }
     rescue JSON::ParserError => e
       Rails.logger.warn "[LlmRfqAnalyzer] JSON parse error: #{e.message}"
@@ -129,7 +131,9 @@ module Gmail
         is_rfq: false, confidence: "none", score: 0,
         reason: "LLM 분석 불가 (API 키 미설정 또는 오류)",
         customer_name: nil, due_date: nil, items: [], quantities: [],
-        project_name: nil, currency: nil, urgency: "normal", raw: {}
+        project_name: nil, delivery_location: nil,
+        currency: nil, estimated_value: nil,
+        urgency: "normal", raw: {}
       }
     end
   end

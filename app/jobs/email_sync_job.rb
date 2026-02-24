@@ -36,9 +36,18 @@ class EmailSyncJob < ApplicationJob
 
     svc = Gmail::GmailService.new(account)
 
-    # Fetch unread messages (or all recent if first sync)
-    query = account.last_synced_at ? "is:unread after:#{account.last_synced_at.to_i}" : "is:unread"
-    messages = svc.fetch_recent_messages(max: 50, query: query)
+    # Fetch messages: 첫 동기화는 최근 90일치 전체, 이후는 마지막 동기화 이후 신규
+    if account.last_synced_at.nil?
+      # 초회 동기화: 최근 90일치 전체 (read/unread 모두)
+      after_ts = 90.days.ago.to_i
+      query = "after:#{after_ts}"
+      max_fetch = 100
+    else
+      # 이후 동기화: 마지막 동기화 이후 신규 메일
+      query = "after:#{account.last_synced_at.to_i}"
+      max_fetch = 50
+    end
+    messages = svc.fetch_recent_messages(max: max_fetch, query: query)
 
     new_rfq_count   = 0
     total_processed = 0

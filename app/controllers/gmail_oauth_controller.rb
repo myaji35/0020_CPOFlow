@@ -30,14 +30,28 @@ class GmailOauthController < ApplicationController
       email = fetch_gmail_email(client.access_token)
 
       account = current_user.email_accounts.find_or_initialize_by(email: email)
-      account.assign_attributes(
-        gmail_access_token:  client.access_token,
-        gmail_refresh_token: client.refresh_token || account.gmail_refresh_token,
-        token_expires_at:    Time.at(client.expires_at.to_i),
-        oauth_scope:         EmailAccount::GMAIL_SCOPES.join(" "),
-        connected:           true
-      )
-      account.save!
+      new_refresh_token = client.refresh_token.presence || (account.persisted? ? account.gmail_refresh_token : nil)
+
+      if account.new_record?
+        account.assign_attributes(
+          gmail_access_token:  client.access_token,
+          gmail_refresh_token: new_refresh_token,
+          token_expires_at:    Time.at(client.expires_at.to_i),
+          oauth_scope:         EmailAccount::GMAIL_SCOPES.join(" "),
+          connected:           true
+        )
+        account.save!
+      else
+        # force-write encrypted columns via direct attribute assignment + save
+        account.gmail_access_token  = client.access_token
+        account.gmail_refresh_token = new_refresh_token if new_refresh_token.present?
+        account.token_expires_at    = Time.at(client.expires_at.to_i)
+        account.oauth_scope         = EmailAccount::GMAIL_SCOPES.join(" ")
+        account.connected           = true
+        account.save!
+        # Lockbox 암호화 컬럼 save 시 connected 변경이 누락되는 경우 대비
+        account.update_column(:connected, true) unless account.connected?
+      end
 
       redirect_to settings_root_path, notice: t("settings.gmail.connect_success")
     rescue Signet::AuthorizationError => e
@@ -75,10 +89,16 @@ class GmailOauthController < ApplicationController
 
   def fetch_gmail_email(access_token)
     client = Google::Apis::GmailV1::GmailService.new
-    client.authorization = Signet::OAuth2::Client.new(access_token: access_token)
+    client.authorization = Google::Auth::UserRefreshCredentials.new(
+      client_id:     Rails.application.credentials.dig(:google, :client_id),
+      client_secret: Rails.application.credentials.dig(:google, :client_secret),
+      scope:         EmailAccount::GMAIL_SCOPES,
+      access_token:  access_token
+    )
     profile = client.get_user_profile("me")
     profile.email_address
-  rescue Google::Apis::Error
+  rescue Google::Apis::Error, StandardError => e
+    Rails.logger.error "[GmailOauth] fetch_gmail_email error: #{e.message}"
     "unknown@gmail.com"
   end
 end

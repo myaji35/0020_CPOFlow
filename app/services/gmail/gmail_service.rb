@@ -64,6 +64,7 @@ module Gmail
         date:        parse_date(headers["date"]),
         snippet:     msg.snippet || "",
         body:        extract_body(msg.payload),
+        html_body:   extract_html_body(msg.payload),
         labels:      msg.label_ids || [],
         unread:      msg.label_ids&.include?("UNREAD") || false
       }
@@ -139,20 +140,48 @@ module Gmail
     def extract_body(payload)
       return "" unless payload
 
-      # Prefer text/plain, fallback to text/html
+      # Prefer text/plain, fallback to text/html stripped
       if payload.mime_type == "text/plain" && payload.body&.data
         Base64.urlsafe_decode64(payload.body.data).force_encoding("UTF-8").encode("UTF-8", invalid: :replace)
       elsif payload.parts
-        plain = payload.parts.find { |p| p.mime_type == "text/plain" }
-        html  = payload.parts.find { |p| p.mime_type == "text/html" }
+        plain = find_part_recursive(payload.parts, "text/plain")
+        html  = find_part_recursive(payload.parts, "text/html")
         part  = plain || html
         return "" unless part&.body&.data
-        Base64.urlsafe_decode64(part.body.data).force_encoding("UTF-8").encode("UTF-8", invalid: :replace)
+        text = Base64.urlsafe_decode64(part.body.data).force_encoding("UTF-8").encode("UTF-8", invalid: :replace)
+        # Strip HTML tags for plain text
+        part.mime_type == "text/html" ? ActionView::Base.full_sanitizer.sanitize(text).gsub(/\s+/, " ").strip : text
       else
         payload.body&.data ? Base64.urlsafe_decode64(payload.body.data).force_encoding("UTF-8") : ""
       end
     rescue ArgumentError
       ""
+    end
+
+    def extract_html_body(payload)
+      return nil unless payload
+
+      if payload.mime_type == "text/html" && payload.body&.data
+        Base64.urlsafe_decode64(payload.body.data).force_encoding("UTF-8").encode("UTF-8", invalid: :replace)
+      elsif payload.parts
+        html = find_part_recursive(payload.parts, "text/html")
+        return nil unless html&.body&.data
+        Base64.urlsafe_decode64(html.body.data).force_encoding("UTF-8").encode("UTF-8", invalid: :replace)
+      end
+    rescue ArgumentError
+      nil
+    end
+
+    def find_part_recursive(parts, mime_type)
+      return nil unless parts
+      parts.each do |part|
+        return part if part.mime_type == mime_type && part.body&.data
+        if part.parts
+          found = find_part_recursive(part.parts, mime_type)
+          return found if found
+        end
+      end
+      nil
     end
 
     def parse_date(date_str)

@@ -10,6 +10,7 @@ class Order < ApplicationRecord
   has_many :assignees, through: :assignments, source: :user
   has_many :order_quotes, dependent: :destroy
   has_many :notifications, as: :notifiable, dependent: :destroy
+  has_many_attached :attachments
 
   enum :status, {
     inbox: 0,

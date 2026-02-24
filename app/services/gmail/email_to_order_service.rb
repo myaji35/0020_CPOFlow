@@ -27,8 +27,16 @@ module Gmail
         source_email_id:        @email[:id],
         original_email_subject: @email[:subject],
         original_email_body:    @email[:body].to_s.truncate(10_000),
+        original_email_html_body: @email[:html_body].to_s.truncate(100_000).presence,
         original_email_from:    @email[:from],
         item_name:              @detection[:item_hints],
+        # LLM 추출 필드 전체 저장
+        extracted_quantities:   @detection[:quantities]&.join(", "),
+        extracted_project_name: @detection[:project_name],
+        delivery_location:      @detection[:delivery_location],
+        currency:               @detection[:currency],
+        estimated_value:        @detection[:estimated_value],
+        sender_domain:          extract_sender_domain,
         rfq_confidence:         @detection[:confidence],
         rfq_score:              @detection[:score],
         llm_analysis:           @detection[:llm_raw].to_json,
@@ -85,6 +93,10 @@ module Gmail
       tags << "sika" if @detection[:item_hints].present?
       tags << "urgent" if @detection[:score] >= 70
       tags.join(",")
+    end
+
+    def extract_sender_domain
+      @email[:from].to_s.match(/@([^>]+)>?/)&.[](1)&.strip&.downcase
     end
   end
 end

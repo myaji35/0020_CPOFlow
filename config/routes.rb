@@ -37,10 +37,13 @@ Rails.application.routes.draw do
   end
 
   # Inbox (email view)
-  get  "inbox",          to: "inbox#index"
-  get  "inbox/:id",      to: "inbox#show",             as: :inbox_email
-  post "inbox/:id/convert", to: "inbox#convert_to_order", as: :convert_email_to_order
-  post "inbox/sync",     to: "inbox#sync",             as: :inbox_sync
+  get  "inbox",             to: "inbox#index"
+  get  "inbox/:id",         to: "inbox#show",               as: :inbox_email
+  post "inbox/:id/convert", to: "inbox#convert_to_order",   as: :convert_email_to_order
+  post "inbox/sync",        to: "inbox#sync",               as: :inbox_sync
+  get  "inbox/:id/translate", to: "inbox#translate",        as: :inbox_translate
+  get  "inbox/:id/attachment/:blob_key", to: "inbox#download_attachment", as: :inbox_attachment
+  post "inbox/analyze_link", to: "inbox#analyze_link", as: :inbox_analyze_link
 
   # Calendar
   get "calendar", to: "calendar#index"
@@ -126,7 +129,9 @@ Rails.application.routes.draw do
   # Settings
   namespace :settings do
     get "/", to: "base#index", as: :root
-    resources :email_accounts, only: %i[index new create destroy]
+    resources :email_accounts, only: %i[index new create destroy] do
+      member { post :sync }
+    end
     patch "profile", to: "profile#update"
     patch "locale", to: "profile#update_locale", as: :update_locale
     patch "theme",  to: "profile#update_theme",  as: :update_theme

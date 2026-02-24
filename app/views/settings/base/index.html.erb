@@ -67,7 +67,7 @@
             <div class="flex items-center gap-2">
               <% if account.connected? %>
                 <%# Manual sync trigger %>
-                <%= button_to "Sync Now", "#", method: :post, class: "text-xs px-3 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600 transition-colors", disabled: account.synced_recently? %>
+                <%= button_to "Sync Now", sync_settings_email_account_path(account), method: :post, class: "text-xs px-3 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600 transition-colors", disabled: account.synced_recently? %>
               <% end %>
               <%# Disconnect %>
               <%= link_to "Disconnect", gmail_oauth_disconnect_path(account), data: { turbo_method: :delete, turbo_confirm: "Disconnect #{account.email}?" }, class: "text-xs px-3 py-1.5 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors" %>

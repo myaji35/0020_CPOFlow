@@ -18,6 +18,25 @@
   .email-item.active.dark-active { background-color: rgba(0, 161, 224, 0.15); }
   @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   .inbox-search:focus { outline: none; box-shadow: 0 0 0 2px rgba(0, 161, 224, 0.3); }
+  .email-tab-btn { cursor: pointer; background: transparent; }
+  .email-tab-btn.active-tab {
+    color: #00A1E0;
+    border-color: #00A1E0;
+    background: #fff;
+    margin-bottom: -1px;
+  }
+  .dark .email-tab-btn.active-tab { background: #111827; }
+  .email-tab-panel.hidden { display: none; }
+  /* HTML 이메일 렌더링 스타일 */
+  .email-html-body { font-size: 0.875rem; color: #374151; line-height: 1.6; }
+  .email-html-body a { color: #00A1E0; text-decoration: underline; }
+  .email-html-body img { max-width: 100%; height: auto; }
+  .email-html-body table { border-collapse: collapse; max-width: 100%; }
+  .email-html-body blockquote { border-left: 3px solid #e5e7eb; padding-left: 0.75rem; margin-left: 0; color: #6b7280; }
+  .dark .email-html-body { color: #d1d5db; }
+  .dark .email-html-body a { color: #38bdf8; }
+  /* 발신자 로고 */
+  .sender-avatar-img { width: 2rem; height: 2rem; border-radius: 9999px; object-fit: cover; }
 </style>
 
 <div class="inbox-layout">
@@ -270,9 +289,23 @@
                   <%= order.original_email_subject.presence || order.title %>
                 </h2>
                 <div class="flex items-center gap-2 mt-2">
-                  <%# Sender avatar %>
-                  <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                    <%= order.original_email_from.presence&.first&.upcase || "?" %>
+                  <%# Sender avatar — 도메인 favicon 또는 이니셜 fallback %>
+                  <% sender_domain = order.sender_domain.presence || order.original_email_from.to_s.match(/@([^>@\s]+)/i)&.[](1)&.strip&.downcase %>
+                  <% favicon_url = sender_domain ? "https://www.google.com/s2/favicons?domain=#{sender_domain}&sz=64" : nil %>
+                  <div class="w-8 h-8 rounded-full flex-shrink-0 relative overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                    <% if favicon_url %>
+                      <img src="<%= favicon_url %>"
+                           alt="<%= sender_domain %>"
+                           class="sender-avatar-img"
+                           onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                      <span class="text-white text-xs font-bold absolute inset-0 items-center justify-center hidden">
+                        <%= order.original_email_from.presence&.first&.upcase || "?" %>
+                      </span>
+                    <% else %>
+                      <span class="text-white text-xs font-bold">
+                        <%= order.original_email_from.presence&.first&.upcase || "?" %>
+                      </span>
+                    <% end %>
                   </div>
                   <div>
                     <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -389,12 +422,84 @@
             </div>
           <% end %>
 
-          <%# Email body %>
-          <div class="p-6">
-            <% body = order.original_email_body.presence || order.description %>
-            <% if body.present? %>
-              <div class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap font-mono bg-gray-50 dark:bg-gray-800 rounded-lg p-5 border border-gray-100 dark:border-gray-700 max-h-96 overflow-y-auto">
-<%= body %>
+          <%# Email body — 원문 / 번역(한글) 탭 %>
+          <div class="p-6" data-order-id="<%= order.id %>">
+            <% plain_body = order.original_email_body.presence || order.description %>
+            <% html_body  = order.respond_to?(:original_email_html_body) ? order.original_email_html_body.presence : nil %>
+            <% has_body   = plain_body.present? || html_body.present? %>
+            <% if has_body %>
+              <%# 탭 헤더 %>
+              <div class="flex items-center gap-1 mb-3 border-b border-gray-200 dark:border-gray-700">
+                <button onclick="switchEmailTab(this, 'original', <%= order.id %>)"
+                        class="email-tab-btn active-tab px-3 py-1.5 text-xs font-medium rounded-t-md border border-b-0 border-transparent transition-colors"
+                        data-tab="original" data-order="<%= order.id %>">
+                  원문
+                </button>
+                <button onclick="switchEmailTab(this, 'translated', <%= order.id %>)"
+                        class="email-tab-btn px-3 py-1.5 text-xs font-medium rounded-t-md border border-b-0 border-transparent transition-colors text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                        data-tab="translated" data-order="<%= order.id %>"
+                        data-translate-url="<%= inbox_translate_path(order.id) %>"
+                        data-auto-translate="<%= order.translated_body.blank? ? 'true' : 'false' %>">
+                  번역 (한글)
+                  <% if order.translated_body.present? %>
+                    <span class="ml-1 w-1.5 h-1.5 rounded-full bg-green-400 inline-block"></span>
+                  <% end %>
+                </button>
+              </div>
+
+              <%# 원문 패널 — HTML 우선, plain text fallback %>
+              <div id="tab-original-<%= order.id %>" class="email-tab-panel">
+                <% if html_body.present? %>
+                  <div class="email-html-body bg-white dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700 p-5 max-h-[480px] overflow-y-auto">
+                    <%= sanitize(html_body,
+                        tags: %w[p br div span a b i u strong em h1 h2 h3 h4 h5 h6 ul ol li
+                                 table thead tbody tr th td blockquote pre code img hr],
+                        attributes: %w[href src alt style class target rel]) %>
+                  </div>
+                <% elsif plain_body.present? %>
+                  <div class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap font-mono bg-gray-50 dark:bg-gray-800 rounded-lg p-5 border border-gray-100 dark:border-gray-700 max-h-[480px] overflow-y-auto">
+<%= plain_body %>
+                  </div>
+                <% end %>
+              </div>
+
+              <%# 번역 패널 — 탭 클릭 시 자동 번역 %>
+              <div id="tab-translated-<%= order.id %>" class="email-tab-panel hidden">
+                <% if order.translated_body.present? %>
+                  <%# 이미 번역된 경우: 번역 결과 표시 + 재번역 버튼 %>
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1">
+                      <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8l6 6"/><path d="M4 14l6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="M22 22l-5-10-5 10"/><path d="M14 18h6"/></svg>
+                      AI 번역 완료
+                    </span>
+                    <button onclick="requestTranslation(<%= order.id %>, '<%= inbox_translate_path(order.id) %>', true)"
+                            id="retranslate-btn-<%= order.id %>"
+                            class="flex items-center gap-1 text-xs text-[#00A1E0] hover:text-blue-700 dark:hover:text-blue-300 transition-colors px-2 py-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/30">
+                      <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+                      재번역
+                    </button>
+                  </div>
+                  <div id="translate-loading-<%= order.id %>" class="hidden flex flex-col items-center justify-center py-10">
+                    <svg class="w-6 h-6 text-[#00A1E0] mb-2" style="animation: spin 1s linear infinite" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+                    <p class="text-xs text-gray-400">Gemini AI가 재번역 중...</p>
+                  </div>
+                  <div id="translate-result-<%= order.id %>" class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap bg-blue-50 dark:bg-blue-900/20 rounded-lg p-5 border border-blue-100 dark:border-blue-800/40 max-h-[480px] overflow-y-auto">
+<%= order.translated_body %>
+                  </div>
+                  <div id="translate-error-<%= order.id %>" class="hidden text-xs text-red-500 dark:text-red-400 text-center py-4"></div>
+                <% else %>
+                  <%# 미번역인 경우: 자동 번역 대기 %>
+                  <div id="translate-placeholder-<%= order.id %>" class="flex flex-col items-center justify-center py-10 text-center">
+                    <svg class="w-8 h-8 text-gray-300 dark:text-gray-600 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8l6 6"/><path d="M4 14l6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="M22 22l-5-10-5 10"/><path d="M14 18h6"/></svg>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mb-1">번역 준비 중...</p>
+                  </div>
+                  <div id="translate-loading-<%= order.id %>" class="hidden flex flex-col items-center justify-center py-10">
+                    <svg class="w-6 h-6 text-[#00A1E0] mb-2" style="animation: spin 1s linear infinite" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+                    <p class="text-xs text-gray-400">Gemini AI가 번역 중...</p>
+                  </div>
+                  <div id="translate-result-<%= order.id %>" class="hidden text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap bg-blue-50 dark:bg-blue-900/20 rounded-lg p-5 border border-blue-100 dark:border-blue-800/40 max-h-[480px] overflow-y-auto"></div>
+                  <div id="translate-error-<%= order.id %>" class="hidden text-xs text-red-500 dark:text-red-400 text-center py-4"></div>
+                <% end %>
               </div>
             <% else %>
               <div class="flex flex-col items-center justify-center py-12 text-center">
@@ -452,39 +557,93 @@
             <% end %>
 
             <%# 첨부파일 + 링크 패널 %>
-            <% attachments = order.respond_to?(:attachment_urls) && order.attachment_urls.present? ? (JSON.parse(order.attachment_urls) rescue []) : [] %>
+            <% att_meta = order.respond_to?(:attachment_urls) && order.attachment_urls.present? ? (JSON.parse(order.attachment_urls) rescue []) : [] %>
+            <% active_storage_attachments = order.respond_to?(:attachments) ? (order.attachments rescue []) : [] %>
             <% links = order.respond_to?(:extracted_links) && order.extracted_links.present? ? (JSON.parse(order.extracted_links) rescue []) : [] %>
-            <% if attachments.any? || links.any? %>
+            <% if att_meta.any? || active_storage_attachments.any? || links.any? %>
               <div class="mt-3 border border-gray-100 dark:border-gray-700 rounded-lg overflow-hidden">
-                <div class="px-4 py-2.5 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-700">
+                <div class="px-4 py-2.5 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
                   <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
                     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
                     첨부파일 및 링크
                   </span>
+                  <% total_att = [ att_meta.size, active_storage_attachments.size ].max %>
+                  <% if total_att > 0 %>
+                    <span class="text-xs text-gray-400 dark:text-gray-500"><%= total_att %>개</span>
+                  <% end %>
                 </div>
                 <div class="px-4 py-3 space-y-2">
-                  <% attachments.each do |att| %>
-                    <% att = att.is_a?(Hash) ? att.with_indifferent_access : {} %>
-                    <% icon_color = att[:mime_type].to_s.include?("pdf") ? "text-red-500" : att[:mime_type].to_s.include?("sheet") || att[:mime_type].to_s.include?("excel") ? "text-green-600" : "text-blue-500" %>
-                    <a href="<%= att[:signed_url] %>" target="_blank" rel="noopener noreferrer"
-                       class="flex items-center gap-2.5 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group">
+                  <%# ActiveStorage 첨부파일 (실제 다운로드 가능) %>
+                  <% active_storage_attachments.each do |att| %>
+                    <% blob = att.blob %>
+                    <% icon_color = blob.content_type.to_s.include?("pdf") ? "text-red-500" : blob.content_type.to_s.include?("sheet") || blob.content_type.to_s.include?("excel") ? "text-green-600" : "text-blue-500" %>
+                    <%= link_to rails_blob_path(blob, disposition: "attachment"),
+                          class: "flex items-center gap-2.5 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors group" do %>
                       <svg class="w-8 h-8 p-1.5 rounded bg-gray-100 dark:bg-gray-700 <%= icon_color %> flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                       <div class="flex-1 min-w-0">
-                        <p class="text-xs font-medium text-gray-800 dark:text-gray-200 truncate"><%= att[:filename] %></p>
+                        <p class="text-xs font-medium text-gray-800 dark:text-gray-200 truncate"><%= blob.filename %></p>
                         <p class="text-xs text-gray-400 dark:text-gray-500">
-                          <%= att[:mime_type]&.split("/")&.last&.upcase %>
-                          <% if att[:size] %> · <%= number_to_human_size(att[:size]) %><% end %>
+                          <%= blob.content_type&.split("/")&.last&.upcase %>
+                          · <%= number_to_human_size(blob.byte_size) %>
                         </p>
                       </div>
                       <svg class="w-3.5 h-3.5 text-gray-300 dark:text-gray-600 group-hover:text-blue-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    </a>
+                    <% end %>
                   <% end %>
-                  <% links.each do |url| %>
-                    <a href="<%= url %>" target="_blank" rel="noopener noreferrer"
-                       class="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group">
-                      <svg class="w-4 h-4 text-blue-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                      <span class="text-xs text-blue-500 hover:underline truncate"><%= url.truncate(60) %></span>
-                    </a>
+
+                  <%# attachment_urls 메타만 있는 경우 (ActiveStorage 미저장) %>
+                  <% if active_storage_attachments.empty? %>
+                    <% att_meta.each do |att| %>
+                      <% att = att.is_a?(Hash) ? att.with_indifferent_access : {} %>
+                      <% icon_color = att[:mime_type].to_s.include?("pdf") ? "text-red-500" : att[:mime_type].to_s.include?("sheet") || att[:mime_type].to_s.include?("excel") ? "text-green-600" : "text-blue-500" %>
+                      <div class="flex items-center gap-2.5 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700 opacity-60">
+                        <svg class="w-8 h-8 p-1.5 rounded bg-gray-100 dark:bg-gray-700 <%= icon_color %> flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        <div class="flex-1 min-w-0">
+                          <p class="text-xs font-medium text-gray-800 dark:text-gray-200 truncate"><%= att[:filename] %></p>
+                          <p class="text-xs text-gray-400 dark:text-gray-500">
+                            <%= att[:mime_type]&.split("/")&.last&.upcase %>
+                            <% if att[:size] %> · <%= number_to_human_size(att[:size]) %><% end %>
+                            · 재동기화 필요
+                          </p>
+                        </div>
+                      </div>
+                    <% end %>
+                  <% end %>
+
+                  <% links.each_with_index do |url, li| %>
+                    <% link_id = "link-#{order.id}-#{li}" %>
+                    <div class="rounded-lg border border-gray-100 dark:border-gray-700 overflow-hidden">
+                      <%# 링크 헤더 %>
+                      <div class="flex items-center gap-2 p-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group">
+                        <svg class="w-4 h-4 text-blue-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                        <a href="<%= url %>" target="_blank" rel="noopener noreferrer"
+                           class="text-xs text-blue-500 hover:underline truncate flex-1">
+                          <%= url.truncate(55) %>
+                        </a>
+                        <button onclick="analyzeLinkUrl(this, '<%= j url %>', '<%= j inbox_analyze_link_path %>')"
+                                data-link-id="<%= link_id %>"
+                                class="flex-shrink-0 text-[10px] px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded border border-indigo-100 dark:border-indigo-800 hover:bg-indigo-100 transition-colors whitespace-nowrap flex items-center gap-1">
+                          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                          AI 분석
+                        </button>
+                        <a href="<%= url %>" target="_blank" rel="noopener noreferrer"
+                           class="flex-shrink-0 text-gray-300 dark:text-gray-600 group-hover:text-blue-400">
+                          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        </a>
+                      </div>
+                      <%# AI 분석 결과 영역 (동적) %>
+                      <div id="<%= link_id %>-result" class="hidden border-t border-gray-100 dark:border-gray-700 px-3 py-2.5 bg-indigo-50/50 dark:bg-indigo-900/10">
+                        <div id="<%= link_id %>-loading" class="hidden flex items-center gap-2 text-xs text-indigo-500 dark:text-indigo-400 py-1">
+                          <svg class="w-3.5 h-3.5" style="animation: spin 1s linear infinite" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+                          URL 내용 분석 중...
+                        </div>
+                        <div id="<%= link_id %>-content" class="hidden">
+                          <p id="<%= link_id %>-title" class="text-[10px] font-semibold text-indigo-700 dark:text-indigo-400 mb-1 truncate"></p>
+                          <p id="<%= link_id %>-summary" class="text-xs text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap"></p>
+                        </div>
+                        <div id="<%= link_id %>-error" class="hidden text-xs text-red-500 dark:text-red-400 py-1"></div>
+                      </div>
+                    </div>
                   <% end %>
                 </div>
               </div>
@@ -618,6 +777,166 @@
       div.style.opacity = '0';
       setTimeout(() => div.remove(), 300);
     }, 3000);
+  }
+
+  // --- 원문 / 번역 탭 ---
+  // 번역 진행 중인 orderId 추적 (중복 요청 방지)
+  const _translatingIds = new Set();
+
+  function switchEmailTab(btn, tab, orderId) {
+    // 탭 버튼 스타일 갱신
+    document.querySelectorAll('[data-order="' + orderId + '"].email-tab-btn').forEach(b => {
+      b.classList.remove('active-tab', 'border-[#00A1E0]', 'text-[#00A1E0]', 'bg-white', 'dark:bg-gray-900');
+      b.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+    });
+    btn.classList.add('active-tab', 'border-[#00A1E0]', 'text-[#00A1E0]', 'bg-white', 'dark:bg-gray-900');
+    btn.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+
+    // 패널 토글
+    document.querySelectorAll('#tab-original-' + orderId + ', #tab-translated-' + orderId).forEach(p => p.classList.add('hidden'));
+    const target = document.getElementById('tab-' + tab + '-' + orderId);
+    if (target) target.classList.remove('hidden');
+
+    // 번역 탭 클릭 시 자동 번역 실행
+    if (tab === 'translated' && btn.dataset.autoTranslate === 'true') {
+      const url = btn.dataset.translateUrl;
+      if (url && !_translatingIds.has(orderId)) {
+        requestTranslation(orderId, url);
+      }
+    }
+  }
+
+  function requestTranslation(orderId, url, force) {
+    if (_translatingIds.has(orderId)) return;
+    _translatingIds.add(orderId);
+
+    const placeholder   = document.getElementById('translate-placeholder-' + orderId);
+    const loading       = document.getElementById('translate-loading-' + orderId);
+    const result        = document.getElementById('translate-result-' + orderId);
+    const error         = document.getElementById('translate-error-' + orderId);
+    const retranslateBtn = document.getElementById('retranslate-btn-' + orderId);
+
+    if (placeholder) placeholder.classList.add('hidden');
+    if (result)      result.classList.add('hidden');
+    if (error)       error.classList.add('hidden');
+    if (loading)     loading.classList.remove('hidden');
+    // 재번역 버튼 비활성화 (중복 클릭 방지)
+    if (retranslateBtn) retranslateBtn.disabled = true;
+
+    const fetchUrl = force ? url + '?force=true' : url;
+    fetch(fetchUrl, {
+      headers: { 'X-CSRF-Token': document.querySelector('meta[name=csrf-token]')?.content }
+    })
+    .then(r => r.json())
+    .then(data => {
+      _translatingIds.delete(orderId);
+      if (loading) loading.classList.add('hidden');
+      if (retranslateBtn) retranslateBtn.disabled = false;
+
+      if (data.translated_body) {
+        if (result) {
+          result.textContent = data.translated_body;
+          result.classList.remove('hidden');
+        }
+        // 탭 버튼에 완료 dot 추가 (최초 번역 시)
+        const tabBtn = document.querySelector('[data-order="' + orderId + '"][data-tab="translated"]');
+        if (tabBtn && !tabBtn.querySelector('.translate-done-dot')) {
+          const dot = document.createElement('span');
+          dot.className = 'translate-done-dot ml-1 w-1.5 h-1.5 rounded-full bg-green-400 inline-block';
+          tabBtn.appendChild(dot);
+          tabBtn.dataset.autoTranslate = 'false';
+        }
+      } else {
+        if (error) {
+          error.textContent = data.error || '번역 실패: Gemini API를 다시 시도해주세요.';
+          error.classList.remove('hidden');
+        }
+        if (placeholder) placeholder.classList.remove('hidden');
+      }
+    })
+    .catch(() => {
+      _translatingIds.delete(orderId);
+      if (loading)     loading.classList.add('hidden');
+      if (retranslateBtn) retranslateBtn.disabled = false;
+      if (placeholder) placeholder.classList.remove('hidden');
+      if (error) {
+        error.textContent = '번역 요청 중 네트워크 오류가 발생했습니다.';
+        error.classList.remove('hidden');
+      }
+    });
+  }
+
+  // 초기 탭 스타일 적용 (active-tab 버튼 강조)
+  document.querySelectorAll('.email-tab-btn.active-tab').forEach(btn => {
+    btn.classList.add('border-[#00A1E0]', 'text-[#00A1E0]', 'bg-white', 'dark:bg-gray-900');
+    btn.classList.remove('border-transparent', 'text-gray-500');
+  });
+
+  // --- 링크 AI 분석 ---
+  const _analyzingLinks = new Set();
+
+  function analyzeLinkUrl(btn, url, analyzeEndpoint) {
+    const linkId = btn.dataset.linkId;
+    if (_analyzingLinks.has(linkId)) return;
+    _analyzingLinks.add(linkId);
+
+    const resultArea  = document.getElementById(linkId + '-result');
+    const loadingEl   = document.getElementById(linkId + '-loading');
+    const contentEl   = document.getElementById(linkId + '-content');
+    const titleEl     = document.getElementById(linkId + '-title');
+    const summaryEl   = document.getElementById(linkId + '-summary');
+    const errorEl     = document.getElementById(linkId + '-error');
+
+    // 결과 영역 표시
+    if (resultArea) resultArea.classList.remove('hidden');
+    if (loadingEl) loadingEl.classList.remove('hidden');
+    if (contentEl) contentEl.classList.add('hidden');
+    if (errorEl) errorEl.classList.add('hidden');
+
+    // 버튼 비활성화
+    btn.disabled = true;
+    btn.textContent = '분석 중...';
+
+    const csrf = document.querySelector('meta[name=csrf-token]')?.content;
+
+    fetch(analyzeEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrf
+      },
+      body: JSON.stringify({ url: url })
+    })
+    .then(r => r.json())
+    .then(data => {
+      _analyzingLinks.delete(linkId);
+      if (loadingEl) loadingEl.classList.add('hidden');
+      btn.disabled = false;
+
+      if (data.success) {
+        if (titleEl) titleEl.textContent = data.title || url;
+        if (summaryEl) summaryEl.textContent = data.summary || '요약 정보 없음';
+        if (contentEl) contentEl.classList.remove('hidden');
+        // 버튼을 "재분석"으로 변경
+        btn.innerHTML = '<svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> 재분석';
+      } else {
+        if (errorEl) {
+          errorEl.textContent = data.error || '분석 실패';
+          errorEl.classList.remove('hidden');
+        }
+        btn.innerHTML = '<svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg> AI 분석';
+      }
+    })
+    .catch(err => {
+      _analyzingLinks.delete(linkId);
+      if (loadingEl) loadingEl.classList.add('hidden');
+      if (errorEl) {
+        errorEl.textContent = '네트워크 오류가 발생했습니다.';
+        errorEl.classList.remove('hidden');
+      }
+      btn.disabled = false;
+      btn.innerHTML = 'AI 분석';
+    });
   }
 
   // --- Keyboard shortcuts ---

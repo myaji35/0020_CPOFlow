@@ -2,8 +2,9 @@ class EmailAccount < ApplicationRecord
   belongs_to :user
 
   # Encrypt OAuth tokens at rest using Lockbox (AES-256-GCM)
-  encrypts :gmail_access_token
-  encrypts :gmail_refresh_token
+  # DB columns: gmail_access_token_ciphertext, gmail_refresh_token_ciphertext
+  has_encrypted :gmail_access_token
+  has_encrypted :gmail_refresh_token
 
   validates :email, presence: true, uniqueness: { scope: :user_id }
 

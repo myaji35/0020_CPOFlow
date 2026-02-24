@@ -10,6 +10,36 @@ module Gmail
   #   result[:score]    # => 0..100
   #   result[:due_date] # => Date or nil
   class RfqDetectorService
+    # 자동 제외 발신 도메인 — 시스템 알림/송장 발송 서버
+    EXCLUDED_SENDER_DOMAINS = %w[
+      ansmtp.ariba.com
+      ariba.com
+      sap.com
+      noreply.github.com
+      notifications.google.com
+      mailer.notion.so
+      amazonses.com
+      sendgrid.net
+      mailchimp.com
+      bounce.linkedin.com
+      reply.github.com
+    ].freeze
+
+    # 제목에서 자동 제외할 패턴 — 알림성 이메일 식별
+    EXCLUDED_SUBJECT_PATTERNS = [
+      /invoice\s*(notification|alert|sent|ready)/i,
+      /payment\s*(received|confirmation|notification)/i,
+      /order\s*(confirmation|shipped|dispatched|delivered)/i,
+      /\bnotification\s+from\b/i,
+      /your\s+(order|invoice|shipment)\s+is/i,
+      /\breceipt\b/i,
+      /\bstatement\b/i,
+      /unsubscribe/i,
+      /do\s+not\s+reply/i,
+      /no-?reply/i,
+      /auto-?generated/i
+    ].freeze
+
     # Weighted keyword groups (subject gets 2x weight)
     SUBJECT_KEYWORDS = [
       # English
@@ -51,8 +81,18 @@ module Gmail
     end
 
     def detect
+      # 1단계: 발신 도메인 / 제목 패턴으로 즉시 제외
+      if excluded_sender? || excluded_subject?
+        return not_rfq_result("발신자/제목 패턴으로 자동 제외 (알림성 이메일)")
+      end
+
       keyword_result = keyword_detect
       llm_result     = LlmRfqAnalyzerService.new(@email).analyze
+
+      # 2단계: LLM이 명확히 RFQ 아님으로 판정 + 키워드도 없으면 제외
+      if !llm_result[:is_rfq] && keyword_result[:score] < 20
+        return not_rfq_result(llm_result[:reason] || "RFQ 아님")
+      end
 
       # Hybrid 점수: 키워드 40% + LLM 60%
       hybrid_score = (keyword_result[:score] * 0.4 + llm_result[:score] * 0.6).round
@@ -69,6 +109,9 @@ module Gmail
         item_hints:       llm_result[:items]&.join(", ") || keyword_result[:item_hints],
         quantities:       llm_result[:quantities],
         project_name:     llm_result[:project_name],
+        delivery_location: llm_result[:delivery_location],
+        currency:         llm_result[:currency],
+        estimated_value:  llm_result[:estimated_value],
         urgency:          llm_result[:urgency],
         llm_raw:          llm_result[:raw]
       }
@@ -92,6 +135,38 @@ module Gmail
     end
 
     private
+
+    def excluded_sender?
+      from_email = @email[:from].to_s
+      domain = from_email.match(/@([^>]+)>?/)&.[](1)&.strip&.downcase
+      return false if domain.blank?
+      EXCLUDED_SENDER_DOMAINS.any? { |d| domain == d || domain.end_with?(".#{d}") }
+    end
+
+    def excluded_subject?
+      EXCLUDED_SUBJECT_PATTERNS.any? { |pattern| @subject.match?(pattern) }
+    end
+
+    def not_rfq_result(reason)
+      {
+        is_rfq:            false,
+        score:             0,
+        confidence:        "none",
+        reason:            reason,
+        subject_matches:   [],
+        body_matches:      [],
+        due_date:          nil,
+        customer_name:     extract_customer_name,
+        item_hints:        nil,
+        quantities:        [],
+        project_name:      nil,
+        delivery_location: nil,
+        currency:          nil,
+        estimated_value:   nil,
+        urgency:           "normal",
+        llm_raw:           {}
+      }
+    end
 
     def score_subject
       return 0 if @subject.blank?
