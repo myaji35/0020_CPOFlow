@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
 module Gmail
-  # Gemini API로 RFQ 수신 확인 답변 초안 자동 생성
+  # Claude API로 RFQ 수신 확인 답변 초안 자동 생성
   #
   # Usage:
   #   Gmail::RfqReplyDraftService.generate!(order)
   #   # => "Dear [Name],\nThank you for your RFQ..."
   class RfqReplyDraftService
-    GEMINI_MODEL = "gemini-2.0-flash"
+    CLAUDE_MODEL = "claude-haiku-4-5-20251001"
 
     def self.generate!(order)
       new(order).generate!
@@ -20,7 +20,7 @@ module Gmail
     def generate!
       return cached_draft if @order.reply_draft.present?
 
-      draft = call_gemini_api
+      draft = call_claude_api
       @order.update_column(:reply_draft, draft) if draft.present?
       draft
     rescue => e
@@ -34,24 +34,27 @@ module Gmail
       @order.reply_draft
     end
 
-    def call_gemini_api
-      api_key = Rails.application.credentials.dig(:gemini, :api_key)
+    def call_claude_api
+      api_key = Rails.application.credentials.dig(:anthropic, :api_key)
       return nil if api_key.blank?
 
-      uri = URI("https://generativelanguage.googleapis.com/v1beta/models/#{GEMINI_MODEL}:generateContent?key=#{api_key}")
+      uri = URI("https://api.anthropic.com/v1/messages")
+      headers = {
+        "Content-Type"      => "application/json",
+        "x-api-key"         => api_key,
+        "anthropic-version" => "2023-06-01"
+      }
       body = {
-        contents: [ { parts: [ { text: build_prompt } ] } ],
-        generationConfig: {
-          temperature:     0.3,
-          maxOutputTokens: 800
-        }
+        model:      CLAUDE_MODEL,
+        max_tokens: 800,
+        messages:   [ { role: "user", content: build_prompt } ]
       }
 
-      response = Net::HTTP.post(uri, body.to_json, "Content-Type" => "application/json")
+      response = Net::HTTP.post(uri, body.to_json, headers)
       data = JSON.parse(response.body)
-      data.dig("candidates", 0, "content", "parts", 0, "text")&.strip
+      data.dig("content", 0, "text")&.strip
     rescue => e
-      Rails.logger.error "[RfqReplyDraft] Gemini API error: #{e.message}"
+      Rails.logger.error "[RfqReplyDraft] Claude API error: #{e.message}"
       nil
     end
 
