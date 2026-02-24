@@ -50,10 +50,31 @@ module Gmail
     end
 
     def build_prompt
+      few_shots = Gmail::RfqFeedbackService.few_shot_examples(limit: 5)
+      domain    = @email[:from].to_s.match(/@([^>]+)>?/)&.[](1)&.strip&.downcase
+      history   = Gmail::RfqFeedbackService.domain_history(domain)
+
+      few_shot_section = if few_shots.any?
+        lines = few_shots.map do |ex|
+          "  - Subject: \"#{ex[:subject]}\" | From: #{ex[:from]} | Verdict: #{ex[:verdict]} | Reason: #{ex[:reason]}"
+        end.join("\n")
+        "\nPAST USER FEEDBACK (few-shot examples — learn from these):\n#{lines}\n"
+      else
+        ""
+      end
+
+      history_section = if history[:confirmed] > 0 || history[:rejected] > 0
+        "\nSENDER DOMAIN HISTORY for \"#{domain}\": #{history[:confirmed]} confirmed RFQs, #{history[:rejected]} rejected. " +
+        (history[:confirmed] > 0 ? "This domain has sent valid RFQs before — lean toward confirmed." : "")
+      else
+        ""
+      end
+
       <<~PROMPT
         You are an expert procurement specialist at AtoZ2010, a company that supplies construction materials (Sika waterproofing, concrete admixtures, adhesives, sealants, grouts) to large infrastructure projects in the Middle East and South Korea.
 
         Analyze the following email and determine if it is an RFQ (Request for Quotation) or procurement inquiry.
+        #{few_shot_section}#{history_section}
 
         EMAIL:
         Subject: #{@email[:subject]}

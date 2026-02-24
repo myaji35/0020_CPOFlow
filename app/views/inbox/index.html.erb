@@ -72,6 +72,19 @@
           <% end %>
         </a>
 
+        <%# Uncertain — AI 판정 불확실 %>
+        <a href="<%= inbox_path(filter: 'uncertain') %>"
+           class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                  <%= @current_filter == 'uncertain' ? 'text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' %>">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-yellow-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          확인 필요
+          <% if @count_uncertain.to_i > 0 %>
+            <span class="ml-auto text-xs bg-red-500 text-white rounded-full px-2 py-0.5 font-bold">
+              <%= @count_uncertain %>
+            </span>
+          <% end %>
+        </a>
+
         <%# Converted (non-inbox status) %>
         <a href="<%= inbox_path(filter: 'converted') %>"
            class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors
@@ -184,6 +197,11 @@
                   <%# RFQ badge %>
                   <% if order.source_email_id.present? %>
                     <span class="text-[10px] px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 rounded font-medium">RFQ</span>
+                  <% end %>
+
+                  <%# AI 불확실 뱃지 %>
+                  <% if order.respond_to?(:rfq_status) && order.rfq_status == "rfq_uncertain" %>
+                    <span class="text-[10px] px-1.5 py-0.5 bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400 rounded font-semibold border border-yellow-200 dark:border-yellow-800">AI 불확실</span>
                   <% end %>
 
                   <%# Priority indicator %>
@@ -422,7 +440,35 @@
             </div>
           <% end %>
 
-          <%# Email body — 원문 / 번역(한글) 탭 %>
+          <%# AI 판정 불확실 피드백 배너 %>
+          <% if order.respond_to?(:rfq_status) && order.rfq_status == "rfq_uncertain" %>
+            <div id="feedback-banner-<%= order.id %>"
+                 class="mx-6 mb-0 mt-3 px-4 py-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg flex items-center justify-between gap-4">
+              <div class="flex items-center gap-2 flex-1 min-w-0">
+                <svg class="w-4 h-4 text-yellow-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <span class="text-xs text-yellow-800 dark:text-yellow-300 font-medium">AI가 이 이메일을 RFQ로 확신하지 못했습니다. 판정해주세요.</span>
+              </div>
+              <div class="flex items-center gap-2 flex-shrink-0">
+                <button onclick="submitFeedback(<%= order.id %>, 'confirmed', '<%= inbox_feedback_path(order.id) %>')"
+                        id="feedback-confirmed-<%= order.id %>"
+                        class="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition-colors">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  RFQ 맞음
+                </button>
+                <button onclick="submitFeedback(<%= order.id %>, 'rejected', '<%= inbox_feedback_path(order.id) %>')"
+                        id="feedback-rejected-<%= order.id %>"
+                        class="flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  RFQ 아님
+                </button>
+              </div>
+            </div>
+            <div id="feedback-done-<%= order.id %>" class="hidden mx-6 mb-0 mt-3 px-4 py-2.5 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+              <p class="text-xs text-green-700 dark:text-green-400 font-medium"></p>
+            </div>
+          <% end %>
+
+          <%# Email body — 원문 / 번역(한글) / 답변 초안 탭 %>
           <div class="p-6" data-order-id="<%= order.id %>">
             <% plain_body = order.original_email_body.presence || order.description %>
             <% html_body  = order.respond_to?(:original_email_html_body) ? order.original_email_html_body.presence : nil %>
@@ -445,6 +491,18 @@
                     <span class="ml-1 w-1.5 h-1.5 rounded-full bg-green-400 inline-block"></span>
                   <% end %>
                 </button>
+                <%# 답변 초안 탭 (RFQ inbox 이메일만) %>
+                <% if order.source_email_id.present? %>
+                  <button onclick="switchEmailTab(this, 'reply-draft', <%= order.id %>)"
+                          class="email-tab-btn px-3 py-1.5 text-xs font-medium rounded-t-md border border-b-0 border-transparent transition-colors text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                          data-tab="reply-draft" data-order="<%= order.id %>"
+                          data-generate-url="<%= inbox_generate_reply_path(order.id) %>">
+                    답변 초안
+                    <% if order.respond_to?(:reply_draft) && order.reply_draft.present? %>
+                      <span class="ml-1 w-1.5 h-1.5 rounded-full bg-blue-400 inline-block"></span>
+                    <% end %>
+                  </button>
+                <% end %>
               </div>
 
               <%# 원문 패널 — HTML 우선, plain text fallback %>
@@ -505,6 +563,63 @@
               <div class="flex flex-col items-center justify-center py-12 text-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-gray-200 dark:text-gray-600 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                 <p class="text-xs text-gray-400 dark:text-gray-500">이메일 본문이 없습니다</p>
+              </div>
+            <% end %>
+
+            <%# 답변 초안 패널 %>
+            <% if order.source_email_id.present? %>
+              <div id="tab-reply-draft-<%= order.id %>" class="email-tab-panel hidden">
+                <% if order.respond_to?(:reply_draft) && order.reply_draft.present? %>
+                  <%# 이미 초안이 있는 경우 %>
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1">
+                      <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      AI 답변 초안
+                    </span>
+                    <div class="flex items-center gap-2">
+                      <button onclick="copyDraft(<%= order.id %>)"
+                              class="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        복사
+                      </button>
+                      <button onclick="regenerateDraft(<%= order.id %>, '<%= inbox_generate_reply_path(order.id) %>')"
+                              id="regen-draft-btn-<%= order.id %>"
+                              class="flex items-center gap-1 text-xs text-[#00A1E0] hover:text-blue-700 px-2 py-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors">
+                        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+                        재생성
+                      </button>
+                    </div>
+                  </div>
+                  <div id="draft-loading-<%= order.id %>" class="hidden flex flex-col items-center justify-center py-6">
+                    <svg class="w-5 h-5 text-[#00A1E0] mb-1" style="animation: spin 1s linear infinite" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+                    <p class="text-xs text-gray-400">Gemini AI가 초안 작성 중...</p>
+                  </div>
+                  <div id="draft-content-<%= order.id %>"
+                       class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-5 border border-indigo-100 dark:border-indigo-800/40 max-h-[400px] overflow-y-auto font-mono text-xs">
+<%= order.reply_draft %>
+                  </div>
+                  <div id="draft-error-<%= order.id %>" class="hidden text-xs text-red-500 dark:text-red-400 text-center py-4"></div>
+                <% else %>
+                  <%# 초안이 없는 경우: 생성 버튼 %>
+                  <div id="draft-placeholder-<%= order.id %>" class="flex flex-col items-center justify-center py-12 text-center">
+                    <svg class="w-8 h-8 text-gray-300 dark:text-gray-600 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mb-3">답변 초안이 아직 없습니다</p>
+                    <button onclick="regenerateDraft(<%= order.id %>, '<%= inbox_generate_reply_path(order.id) %>')"
+                            id="gen-draft-btn-<%= order.id %>"
+                            class="flex items-center gap-2 px-4 py-2 bg-[#00A1E0] hover:bg-blue-600 text-white text-xs font-semibold rounded-lg transition-colors">
+                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                      AI로 답변 초안 생성
+                    </button>
+                  </div>
+                  <div id="draft-loading-<%= order.id %>" class="hidden flex flex-col items-center justify-center py-10">
+                    <svg class="w-6 h-6 text-[#00A1E0] mb-2" style="animation: spin 1s linear infinite" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+                    <p class="text-xs text-gray-400">Gemini AI가 초안 작성 중...</p>
+                  </div>
+                  <div id="draft-content-<%= order.id %>"
+                       class="hidden text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-5 border border-indigo-100 dark:border-indigo-800/40 max-h-[400px] overflow-y-auto font-mono text-xs">
+                  </div>
+                  <div id="draft-error-<%= order.id %>" class="hidden text-xs text-red-500 dark:text-red-400 text-center py-4"></div>
+                <% end %>
               </div>
             <% end %>
 
@@ -937,6 +1052,162 @@
       btn.disabled = false;
       btn.innerHTML = 'AI 분석';
     });
+  }
+
+  // --- RFQ 피드백 (맞음/아님) ---
+  function submitFeedback(orderId, verdict, url) {
+    const confirmedBtn = document.getElementById('feedback-confirmed-' + orderId);
+    const rejectedBtn  = document.getElementById('feedback-rejected-' + orderId);
+    const banner       = document.getElementById('feedback-banner-' + orderId);
+    const doneBanner   = document.getElementById('feedback-done-' + orderId);
+
+    if (confirmedBtn) confirmedBtn.disabled = true;
+    if (rejectedBtn)  rejectedBtn.disabled = true;
+
+    const csrf = document.querySelector('meta[name=csrf-token]')?.content;
+    fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+      body: JSON.stringify({ verdict: verdict })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.status === 'ok') {
+        if (banner) banner.classList.add('hidden');
+        if (doneBanner) {
+          const p = doneBanner.querySelector('p');
+          if (p) p.textContent = data.message;
+          doneBanner.classList.remove('hidden');
+        }
+        // 목록 카드에서 AI 불확실 뱃지 제거
+        const listItem = document.getElementById('email-item-' + orderId);
+        if (listItem) {
+          listItem.querySelectorAll('[class*="AI 불확실"], .uncertain-badge').forEach(el => el.remove());
+          const badges = listItem.querySelectorAll('span');
+          badges.forEach(b => { if (b.textContent.trim() === 'AI 불확실') b.remove(); });
+        }
+        // confirmed → 답변 초안 탭 활성화 안내
+        if (verdict === 'confirmed') {
+          const draftTab = document.querySelector('[data-order="' + orderId + '"][data-tab="reply-draft"]');
+          if (draftTab) {
+            draftTab.classList.add('text-blue-600', 'dark:text-blue-400');
+          }
+        }
+      } else {
+        if (confirmedBtn) confirmedBtn.disabled = false;
+        if (rejectedBtn)  rejectedBtn.disabled = false;
+        showSyncNotification(data.error || '오류가 발생했습니다.', 'error');
+      }
+    })
+    .catch(() => {
+      if (confirmedBtn) confirmedBtn.disabled = false;
+      if (rejectedBtn)  rejectedBtn.disabled = false;
+      showSyncNotification('네트워크 오류가 발생했습니다.', 'error');
+    });
+  }
+
+  // --- 답변 초안 생성 ---
+  const _generatingDrafts = new Set();
+
+  function regenerateDraft(orderId, url) {
+    if (_generatingDrafts.has(orderId)) return;
+    _generatingDrafts.add(orderId);
+
+    const placeholder = document.getElementById('draft-placeholder-' + orderId);
+    const loading     = document.getElementById('draft-loading-' + orderId);
+    const content     = document.getElementById('draft-content-' + orderId);
+    const errorEl     = document.getElementById('draft-error-' + orderId);
+    const regenBtn    = document.getElementById('regen-draft-btn-' + orderId);
+    const genBtn      = document.getElementById('gen-draft-btn-' + orderId);
+
+    if (placeholder) placeholder.classList.add('hidden');
+    if (content)     content.classList.add('hidden');
+    if (errorEl)     errorEl.classList.add('hidden');
+    if (loading)     loading.classList.remove('hidden');
+    if (regenBtn)    regenBtn.disabled = true;
+    if (genBtn)      genBtn.disabled = true;
+
+    const csrf = document.querySelector('meta[name=csrf-token]')?.content;
+    fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf }
+    })
+    .then(r => r.json())
+    .then(data => {
+      _generatingDrafts.delete(orderId);
+      if (loading) loading.classList.add('hidden');
+      if (regenBtn) regenBtn.disabled = false;
+      if (genBtn)   genBtn.disabled = false;
+
+      if (data.status === 'ok' && data.draft) {
+        if (content) {
+          content.textContent = data.draft;
+          content.classList.remove('hidden');
+        }
+        if (placeholder) placeholder.classList.add('hidden');
+        // 탭 버튼에 완료 dot 추가
+        const tabBtn = document.querySelector('[data-order="' + orderId + '"][data-tab="reply-draft"]');
+        if (tabBtn && !tabBtn.querySelector('.draft-done-dot')) {
+          const dot = document.createElement('span');
+          dot.className = 'draft-done-dot ml-1 w-1.5 h-1.5 rounded-full bg-blue-400 inline-block';
+          tabBtn.appendChild(dot);
+        }
+      } else {
+        if (errorEl) {
+          errorEl.textContent = data.error || '답변 초안 생성에 실패했습니다.';
+          errorEl.classList.remove('hidden');
+        }
+        if (placeholder) placeholder.classList.remove('hidden');
+      }
+    })
+    .catch(() => {
+      _generatingDrafts.delete(orderId);
+      if (loading)  loading.classList.add('hidden');
+      if (regenBtn) regenBtn.disabled = false;
+      if (genBtn)   genBtn.disabled = false;
+      if (placeholder) placeholder.classList.remove('hidden');
+      if (errorEl) {
+        errorEl.textContent = '네트워크 오류가 발생했습니다.';
+        errorEl.classList.remove('hidden');
+      }
+    });
+  }
+
+  function copyDraft(orderId) {
+    const content = document.getElementById('draft-content-' + orderId);
+    if (!content) return;
+    navigator.clipboard.writeText(content.textContent.trim()).then(() => {
+      showSyncNotification('답변 초안이 클립보드에 복사되었습니다.', 'success');
+    });
+  }
+
+  // --- switchEmailTab에 reply-draft 패널 포함 ---
+  // (기존 switchEmailTab을 확장하여 3번째 패널 숨김 처리)
+  const _origSwitchEmailTab = window.switchEmailTab;
+  function switchEmailTab(btn, tab, orderId) {
+    // 탭 버튼 스타일 갱신
+    document.querySelectorAll('[data-order="' + orderId + '"].email-tab-btn').forEach(b => {
+      b.classList.remove('active-tab', 'border-[#00A1E0]', 'text-[#00A1E0]', 'bg-white', 'dark:bg-gray-900');
+      b.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+    });
+    btn.classList.add('active-tab', 'border-[#00A1E0]', 'text-[#00A1E0]', 'bg-white', 'dark:bg-gray-900');
+    btn.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+
+    // 패널 토글 (3개 패널 모두 숨김)
+    ['original', 'translated', 'reply-draft'].forEach(t => {
+      const p = document.getElementById('tab-' + t + '-' + orderId);
+      if (p) p.classList.add('hidden');
+    });
+    const target = document.getElementById('tab-' + tab + '-' + orderId);
+    if (target) target.classList.remove('hidden');
+
+    // 번역 탭 클릭 시 자동 번역
+    if (tab === 'translated' && btn.dataset.autoTranslate === 'true') {
+      const url = btn.dataset.translateUrl;
+      if (url && !_translatingIds.has(orderId)) {
+        requestTranslation(orderId, url);
+      }
+    }
   }
 
   // --- Keyboard shortcuts ---

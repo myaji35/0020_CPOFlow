@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_24_025435) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_24_175107) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -330,8 +330,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_24_025435) do
     t.integer "priority", default: 1, null: false
     t.integer "project_id"
     t.integer "quantity"
+    t.text "reply_draft"
     t.string "rfq_confidence", default: "none"
     t.integer "rfq_score", default: 0
+    t.integer "rfq_status", default: 0
     t.string "risk_level"
     t.integer "risk_score"
     t.datetime "risk_updated_at"
@@ -396,6 +398,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_24_025435) do
     t.index ["code"], name: "index_projects_on_code"
     t.index ["site_category"], name: "index_projects_on_site_category"
     t.index ["status"], name: "index_projects_on_status"
+  end
+
+  create_table "rfq_feedbacks", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "note"
+    t.integer "order_id", null: false
+    t.string "sender_domain"
+    t.string "subject_pattern"
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.string "verdict", null: false
+    t.index ["order_id", "user_id"], name: "index_rfq_feedbacks_on_order_id_and_user_id", unique: true
+    t.index ["order_id"], name: "index_rfq_feedbacks_on_order_id"
+    t.index ["sender_domain"], name: "index_rfq_feedbacks_on_sender_domain"
+    t.index ["user_id"], name: "index_rfq_feedbacks_on_user_id"
+    t.index ["verdict"], name: "index_rfq_feedbacks_on_verdict"
   end
 
   create_table "sheets_sync_logs", force: :cascade do |t|
@@ -524,6 +542,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_24_025435) do
   add_foreign_key "orders", "suppliers"
   add_foreign_key "orders", "users"
   add_foreign_key "projects", "clients"
+  add_foreign_key "rfq_feedbacks", "orders"
+  add_foreign_key "rfq_feedbacks", "users"
   add_foreign_key "supplier_products", "products"
   add_foreign_key "supplier_products", "suppliers"
   add_foreign_key "tasks", "orders"

@@ -44,6 +44,8 @@ Rails.application.routes.draw do
   get  "inbox/:id/translate", to: "inbox#translate",        as: :inbox_translate
   get  "inbox/:id/attachment/:blob_key", to: "inbox#download_attachment", as: :inbox_attachment
   post "inbox/analyze_link", to: "inbox#analyze_link", as: :inbox_analyze_link
+  post "inbox/:id/feedback",      to: "inbox#feedback",       as: :inbox_feedback
+  post "inbox/:id/generate_reply", to: "inbox#generate_reply", as: :inbox_generate_reply
 
   # Calendar
   get "calendar", to: "calendar#index"

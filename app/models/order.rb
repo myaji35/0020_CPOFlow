@@ -11,6 +11,7 @@ class Order < ApplicationRecord
   has_many :order_quotes, dependent: :destroy
   has_many :notifications, as: :notifiable, dependent: :destroy
   has_many_attached :attachments
+  has_many :rfq_feedbacks, dependent: :destroy
 
   enum :status, {
     inbox: 0,
@@ -21,6 +22,12 @@ class Order < ApplicationRecord
     qa: 5,
     delivered: 6
   }, default: :inbox
+
+  enum :rfq_status, {
+    rfq_confirmed: 0,
+    rfq_uncertain: 1,
+    rfq_excluded:  2
+  }, default: :rfq_confirmed, prefix: :rfq
 
   enum :priority, {
     low: 0,

@@ -17,11 +17,19 @@ module Gmail
       # Idempotency: skip if already imported
       return nil if Order.exists?(source_email_id: @email[:id])
 
+      verdict = @detection[:rfq_verdict] || :confirmed
+      rfq_status_val = case verdict
+      when :confirmed  then Order.rfq_statuses[:rfq_confirmed]
+      when :uncertain  then Order.rfq_statuses[:rfq_uncertain]
+      else                  Order.rfq_statuses[:rfq_excluded]
+      end
+
       order = Order.new(
         title:                  build_title,
         customer_name:          @detection[:customer_name].presence || "Unknown",
         description:            build_description,
         status:                 :inbox,
+        rfq_status:             rfq_status_val,
         priority:               infer_priority,
         due_date:               @detection[:due_date],
         source_email_id:        @email[:id],
@@ -46,14 +54,24 @@ module Gmail
       )
 
       if order.save
-        # Assign the account owner as default assignee
+        # 기본 담당자: 계정 소유자
         Assignment.find_or_create_by!(order: order, user: @account.user)
+
+        # Phase E: 발주처 이력 기반 담당자 자동 배정
+        auto_assign_from_history(order)
+
         Activity.create!(
           order:  order,
           user:   @account.user,
           action: "auto_created_from_email"
         )
-        Rails.logger.info "[EmailToOrder] Created order ##{order.id} from Gmail #{@email[:id]}"
+
+        # confirmed 판정 시 답변 초안 자동 생성 (백그라운드)
+        if verdict == :confirmed
+          RfqReplyDraftJob.perform_later(order.id)
+        end
+
+        Rails.logger.info "[EmailToOrder] Created order ##{order.id} verdict=#{verdict} from Gmail #{@email[:id]}"
         order
       else
         Rails.logger.warn "[EmailToOrder] Failed to create order: #{order.errors.full_messages}"
@@ -97,6 +115,25 @@ module Gmail
 
     def extract_sender_domain
       @email[:from].to_s.match(/@([^>]+)>?/)&.[](1)&.strip&.downcase
+    end
+
+    # Phase E: 같은 발주처(이메일 도메인) 최근 Order 담당자를 자동 배정
+    def auto_assign_from_history(order)
+      domain = extract_sender_domain
+      return if domain.blank?
+
+      last_order = Order.where("original_email_from LIKE ?", "%#{domain}%")
+                        .where.not(id: order.id)
+                        .joins(:assignments)
+                        .order(created_at: :desc)
+                        .first
+      return unless last_order
+
+      last_order.assignees.each do |assignee|
+        next if assignee == @account.user  # 이미 기본 배정된 경우 스킵
+        Assignment.find_or_create_by!(order: order, user: assignee)
+        Rails.logger.info "[EmailToOrder] Auto-assigned #{assignee.email} from domain history"
+      end
     end
   end
 end

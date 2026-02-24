@@ -42,27 +42,58 @@ module Gmail
 
     # Weighted keyword groups (subject gets 2x weight)
     SUBJECT_KEYWORDS = [
-      # English
+      # English — RFQ / Quotation
       "rfq", "request for quotation", "quotation request",
       "request for quote", "inquiry", "enquiry",
       "price inquiry", "price request", "quote request",
       "tender", "bid request", "procurement inquiry",
+      "rfp", "request for proposal", "invitation to bid",
+      "itb", "material request", "mr ", "purchase request",
+      "pr ", "supply request", "quotation needed",
+      "please quote", "please provide quotation",
+      "revised quotation", "revised quote", "re: quotation",
+      "re: rfq", "re: quote", "follow up quotation",
       # Korean
       "견적요청", "견적 요청", "견적의뢰", "견적 의뢰",
       "구매요청", "발주요청", "입찰요청",
+      "자재요청", "구매의뢰", "가격문의",
+      "물량산출", "물량확인", "공급요청",
+      "납품의뢰", "견적서 요청", "견적서 의뢰",
       # Arabic
       "طلب عرض أسعار", "طلب عرض سعر", "استفسار عن الأسعار",
-      "طلب توريد", "طلب مشتريات"
+      "طلب توريد", "طلب مشتريات",
+      "طلب تسعير", "استفسار سعر", "طلب عطاء",
+      "طلب مواد", "طلب شراء", "عرض سعر مطلوب",
+      "مناقصة", "طلب توريد مواد"
     ].freeze
 
     BODY_KEYWORDS = [
+      # English — request patterns
       "please provide", "please quote", "kindly provide",
+      "kindly quote", "kindly send", "kindly advise",
+      "please advise", "please confirm",
       "we require", "we need", "supply of",
       "delivery by", "due date", "required by",
-      "urgently required", "asap",
+      "urgently required", "asap", "urgent",
+      "attached herewith", "please find attached",
+      "as per attached", "as per below",
+      "best price", "competitive price",
+      "unit price", "total price",
+      "bill of quantities", "boq", "bom",
+      "bill of materials", "material list",
+      "spec sheet", "specification",
+      "lead time", "validity",
+      # Korean
       "견적서", "납기", "납품일", "단가", "공급",
+      "최저가", "단가표", "물량표", "자재목록",
+      "긴급", "급합니다", "빨리", "조속히",
+      # Construction / procurement materials
       "sika", "waterproofing", "concrete", "adhesive",
-      "grout", "admixture", "sealant"
+      "grout", "admixture", "sealant",
+      "pipe", "valve", "fitting", "cable",
+      "pump", "motor", "generator", "panel",
+      "steel", "rebar", "cement", "paint",
+      "insulation", "membrane", "epoxy"
     ].freeze
 
     # Date patterns to extract due date from email body
@@ -83,7 +114,7 @@ module Gmail
     def detect
       # 1단계: 발신 도메인 / 제목 패턴으로 즉시 제외
       if excluded_sender? || excluded_subject?
-        return not_rfq_result("발신자/제목 패턴으로 자동 제외 (알림성 이메일)")
+        return not_rfq_result("발신자/제목 패턴으로 자동 제외 (알림성 이메일)", :excluded)
       end
 
       keyword_result = keyword_detect
@@ -91,14 +122,24 @@ module Gmail
 
       # 2단계: LLM이 명확히 RFQ 아님으로 판정 + 키워드도 없으면 제외
       if !llm_result[:is_rfq] && keyword_result[:score] < 20
-        return not_rfq_result(llm_result[:reason] || "RFQ 아님")
+        return not_rfq_result(llm_result[:reason] || "RFQ 아님", :excluded)
       end
 
       # Hybrid 점수: 키워드 40% + LLM 60%
       hybrid_score = (keyword_result[:score] * 0.4 + llm_result[:score] * 0.6).round
 
+      # 3단계 판정: confirmed / uncertain / excluded
+      rfq_verdict = if hybrid_score >= 70
+        :confirmed
+      elsif hybrid_score >= 30 || llm_result[:is_rfq]
+        :uncertain
+      else
+        :excluded
+      end
+
       {
-        is_rfq:           hybrid_score >= 30 || llm_result[:is_rfq],
+        is_rfq:           rfq_verdict != :excluded,
+        rfq_verdict:      rfq_verdict,          # :confirmed | :uncertain | :excluded
         score:            hybrid_score,
         confidence:       llm_result[:confidence],
         reason:           llm_result[:reason],
@@ -147,9 +188,10 @@ module Gmail
       EXCLUDED_SUBJECT_PATTERNS.any? { |pattern| @subject.match?(pattern) }
     end
 
-    def not_rfq_result(reason)
+    def not_rfq_result(reason, verdict = :excluded)
       {
         is_rfq:            false,
+        rfq_verdict:       verdict,
         score:             0,
         confidence:        "none",
         reason:            reason,

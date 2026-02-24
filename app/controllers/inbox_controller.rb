@@ -3,7 +3,8 @@ class InboxController < ApplicationController
   RATE_LIMIT_WINDOW = 60   # 초
   RATE_LIMIT_MAX    = 10   # 최대 호출 수
 
-  before_action :check_rate_limit!, only: %i[translate analyze_link]
+  before_action :check_rate_limit!, only: %i[translate analyze_link generate_reply]
+
   def index
     base_scope = Order.where.not(original_email_from: [ nil, "" ])
                       .includes(:user, :assignees, :client, :supplier, :project)
@@ -13,6 +14,8 @@ class InboxController < ApplicationController
     case @current_filter
     when "rfq"
       base_scope = base_scope.where(status: :inbox)
+    when "uncertain"
+      base_scope = base_scope.where(status: :inbox, rfq_status: Order.rfq_statuses[:rfq_uncertain])
     when "converted"
       base_scope = base_scope.where.not(status: :inbox)
     end
@@ -33,6 +36,7 @@ class InboxController < ApplicationController
     email_scope = Order.where.not(original_email_from: [ nil, "" ])
     @count_all       = email_scope.count
     @count_rfq       = email_scope.where(status: :inbox).count
+    @count_uncertain = email_scope.where(status: :inbox, rfq_status: Order.rfq_statuses[:rfq_uncertain]).count
     @count_converted = email_scope.where.not(status: :inbox).count
   end
 
@@ -81,6 +85,47 @@ class InboxController < ApplicationController
       translated_subject: order.translated_subject,
       translated_body:    order.translated_body
     }
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: "not found" }, status: :not_found
+  end
+
+  # AJAX: 사용자 RFQ 피드백 (맞음/아님)
+  def feedback
+    order = Order.find(params[:id])
+    verdict = params[:verdict].to_s  # "confirmed" or "rejected"
+
+    unless %w[confirmed rejected].include?(verdict)
+      return render json: { error: "올바르지 않은 판정값입니다" }, status: :unprocessable_entity
+    end
+
+    Gmail::RfqFeedbackService.record!(order, current_user, verdict: verdict, note: params[:note])
+
+    # confirmed 시 칸반 카드 자동 생성 (status 변경 없이 rfq_status만 업데이트됨)
+    if verdict == "confirmed"
+      RfqReplyDraftJob.perform_later(order.id)
+    end
+
+    render json: {
+      status:     "ok",
+      verdict:    verdict,
+      rfq_status: order.reload.rfq_status,
+      message:    verdict == "confirmed" ? "RFQ로 확정했습니다. 답변 초안을 생성 중입니다." : "제외 처리했습니다."
+    }
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: "not found" }, status: :not_found
+  end
+
+  # AJAX: 답변 초안 직접 생성 요청
+  def generate_reply
+    order = Order.find(params[:id])
+    order.update_column(:reply_draft, nil)  # 기존 초안 삭제 후 재생성
+    draft = Gmail::RfqReplyDraftService.generate!(order)
+
+    if draft.present?
+      render json: { status: "ok", draft: draft }
+    else
+      render json: { error: "답변 초안 생성에 실패했습니다." }, status: :unprocessable_entity
+    end
   rescue ActiveRecord::RecordNotFound
     render json: { error: "not found" }, status: :not_found
   end
