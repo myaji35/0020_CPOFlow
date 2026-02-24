@@ -37,6 +37,7 @@ class ClientsController < ApplicationController
     total             = @client.orders.where.not(due_date: nil).count
     overdue           = @client.orders.where("due_date < ? AND status != ?", Date.today, Order.statuses[:delivered]).count
     @on_time_rate     = total > 0 ? ((total - overdue).to_f / total * 100).round(1) : nil
+    @risk_grade       = calculate_client_risk(@client, @on_time_rate, overdue)
   end
 
   def new
@@ -79,6 +80,15 @@ class ClientsController < ApplicationController
       :credit_grade, :contract_start_date, :payment_terms, :currency,
       :ecount_code, :notes, :active
     )
+  end
+
+  def calculate_client_risk(client, on_time_rate, overdue)
+    return "N/A" if on_time_rate.nil?
+    if on_time_rate >= 90 && overdue == 0 then "A"
+    elsif on_time_rate >= 75 || overdue <= 1 then "B"
+    elsif on_time_rate >= 60 || overdue <= 3 then "C"
+    else "D"
+    end
   end
 
   def require_manager!

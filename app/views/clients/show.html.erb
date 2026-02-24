@@ -34,7 +34,11 @@
   </div>
 
   <!-- KPI 카드 -->
-  <div class="grid grid-cols-4 gap-4">
+  <% risk_color = { "A" => "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400",
+                    "B" => "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400",
+                    "C" => "bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400",
+                    "D" => "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400" } %>
+  <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
       <p class="text-xs text-gray-500 dark:text-gray-400">총 오더</p>
       <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><%= @client.orders.count %></p>
@@ -48,8 +52,21 @@
       <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><%= @client.active_orders_count %></p>
     </div>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
-      <p class="text-xs text-gray-500 dark:text-gray-400">프로젝트</p>
-      <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><%= @projects.count %></p>
+      <p class="text-xs text-gray-500 dark:text-gray-400">납기준수율</p>
+      <% if @on_time_rate %>
+        <% rate_color = @on_time_rate >= 90 ? 'text-green-600 dark:text-green-400' : @on_time_rate >= 75 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400' %>
+        <p class="text-2xl font-bold <%= rate_color %> mt-1"><%= @on_time_rate %>%</p>
+      <% else %>
+        <p class="text-2xl font-bold text-gray-300 dark:text-gray-600 mt-1">-</p>
+      <% end %>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
+      <p class="text-xs text-gray-500 dark:text-gray-400">리스크 등급</p>
+      <% if @risk_grade && @risk_grade != "N/A" %>
+        <p class="mt-1"><span class="inline-flex px-3 py-1 text-xl font-bold rounded-lg <%= risk_color[@risk_grade] || 'bg-gray-100 text-gray-600' %>"><%= @risk_grade %></span></p>
+      <% else %>
+        <p class="text-2xl font-bold text-gray-300 dark:text-gray-600 mt-1">-</p>
+      <% end %>
     </div>
   </div>
 

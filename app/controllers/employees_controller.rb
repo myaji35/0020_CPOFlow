@@ -13,6 +13,11 @@ class EmployeesController < ApplicationController
     @employees = @employees.where(department: params[:department]) if params[:department].present?
     @employees = @employees.where(employment_type: params[:type]) if params[:type].present?
     @employees = @employees.dispatched if params[:deployed] == "1"
+    if params[:expiring] == "visa"
+      @employees = @employees.joins(:visas).merge(Visa.expiring_within(60)).distinct
+    elsif params[:expiring] == "contract"
+      @employees = @employees.joins(:employment_contracts).merge(EmploymentContract.expiring_within(30)).distinct
+    end
 
     @stats = {
       total:             Employee.active.count,

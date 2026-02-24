@@ -33,6 +33,7 @@ class SuppliersController < ApplicationController
     total                = @supplier.orders.where.not(due_date: nil).count
     overdue              = @supplier.orders.where("due_date < ? AND status != ?", Date.today, Order.statuses[:delivered]).count
     @on_time_rate        = total > 0 ? ((total - overdue).to_f / total * 100).round(1) : nil
+    @performance_grade   = calculate_supplier_performance(@on_time_rate, total)
   end
 
   def new
@@ -59,6 +60,15 @@ class SuppliersController < ApplicationController
   end
 
   private
+
+  def calculate_supplier_performance(on_time_rate, total_orders)
+    return "N/A" if on_time_rate.nil? || total_orders < 3
+    if on_time_rate >= 95 then "A"
+    elsif on_time_rate >= 85 then "B"
+    elsif on_time_rate >= 70 then "C"
+    else "D"
+    end
+  end
 
   def set_supplier
     @supplier = Supplier.find(params[:id])
