@@ -59,11 +59,9 @@ end %>
           ["this_year",    "올해"],
           ["custom",       "직접입력"]
         ].each do |val, label| %>
+          <% active_cls = @period == val ? 'bg-white dark:bg-gray-700 shadow text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300' %>
           <%= link_to label, reports_path(period: val),
-                class: "px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer
-                        #{@period == val
-                          ? 'bg-white dark:bg-gray-700 shadow text-gray-900 dark:text-white'
-                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}" %>
+                class: "px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer #{active_cls}" %>
         <% end %>
       </div>
       <%# 직접입력 날짜 picker %>
