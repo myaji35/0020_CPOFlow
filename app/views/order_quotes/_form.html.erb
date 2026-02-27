@@ -1,0 +1,62 @@
+<%= form_with model: [order, quote], class: "space-y-4" do |f| %>
+  <% if quote.errors.any? %>
+    <div class="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+      <ul class="text-xs text-red-600 dark:text-red-400 space-y-1">
+        <% quote.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%# 거래처 %>
+  <div>
+    <%= f.label :supplier_id, "거래처", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+    <%= f.collection_select :supplier_id, Supplier.active.order(:name), :id, :name,
+        { prompt: "거래처를 선택하세요" },
+        class: "w-full text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" %>
+  </div>
+
+  <%# 단가 + 통화 %>
+  <div class="flex gap-2">
+    <div class="flex-1">
+      <%= f.label :unit_price, "단가", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+      <%= f.number_field :unit_price, step: 0.01, placeholder: "0.00",
+          class: "w-full text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" %>
+    </div>
+    <div class="w-28">
+      <%= f.label :currency, "통화", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+      <%= f.select :currency, %w[USD KRW AED EUR], { selected: quote.currency.presence || "USD" },
+          class: "w-full text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" %>
+    </div>
+  </div>
+
+  <%# 납기 일수 %>
+  <div>
+    <%= f.label :lead_time_days, "납기 일수", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+    <%= f.number_field :lead_time_days, placeholder: "예: 14",
+        class: "w-full text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" %>
+  </div>
+
+  <%# 유효기간 %>
+  <div>
+    <%= f.label :validity_date, "견적 유효기간", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+    <%= f.date_field :validity_date,
+        class: "w-full text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" %>
+  </div>
+
+  <%# 메모 %>
+  <div>
+    <%= f.label :notes, "메모", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+    <%= f.text_area :notes, rows: 3, placeholder: "특이사항, 조건 등",
+        class: "w-full text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" %>
+  </div>
+
+  <%# 버튼 %>
+  <div class="flex justify-end gap-2 pt-2">
+    <%= link_to "취소", order_path(order),
+        class: "px-4 py-2 text-sm text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" %>
+    <%= f.submit "견적 저장",
+        class: "px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors cursor-pointer" %>
+  </div>
+<% end %>

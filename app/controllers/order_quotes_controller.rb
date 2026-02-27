@@ -27,6 +27,7 @@ class OrderQuotesController < ApplicationController
 
   def select
     @quote.select!
+    @quote.order.update(supplier_id: @quote.supplier_id)
     redirect_to @quote.order, notice: "#{@quote.supplier.name} 견적이 선택되었습니다."
   end
 

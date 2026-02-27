@@ -179,7 +179,7 @@
   <% end %>
 </div>
 
-<%# ── 견적 비교 ────────────────────────────────────────── %>
+<%# ── 견적 비교 (FR-02, FR-03) ───────────────────────── %>
 <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
   <div class="flex items-center justify-between mb-3">
     <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">견적 비교</h4>
@@ -191,41 +191,82 @@
       <% end %>
     <% end %>
   </div>
-  <% quotes = order.order_quotes.order(created_at: :asc) %>
+
+  <% quotes = order.order_quotes.includes(:supplier).order(unit_price: :asc) %>
+  <% min_price = quotes.map(&:unit_price).compact.min %>
+
   <% if quotes.any? %>
     <div class="space-y-2">
       <% quotes.each do |quote| %>
-        <div class="flex items-start gap-2 p-2 rounded-lg border <%= quote.selected? ? 'border-accent bg-accent/5 dark:bg-accent/10' : 'border-gray-100 dark:border-gray-700' %>">
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-1.5">
+        <% is_cheapest = min_price && quote.unit_price == min_price && quotes.count { |q| q.unit_price == min_price } == 1 %>
+        <div class="p-2.5 rounded-lg border
+          <%= quote.selected? ? 'border-accent bg-accent/5 dark:bg-accent/10' :
+              is_cheapest ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20' :
+              'border-gray-100 dark:border-gray-700' %>">
+
+          <%# 거래처명 + 액션 버튼 %>
+          <div class="flex items-center justify-between mb-1.5">
+            <p class="text-xs font-semibold text-gray-800 dark:text-white truncate flex items-center gap-1">
               <% if quote.selected? %>
-                <span class="text-accent text-xs">✓</span>
+                <span class="text-accent">✓</span>
+              <% elsif is_cheapest %>
+                <span class="text-xs font-medium text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/40 px-1 rounded">최저</span>
               <% end %>
-              <p class="text-xs font-medium text-gray-800 dark:text-white truncate">
-                <%= quote.supplier&.name || "거래처 미지정" %>
+              <%= quote.supplier&.name || "거래처 미지정" %>
+            </p>
+            <div class="flex items-center gap-1 shrink-0">
+              <% if can_update?("orders") && !quote.selected? %>
+                <%= button_to select_order_order_quote_path(order, quote), method: :patch,
+                    class: "text-xs text-gray-400 hover:text-accent transition-colors bg-transparent border-0 cursor-pointer px-1 py-0",
+                    title: "이 견적 선택" do %>선택<% end %>
+              <% end %>
+              <% if can_update?("orders") %>
+                <%= button_to order_order_quote_path(order, quote), method: :delete,
+                    data: { turbo_confirm: "이 견적을 삭제하시겠습니까?" },
+                    class: "text-gray-300 hover:text-red-400 transition-colors bg-transparent border-0 cursor-pointer p-0.5",
+                    title: "삭제" do %>
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+
+          <%# 단가 + 총액 (FR-03) %>
+          <div class="grid grid-cols-2 gap-x-2 text-xs">
+            <div>
+              <span class="text-gray-400 dark:text-gray-500">단가</span>
+              <p class="font-medium text-gray-700 dark:text-gray-200">
+                <%= quote.unit_price ? "#{quote.currency.presence || 'USD'} #{number_with_delimiter(quote.unit_price)}" : "-" %>
               </p>
             </div>
-            <p class="text-xs text-gray-500 dark:text-gray-400">
-              <%= number_to_currency(quote.unit_price, unit: quote.currency.presence || "$", format: "%u %n") %>
-              <% if quote.lead_time_days %>
-                · <%= quote.lead_time_days %>일
-              <% end %>
-            </p>
+            <div>
+              <span class="text-gray-400 dark:text-gray-500">총액</span>
+              <p class="font-medium text-gray-700 dark:text-gray-200">
+                <% if quote.unit_price && order.quantity.to_i > 0 %>
+                  <%= "#{quote.currency.presence || 'USD'} #{number_with_delimiter((quote.unit_price * order.quantity).round(2))}" %>
+                <% else %>
+                  -
+                <% end %>
+              </p>
+            </div>
+            <% if quote.lead_time_days %>
+              <div class="mt-1.5">
+                <span class="text-gray-400 dark:text-gray-500">납기</span>
+                <p class="text-gray-600 dark:text-gray-300"><%= quote.lead_time_days %>일</p>
+              </div>
+            <% end %>
+            <% if quote.validity_date %>
+              <div class="mt-1.5">
+                <span class="text-gray-400 dark:text-gray-500">유효기간</span>
+                <p class="text-gray-600 dark:text-gray-300"><%= quote.validity_date.strftime("%m/%d") %></p>
+              </div>
+            <% end %>
           </div>
-          <% if can_update?("orders") && !quote.selected? %>
-            <%= button_to select_order_order_quote_path(order, quote), method: :patch,
-                class: "shrink-0 text-xs text-gray-400 hover:text-accent transition-colors bg-transparent border-0 cursor-pointer px-1 py-0.5",
-                title: "이 견적 선택" do %>
-              선택
-            <% end %>
-          <% end %>
-          <% if can_update?("orders") %>
-            <%= button_to order_order_quote_path(order, quote), method: :delete,
-                data: { turbo_confirm: "이 견적을 삭제하시겠습니까?" },
-                class: "shrink-0 text-gray-300 hover:text-red-400 transition-colors bg-transparent border-0 cursor-pointer p-0.5",
-                title: "삭제" do %>
-              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            <% end %>
+
+          <% if quote.notes.present? %>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1.5 truncate" title="<%= quote.notes %>">
+              <%= quote.notes %>
+            </p>
           <% end %>
         </div>
       <% end %>
