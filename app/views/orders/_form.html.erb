@@ -1,163 +1,229 @@
-<%= form_with model: order, class: "space-y-6" do |f| %>
+<%= form_with model: order, class: "space-y-5" do |f| %>
   <% if order.errors.any? %>
     <div class="px-4 py-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-800 dark:text-red-400 text-sm">
       <%= order.errors.full_messages.to_sentence %>
     </div>
   <% end %>
 
-  <!-- Basic Info -->
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div class="md:col-span-2">
-      <%= f.label :title, "Order Title", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
-      <%= f.text_field :title, placeholder: "e.g. Sika Waterproofing - Barakah NPP",
-          class: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none" %>
-    </div>
-
-    <div>
-      <%= f.label :client_id, "발주처 (Client)", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
-      <div data-controller="autocomplete"
-           data-autocomplete-url-value="<%= search_clients_path %>"
-           data-autocomplete-placeholder-value="발주처 검색..."
-           data-autocomplete-sublabel-value="code"
-           class="relative">
-        <%= f.hidden_field :client_id, data: { autocomplete_target: "hidden" } %>
-        <!-- 배지 (선택된 항목 표시) -->
-        <div data-autocomplete-target="badge"
-             class="<%= order.client_id.present? ? '' : 'hidden' %> flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg text-sm">
-          <span data-autocomplete-target="badgeLabel" class="text-gray-900 dark:text-white font-medium"><%= order.client&.name %></span>
-          <span data-autocomplete-target="badgeSub" class="text-gray-400 dark:text-gray-500 text-xs"><%= order.client&.code ? "(#{order.client.code})" : "" %></span>
-          <button type="button" data-action="click->autocomplete#clear"
-                  class="ml-auto text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-          </button>
-        </div>
-        <!-- 검색 input -->
-        <input type="text"
-               data-autocomplete-target="input"
-               data-action="input->autocomplete#onInput keydown->autocomplete#onKeydown"
-               placeholder="발주처 검색..."
-               autocomplete="off"
-               class="<%= order.client_id.present? ? 'hidden' : '' %> w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none">
-        <!-- 드롭다운 -->
-        <div data-autocomplete-target="dropdown"
-             class="hidden absolute z-50 left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-52 overflow-y-auto">
-        </div>
-      </div>
-    </div>
-
-    <div>
-      <%= f.label :due_date, "Delivery Due Date", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
-      <%= f.date_field :due_date,
-          class: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none" %>
-    </div>
-  </div>
-
-  <!-- 거래처/현장 -->
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div>
-      <%= f.label :supplier_id, "공급사 (Supplier)", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
-      <div data-controller="autocomplete"
-           data-autocomplete-url-value="<%= search_suppliers_path %>"
-           data-autocomplete-placeholder-value="공급사 검색..."
-           data-autocomplete-sublabel-value="code"
-           class="relative">
-        <%= f.hidden_field :supplier_id, data: { autocomplete_target: "hidden" } %>
-        <div data-autocomplete-target="badge"
-             class="<%= order.supplier_id.present? ? '' : 'hidden' %> flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg text-sm">
-          <span data-autocomplete-target="badgeLabel" class="text-gray-900 dark:text-white font-medium"><%= order.supplier&.name %></span>
-          <span data-autocomplete-target="badgeSub" class="text-gray-400 dark:text-gray-500 text-xs"><%= order.supplier&.ecount_code ? "(#{order.supplier.ecount_code})" : "" %></span>
-          <button type="button" data-action="click->autocomplete#clear"
-                  class="ml-auto text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-          </button>
-        </div>
-        <input type="text"
-               data-autocomplete-target="input"
-               data-action="input->autocomplete#onInput keydown->autocomplete#onKeydown"
-               placeholder="공급사 검색..."
-               autocomplete="off"
-               class="<%= order.supplier_id.present? ? 'hidden' : '' %> w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none">
-        <div data-autocomplete-target="dropdown"
-             class="hidden absolute z-50 left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-52 overflow-y-auto">
-        </div>
-      </div>
-    </div>
-    <div>
-      <%= f.label :project_id, "현장/프로젝트", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
-      <div data-controller="autocomplete"
-           data-autocomplete-url-value="<%= search_projects_path %>"
-           data-autocomplete-placeholder-value="현장/프로젝트 검색..."
-           data-autocomplete-sublabel-value="client_name"
-           class="relative">
-        <%= f.hidden_field :project_id, data: { autocomplete_target: "hidden" } %>
-        <div data-autocomplete-target="badge"
-             class="<%= order.project_id.present? ? '' : 'hidden' %> flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg text-sm">
-          <span data-autocomplete-target="badgeLabel" class="text-gray-900 dark:text-white font-medium"><%= order.project&.name %></span>
-          <span data-autocomplete-target="badgeSub" class="text-gray-400 dark:text-gray-500 text-xs"><%= order.project&.client&.name ? "(#{order.project.client.name})" : "" %></span>
-          <button type="button" data-action="click->autocomplete#clear"
-                  class="ml-auto text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-          </button>
-        </div>
-        <input type="text"
-               data-autocomplete-target="input"
-               data-action="input->autocomplete#onInput keydown->autocomplete#onKeydown"
-               placeholder="현장/프로젝트 검색..."
-               autocomplete="off"
-               class="<%= order.project_id.present? ? 'hidden' : '' %> w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none">
-        <div data-autocomplete-target="dropdown"
-             class="hidden absolute z-50 left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-52 overflow-y-auto">
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Item Info -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-    <div>
-      <%= f.label :item_name, "Product / Item", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
-      <%= f.text_field :item_name, placeholder: "Sika® MonoTop®-412 N",
-          class: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none" %>
-    </div>
-    <div>
-      <%= f.label :quantity, "Quantity", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
-      <%= f.number_field :quantity, placeholder: "5000",
-          class: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none" %>
-    </div>
-    <div>
-      <%= f.label :estimated_value, "Estimated Value (USD)", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
-      <%= f.number_field :estimated_value, placeholder: "26000", step: "0.01",
-          class: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none" %>
-    </div>
-  </div>
-
-  <!-- Priority + Status -->
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div>
-      <%= f.label :priority, "Priority", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
-      <%= f.select :priority, Order.priorities.keys.map { |p| [p.capitalize, p] },
-          { selected: order.priority },
-          class: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none" %>
-    </div>
-    <div>
-      <%= f.label :tags, "Tags (comma separated)", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
-      <%= f.text_field :tags, placeholder: "nuclear,sika,UAE,waterproofing",
-          class: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none" %>
-    </div>
-  </div>
-
-  <!-- Description -->
+  <%# ===== 섹션 1: 기본 정보 ===== %>
   <div>
-    <%= f.label :description, "Description / Notes", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
-    <%= f.text_area :description, rows: 4, placeholder: "Order details, site conditions, special requirements...",
-        class: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none resize-none" %>
+    <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">기본 정보</h3>
+    <div class="space-y-3">
+      <%# 제목 %>
+      <div>
+        <%= f.label :title, "주문 제목", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+        <%= f.text_field :title, placeholder: "e.g. Sika Waterproofing - Barakah NPP",
+            class: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none" %>
+      </div>
+      <%# 고객사명 + 발주처 %>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+          <%= f.label :customer_name, "고객사명", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+          <%= f.text_field :customer_name, placeholder: "e.g. KEPCO Engineering",
+              class: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none" %>
+        </div>
+        <div>
+          <%= f.label :client_id, "발주처 (Client)", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+          <div data-controller="autocomplete"
+               data-autocomplete-url-value="<%= search_clients_path %>"
+               data-autocomplete-placeholder-value="발주처 검색..."
+               data-autocomplete-sublabel-value="code"
+               id="client-autocomplete"
+               class="relative">
+            <%= f.hidden_field :client_id, data: { autocomplete_target: "hidden" }, id: "order_client_id" %>
+            <div data-autocomplete-target="badge"
+                 class="<%= order.client_id.present? ? '' : 'hidden' %> flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg text-sm">
+              <span data-autocomplete-target="badgeLabel" class="text-gray-900 dark:text-white font-medium"><%= order.client&.name %></span>
+              <span data-autocomplete-target="badgeSub" class="text-gray-400 dark:text-gray-500 text-xs"><%= order.client&.code ? "(#{order.client.code})" : "" %></span>
+              <button type="button" data-action="click->autocomplete#clear"
+                      class="ml-auto text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
+            <input type="text"
+                   data-autocomplete-target="input"
+                   data-action="input->autocomplete#onInput keydown->autocomplete#onKeydown"
+                   placeholder="발주처 검색..."
+                   autocomplete="off"
+                   class="<%= order.client_id.present? ? 'hidden' : '' %> w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none">
+            <div data-autocomplete-target="dropdown"
+                 class="hidden absolute z-50 left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-52 overflow-y-auto">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- Actions -->
+  <div class="border-t border-gray-100 dark:border-gray-700"></div>
+
+  <%# ===== 섹션 2: 거래 정보 ===== %>
+  <div>
+    <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">거래 정보</h3>
+    <div class="space-y-3">
+      <%# 공급사 + 현장/프로젝트 %>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+          <%= f.label :supplier_id, "공급사 (Supplier)", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+          <div data-controller="autocomplete"
+               data-autocomplete-url-value="<%= search_suppliers_path %>"
+               data-autocomplete-placeholder-value="공급사 검색..."
+               data-autocomplete-sublabel-value="code"
+               class="relative">
+            <%= f.hidden_field :supplier_id, data: { autocomplete_target: "hidden" } %>
+            <div data-autocomplete-target="badge"
+                 class="<%= order.supplier_id.present? ? '' : 'hidden' %> flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg text-sm">
+              <span data-autocomplete-target="badgeLabel" class="text-gray-900 dark:text-white font-medium"><%= order.supplier&.name %></span>
+              <span data-autocomplete-target="badgeSub" class="text-gray-400 dark:text-gray-500 text-xs"><%= order.supplier&.ecount_code ? "(#{order.supplier.ecount_code})" : "" %></span>
+              <button type="button" data-action="click->autocomplete#clear"
+                      class="ml-auto text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
+            <input type="text"
+                   data-autocomplete-target="input"
+                   data-action="input->autocomplete#onInput keydown->autocomplete#onKeydown"
+                   placeholder="공급사 검색..."
+                   autocomplete="off"
+                   class="<%= order.supplier_id.present? ? 'hidden' : '' %> w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none">
+            <div data-autocomplete-target="dropdown"
+                 class="hidden absolute z-50 left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-52 overflow-y-auto">
+            </div>
+          </div>
+        </div>
+        <div>
+          <%= f.label :project_id, "현장/프로젝트", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+          <div data-controller="autocomplete"
+               data-autocomplete-url-value="<%= search_projects_path %>"
+               data-autocomplete-placeholder-value="현장/프로젝트 검색..."
+               data-autocomplete-sublabel-value="client_name"
+               id="project-autocomplete"
+               class="relative">
+            <%= f.hidden_field :project_id, data: { autocomplete_target: "hidden" } %>
+            <div data-autocomplete-target="badge"
+                 class="<%= order.project_id.present? ? '' : 'hidden' %> flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg text-sm">
+              <span data-autocomplete-target="badgeLabel" class="text-gray-900 dark:text-white font-medium"><%= order.project&.name %></span>
+              <span data-autocomplete-target="badgeSub" class="text-gray-400 dark:text-gray-500 text-xs"><%= order.project&.client&.name ? "(#{order.project.client.name})" : "" %></span>
+              <button type="button" data-action="click->autocomplete#clear"
+                      class="ml-auto text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
+            <input type="text"
+                   data-autocomplete-target="input"
+                   data-action="input->autocomplete#onInput keydown->autocomplete#onKeydown"
+                   placeholder="현장/프로젝트 검색..."
+                   autocomplete="off"
+                   class="<%= order.project_id.present? ? 'hidden' : '' %> w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none">
+            <div data-autocomplete-target="dropdown"
+                 class="hidden absolute z-50 left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-52 overflow-y-auto">
+            </div>
+          </div>
+        </div>
+      </div>
+      <%# 납기일 + 퀵픽 버튼 %>
+      <div>
+        <%= f.label :due_date, "납기일", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+        <div class="flex items-center gap-2">
+          <%= f.date_field :due_date,
+              class: "flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none" %>
+          <button type="button" onclick="setDueDateOffset(7)"
+                  class="px-2.5 py-2 text-xs font-medium border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors whitespace-nowrap">1주</button>
+          <button type="button" onclick="setDueDateOffset(14)"
+                  class="px-2.5 py-2 text-xs font-medium border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors whitespace-nowrap">2주</button>
+          <button type="button" onclick="setDueDateOffset(30)"
+                  class="px-2.5 py-2 text-xs font-medium border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors whitespace-nowrap">1개월</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="border-t border-gray-100 dark:border-gray-700"></div>
+
+  <%# ===== 섹션 3: 품목 / 금액 ===== %>
+  <div>
+    <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">품목 / 금액</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div>
+        <%= f.label :item_name, "품목명", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+        <%= f.text_field :item_name, placeholder: "Sika® MonoTop®-412 N",
+            class: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none" %>
+      </div>
+      <div>
+        <%= f.label :quantity, "수량", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+        <%= f.number_field :quantity, placeholder: "5000",
+            class: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none" %>
+      </div>
+      <div>
+        <%= f.label :estimated_value, "예상금액 (USD)", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+        <%= f.number_field :estimated_value, placeholder: "26000", step: "0.01",
+            class: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none" %>
+      </div>
+    </div>
+  </div>
+
+  <div class="border-t border-gray-100 dark:border-gray-700"></div>
+
+  <%# ===== 섹션 4: 추가 정보 ===== %>
+  <div>
+    <h3 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">추가 정보</h3>
+    <div class="space-y-3">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+          <%= f.label :priority, "우선순위", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+          <%= f.select :priority, Order.priorities.keys.map { |p| [p.capitalize, p] },
+              { selected: order.priority },
+              class: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none" %>
+        </div>
+        <div>
+          <%= f.label :tags, "태그 (쉼표 구분)", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+          <%= f.text_field :tags, placeholder: "nuclear,sika,UAE,waterproofing",
+              class: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none" %>
+        </div>
+      </div>
+      <div>
+        <%= f.label :description, "설명 / 메모", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+        <%= f.text_area :description, rows: 3, placeholder: "주문 상세, 현장 조건, 특수 요구사항...",
+            class: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none resize-none" %>
+      </div>
+    </div>
+  </div>
+
+  <%# ===== 액션 버튼 ===== %>
   <div class="flex items-center gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
-    <%= f.submit order.new_record? ? "Create Order" : "Update Order",
+    <%= f.submit order.new_record? ? "주문 등록" : "저장",
         class: "bg-accent text-white font-medium px-6 py-2.5 rounded-lg hover:bg-blue-500 transition-colors cursor-pointer text-sm" %>
-    <%= link_to "Cancel", order.new_record? ? kanban_path : order_path(order),
+    <%= link_to "취소", order.new_record? ? kanban_path : order_path(order),
         class: "text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" %>
   </div>
 <% end %>
+
+<script>
+  // 납기일 퀵픽: 오늘 기준 +days 일 설정
+  function setDueDateOffset(days) {
+    var d = new Date();
+    d.setDate(d.getDate() + days);
+    var yyyy = d.getFullYear();
+    var mm   = String(d.getMonth() + 1).padStart(2, '0');
+    var dd   = String(d.getDate()).padStart(2, '0');
+    var field = document.getElementById('order_due_date');
+    if (field) field.value = yyyy + '-' + mm + '-' + dd;
+  }
+
+  // 발주처(client) 선택 시 프로젝트 자동완성 URL에 client_id 필터 적용 + 기존 선택 초기화
+  document.addEventListener('change', function(e) {
+    if (e.target && e.target.id === 'order_client_id') {
+      var projectEl = document.getElementById('project-autocomplete');
+      if (!projectEl) return;
+      var base = '<%= search_projects_path %>';
+      projectEl.dataset.autocompleteUrlValue =
+        e.target.value ? (base + '?client_id=' + e.target.value) : base;
+      // 기존 project 선택 초기화
+      var projectHidden = projectEl.querySelector('[data-autocomplete-target="hidden"]');
+      if (projectHidden && projectHidden.value) {
+        var clearBtn = projectEl.querySelector('[data-action="click->autocomplete#clear"]');
+        if (clearBtn) clearBtn.click();
+      }
+    }
+  });
+</script>

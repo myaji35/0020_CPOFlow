@@ -63,6 +63,7 @@ class ProjectsController < ApplicationController
     q = params[:q].to_s.strip
     projects = Project.includes(:client).active.by_name
     projects = projects.where("projects.name LIKE ?", "%#{q}%") if q.present?
+    projects = projects.where(client_id: params[:client_id]) if params[:client_id].present?
     results = projects.limit(10).map { |p| { id: p.id, name: p.name, client_name: p.client&.name, status: p.status } }
     render json: results
   end
