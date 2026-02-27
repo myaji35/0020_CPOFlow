@@ -6,7 +6,7 @@ class OrderQuotesController < ApplicationController
 
   def new
     @quote = @order.order_quotes.build
-    @suppliers = Supplier.order(:name)
+    @suppliers = Supplier.active.order(:name)
   end
 
   def create
@@ -14,7 +14,7 @@ class OrderQuotesController < ApplicationController
     if @quote.save
       redirect_to @order, notice: "견적이 등록되었습니다."
     else
-      @suppliers = Supplier.order(:name)
+      @suppliers = Supplier.active.order(:name)
       render :new, status: :unprocessable_entity
     end
   end

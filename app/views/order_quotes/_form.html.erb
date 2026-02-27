@@ -12,7 +12,7 @@
   <%# 거래처 %>
   <div>
     <%= f.label :supplier_id, "거래처", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
-    <%= f.collection_select :supplier_id, Supplier.active.order(:name), :id, :name,
+    <%= f.collection_select :supplier_id, @suppliers || Supplier.active.order(:name), :id, :name,
         { prompt: "거래처를 선택하세요" },
         class: "w-full text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" %>
   </div>
