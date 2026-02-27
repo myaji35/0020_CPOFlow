@@ -20,6 +20,12 @@ production:
     queue: default
     schedule: every 15 minutes
 
+  # Due date notifications (Google Chat + in-app) at 07:00 daily
+  due_notifications:
+    class: DueNotificationJob
+    queue: default
+    schedule: every day at 7am
+
   # HR expiry notifications (visa/contract) at 08:00 daily
   hr_expiry_notifications:
     class: HrExpiryNotificationJob

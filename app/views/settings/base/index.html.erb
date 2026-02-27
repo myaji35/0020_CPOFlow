@@ -84,6 +84,66 @@
     <% end %>
   </div>
 
+  <%# --- Google Chat 알림 Section --- %>
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 mb-6">
+    <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
+      <svg class="w-5 h-5 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <div>
+        <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">Google Chat 납기 알림</h2>
+        <p class="text-xs text-gray-500 dark:text-gray-400">D-14 / D-7 / D-3 / D-0 납기일 알림을 Google Chat으로 발송합니다</p>
+      </div>
+      <% webhook_set = AppSetting.google_chat_webhook_url.present? %>
+      <span class="ml-auto text-xs px-2 py-0.5 rounded-full font-medium <%= webhook_set ? 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400' %>">
+        <%= webhook_set ? '연결됨' : '미설정' %>
+      </span>
+    </div>
+
+    <div class="px-6 py-5">
+      <%= form_with url: settings_notifications_path, method: :patch, class: "space-y-4" do |f| %>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+            Google Chat Incoming Webhook URL
+          </label>
+          <div class="flex gap-2">
+            <%= f.text_field :google_chat_webhook_url,
+                value: AppSetting.google_chat_webhook_url.to_s,
+                placeholder: "https://chat.googleapis.com/v1/spaces/.../messages?key=...&token=...",
+                class: "flex-1 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono" %>
+            <%= f.submit "저장",
+                class: "px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer whitespace-nowrap" %>
+          </div>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+            Google Chat 스페이스 → 메뉴 → "앱 및 통합" → "수신 Webhook" → "추가"에서 URL을 복사하세요.
+          </p>
+        </div>
+      <% end %>
+
+      <% if AppSetting.google_chat_webhook_url.present? %>
+        <div class="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700">
+          <div>
+            <p class="text-sm font-medium text-gray-700 dark:text-gray-300">테스트 메시지 발송</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500">Google Chat으로 테스트 알림을 즉시 발송합니다</p>
+          </div>
+          <%= button_to settings_test_notifications_path, method: :post,
+              class: "flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" do %>
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            <span>테스트 발송</span>
+          <% end %>
+        </div>
+
+        <div class="mt-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 px-4 py-3">
+          <p class="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-1">알림 스케줄</p>
+          <ul class="text-xs text-blue-600 dark:text-blue-400 space-y-0.5">
+            <li>🔵 D-14 — 납기 2주 전 (매일 오전 7:00)</li>
+            <li>🟡 D-7 &nbsp;— 납기 1주 전</li>
+            <li>🟠 D-3 &nbsp;— 납기 3일 전</li>
+            <li>🔴 D-0 &nbsp;— 납기 당일</li>
+          </ul>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
   <%# --- Profile Section --- %>
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 mb-6">
     <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700">

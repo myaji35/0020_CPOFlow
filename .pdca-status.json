@@ -14,5 +14,45 @@
     "startedAt": "2026-02-22T00:00:00Z",
     "archivedAt": "2026-02-22T03:25:00Z",
     "archivedTo": "docs/archive/2026-02/cpoflow-enhancement/"
+  },
+  "ecount-api-integration": {
+    "phase": "archived",
+    "matchRate": 94,
+    "iterationCount": 0,
+    "startedAt": "2026-02-28T00:00:00Z",
+    "archivedAt": "2026-02-28T00:00:00Z",
+    "archivedTo": "docs/archive/2026-02/ecount-api-integration/"
+  },
+  "management-report": {
+    "phase": "archived",
+    "matchRate": 98,
+    "iterationCount": 0,
+    "startedAt": "2026-02-28T00:00:00Z",
+    "archivedAt": "2026-02-28T01:09:00Z",
+    "archivedTo": "docs/archive/2026-02/management-report/"
+  },
+  "client-supplier-management": {
+    "phase": "archived",
+    "matchRate": 100,
+    "iterationCount": 0,
+    "startedAt": "2026-02-28T01:30:00Z",
+    "archivedAt": "2026-02-28T17:00:00Z",
+    "archivedTo": "docs/archive/2026-02/client-supplier-management/"
+  },
+  "order-form-autocomplete": {
+    "phase": "archived",
+    "matchRate": 95,
+    "iterationCount": 0,
+    "startedAt": "2026-02-28T18:00:00Z",
+    "archivedAt": "2026-02-28T19:00:00Z",
+    "archivedTo": "docs/archive/2026-02/order-form-autocomplete/"
+  },
+  "order-drawer-enhancement": {
+    "phase": "archived",
+    "matchRate": 89,
+    "iterationCount": 0,
+    "startedAt": "2026-02-28T00:00:00Z",
+    "archivedAt": "2026-02-28T02:15:00Z",
+    "archivedTo": "docs/archive/2026-02/order-drawer-enhancement/"
   }
 }

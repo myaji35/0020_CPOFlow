@@ -149,5 +149,7 @@ Rails.application.routes.draw do
     patch "theme",  to: "profile#update_theme",  as: :update_theme
     get  "menu_permissions",    to: "menu_permissions#index",     as: :menu_permissions
     patch "menu_permissions",   to: "menu_permissions#update_all", as: :update_menu_permissions
+    patch "notifications",      to: "notifications#update",        as: :notifications
+    post  "notifications/test", to: "notifications#test",          as: :test_notifications
   end
 end
