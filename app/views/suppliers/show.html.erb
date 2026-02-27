@@ -188,21 +188,32 @@
         <% end %>
       </div>
 
-      <!-- 기간/정렬 필터 -->
-      <%= form_with url: supplier_path(@supplier), method: :get, local: true, class: "flex flex-wrap gap-2 mb-4" do |f| %>
+      <!-- 기간/정렬/상태 필터 -->
+      <%= form_with url: supplier_path(@supplier), method: :get, local: true, class: "flex flex-wrap gap-2 mb-4 items-center" do |f| %>
         <select name="period" onchange="this.form.submit()" class="text-xs border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none">
           <option value="" <%= params[:period].blank? ? 'selected' : '' %>>전체 기간</option>
           <option value="this_month" <%= params[:period]=="this_month" ? 'selected' : '' %>>이번 달</option>
           <option value="3months"    <%= params[:period]=="3months"    ? 'selected' : '' %>>최근 3개월</option>
           <option value="this_year"  <%= params[:period]=="this_year"  ? 'selected' : '' %>>올해</option>
         </select>
+        <select name="order_status" onchange="this.form.submit()" class="text-xs border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none">
+          <option value="" <%= params[:order_status].blank? ? 'selected' : '' %>>전체 상태</option>
+          <% Order::STATUS_LABELS.each do |k, v| %>
+            <option value="<%= k %>" <%= params[:order_status]==k ? 'selected' : '' %>><%= v %></option>
+          <% end %>
+        </select>
         <select name="sort" onchange="this.form.submit()" class="text-xs border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none">
           <option value="due_date" <%= (params[:sort].blank? || params[:sort]=="due_date") ? 'selected' : '' %>>납기일순</option>
           <option value="value"    <%= params[:sort]=="value"    ? 'selected' : '' %>>금액순</option>
           <option value="recent"   <%= params[:sort]=="recent"   ? 'selected' : '' %>>최신순</option>
         </select>
-        <% if params[:period].present? || params[:sort].present? %>
+        <% if params[:period].present? || params[:sort].present? || params[:order_status].present? %>
           <%= link_to "초기화", supplier_path(@supplier), class: "text-xs text-gray-400 dark:text-gray-500 hover:text-primary px-2 py-1.5" %>
+        <% end %>
+        <%= link_to supplier_path(@supplier, format: :csv, **request.query_parameters.except("format")),
+            class: "inline-flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-primary border border-gray-200 dark:border-gray-600 px-2 py-1.5 rounded-lg transition-colors" do %>
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          CSV
         <% end %>
         <span class="ml-auto text-xs text-gray-400 dark:text-gray-500 self-center">총 <%= @orders.count %>건</span>
       <% end %>

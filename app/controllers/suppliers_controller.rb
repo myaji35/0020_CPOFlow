@@ -35,6 +35,8 @@ class SuppliersController < ApplicationController
     when "this_year"  then orders_scope = orders_scope.where(created_at: Time.current.beginning_of_year..)
     end
 
+    orders_scope = orders_scope.where(status: params[:order_status]) if params[:order_status].present?
+
     sort = params[:sort] || "due_date"
     orders_scope = case sort
     when "value"  then orders_scope.order(estimated_value: :desc)
@@ -42,7 +44,17 @@ class SuppliersController < ApplicationController
     else               orders_scope.by_due_date
     end
 
-    @orders              = orders_scope.includes(:client, :project)
+    @orders = orders_scope.includes(:client, :project)
+
+    respond_to do |format|
+      format.html
+      format.csv do
+        send_data supplier_orders_to_csv(@orders),
+                  filename: "#{@supplier.name}-orders-#{Date.today}.csv",
+                  type: "text/csv; charset=utf-8"
+      end
+    end
+
     @order_status_counts = @supplier.orders.group(:status).count
     total                = @supplier.orders.where.not(due_date: nil).count
     overdue              = @supplier.orders.where("due_date < ? AND status != ?", Date.today, Order.statuses[:delivered]).count
@@ -103,6 +115,25 @@ class SuppliersController < ApplicationController
     elsif on_time_rate >= 85 then "B"
     elsif on_time_rate >= 70 then "C"
     else "D"
+    end
+  end
+
+  def supplier_orders_to_csv(orders)
+    require "csv"
+    CSV.generate(headers: true, encoding: "UTF-8") do |csv|
+      csv << [ "주문번호", "제목", "상태", "납기일", "금액", "발주처", "현장", "담당자" ]
+      orders.each do |o|
+        csv << [
+          o.id,
+          o.title,
+          Order::STATUS_LABELS[o.status] || o.status,
+          o.due_date&.strftime("%Y-%m-%d"),
+          o.estimated_value,
+          o.client&.name,
+          o.project&.name,
+          o.assignees.map(&:display_name).join("|")
+        ]
+      end
     end
   end
 

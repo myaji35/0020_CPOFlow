@@ -59,6 +59,17 @@ module ApplicationHelper
     content_tag(:span, label, class: "text-xs font-semibold #{klass} px-2 py-0.5 rounded-full")
   end
 
+  # Due date color class (for inline use in views)
+  def due_date_color_class(due_date)
+    return "text-gray-400 dark:text-gray-500" if due_date.nil?
+    days = (due_date.to_date - Date.today).to_i
+    if days < 0         then "text-red-700 dark:text-red-400 font-semibold"
+    elsif days <= 7     then "text-red-600 dark:text-red-400"
+    elsif days <= 14    then "text-orange-500 dark:text-orange-400"
+    else                     "text-green-600 dark:text-green-400"
+    end
+  end
+
   # Task progress bar
   def task_progress_bar(order)
     prog = order.task_progress
