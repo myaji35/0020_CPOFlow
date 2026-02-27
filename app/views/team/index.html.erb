@@ -2,14 +2,26 @@
 
 <div class="flex flex-col gap-6">
   <%# Header %>
-  <div class="flex items-center justify-between">
+  <div class="flex items-center justify-between flex-wrap gap-3">
     <div>
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white">팀 현황</h1>
       <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">팀원별 업무 및 워크로드 현황</p>
     </div>
+
+    <%# FR-02: Branch 탭 필터 %>
+    <div class="flex gap-1">
+      <% [['전체', nil], ['Abu Dhabi', 'abu_dhabi'], ['Seoul', 'seoul']].each do |label, val| %>
+        <% is_active = params[:branch].to_s == val.to_s || (val.nil? && params[:branch].blank?) %>
+        <%= link_to label,
+              team_index_path(branch: val),
+              class: "px-3 py-1.5 text-sm rounded-lg font-medium transition-colors " +
+                     (is_active ? "bg-primary text-white" :
+                                  "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700") %>
+      <% end %>
+    </div>
   </div>
 
-  <%# FR-01: 팀 전체 통계 바 %>
+  <%# 팀 전체 통계 바 %>
   <div class="grid grid-cols-4 gap-3">
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
       <p class="text-2xl font-bold text-gray-900 dark:text-white"><%= @summary[:total_members] %></p>
@@ -34,32 +46,57 @@
     <% @workloads.each do |w| %>
       <% user = w[:user] %>
       <% is_overloaded = w[:active_orders] >= 8 %>
-      <%= link_to team_path(user),
-          class: "bg-white dark:bg-gray-800 rounded-xl border p-5 hover:shadow-md transition-all block #{is_overloaded ? 'border-red-300 dark:border-red-700' : 'border-gray-200 dark:border-gray-700 hover:border-primary/30'}" do %>
+      <%
+        today = Date.today
+        if w[:nearest_due]
+          days    = (w[:nearest_due] - today).to_i
+          d_label = days < 0  ? "D+#{days.abs}" :
+                    days == 0 ? 'D-Day'          : "D-#{days}"
+          d_color = days < 0  ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                    days <= 7 ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
+                                'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+        end
+      %>
+      <div class="bg-white dark:bg-gray-800 rounded-xl border p-5 transition-all
+                  <%= is_overloaded ? 'border-red-300 dark:border-red-700' : 'border-gray-200 dark:border-gray-700' %>">
 
-        <%# 이름 영역 + 과부하 배지 %>
-        <div class="flex items-center justify-between mb-4">
+        <%# 이름 영역 + 과부하/D-day 배지 %>
+        <div class="flex items-start justify-between mb-4">
           <div class="flex items-center gap-3 min-w-0">
-            <div class="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary font-bold text-lg flex-shrink-0">
-              <%= user.initials %>
-            </div>
-            <div class="min-w-0">
-              <p class="font-semibold text-gray-900 dark:text-white truncate"><%= user.display_name %></p>
-              <div class="flex items-center gap-2 mt-0.5">
-                <span class="text-xs px-2 py-0.5 rounded-full <%= user.role == 'admin' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' : user.role == 'manager' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400' %>">
-                  <%= { 'admin' => '관리자', 'manager' => '매니저', 'member' => '멤버' }[user.role] || user.role %>
-                </span>
-                <% if user.branch.present? %>
-                  <span class="text-xs text-gray-400 dark:text-gray-500"><%= user.branch %></span>
-                <% end %>
+            <%= link_to team_path(user), class: "flex items-center gap-3 min-w-0 hover:opacity-80 transition-opacity" do %>
+              <div class="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary font-bold text-lg flex-shrink-0">
+                <%= user.initials %>
               </div>
-            </div>
+              <div class="min-w-0">
+                <p class="font-semibold text-gray-900 dark:text-white truncate"><%= user.display_name %></p>
+                <div class="flex items-center gap-2 mt-0.5">
+                  <span class="text-xs px-2 py-0.5 rounded-full
+                    <%= user.role == 'admin'   ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' :
+                        user.role == 'manager' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'   :
+                                                 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400' %>">
+                    <%= { 'admin' => '관리자', 'manager' => '매니저', 'member' => '멤버', 'viewer' => '뷰어' }[user.role] || user.role %>
+                  </span>
+                  <% if user.branch.present? %>
+                    <span class="text-xs text-gray-400 dark:text-gray-500">
+                      <%= user.branch == 'abu_dhabi' ? 'Abu Dhabi' : 'Seoul' %>
+                    </span>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
           </div>
-          <% if is_overloaded %>
-            <span class="text-xs font-semibold bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-full shrink-0">
-              과부하
-            </span>
-          <% end %>
+
+          <%# FR-01: 과부하 + D-day 배지 묶음 %>
+          <div class="flex flex-col items-end gap-1 shrink-0">
+            <% if is_overloaded %>
+              <span class="text-xs font-semibold bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-full">
+                과부하
+              </span>
+            <% end %>
+            <% if w[:nearest_due] %>
+              <span class="text-xs font-semibold px-2 py-0.5 rounded-full <%= d_color %>"><%= d_label %></span>
+            <% end %>
+          </div>
         </div>
 
         <%# 4개 숫자 카드 %>
@@ -90,11 +127,27 @@
             <span><%= load_pct %>%</span>
           </div>
           <div class="w-full h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-            <div class="h-full rounded-full transition-all <%= w[:active_orders] >= 8 ? 'bg-red-400' : w[:active_orders] >= 5 ? 'bg-orange-400' : 'bg-green-400' %>"
+            <div class="h-full rounded-full transition-all
+                        <%= w[:active_orders] >= 8 ? 'bg-red-400' : w[:active_orders] >= 5 ? 'bg-orange-400' : 'bg-green-400' %>"
                  style="width: <%= load_pct %>%"></div>
           </div>
         </div>
-      <% end %>
+
+        <%# FR-03: Admin Role 드롭다운 %>
+        <% if current_user.admin? %>
+          <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
+            <span class="text-xs text-gray-400 dark:text-gray-500">역할 변경</span>
+            <%= form_with url: update_role_team_path(user), method: :patch, local: true do |f| %>
+              <%= f.select :role,
+                    [['뷰어', 'viewer'], ['멤버', 'member'], ['매니저', 'manager'], ['관리자', 'admin']],
+                    { selected: user.role },
+                    { class:    "text-xs border border-gray-200 dark:border-gray-600 rounded px-1.5 py-0.5 " \
+                                "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 cursor-pointer",
+                      onchange: "this.form.requestSubmit()" } %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
     <% end %>
   </div>
 

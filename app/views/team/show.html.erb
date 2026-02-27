@@ -14,10 +14,18 @@
         <div>
           <h1 class="text-2xl font-bold text-gray-900 dark:text-white"><%= @member.display_name %></h1>
           <div class="flex items-center gap-2 mt-0.5">
-            <span class="text-xs px-2 py-0.5 rounded-full <%= @member.role == 'admin' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' : @member.role == 'manager' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400' %>">
-              <%= { 'admin' => '관리자', 'manager' => '매니저', 'member' => '멤버' }[@member.role] %>
+            <span class="text-xs px-2 py-0.5 rounded-full
+              <%= @member.role == 'admin'   ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' :
+                  @member.role == 'manager' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'   :
+                                             'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400' %>">
+              <%= { 'admin' => '관리자', 'manager' => '매니저', 'member' => '멤버', 'viewer' => '뷰어' }[@member.role] %>
             </span>
             <span class="text-sm text-gray-500 dark:text-gray-400"><%= @member.email %></span>
+            <% if @member.branch.present? %>
+              <span class="text-xs text-gray-400 dark:text-gray-500">
+                <%= @member.branch == 'abu_dhabi' ? 'Abu Dhabi' : 'Seoul' %>
+              </span>
+            <% end %>
           </div>
         </div>
       </div>
@@ -38,18 +46,33 @@
     </div>
   <% end %>
 
-  <%# FR-03: 지연 주문 별도 섹션 %>
-  <% if @overdue_orders.any? %>
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-red-200 dark:border-red-800 overflow-hidden">
-      <div class="px-5 py-4 border-b border-red-100 dark:border-red-800 bg-red-50 dark:bg-red-900/20">
-        <h2 class="text-sm font-semibold text-red-700 dark:text-red-400">
-          지연 주문 (<%= @overdue_orders.count %>건)
-        </h2>
-      </div>
+  <%# FR-04: 상태별 탭 (All / Overdue / Active) %>
+  <%
+    all_orders    = (@overdue_orders.to_a + @active_orders.to_a).uniq(&:id)
+    overdue_count = @overdue_orders.count
+    active_count  = @active_orders.count
+    total_count   = all_orders.count
+  %>
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <%# 탭 헤더 %>
+    <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-1" id="order-tabs">
+      <% [['전체', 'all', total_count], ['지연', 'overdue', overdue_count], ['진행', 'active', active_count]].each do |label, tab, cnt| %>
+        <button class="tab-btn px-3 py-1.5 text-sm rounded-lg font-medium transition-colors
+                       <%= tab == 'all' ? 'bg-primary text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700' %>"
+                data-tab="<%= tab %>"
+                onclick="filterOrders('<%= tab %>')">
+          <%= label %> (<%= cnt %>)
+        </button>
+      <% end %>
+    </div>
+
+    <%# 주문 목록 (overdue + active 통합, data-overdue 속성으로 구분) %>
+    <% if all_orders.any? %>
       <div class="divide-y divide-gray-50 dark:divide-gray-700">
         <% @overdue_orders.each do |order| %>
-          <div class="flex items-center justify-between px-5 py-3
+          <div class="order-row flex items-center justify-between px-5 py-3
                       hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
+               data-overdue="true"
                onclick="openOrderDrawer(<%= order.id %>, <%= order.title.to_json %>, '<%= order_path(order) %>')">
             <div class="min-w-0">
               <p class="text-sm font-medium text-gray-900 dark:text-white truncate"><%= order.title %></p>
@@ -71,20 +94,11 @@
             </div>
           </div>
         <% end %>
-      </div>
-    </div>
-  <% end %>
 
-  <%# FR-03: 진행 중 주문 (배지 + 드로어 연동) %>
-  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-    <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700">
-      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">진행 중 주문 (<%= @active_orders.count %>건)</h2>
-    </div>
-    <% if @active_orders.any? %>
-      <div class="divide-y divide-gray-50 dark:divide-gray-700">
         <% @active_orders.each do |order| %>
-          <div class="flex items-center justify-between px-5 py-3
+          <div class="order-row flex items-center justify-between px-5 py-3
                       hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
+               data-overdue="false"
                onclick="openOrderDrawer(<%= order.id %>, <%= order.title.to_json %>, '<%= order_path(order) %>')">
             <div class="min-w-0">
               <p class="text-sm font-medium text-gray-900 dark:text-white truncate"><%= order.title %></p>
@@ -108,7 +122,26 @@
         <% end %>
       </div>
     <% else %>
-      <div class="p-8 text-center text-sm text-gray-400 dark:text-gray-500">진행 중인 주문이 없습니다.</div>
+      <div class="p-8 text-center text-sm text-gray-400 dark:text-gray-500">담당 주문이 없습니다.</div>
     <% end %>
   </div>
 </div>
+
+<script>
+function filterOrders(tab) {
+  document.querySelectorAll('.order-row').forEach(function(row) {
+    var overdue = row.dataset.overdue === 'true';
+    var show = tab === 'all' ||
+               (tab === 'overdue' && overdue) ||
+               (tab === 'active' && !overdue);
+    row.style.display = show ? '' : 'none';
+  });
+  document.querySelectorAll('.tab-btn').forEach(function(btn) {
+    var isActive = btn.dataset.tab === tab;
+    btn.className = 'tab-btn px-3 py-1.5 text-sm rounded-lg font-medium transition-colors ' +
+      (isActive
+        ? 'bg-primary text-white'
+        : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700');
+  });
+}
+</script>

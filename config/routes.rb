@@ -52,7 +52,11 @@ Rails.application.routes.draw do
   get "calendar", to: "calendar#index"
 
   # Team management
-  resources :team, only: %i[index show], controller: "team"
+  resources :team, only: %i[index show], controller: "team" do
+    member do
+      patch :update_role
+    end
+  end
 
   # Admin namespace
   namespace :admin do
