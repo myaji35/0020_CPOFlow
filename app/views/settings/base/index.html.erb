@@ -271,6 +271,51 @@
 
   <% end %>
 
+  <%# --- eCountERP API 연동 상태 (manager+ 만 표시) --- %>
+  <% if current_user.role.in?(%w[admin manager]) %>
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+    <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+      <h2 class="text-base font-semibold text-gray-900 dark:text-white">eCountERP API 연동</h2>
+      <%= link_to admin_ecount_sync_index_path, class: "text-xs text-blue-600 hover:underline dark:text-blue-400" do %>
+        동기화 관리
+        <svg class="w-3 h-3 inline ml-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      <% end %>
+    </div>
+    <div class="px-6 py-4 space-y-3">
+      <% products_last  = EcountSyncLog.where(sync_type: "products",  status: :completed).order(:completed_at).last %>
+      <% customers_last = EcountSyncLog.where(sync_type: "customers", status: :completed).order(:completed_at).last %>
+      <% ecount_configured = Rails.application.credentials.dig(:ecount, :api_cert_key).present? rescue false %>
+
+      <div class="flex items-center justify-between text-sm">
+        <span class="text-gray-600 dark:text-gray-400">API 연결 상태</span>
+        <% if ecount_configured %>
+          <span class="inline-flex items-center gap-1 text-green-600 dark:text-green-400 font-medium text-xs">
+            <span class="w-2 h-2 rounded-full bg-green-500"></span> 설정됨
+          </span>
+        <% else %>
+          <span class="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium text-xs">
+            <span class="w-2 h-2 rounded-full bg-amber-500"></span> 미설정
+          </span>
+        <% end %>
+      </div>
+
+      <div class="flex items-center justify-between text-sm">
+        <span class="text-gray-600 dark:text-gray-400">품목 마지막 동기화</span>
+        <span class="text-gray-900 dark:text-gray-200 text-xs tabular-nums">
+          <%= products_last ? products_last.completed_at.strftime("%m/%d %H:%M") : "없음" %>
+        </span>
+      </div>
+
+      <div class="flex items-center justify-between text-sm">
+        <span class="text-gray-600 dark:text-gray-400">거래처 마지막 동기화</span>
+        <span class="text-gray-900 dark:text-gray-200 text-xs tabular-nums">
+          <%= customers_last ? customers_last.completed_at.strftime("%m/%d %H:%M") : "없음" %>
+        </span>
+      </div>
+    </div>
+  </div>
+  <% end %>
+
   <%# --- Danger Zone --- %>
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-red-100 dark:border-red-900">
     <div class="px-6 py-4 border-b border-red-100 dark:border-red-900">

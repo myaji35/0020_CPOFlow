@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_25_213842) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_28_000602) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -93,6 +93,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_25_213842) do
     t.string "credit_grade"
     t.string "currency", default: "USD"
     t.string "ecount_code"
+    t.datetime "ecount_synced_at"
     t.string "industry"
     t.string "name", null: false
     t.text "notes"
@@ -172,6 +173,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_25_213842) do
     t.index ["company_id", "name"], name: "index_departments_on_company_id_and_name"
     t.index ["company_id"], name: "index_departments_on_company_id"
     t.index ["parent_id"], name: "index_departments_on_parent_id"
+  end
+
+  create_table "ecount_sync_logs", force: :cascade do |t|
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.integer "error_count", default: 0
+    t.text "error_details"
+    t.datetime "started_at"
+    t.integer "status", default: 0, null: false
+    t.integer "success_count", default: 0
+    t.string "sync_type", null: false
+    t.integer "total_count", default: 0
+    t.datetime "updated_at", null: false
+    t.index ["created_at"], name: "index_ecount_sync_logs_on_created_at"
+    t.index ["status"], name: "index_ecount_sync_logs_on_status"
+    t.index ["sync_type"], name: "index_ecount_sync_logs_on_sync_type"
   end
 
   create_table "email_accounts", force: :cascade do |t|
@@ -318,6 +335,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_25_213842) do
     t.string "delivery_location"
     t.text "description"
     t.date "due_date"
+    t.string "ecount_slip_no"
+    t.datetime "ecount_synced_at"
     t.decimal "estimated_value", precision: 12, scale: 2
     t.text "extracted_links"
     t.string "extracted_project_name"
@@ -353,6 +372,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_25_213842) do
     t.index ["ariba_event_id"], name: "index_orders_on_ariba_event_id"
     t.index ["client_id"], name: "index_orders_on_client_id"
     t.index ["due_date"], name: "index_orders_on_due_date"
+    t.index ["ecount_slip_no"], name: "index_orders_on_ecount_slip_no"
     t.index ["project_id"], name: "index_orders_on_project_id"
     t.index ["source_email_id"], name: "index_orders_on_source_email_id", unique: true, where: "source_email_id IS NOT NULL"
     t.index ["status"], name: "index_orders_on_status"
@@ -369,9 +389,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_25_213842) do
     t.string "currency", default: "USD"
     t.text "description"
     t.string "ecount_code"
+    t.datetime "ecount_synced_at"
     t.string "name"
     t.boolean "sika_product", default: false, null: false
     t.string "site_category"
+    t.integer "stock_quantity", default: 0
     t.string "supplier_code"
     t.string "unit"
     t.decimal "unit_price", precision: 12, scale: 4
@@ -460,6 +482,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_25_213842) do
     t.string "credit_grade"
     t.string "currency", default: "USD"
     t.string "ecount_code"
+    t.datetime "ecount_synced_at"
     t.string "industry"
     t.integer "lead_time_days"
     t.string "name"

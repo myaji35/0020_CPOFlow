@@ -93,4 +93,16 @@ class Order < ApplicationRecord
   def tags_array
     tags.to_s.split(",").map(&:strip).reject(&:blank?)
   end
+
+  # eCountERP 전표 자동 생성 — confirmed 상태 전환 시 트리거
+  after_update_commit :enqueue_ecount_slip, if: :saved_change_to_status?
+
+  private
+
+  def enqueue_ecount_slip
+    return unless status == "confirmed"
+    return if ecount_slip_no.present?
+
+    EcountSlipCreateJob.perform_later(id)
+  end
 end

@@ -26,6 +26,18 @@ production:
     queue: default
     schedule: every day at 8am
 
+  # eCountERP 품목 동기화 (매 시간 30분)
+  ecount_product_sync:
+    class: EcountProductSyncJob
+    queue: default
+    schedule: every hour at minute 30
+
+  # eCountERP 거래처 동기화 (매 시간 45분)
+  ecount_customer_sync:
+    class: EcountCustomerSyncJob
+    queue: default
+    schedule: every hour at minute 45
+
 development:
   # Sync Gmail every 5 minutes in development for faster testing
   gmail_sync_all:

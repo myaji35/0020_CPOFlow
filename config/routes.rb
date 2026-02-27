@@ -60,6 +60,11 @@ Rails.application.routes.draw do
     end
     patch "sheets_config",       to: "sheets_config#update", as: :sheets_config
     delete "sheets_config/clear", to: "sheets_config#clear",  as: :sheets_config_clear
+
+    # eCountERP API 동기화 관리
+    resources :ecount_sync, only: [:index] do
+      collection { post :trigger }
+    end
   end
 
   # Gmail OAuth2

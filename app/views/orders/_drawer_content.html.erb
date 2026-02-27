@@ -62,6 +62,24 @@
         <div>
           <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">품목</dt>
           <dd class="font-medium text-gray-900 dark:text-white"><%= order.item_name %> <%= "× #{order.quantity}" if order.quantity %></dd>
+          <%# eCountERP 실시간 재고 표시 %>
+          <% product = Product.find_by(name: order.item_name) %>
+          <% if product&.ecount_code.present? %>
+            <% stock = EcountApi::InventoryService.stock_for(product.ecount_code) %>
+            <dd class="mt-1 flex items-center gap-1.5 text-xs">
+              <svg class="w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+              <span class="text-gray-500 dark:text-gray-400">재고</span>
+              <% if stock.nil? %>
+                <span class="text-gray-400 dark:text-gray-500">조회 불가</span>
+              <% elsif stock <= 0 %>
+                <span class="font-semibold text-red-600 dark:text-red-400">재고 없음</span>
+              <% elsif stock <= 10 %>
+                <span class="font-semibold text-orange-600 dark:text-orange-400"><%= stock %>개 (부족)</span>
+              <% else %>
+                <span class="font-medium text-green-600 dark:text-green-400"><%= stock %>개</span>
+              <% end %>
+            </dd>
+          <% end %>
         </div>
       <% end %>
       <% if order.estimated_value.present? %>
