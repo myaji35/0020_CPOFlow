@@ -1,76 +1,130 @@
-<div class="header-row">
+<%# ===== 문서 메타 ===== %>
+<div class="doc-meta">
   <div>
-    <h1>견적서 (QUOTATION)</h1>
-    <p style="color:#6b7280;font-size:10pt;margin-top:4px">No. QT-<%= @order.id %>-<%= Date.today.strftime("%Y%m%d") %></p>
+    <div class="doc-title">견적서</div>
+    <div class="doc-number">QUOTATION &middot; No. QT-<%= @order.id %>-<%= Date.today.strftime("%Y%m%d") %></div>
   </div>
-  <div class="company-info">
-    <strong>AtoZ2010 Inc.</strong><br>
-    Abu Dhabi, UAE<br>
-    www.atoz2010.com
+  <div class="doc-date-block">
+    <div>발행일: <strong><%= Date.today.strftime("%Y년 %m월 %d일") %></strong></div>
+    <div>담당자: <strong><%= @order.assignees.first&.name || @order.user.name %></strong></div>
   </div>
 </div>
 
+<%# ===== 유효기간 강조 박스 ===== %>
+<div class="highlight-box">
+  <div>
+    <div class="hl-label">견적 유효기간</div>
+    <div class="hl-value"><%= (Date.today + 30.days).strftime("%Y년 %m월 %d일") %>까지</div>
+  </div>
+  <div class="hl-divider"></div>
+  <div>
+    <div class="hl-label">납기 요청일</div>
+    <div class="hl-value"><%= @order.due_date&.strftime("%Y년 %m월 %d일") || "미정" %></div>
+  </div>
+  <div class="hl-divider"></div>
+  <div>
+    <div class="hl-label">우선순위</div>
+    <div class="hl-value">
+      <span class="badge badge-<%= @order.priority %>"><%= @order.priority&.upcase %></span>
+    </div>
+  </div>
+</div>
+
+<%# ===== 발주처 정보 ===== %>
 <h2>발주처 정보</h2>
 <div class="info-grid">
   <div class="info-item">
-    <span class="info-label">발주처</span>
-    <span class="info-value"><%= @order.client&.name || @order.customer_name %></span>
+    <span class="info-label">발주처 (Client)</span>
+    <span class="info-value"><%= @order.client&.name || @order.customer_name || "-" %></span>
   </div>
   <div class="info-item">
-    <span class="info-label">견적 유효일</span>
-    <span class="info-value"><%= (Date.today + 30.days).strftime("%Y-%m-%d") %></span>
+    <span class="info-label">고객사명</span>
+    <span class="info-value"><%= @order.customer_name || "-" %></span>
   </div>
   <div class="info-item">
-    <span class="info-label">현장</span>
+    <span class="info-label">현장 / 프로젝트</span>
     <span class="info-value"><%= @order.project&.name || "-" %></span>
   </div>
   <div class="info-item">
-    <span class="info-label">납기 요청일</span>
-    <span class="info-value"><%= @order.due_date&.strftime("%Y-%m-%d") || "-" %></span>
+    <span class="info-label">견적 번호</span>
+    <span class="info-value">QT-<%= @order.id %>-<%= Date.today.strftime("%Y%m%d") %></span>
   </div>
 </div>
 
+<%# ===== 견적 품목 ===== %>
 <h2>견적 품목</h2>
 <table>
   <thead>
     <tr>
-      <th width="40%">품목명</th>
-      <th width="15%">수량</th>
-      <th width="20%">단가 (USD)</th>
-      <th width="25%">금액 (USD)</th>
+      <th width="42%">품목명</th>
+      <th width="13%" class="amount-col">수량</th>
+      <th width="22%" class="amount-col">단가 (USD)</th>
+      <th width="23%" class="amount-col">금액 (USD)</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td><%= @order.item_name.presence || @order.title %></td>
-      <td><%= number_with_delimiter(@order.quantity) || 1 %></td>
-      <td>
+      <td class="amount-col"><%= number_with_delimiter(@order.quantity) || 1 %></td>
+      <td class="amount-col">
         <% if @order.estimated_value.present? && @order.quantity.to_i > 0 %>
           <%= number_with_delimiter((@order.estimated_value / @order.quantity).round(2)) %>
-        <% else %>
-          -
-        <% end %>
+        <% else %>-<% end %>
       </td>
-      <td><%= number_with_delimiter(@order.estimated_value) || "-" %></td>
+      <td class="amount-col"><%= number_with_delimiter(@order.estimated_value&.round(2)) || "-" %></td>
     </tr>
     <tr class="total-row">
-      <td colspan="3" style="text-align:right">합계 (VAT 별도)</td>
-      <td>USD <%= number_with_delimiter(@order.estimated_value&.round(2)) || "-" %></td>
+      <td colspan="3" class="amount-col">합계 (VAT 별도)</td>
+      <td class="amount-col">USD <%= number_with_delimiter(@order.estimated_value&.round(2)) || "-" %></td>
     </tr>
   </tbody>
 </table>
 
 <% if @order.description.present? %>
   <h2>비고</h2>
-  <p style="font-size:10pt;color:#374151;line-height:1.6"><%= @order.description %></p>
+  <p style="font-size:10pt;color:#374151;line-height:1.6;margin-top:6px"><%= @order.description %></p>
 <% end %>
 
+<%# ===== 결제 조건 ===== %>
 <h2>결제 조건</h2>
-<p style="font-size:10pt;color:#374151">
-  <% if @order.supplier %>
-    결제 조건: <%= @order.supplier.payment_terms || "NET 30" %> ·
-    통화: <%= @order.currency || "USD" %>
-  <% else %>
-    결제 조건: T/T 30일 · 통화: USD
-  <% end %>
-</p>
+<div class="info-grid">
+  <div class="info-item">
+    <span class="info-label">결제 방식</span>
+    <span class="info-value"><%= @order.supplier&.payment_terms || "T/T 30일" %></span>
+  </div>
+  <div class="info-item">
+    <span class="info-label">통화</span>
+    <span class="info-value"><%= @order.currency || "USD" %></span>
+  </div>
+</div>
+
+<%# ===== 서명란 ===== %>
+<h2>서명</h2>
+<div class="signature-grid">
+  <div class="signature-box">
+    <div class="sig-role">작성자 (Prepared by)</div>
+    <div class="sig-name"><%= @order.user.name %></div>
+    <div class="sig-date">날짜: ___________</div>
+  </div>
+  <div class="signature-box">
+    <div class="sig-role">검토 (Reviewed by)</div>
+    <div class="sig-name">&nbsp;</div>
+    <div class="sig-date">날짜: ___________</div>
+  </div>
+  <div class="signature-box">
+    <div class="sig-role">승인 (Approved by)</div>
+    <div class="sig-name">&nbsp;</div>
+    <div class="sig-date">날짜: ___________</div>
+  </div>
+</div>
+
+<%# ===== Terms & Conditions ===== %>
+<div class="terms-section">
+  <h4>Terms &amp; Conditions</h4>
+  <p><strong>1. Validity:</strong> This quotation is valid for 30 days from the date of issue.</p>
+  <p><strong>2. Payment:</strong> <%= @order.supplier&.payment_terms || "T/T 30 days after delivery." %></p>
+  <p><strong>3. Delivery:</strong> Delivery schedule subject to confirmation upon order placement.</p>
+  <p><strong>4. Warranty:</strong> Products are warranted per manufacturer specifications.</p>
+  <p><strong>5. Cancellation:</strong> Orders may be cancelled with 7 days written notice prior to shipment.</p>
+  <p><strong>6. Governing Law:</strong> This quotation is governed by the laws of the UAE.</p>
+</div>

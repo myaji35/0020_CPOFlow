@@ -1,15 +1,42 @@
-<div class="header-row">
+<%# ===== 문서 메타 ===== %>
+<div class="doc-meta">
   <div>
-    <h1>발주서 (PURCHASE ORDER)</h1>
-    <p style="color:#6b7280;font-size:10pt;margin-top:4px">No. PO-<%= @order.id %>-<%= Date.today.strftime("%Y%m%d") %></p>
+    <div class="doc-title">발주서</div>
+    <div class="doc-number">PURCHASE ORDER &middot; No. PO-<%= @order.id %>-<%= Date.today.strftime("%Y%m%d") %></div>
   </div>
-  <div class="company-info">
-    <strong>AtoZ2010 Inc.</strong><br>
-    Abu Dhabi, UAE<br>
-    www.atoz2010.com
+  <div class="doc-date-block">
+    <div>발행일: <strong><%= Date.today.strftime("%Y년 %m월 %d일") %></strong></div>
+    <div>담당자: <strong><%= @order.assignees.first&.name || @order.user.name %></strong></div>
   </div>
 </div>
 
+<%# ===== 납기일 강조 박스 ===== %>
+<% overdue = @order.due_date.present? && @order.due_date < Date.today %>
+<div class="highlight-box">
+  <div>
+    <div class="hl-label">납기 요청일</div>
+    <div class="hl-value" style="<%= overdue ? 'color:#dc2626' : '' %>">
+      <%= @order.due_date&.strftime("%Y년 %m월 %d일") || "미정" %>
+      <% if overdue %>
+        <span style="font-size:8.5pt;color:#dc2626;margin-left:6px">(납기 지연)</span>
+      <% end %>
+    </div>
+  </div>
+  <div class="hl-divider"></div>
+  <div>
+    <div class="hl-label">결제 조건</div>
+    <div class="hl-value"><%= @order.supplier&.payment_terms || "T/T 30일" %></div>
+  </div>
+  <div class="hl-divider"></div>
+  <div>
+    <div class="hl-label">우선순위</div>
+    <div class="hl-value">
+      <span class="badge badge-<%= @order.priority %>"><%= @order.priority&.upcase %></span>
+    </div>
+  </div>
+</div>
+
+<%# ===== 공급사 정보 ===== %>
 <h2>공급사 정보</h2>
 <div class="info-grid">
   <div class="info-item">
@@ -17,54 +44,69 @@
     <span class="info-value"><%= @order.supplier&.name || "-" %></span>
   </div>
   <div class="info-item">
-    <span class="info-label">발주일</span>
-    <span class="info-value"><%= Date.today.strftime("%Y-%m-%d") %></span>
+    <span class="info-label">eCount 코드</span>
+    <span class="info-value"><%= @order.supplier&.ecount_code || "-" %></span>
   </div>
   <div class="info-item">
-    <span class="info-label">납품 현장</span>
+    <span class="info-label">발주처 (Client)</span>
+    <span class="info-value"><%= @order.client&.name || @order.customer_name || "-" %></span>
+  </div>
+  <div class="info-item">
+    <span class="info-label">현장 / 프로젝트</span>
     <span class="info-value"><%= @order.project&.name || "-" %></span>
-  </div>
-  <div class="info-item">
-    <span class="info-label">납기 요청일</span>
-    <span class="info-value" style="color:<%= @order.due_date && @order.due_date < Date.today ? '#dc2626' : '#1a1a1a' %>">
-      <%= @order.due_date&.strftime("%Y-%m-%d") || "-" %>
-    </span>
   </div>
 </div>
 
+<%# ===== 발주 품목 ===== %>
 <h2>발주 품목</h2>
+<% selected_quote = @order.order_quotes.find_by(selected: true) %>
 <table>
   <thead>
     <tr>
-      <th width="40%">품목명</th>
-      <th width="15%">수량</th>
-      <th width="20%">단가</th>
-      <th width="25%">금액</th>
+      <th width="42%">품목명</th>
+      <th width="13%" class="amount-col">수량</th>
+      <th width="22%" class="amount-col">단가</th>
+      <th width="23%" class="amount-col">금액</th>
     </tr>
   </thead>
   <tbody>
-    <% selected_quote = @order.order_quotes.find_by(selected: true) %>
     <tr>
       <td><%= @order.item_name.presence || @order.title %></td>
-      <td><%= number_with_delimiter(@order.quantity) || 1 %></td>
-      <td>
+      <td class="amount-col"><%= number_with_delimiter(@order.quantity) || 1 %></td>
+      <td class="amount-col">
         <% if selected_quote %>
           <%= selected_quote.currency %> <%= number_with_delimiter(selected_quote.unit_price) %>
         <% elsif @order.estimated_value.present? && @order.quantity.to_i > 0 %>
           USD <%= number_with_delimiter((@order.estimated_value / @order.quantity).round(2)) %>
+        <% else %>-<% end %>
+      </td>
+      <td class="amount-col">
+        <% if selected_quote %>
+          <%= selected_quote.currency %> <%= number_with_delimiter(selected_quote.total_price&.round(2)) %>
         <% else %>
-          -
+          USD <%= number_with_delimiter(@order.estimated_value&.round(2)) || "-" %>
         <% end %>
       </td>
-      <td>USD <%= number_with_delimiter(@order.estimated_value&.round(2)) || "-" %></td>
     </tr>
     <tr class="total-row">
-      <td colspan="3" style="text-align:right">합계</td>
-      <td>USD <%= number_with_delimiter(@order.estimated_value&.round(2)) || "-" %></td>
+      <td colspan="3" class="amount-col">합계 (VAT 별도)</td>
+      <td class="amount-col">
+        <% if selected_quote %>
+          <%= selected_quote.currency %> <%= number_with_delimiter(selected_quote.total_price&.round(2)) %>
+        <% else %>
+          USD <%= number_with_delimiter(@order.estimated_value&.round(2)) || "-" %>
+        <% end %>
+      </td>
     </tr>
   </tbody>
 </table>
 
+<% if @order.description.present? %>
+  <h2>특기사항</h2>
+  <p style="font-size:10pt;color:#374151;line-height:1.6;margin-top:6px"><%= @order.description %></p>
+<% end %>
+
+<%# ===== 배송 조건 ===== %>
 <h2>배송 조건</h2>
 <div class="info-grid">
   <div class="info-item">
@@ -72,24 +114,38 @@
     <span class="info-value"><%= @order.project&.name || "To Be Confirmed" %></span>
   </div>
   <div class="info-item">
-    <span class="info-label">결제 조건</span>
-    <span class="info-value"><%= @order.supplier&.payment_terms || "NET 30" %></span>
+    <span class="info-label">통화</span>
+    <span class="info-value"><%= selected_quote&.currency || @order.currency || "USD" %></span>
   </div>
 </div>
 
-<% if @order.description.present? %>
-  <h2>특기사항</h2>
-  <p style="font-size:10pt;color:#374151;line-height:1.6"><%= @order.description %></p>
-<% end %>
+<%# ===== 서명란 ===== %>
+<h2>서명</h2>
+<div class="signature-grid">
+  <div class="signature-box">
+    <div class="sig-role">작성자 (Prepared by)</div>
+    <div class="sig-name"><%= @order.user.name %></div>
+    <div class="sig-date">날짜: ___________</div>
+  </div>
+  <div class="signature-box">
+    <div class="sig-role">검토 (Reviewed by)</div>
+    <div class="sig-name">&nbsp;</div>
+    <div class="sig-date">날짜: ___________</div>
+  </div>
+  <div class="signature-box">
+    <div class="sig-role">승인 (Approved by)</div>
+    <div class="sig-name">&nbsp;</div>
+    <div class="sig-date">날짜: ___________</div>
+  </div>
+</div>
 
-<div style="margin-top:32px;display:flex;justify-content:space-between">
-  <div style="text-align:center;width:120px">
-    <div style="border-top:1px solid #374151;padding-top:4px;font-size:9pt">담당자</div>
-  </div>
-  <div style="text-align:center;width:120px">
-    <div style="border-top:1px solid #374151;padding-top:4px;font-size:9pt">확인</div>
-  </div>
-  <div style="text-align:center;width:120px">
-    <div style="border-top:1px solid #374151;padding-top:4px;font-size:9pt">승인</div>
-  </div>
+<%# ===== Terms & Conditions ===== %>
+<div class="terms-section">
+  <h4>Terms &amp; Conditions</h4>
+  <p><strong>1. Validity:</strong> This purchase order is binding upon supplier acceptance within 3 business days.</p>
+  <p><strong>2. Payment:</strong> <%= @order.supplier&.payment_terms || "T/T 30 days after delivery and invoice." %></p>
+  <p><strong>3. Delivery:</strong> Goods must be delivered by the requested delivery date stated above.</p>
+  <p><strong>4. Inspection:</strong> AtoZ2010 reserves the right to inspect goods prior to final acceptance.</p>
+  <p><strong>5. Warranty:</strong> Supplier warrants all goods conform to specifications and are free from defects.</p>
+  <p><strong>6. Governing Law:</strong> This purchase order is governed by the laws of the UAE.</p>
 </div>
