@@ -41,7 +41,7 @@ class ReportsController < ApplicationController
   def parse_period(period, from, to)
     today = Date.today
     case period
-    when "last_month"   then 1.month.ago.beginning_of_month..1.month.ago.end_of_month
+    when "last_month"   then 1.month.ago.to_date.beginning_of_month..1.month.ago.to_date.end_of_month
     when "this_quarter" then today.beginning_of_quarter..today.end_of_quarter
     when "this_year"    then today.beginning_of_year..today.end_of_year
     when "custom"
@@ -137,15 +137,15 @@ class ReportsController < ApplicationController
 
   # ── 담당자별 성과 ──────────────────────────────────────────
   def build_by_assignee(range)
-    User.joins(:orders)
-        .where(orders: { created_at: range })
+    User.joins(:created_orders)
+        .where(created_orders: { created_at: range })
         .group("users.id", "users.name")
         .select(
           "users.id, users.name,
-           COUNT(orders.id) AS order_count,
-           SUM(CASE WHEN orders.status = 6 THEN 1 ELSE 0 END) AS delivered_count,
-           SUM(CASE WHEN orders.status = 6
-                     AND orders.due_date >= DATE(orders.updated_at)
+           COUNT(created_orders.id) AS order_count,
+           SUM(CASE WHEN created_orders.status = 6 THEN 1 ELSE 0 END) AS delivered_count,
+           SUM(CASE WHEN created_orders.status = 6
+                     AND created_orders.due_date >= DATE(created_orders.updated_at)
                     THEN 1 ELSE 0 END) AS on_time_count"
         )
         .order("order_count DESC")
