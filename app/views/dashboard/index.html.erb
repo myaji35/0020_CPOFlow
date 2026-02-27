@@ -383,7 +383,7 @@
             </div>
             <div class="flex-1 min-w-0">
               <p class="text-xs font-medium text-gray-900 dark:text-white truncate"><%= contract.employee&.name %></p>
-              <p class="text-xs text-gray-400 dark:text-gray-500"><%= contract.contract_type %> · <%= contract.end_date&.strftime("%Y.%m.%d") %></p>
+              <p class="text-xs text-gray-400 dark:text-gray-500"><%= contract.status_label %> · <%= contract.end_date&.strftime("%Y.%m.%d") %></p>
             </div>
             <%= link_to employee_path(contract.employee), class: "text-xs text-primary hover:underline shrink-0" do %>보기<% end %>
           </div>
