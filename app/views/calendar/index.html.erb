@@ -8,7 +8,6 @@
       <p class="text-sm text-gray-500 dark:text-gray-400 mt-1"><%= @month.strftime("%Y년 %m월") %> 마감일 현황</p>
     </div>
     <div class="flex items-center gap-2">
-      <%# FR-04: 오늘 버튼 %>
       <%= link_to "오늘", calendar_path,
           class: "text-xs px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" %>
       <%= link_to calendar_path(month: (@month - 1.month).strftime("%Y-%m-%d")),
@@ -56,27 +55,58 @@
 
     <%# 날짜 그리드 %>
     <%
+      today      = Date.today
       first_day  = @month.beginning_of_month
       last_day   = @month.end_of_month
       start_date = first_day - first_day.wday.days
       orders_by_date = @orders.group_by { |o| o.due_date.to_date }
     %>
     <div class="grid grid-cols-7">
-      <% (start_date..start_date + 5.weeks + 6.days).each do |date| %>
-        <% next if date > last_day + (6 - last_day.wday).days && date.month != @month.month %>
+      <% (start_date..start_date + 41.days).each do |date| %>
         <%
           is_current_month = date.month == @month.month
-          is_today         = date == Date.today
+          is_today         = date == today
           day_orders       = orders_by_date[date] || []
-          day_orders_json  = day_orders.map { |o|
-            { id: o.id, title: o.title, path: order_path(o),
-              status: Order::STATUS_LABELS[o.status], priority: o.priority }
+
+          # FR-01: 히트맵 배경색 (건수 기반)
+          heatmap_bg = case day_orders.size
+                       when 0    then ''
+                       when 1    then 'bg-blue-50 dark:bg-blue-900/10'
+                       when 2..3 then 'bg-blue-100 dark:bg-blue-900/20'
+                       when 4..6 then 'bg-blue-200 dark:bg-blue-900/30'
+                       else           'bg-blue-300 dark:bg-blue-900/40'
+                       end
+
+          # FR-02: 위험도 배경색 (히트맵보다 우선)
+          has_overdue = day_orders.any? { |o| o.due_date < today }
+          has_urgent  = day_orders.any? { |o| o.due_date >= today && o.due_date <= today + 7 }
+          risk_bg     = if has_overdue
+                          'bg-red-50 dark:bg-red-900/15'
+                        elsif has_urgent
+                          'bg-orange-50 dark:bg-orange-900/15'
+                        else
+                          heatmap_bg
+                        end
+
+          cell_bg = is_current_month ? (risk_bg.present? ? risk_bg : 'bg-white dark:bg-gray-800') : 'bg-gray-50 dark:bg-gray-700/30'
+
+          # FR-03: data-orders JSON (client/project/assignee 포함)
+          day_orders_json = day_orders.map { |o|
+            {
+              id:       o.id,
+              title:    o.title,
+              path:     order_path(o),
+              status:   Order::STATUS_LABELS[o.status],
+              priority: o.priority,
+              due_date: o.due_date.strftime("%m/%d"),
+              client:   o.client&.name || o.customer_name,
+              project:  o.project&.name,
+              assignee: o.assignees.first&.name
+            }
           }.to_json
         %>
-        <%# FR-02: data 속성 추가, 날짜 셀 클릭 이벤트 %>
         <div class="min-h-24 border-b border-r border-gray-50 dark:border-gray-700 p-2 cursor-pointer
-                    hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors
-                    <%= is_current_month ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700/30' %>
+                    hover:opacity-90 transition-colors <%= cell_bg %>
                     <%= is_today ? 'ring-2 ring-inset ring-primary/30' : '' %>"
              data-calendar-date="<%= date.strftime('%Y-%m-%d') %>"
              data-orders="<%= html_escape(day_orders_json) %>">
@@ -85,7 +115,6 @@
               <%= date.day %>
             </span>
           </div>
-          <%# FR-03: link_to → onclick openOrderDrawer %>
           <% day_orders.first(3).each do |order| %>
             <div class="block text-xs truncate px-1.5 py-0.5 rounded mb-0.5 cursor-pointer
                         <%= case order.priority
@@ -105,7 +134,7 @@
     </div>
   </div>
 
-  <%# FR-02: 사이드 패널 HTML %>
+  <%# 사이드 패널 HTML %>
   <div id="calendar-panel-overlay" class="fixed inset-0 z-40 hidden"></div>
   <div id="calendar-side-panel"
        class="fixed top-0 right-0 h-full w-80 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 shadow-xl z-50 transform translate-x-full transition-transform duration-200 flex flex-col">
@@ -121,14 +150,15 @@
     <div id="panel-orders-list" class="flex-1 overflow-y-auto py-2"></div>
   </div>
 
-  <%# FR-05: 하단 목록 배지 강화 %>
-  <% if @orders.any? %>
+  <%# 하단 이번 달 주문 목록 %>
+  <% month_orders = @orders.select { |o| o.due_date.month == @month.month && o.due_date.year == @month.year } %>
+  <% if month_orders.any? %>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
       <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700">
-        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">이번 달 마감 주문 (<%= @orders.count %>건)</h2>
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">이번 달 마감 주문 (<%= month_orders.count %>건)</h2>
       </div>
       <div class="divide-y divide-gray-50 dark:divide-gray-700">
-        <% @orders.each do |order| %>
+        <% month_orders.each do |order| %>
           <div class="flex items-center justify-between px-5 py-3
                       hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
                onclick="openOrderDrawer(<%= order.id %>, <%= order.title.to_json %>, '<%= order_path(order) %>')">
@@ -165,36 +195,48 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // ── FR-02: 날짜 사이드 패널 ──────────────────────────────
   var sidePanel  = document.getElementById('calendar-side-panel');
   var panelTitle = document.getElementById('panel-date-title');
   var panelList  = document.getElementById('panel-orders-list');
   var panelClose = document.getElementById('calendar-panel-close');
   var overlay    = document.getElementById('calendar-panel-overlay');
 
+  // FR-03: 강화된 우선순위 배지
+  var PRIORITY_LABELS = { urgent: 'URGENT', high: 'HIGH', medium: 'MEDIUM', low: 'LOW' };
   var PRIORITY_COLORS = {
     urgent: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
     high:   'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-    medium: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+    medium: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
     low:    'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
   };
+
+  // FR-03: 강화된 카드 렌더링 (client/project/assignee/due_date 포함)
+  function renderOrderCard(o) {
+    var priColor = PRIORITY_COLORS[o.priority] || PRIORITY_COLORS.low;
+    var priLabel = PRIORITY_LABELS[o.priority] || (o.priority || '').toUpperCase();
+    var meta = [o.client, o.project].filter(Boolean).join(' · ');
+    return '<div class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer ' +
+           'border-b border-gray-50 dark:border-gray-700/50 transition-colors"' +
+           ' onclick="openOrderDrawer(' + o.id + ', ' + JSON.stringify(o.title) + ', \'' + o.path + '\')">' +
+           '<div class="flex items-start justify-between gap-2 mb-1">' +
+           '<p class="text-sm font-medium text-gray-900 dark:text-white truncate flex-1">' + o.title + '</p>' +
+           (o.due_date ? '<span class="text-xs text-gray-400 dark:text-gray-500 shrink-0">' + o.due_date + '</span>' : '') +
+           '</div>' +
+           (meta ? '<p class="text-xs text-blue-600 dark:text-blue-400 truncate mb-1.5">' + meta + '</p>' : '') +
+           '<div class="flex items-center gap-1.5 flex-wrap">' +
+           '<span class="text-xs text-gray-500 dark:text-gray-400">' + (o.status || '') + '</span>' +
+           '<span class="text-xs font-semibold px-1.5 py-0.5 rounded-full ' + priColor + '">' + priLabel + '</span>' +
+           (o.assignee ? '<span class="text-xs text-gray-400 dark:text-gray-500 ml-auto">담당: ' + o.assignee + '</span>' : '') +
+           '</div>' +
+           '</div>';
+  }
 
   function openDatePanel(dateStr, orders) {
     panelTitle.textContent = dateStr + ' 마감 (' + orders.length + '건)';
     if (orders.length === 0) {
       panelList.innerHTML = '<p class="text-xs text-gray-400 text-center py-8">마감 주문 없음</p>';
     } else {
-      panelList.innerHTML = orders.map(function(o) {
-        var priColor = PRIORITY_COLORS[o.priority] || PRIORITY_COLORS.low;
-        return '<div class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors border-b border-gray-50 dark:border-gray-700/50"' +
-               ' onclick="openOrderDrawer(' + o.id + ', ' + JSON.stringify(o.title) + ', \'' + o.path + '\')">' +
-               '<div class="flex-1 min-w-0">' +
-               '<p class="text-sm font-medium text-gray-900 dark:text-white truncate">' + o.title + '</p>' +
-               '<p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">' + o.status + '</p>' +
-               '</div>' +
-               '<span class="text-xs font-semibold px-2 py-0.5 rounded-full ' + priColor + '">' + o.priority.toUpperCase() + '</span>' +
-               '</div>';
-      }).join('');
+      panelList.innerHTML = orders.map(renderOrderCard).join('');
     }
     overlay.classList.remove('hidden');
     requestAnimationFrame(function() {
@@ -207,7 +249,6 @@ document.addEventListener('DOMContentLoaded', function() {
     overlay.classList.add('hidden');
   }
 
-  // 날짜 셀 클릭
   document.querySelectorAll('[data-calendar-date]').forEach(function(cell) {
     cell.addEventListener('click', function() {
       var orders = JSON.parse(cell.dataset.orders || '[]');
