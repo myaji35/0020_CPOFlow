@@ -110,7 +110,8 @@ Rails.application.routes.draw do
   get "/search", to: "search#index", as: :search
 
   # 경영 리포트
-  get "/reports", to: "reports#index", as: :reports
+  get "/reports",            to: "reports#index",      as: :reports
+  get "/reports/export_csv", to: "reports#export_csv", as: :reports_export_csv
 
   # 알림 센터
   resources :notifications, only: %i[index] do

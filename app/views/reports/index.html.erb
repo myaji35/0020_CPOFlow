@@ -1,129 +1,385 @@
+<%# 경영 리포트 고도화 — Chart.js + 기간 필터 + CSV + 인쇄 %>
 <% content_for :page_title, "경영 리포트" %>
 
+<%# Chart.js CDN %>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<%# Print CSS %>
+<style>
+  @media print {
+    nav, aside, header, .no-print { display: none !important; }
+    .print-break { page-break-before: always; }
+    body { font-size: 10pt; background: white !important; }
+    .bg-white, .dark\:bg-gray-800 { box-shadow: none !important; border: 1px solid #e5e7eb !important; background: white !important; }
+    canvas { max-height: 200px !important; }
+  }
+</style>
+
+<%# 증감률 배지 헬퍼 %>
+<% delta_badge = ->(curr, prev_val) do
+  return "" if prev_val.nil? || prev_val == 0
+  pct = ((curr - prev_val).to_f / prev_val * 100).round(1)
+  arrow = pct >= 0 ? "▲" : "▼"
+  color = pct >= 0 ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"
+  "<span class='text-xs #{color} font-medium ml-1'>#{arrow} #{pct.abs}%</span>"
+end %>
+
 <div class="flex flex-col gap-6">
-  <%# Header %>
+
+  <%# ── 헤더 ── %>
   <div class="flex items-center justify-between">
     <div>
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white">경영 리포트</h1>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">수주·납품·거래처 KPI 현황</p>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5"><%= @from_str %> ~ <%= @to_str %></p>
     </div>
-    <span class="text-xs text-gray-400 dark:text-gray-500"><%= Date.today.strftime("%Y년 %m월") %> 기준</span>
-  </div>
-
-  <%# 이번달 KPI 카드 %>
-  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-      <p class="text-xs text-gray-500 dark:text-gray-400">이번달 수주</p>
-      <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><%= @kpi[:new_orders] %><span class="text-sm font-normal ml-1">건</span></p>
-    </div>
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-      <p class="text-xs text-gray-500 dark:text-gray-400">이번달 납품</p>
-      <p class="text-2xl font-bold text-green-600 dark:text-green-400 mt-1"><%= @kpi[:delivered] %><span class="text-sm font-normal ml-1">건</span></p>
-    </div>
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-      <p class="text-xs text-gray-500 dark:text-gray-400">이번달 수주액</p>
-      <p class="text-2xl font-bold text-primary dark:text-blue-400 mt-1">$<%= number_with_delimiter((@kpi[:total_value] / 1000).round) %>K</p>
-    </div>
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-      <p class="text-xs text-gray-500 dark:text-gray-400">납기 준수율</p>
-      <p class="text-2xl font-bold <%= @kpi[:on_time_rate] >= 90 ? 'text-green-600' : @kpi[:on_time_rate] >= 70 ? 'text-yellow-600' : 'text-red-600' %> mt-1"><%= @kpi[:on_time_rate] %>%</p>
-    </div>
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 <%= @kpi[:overdue] > 0 ? 'border-red-200 dark:border-red-800' : '' %>">
-      <p class="text-xs text-gray-500 dark:text-gray-400">납기 지연</p>
-      <p class="text-2xl font-bold <%= @kpi[:overdue] > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white' %> mt-1"><%= @kpi[:overdue] %><span class="text-sm font-normal ml-1">건</span></p>
-    </div>
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 <%= @kpi[:urgent] > 0 ? 'border-orange-200 dark:border-orange-800' : '' %>">
-      <p class="text-xs text-gray-500 dark:text-gray-400">긴급 처리</p>
-      <p class="text-2xl font-bold <%= @kpi[:urgent] > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-gray-900 dark:text-white' %> mt-1"><%= @kpi[:urgent] %><span class="text-sm font-normal ml-1">건</span></p>
+    <div class="flex items-center gap-2 no-print">
+      <%# CSV 다운로드 %>
+      <%= link_to reports_export_csv_path(period: @period, from: params[:from], to: params[:to], format: :csv),
+            class: "inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" do %>
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        CSV 내보내기
+      <% end %>
+      <%# 인쇄 %>
+      <button onclick="window.print()"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        인쇄
+      </button>
     </div>
   </div>
 
-  <%# 위험도 분포 %>
-  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-    <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">납기 위험도 분포 (진행 중 주문)</h2>
-    <div class="grid grid-cols-4 gap-4">
-      <% [["critical","위험","bg-red-500"],["high","주의","bg-orange-400"],["medium","경고","bg-yellow-400"],["low","정상","bg-green-500"]].each do |level, label, color| %>
-        <div class="text-center">
-          <div class="w-12 h-12 <%= color %> rounded-full flex items-center justify-center text-white text-lg font-bold mx-auto mb-2">
-            <%= @by_risk[level] %>
-          </div>
-          <p class="text-xs text-gray-500 dark:text-gray-400"><%= label %></p>
-        </div>
+  <%# ── 기간 필터 ── %>
+  <div class="no-print">
+    <div class="flex flex-wrap items-center gap-2">
+      <div class="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+        <% [
+          ["this_month",   "이번달"],
+          ["last_month",   "지난달"],
+          ["this_quarter", "이번분기"],
+          ["this_year",    "올해"],
+          ["custom",       "직접입력"]
+        ].each do |val, label| %>
+          <%= link_to label, reports_path(period: val),
+                class: "px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer
+                        #{@period == val
+                          ? 'bg-white dark:bg-gray-700 shadow text-gray-900 dark:text-white'
+                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}" %>
+        <% end %>
+      </div>
+      <%# 직접입력 날짜 picker %>
+      <% if @period == "custom" %>
+        <%= form_with url: reports_path, method: :get, class: "flex items-center gap-2" do |f| %>
+          <%= f.hidden_field :period, value: "custom" %>
+          <%= f.date_field :from, value: params[:from] || @from_str,
+                class: "text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" %>
+          <span class="text-gray-400 text-sm">~</span>
+          <%= f.date_field :to, value: params[:to] || @to_str,
+                class: "text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" %>
+          <%= f.submit "조회",
+                class: "px-3 py-1.5 bg-primary text-white text-sm rounded-lg hover:bg-primary/90 cursor-pointer transition-colors" %>
+        <% end %>
       <% end %>
     </div>
   </div>
 
+  <%# ── KPI 카드 (7개) ── %>
+  <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+    <%# 수주 건수 %>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+      <p class="text-xs text-gray-500 dark:text-gray-400">수주 건수</p>
+      <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+        <%= @kpi[:new_orders] %><span class="text-sm font-normal ml-0.5">건</span>
+      </p>
+      <%= delta_badge.call(@kpi[:new_orders], @kpi[:prev_orders]).html_safe %>
+    </div>
+    <%# 납품 건수 %>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+      <p class="text-xs text-gray-500 dark:text-gray-400">납품 건수</p>
+      <p class="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">
+        <%= @kpi[:delivered] %><span class="text-sm font-normal ml-0.5">건</span>
+      </p>
+      <%= delta_badge.call(@kpi[:delivered], @kpi[:prev_delivered]).html_safe %>
+    </div>
+    <%# 수주액 %>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+      <p class="text-xs text-gray-500 dark:text-gray-400">수주액</p>
+      <p class="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">
+        $<%= number_with_delimiter((@kpi[:total_value] / 1000).round) %><span class="text-sm font-normal ml-0.5">K</span>
+      </p>
+      <%= delta_badge.call(@kpi[:total_value], @kpi[:prev_value]).html_safe %>
+    </div>
+    <%# 납기 준수율 %>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+      <p class="text-xs text-gray-500 dark:text-gray-400">납기 준수율</p>
+      <p class="text-2xl font-bold mt-1 <%= @kpi[:on_time_rate] >= 90 ? 'text-green-600' : @kpi[:on_time_rate] >= 70 ? 'text-yellow-500' : 'text-red-500' %>">
+        <%= @kpi[:on_time_rate] %>%
+      </p>
+      <%= delta_badge.call(@kpi[:on_time_rate], @kpi[:prev_on_time]).html_safe %>
+    </div>
+    <%# 납기 지연 %>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border <%= @kpi[:overdue] > 0 ? 'border-red-200 dark:border-red-800' : 'border-gray-200 dark:border-gray-700' %> p-4">
+      <p class="text-xs text-gray-500 dark:text-gray-400">납기 지연</p>
+      <p class="text-2xl font-bold mt-1 <%= @kpi[:overdue] > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white' %>">
+        <%= @kpi[:overdue] %><span class="text-sm font-normal ml-0.5">건</span>
+      </p>
+    </div>
+    <%# 긴급 처리 %>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border <%= @kpi[:urgent] > 0 ? 'border-orange-200 dark:border-orange-800' : 'border-gray-200 dark:border-gray-700' %> p-4">
+      <p class="text-xs text-gray-500 dark:text-gray-400">긴급 처리</p>
+      <p class="text-2xl font-bold mt-1 <%= @kpi[:urgent] > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-gray-900 dark:text-white' %>">
+        <%= @kpi[:urgent] %><span class="text-sm font-normal ml-0.5">건</span>
+      </p>
+    </div>
+    <%# 평균 소요일 %>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+      <p class="text-xs text-gray-500 dark:text-gray-400">평균 소요일</p>
+      <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+        <%= @kpi[:avg_lead_days] %><span class="text-sm font-normal ml-0.5">일</span>
+      </p>
+    </div>
+  </div>
+
+  <%# ── 차트 행 (2열) ── %>
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <%# 월별 수주 트렌드 %>
+
+    <%# 월별 트렌드 Chart.js %>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
       <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">월별 수주 트렌드 (최근 12개월)</h2>
-      <div class="flex items-end gap-2 h-40">
-        <% max_count = [@monthly_orders.values.max.to_i, 1].max %>
-        <% @monthly_orders.each do |month, count| %>
-          <div class="flex-1 flex flex-col items-center gap-1">
-            <span class="text-xs text-gray-500 dark:text-gray-400"><%= count %></span>
-            <div class="w-full bg-primary/80 dark:bg-primary/60 rounded-t"
-                 style="height: <%= [(count.to_f / max_count * 120).round, 4].max %>px"
-                 title="<%= month %>: <%= count %>건"></div>
-            <span class="text-xs text-gray-400 dark:text-gray-500" style="font-size:9px"><%= month.split("-").last %>월</span>
+      <div style="position:relative; height:220px;">
+        <canvas id="trendChart"></canvas>
+      </div>
+    </div>
+
+    <%# 파이프라인 퍼널 %>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">파이프라인 현황</h2>
+      <% funnel_stages = [
+           ["inbox",     "Inbox",         "bg-gray-400"],
+           ["reviewing", "Under Review",  "bg-blue-400"],
+           ["quoted",    "Quoted",        "bg-indigo-400"],
+           ["confirmed", "Confirmed",     "bg-purple-400"],
+           ["procuring", "Procuring",     "bg-yellow-400"],
+           ["qa",        "QA",            "bg-orange-400"],
+           ["delivered", "Delivered",     "bg-green-500"]
+         ]
+         funnel_total = [@funnel.values.sum, 1].max %>
+      <div class="flex flex-col gap-2.5">
+        <% funnel_stages.each do |key, label, color| %>
+          <% cnt = @funnel[key] || 0 %>
+          <% pct = (cnt.to_f / funnel_total * 100).round(1) %>
+          <div class="flex items-center gap-3">
+            <span class="text-xs text-gray-500 dark:text-gray-400 w-24 flex-shrink-0"><%= label %></span>
+            <div class="flex-1 bg-gray-100 dark:bg-gray-700 rounded-full h-5 relative overflow-hidden">
+              <div class="<%= color %> h-5 rounded-full transition-all" style="width:<%= [pct, 1].max %>%"></div>
+              <span class="absolute inset-0 flex items-center px-2 text-xs font-medium <%= cnt > 0 ? 'text-white' : 'text-gray-400' %>">
+                <%= cnt %>건
+              </span>
+            </div>
+            <span class="text-xs text-gray-400 dark:text-gray-500 w-10 text-right tabular-nums"><%= pct %>%</span>
           </div>
         <% end %>
       </div>
     </div>
+  </div>
+
+  <%# ── Top 10 (3열) ── %>
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
     <%# 발주처별 수주액 %>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
       <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">발주처별 수주액 Top 10</h2>
-      <% max_val = [(@by_client.first&.last || 0).to_f, 1].max %>
-      <div class="flex flex-col gap-2">
-        <% @by_client.first(8).each do |name, val| %>
-          <div class="flex items-center gap-2">
-            <span class="text-xs text-gray-600 dark:text-gray-400 w-40 truncate" title="<%= name %>"><%= name.truncate(22) %></span>
-            <div class="flex-1 bg-gray-100 dark:bg-gray-700 rounded-full h-2">
-              <div class="bg-primary dark:bg-primary/80 h-2 rounded-full"
-                   style="width: <%= [(val.to_f / max_val * 100).round, 2].max %>%"></div>
+      <% if @by_client.any? %>
+        <% max_val = [(@by_client.first&.last || 0).to_f, 1].max %>
+        <div class="flex flex-col gap-2">
+          <% @by_client.each do |name, val| %>
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-gray-600 dark:text-gray-400 w-28 truncate" title="<%= name %>"><%= name&.truncate(16) %></span>
+              <div class="flex-1 bg-gray-100 dark:bg-gray-700 rounded-full h-2">
+                <div class="h-2 rounded-full" style="width:<%= [(val.to_f / max_val * 100).round, 2].max %>%; background-color:#1E3A5F"></div>
+              </div>
+              <span class="text-xs text-gray-500 dark:text-gray-400 w-16 text-right tabular-nums">$<%= number_with_delimiter((val.to_f / 1000).round) %>K</span>
             </div>
-            <span class="text-xs text-gray-500 dark:text-gray-400 w-20 text-right">$<%= number_with_delimiter((val.to_f / 1000).round) %>K</span>
-          </div>
-        <% end %>
-      </div>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="text-sm text-gray-400 dark:text-gray-500 text-center py-6">해당 기간 데이터 없음</p>
+      <% end %>
     </div>
 
     <%# 거래처별 발주 건수 %>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
       <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">거래처별 발주 건수</h2>
-      <% max_cnt = [(@by_supplier.first&.last || 0).to_i, 1].max %>
-      <div class="flex flex-col gap-2">
-        <% @by_supplier.first(8).each do |name, cnt| %>
-          <div class="flex items-center gap-2">
-            <span class="text-xs text-gray-600 dark:text-gray-400 w-40 truncate"><%= name.truncate(22) %></span>
-            <div class="flex-1 bg-gray-100 dark:bg-gray-700 rounded-full h-2">
-              <div class="bg-accent dark:bg-accent/80 h-2 rounded-full"
-                   style="width: <%= [(cnt.to_f / max_cnt * 100).round, 2].max %>%; background-color:#00A1E0"></div>
+      <% if @by_supplier.any? %>
+        <% max_cnt = [(@by_supplier.first&.last || 0).to_i, 1].max %>
+        <div class="flex flex-col gap-2">
+          <% @by_supplier.each do |name, cnt| %>
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-gray-600 dark:text-gray-400 w-28 truncate" title="<%= name %>"><%= name&.truncate(16) %></span>
+              <div class="flex-1 bg-gray-100 dark:bg-gray-700 rounded-full h-2">
+                <div class="h-2 rounded-full" style="width:<%= [(cnt.to_f / max_cnt * 100).round, 2].max %>%; background-color:#00A1E0"></div>
+              </div>
+              <span class="text-xs text-gray-500 dark:text-gray-400 w-10 text-right tabular-nums"><%= cnt %>건</span>
             </div>
-            <span class="text-xs text-gray-500 dark:text-gray-400 w-10 text-right"><%= cnt %>건</span>
-          </div>
-        <% end %>
-      </div>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="text-sm text-gray-400 dark:text-gray-500 text-center py-6">해당 기간 데이터 없음</p>
+      <% end %>
     </div>
 
-    <%# 상태별 주문 현황 %>
+    <%# 프로젝트별 수주액 %>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">현재 파이프라인 현황</h2>
-      <div class="flex flex-col gap-2">
-        <% total_active = @by_status.sum { |s| s[:count] } %>
-        <% @by_status.each do |s| %>
-          <% pct = total_active > 0 ? (s[:count].to_f / total_active * 100).round(1) : 0 %>
-          <div class="flex items-center gap-2">
-            <span class="text-xs text-gray-600 dark:text-gray-400 w-28"><%= s[:status] %></span>
-            <div class="flex-1 bg-gray-100 dark:bg-gray-700 rounded-full h-2">
-              <div class="bg-indigo-400 dark:bg-indigo-500 h-2 rounded-full"
-                   style="width: <%= [pct, 1].max %>%"></div>
+      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">프로젝트별 수주액</h2>
+      <% if @by_project.any? %>
+        <% max_pv = [(@by_project.first&.last || 0).to_f, 1].max %>
+        <div class="flex flex-col gap-2">
+          <% @by_project.each do |name, val| %>
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-gray-600 dark:text-gray-400 w-28 truncate" title="<%= name %>"><%= name&.truncate(16) %></span>
+              <div class="flex-1 bg-gray-100 dark:bg-gray-700 rounded-full h-2">
+                <div class="h-2 rounded-full" style="width:<%= [(val.to_f / max_pv * 100).round, 2].max %>%; background-color:#7C3AED"></div>
+              </div>
+              <span class="text-xs text-gray-500 dark:text-gray-400 w-16 text-right tabular-nums">$<%= number_with_delimiter((val.to_f / 1000).round) %>K</span>
             </div>
-            <span class="text-xs text-gray-500 dark:text-gray-400 w-16 text-right"><%= s[:count] %>건 (<%= pct %>%)</span>
-          </div>
-        <% end %>
-      </div>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="text-sm text-gray-400 dark:text-gray-500 text-center py-6">해당 기간 데이터 없음</p>
+      <% end %>
     </div>
   </div>
+
+  <%# ── 담당자별 성과 ── %>
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden print-break">
+    <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">담당자별 성과</h2>
+    </div>
+    <% if @by_assignee.any? %>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 dark:bg-gray-700/50">
+            <tr>
+              <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">담당자</th>
+              <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">담당 건수</th>
+              <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">납품 건수</th>
+              <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">납기 준수율</th>
+              <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">납기 준수 현황</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+            <% @by_assignee.each do |u| %>
+              <% rate = u.delivered_count.to_i > 0 ? (u.on_time_count.to_f / u.delivered_count * 100).round(1) : 0.0 %>
+              <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                <td class="px-5 py-3 font-medium text-gray-900 dark:text-white"><%= u.name %></td>
+                <td class="px-5 py-3 text-right tabular-nums text-gray-700 dark:text-gray-300"><%= u.order_count %></td>
+                <td class="px-5 py-3 text-right tabular-nums text-green-600 dark:text-green-400 font-medium"><%= u.delivered_count %></td>
+                <td class="px-5 py-3 text-right tabular-nums">
+                  <span class="font-semibold <%= rate >= 90 ? 'text-green-600 dark:text-green-400' : rate >= 70 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-500 dark:text-red-400' %>">
+                    <%= rate %>%
+                  </span>
+                </td>
+                <td class="px-5 py-3">
+                  <% bar_w = [rate.to_i, 2].max %>
+                  <div class="w-32 bg-gray-100 dark:bg-gray-700 rounded-full h-2">
+                    <div class="h-2 rounded-full <%= rate >= 90 ? 'bg-green-500' : rate >= 70 ? 'bg-yellow-400' : 'bg-red-400' %>"
+                         style="width:<%= bar_w %>%"></div>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="flex flex-col items-center justify-center py-12 text-center">
+        <svg class="w-10 h-10 text-gray-200 dark:text-gray-600 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <p class="text-sm text-gray-400 dark:text-gray-500">해당 기간 담당자 데이터 없음</p>
+      </div>
+    <% end %>
+  </div>
+
 </div>
+
+<%# ── Chart.js 스크립트 ── %>
+<script>
+(function() {
+  const isDark = document.documentElement.classList.contains('dark');
+  const gridColor  = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+  const tickColor  = isDark ? '#9ca3af' : '#6b7280';
+  const labels     = <%= @monthly.map { |m| m[:label] }.to_json.html_safe %>;
+  const ordersData = <%= @monthly.map { |m| m[:orders] }.to_json.html_safe %>;
+  const delivData  = <%= @monthly.map { |m| m[:delivered] }.to_json.html_safe %>;
+  const valueData  = <%= @monthly.map { |m| m[:value] }.to_json.html_safe %>;
+
+  const ctx = document.getElementById('trendChart');
+  if (!ctx) return;
+
+  new Chart(ctx, {
+    data: {
+      labels,
+      datasets: [
+        {
+          type: 'line',
+          label: '수주',
+          data: ordersData,
+          borderColor: '#1E3A5F',
+          backgroundColor: 'rgba(30,58,95,0.08)',
+          borderWidth: 2,
+          pointRadius: 3,
+          tension: 0.35,
+          fill: true,
+          yAxisID: 'y'
+        },
+        {
+          type: 'line',
+          label: '납품',
+          data: delivData,
+          borderColor: '#1E8E3E',
+          backgroundColor: 'rgba(30,142,62,0.06)',
+          borderWidth: 2,
+          pointRadius: 3,
+          tension: 0.35,
+          fill: true,
+          yAxisID: 'y'
+        },
+        {
+          type: 'bar',
+          label: '수주액($K)',
+          data: valueData,
+          backgroundColor: 'rgba(0,161,224,0.25)',
+          borderColor: 'rgba(0,161,224,0.6)',
+          borderWidth: 1,
+          borderRadius: 3,
+          yAxisID: 'y1'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: tickColor, font: { size: 11 }, boxWidth: 12, padding: 12 } }
+      },
+      scales: {
+        x: {
+          grid: { color: gridColor },
+          ticks: { color: tickColor, font: { size: 10 } }
+        },
+        y: {
+          position: 'left',
+          grid: { color: gridColor },
+          ticks: { color: tickColor, font: { size: 10 } },
+          title: { display: true, text: '건수', color: tickColor, font: { size: 10 } }
+        },
+        y1: {
+          position: 'right',
+          grid: { drawOnChartArea: false },
+          ticks: { color: tickColor, font: { size: 10 }, callback: v => '$' + v + 'K' },
+          title: { display: true, text: '수주액', color: tickColor, font: { size: 10 } }
+        }
+      }
+    }
+  });
+})();
+</script>
