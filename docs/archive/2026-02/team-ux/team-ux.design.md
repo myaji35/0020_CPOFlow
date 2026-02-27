@@ -1,71 +1,102 @@
-# Design: team-ux
+# team-ux Design
 
-## 개요
+## 1. Overview
 
-팀 현황 UX 강화 — 통계 바(FR-01) + 워크로드 카드 강화(FR-02) + 팀원 상세 강화(FR-03)
+**Feature**: team-ux
+**Phase**: Design
+**Created**: 2026-02-28
+**References**: `docs/01-plan/features/team-ux.plan.md`
 
-- **Plan**: `docs/01-plan/features/team-ux.plan.md`
-- **작성일**: 2026-02-28
-
----
-
-## 실측 확인 사항
-
-| 항목 | 값 |
-|------|-----|
-| `Order.scope :active` | `where.not(status: :delivered)` |
-| `Order.scope :overdue` | `where("due_date < ?", Date.today).where.not(status: :delivered)` |
-| `Order.scope :urgent` | `where("due_date <= ?", 7.days.from_now).where.not(status: :delivered)` |
-| `Task.scope :pending` | `where(completed: false)` |
-| `User#assigned_orders` | `has_many :assigned_orders, through: :assignments, source: :order` |
-| `User#display_name` | L39 정의됨 |
-| `User#initials` | L43 정의됨 |
-| `openOrderDrawer(id, title, path)` | `layouts/application.html.erb` L152 전역 |
-| `priority_badge(order)` | `application_helper.rb` L35 |
-| `due_badge(order)` | `application_helper.rb` L19 |
-| `status_badge(order)` | `application_helper.rb` L47 |
+팀/담당자 관리 페이지 UX 개선 — 납기 D-day 배지, Branch 탭 필터, Admin Role 편집, 상태별 탭.
 
 ---
 
-## 변경 파일
+## 2. Architecture
 
-| 파일 | 변경 | 내용 |
-|------|------|------|
-| `app/controllers/team_controller.rb` | 수정 | overdue/urgent 카운트 + @summary + show 강화 |
-| `app/views/team/index.html.erb` | 수정 | FR-01 통계 바 + FR-02 카드 강화 |
-| `app/views/team/show.html.erb` | 수정 | FR-03 지연 섹션 + 배지 + 드로어 연동 |
+### 2.1 Data Flow
+
+```
+TeamController#index
+  ↓ params[:branch] 필터 적용
+@members (User, branch 필터)
+  ↓ @workloads 계산
+    - nearest_due: active 중 가장 가까운 due_date
+    - active/overdue/urgent/tasks 기존 유지
+  ↓ ERB 렌더링:
+    - Branch 탭 필터 (All/Abu Dhabi/Seoul)
+    - 워크로드 카드: D-day 배지 + Admin Role 드롭다운
+    - 링크 클릭 → TeamController#show
+
+TeamController#show
+  ↓ @all_orders = overdue + active 합산
+  ↓ ERB 렌더링:
+    - All/Overdue/Active 탭 (JS 클라이언트 필터)
+    - data-overdue 속성으로 탭 분류
+
+TeamController#update_role (PATCH /team/:id/update_role)
+  ↓ Admin 권한 확인
+  ↓ user.update!(role:)
+  ↓ redirect team_index_path
+```
+
+### 2.2 Files to Modify
+
+| File | 변경 내용 |
+|------|-----------|
+| `config/routes.rb` | update_role 라우트 추가 |
+| `app/controllers/team_controller.rb` | Branch 필터 + nearest_due + update_role 액션 |
+| `app/views/team/index.html.erb` | Branch 탭 + D-day 배지 + Admin Role 드롭다운 |
+| `app/views/team/show.html.erb` | All/Overdue/Active 탭 (JS 필터) |
 
 ---
 
-## FR-01 + FR-02: 컨트롤러 index 변경
+## 3. Detailed Design
+
+### 3.1 Routes 추가
+
+```ruby
+# config/routes.rb
+get  '/team',     to: 'team#index',       as: 'team_index'
+get  '/team/:id', to: 'team#show',        as: 'team'
+patch '/team/:id/update_role', to: 'team#update_role', as: 'update_role_team'
+```
+
+### 3.2 Controller: Branch 필터 + nearest_due + update_role (FR-01, FR-02, FR-03)
 
 ```ruby
 class TeamController < ApplicationController
   def index
-    @members = User.order(:branch, :name).includes(:assigned_orders, :tasks)
+    branch = params[:branch].presence
+    scope  = User.order(:branch, :name).includes(:assigned_orders, :tasks)
+    scope  = scope.where(branch: branch) if branch.present?
+    @members = scope
+
     today = Date.today
 
     @workloads = @members.map do |u|
-      active = u.assigned_orders.active.to_a
+      active  = u.assigned_orders.active.to_a
+      nearest = active.select { |o| o.due_date.present? }
+                      .min_by { |o| o.due_date }
       {
         user:           u,
         active_orders:  active.count,
         tasks_pending:  u.tasks.pending.count,
         overdue_orders: active.count { |o| o.due_date && o.due_date < today },
-        urgent_orders:  active.count { |o| o.due_date && o.due_date >= today && o.due_date <= today + 7 }
+        urgent_orders:  active.count { |o| o.due_date && o.due_date >= today && o.due_date <= today + 7 },
+        nearest_due:    nearest&.due_date
       }
     end
 
     @summary = {
-      total_members:  @members.count,
-      total_active:   @workloads.sum { |w| w[:active_orders] },
-      total_overdue:  @workloads.sum { |w| w[:overdue_orders] },
-      overloaded:     @workloads.count { |w| w[:active_orders] >= 8 }
+      total_members: @members.count,
+      total_active:  @workloads.sum { |w| w[:active_orders] },
+      total_overdue: @workloads.sum { |w| w[:overdue_orders] },
+      overloaded:    @workloads.count { |w| w[:active_orders] >= 8 }
     }
   end
 
   def show
-    @member        = User.find(params[:id])
+    @member         = User.find(params[:id])
     @overdue_orders = @member.assigned_orders.overdue.by_due_date
                              .includes(:client, :project)
     @active_orders  = @member.assigned_orders.active
@@ -74,207 +105,209 @@ class TeamController < ApplicationController
                              .includes(:client, :project)
     @status_counts  = @member.assigned_orders.group(:status).count
   end
+
+  def update_role
+    redirect_to team_index_path, alert: "권한이 없습니다." and return unless current_user.admin?
+    @member = User.find(params[:id])
+    @member.update!(role: params[:role])
+    redirect_to team_index_path, notice: "#{@member.display_name} 역할이 변경되었습니다."
+  rescue ActiveRecord::RecordInvalid => e
+    redirect_to team_index_path, alert: "변경 실패: #{e.message}"
+  end
 end
 ```
 
----
+### 3.3 View index.html.erb: Branch 탭 필터 (FR-02)
 
-## FR-01: 팀 전체 통계 바 ERB
-
-헤더 `</div>` 직후, 워크로드 그리드 위:
+헤더 하단, 통계 카드 상단에 탭 배치:
 
 ```erb
-<%# FR-01: 팀 전체 통계 바 %>
-<div class="grid grid-cols-4 gap-3">
-  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
-    <p class="text-2xl font-bold text-gray-900 dark:text-white"><%= @summary[:total_members] %></p>
-    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">총 팀원</p>
-  </div>
-  <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800 p-4 text-center">
-    <p class="text-2xl font-bold text-blue-600 dark:text-blue-400"><%= @summary[:total_active] %></p>
-    <p class="text-xs text-blue-500 dark:text-blue-400 mt-1">총 진행 주문</p>
-  </div>
-  <div class="bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-800 p-4 text-center">
-    <p class="text-2xl font-bold text-red-600 dark:text-red-400"><%= @summary[:total_overdue] %></p>
-    <p class="text-xs text-red-500 dark:text-red-400 mt-1">지연 주문</p>
-  </div>
-  <div class="bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-100 dark:border-orange-800 p-4 text-center">
-    <p class="text-2xl font-bold text-orange-600 dark:text-orange-400"><%= @summary[:overloaded] %></p>
-    <p class="text-xs text-orange-500 dark:text-orange-400 mt-1">과부하 팀원</p>
-  </div>
-</div>
-```
-
----
-
-## FR-02: 워크로드 카드 강화 ERB
-
-기존 카드 구조 유지, 다음 항목 변경:
-
-### 1. 카드 루트 div — 과부하 경고 테두리
-
-```erb
-<%# 기존 %>
-<%= link_to team_path(user), class: "bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 ..." do %>
-
-<%# 변경: 과부하 시 border-red-300 %>
-<% is_overloaded = w[:active_orders] >= 8 %>
-<%= link_to team_path(user),
-    class: "bg-white dark:bg-gray-800 rounded-xl border p-5 hover:shadow-md transition-all block
-            #{is_overloaded ? 'border-red-300 dark:border-red-700' : 'border-gray-200 dark:border-gray-700 hover:border-primary/30'}" do %>
-```
-
-### 2. 이름 영역 — 과부하 배지 추가
-
-```erb
-<div class="flex items-center justify-between mb-4">
-  <div class="flex items-center gap-3">
-    <div class="w-10 h-10 rounded-full bg-primary/10 ... ">
-      <%= user.initials %>
-    </div>
-    <div class="min-w-0">
-      <p class="font-semibold text-gray-900 dark:text-white truncate"><%= user.display_name %></p>
-      <div class="flex items-center gap-2 mt-0.5">
-        <%# 역할 배지 (기존) %>
-        ...
-      </div>
-    </div>
-  </div>
-  <%# FR-02: 과부하 경고 배지 %>
-  <% if is_overloaded %>
-    <span class="text-xs font-semibold bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-full shrink-0">
-      과부하
-    </span>
+<%# Branch 탭 필터 %>
+<% branch_tabs = [['전체', nil], ['Abu Dhabi', 'abu_dhabi'], ['Seoul', 'seoul']] %>
+<div class="flex gap-1">
+  <% branch_tabs.each do |label, val| %>
+    <% is_active = params[:branch].to_s == val.to_s || (val.nil? && params[:branch].blank?) %>
+    <%= link_to label,
+          team_index_path(branch: val),
+          class: "px-3 py-1.5 text-sm rounded-lg font-medium transition-colors " \
+                 "#{is_active ? 'bg-primary text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'}" %>
   <% end %>
 </div>
 ```
 
-### 3. 숫자 카드 — 4개로 확장 (지연 + 긴급 추가)
+### 3.4 View index.html.erb: D-day 배지 (FR-01)
+
+워크로드 카드 헤더 우측, 과부하 배지와 같은 줄에 배치:
 
 ```erb
-<%# 기존: 2개 (진행 중 / 대기 태스크) %>
-<%# 변경: 4개 (진행 중 / 지연 / 긴급 / 대기 태스크) %>
-<div class="grid grid-cols-4 gap-2">
-  <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2 text-center">
-    <p class="text-xl font-bold text-gray-900 dark:text-white"><%= w[:active_orders] %></p>
-    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">진행</p>
-  </div>
-  <div class="bg-red-50 dark:bg-red-900/20 rounded-lg p-2 text-center">
-    <p class="text-xl font-bold text-red-600 dark:text-red-400"><%= w[:overdue_orders] %></p>
-    <p class="text-xs text-red-500 dark:text-red-400 mt-0.5">지연</p>
-  </div>
-  <div class="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-2 text-center">
-    <p class="text-xl font-bold text-orange-600 dark:text-orange-400"><%= w[:urgent_orders] %></p>
-    <p class="text-xs text-orange-500 dark:text-orange-400 mt-0.5">D-7</p>
-  </div>
-  <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2 text-center">
-    <p class="text-xl font-bold text-gray-900 dark:text-white"><%= w[:tasks_pending] %></p>
-    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">태스크</p>
-  </div>
+<%
+  today = Date.today
+  if w[:nearest_due]
+    days    = (w[:nearest_due] - today).to_i
+    d_label = days < 0  ? "D+#{days.abs}" :
+              days == 0 ? 'D-Day'          : "D-#{days}"
+    d_color = days < 0  ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+              days <= 7 ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
+                          'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+  end
+%>
+<%# 카드 헤더 우측 배지 영역 %>
+<div class="flex flex-col items-end gap-1 shrink-0">
+  <% if is_overloaded %>
+    <span class="text-xs font-semibold bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-full">
+      과부하
+    </span>
+  <% end %>
+  <% if w[:nearest_due] %>
+    <span class="text-xs font-semibold px-2 py-0.5 rounded-full <%= d_color %>"><%= d_label %></span>
+  <% end %>
 </div>
 ```
 
-### 4. 워크로드 바 — 색상 기준 개선
+### 3.5 View index.html.erb: Admin Role 드롭다운 (FR-03)
+
+워크로드 바 하단에 추가:
 
 ```erb
-<%# 기존: 50% / 80% 기준 %>
-<%# 변경: 4건(40%) / 7건(70%) 기준 %>
-<% load_pct = [[w[:active_orders] * 10, 100].min, 0].max %>
-<div class="h-full rounded-full transition-all
-            <%= w[:active_orders] >= 8 ? 'bg-red-400' :
-                w[:active_orders] >= 5 ? 'bg-orange-400' : 'bg-green-400' %>"
-     style="width: <%= load_pct %>%"></div>
-```
-
----
-
-## FR-03: 팀원 상세 (show.html.erb) 강화
-
-### 1. 지연 주문 섹션 (진행 중 주문 위에 삽입)
-
-```erb
-<%# FR-03: 지연 주문 섹션 %>
-<% if @overdue_orders.any? %>
-  <div class="bg-white dark:bg-gray-800 rounded-xl border border-red-200 dark:border-red-800 overflow-hidden">
-    <div class="px-5 py-4 border-b border-red-100 dark:border-red-800 bg-red-50 dark:bg-red-900/20">
-      <h2 class="text-sm font-semibold text-red-700 dark:text-red-400">
-        지연 주문 (<%= @overdue_orders.count %>건)
-      </h2>
-    </div>
-    <div class="divide-y divide-gray-50 dark:divide-gray-700">
-      <% @overdue_orders.each do |order| %>
-        <div class="flex items-center justify-between px-5 py-3
-                    hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
-             onclick="openOrderDrawer(<%= order.id %>, <%= order.title.to_json %>, '<%= order_path(order) %>')">
-          <div class="min-w-0">
-            <p class="text-sm font-medium text-gray-900 dark:text-white truncate"><%= order.title %></p>
-            <div class="flex items-center gap-1.5 mt-0.5">
-              <% if order.client %>
-                <span class="text-xs text-blue-600 dark:text-blue-400"><%= order.client.name %></span>
-              <% elsif order.customer_name.present? %>
-                <span class="text-xs text-gray-500 dark:text-gray-400"><%= order.customer_name %></span>
-              <% end %>
-            </div>
-          </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <%= status_badge(order) %>
-            <%= priority_badge(order) %>
-            <%= due_badge(order) %>
-          </div>
-        </div>
-      <% end %>
-    </div>
+<%# Admin Role 편집 (Admin 전용) %>
+<% if current_user.admin? %>
+  <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
+    <span class="text-xs text-gray-400 dark:text-gray-500">역할 변경</span>
+    <%= form_with url: update_role_team_path(user), method: :patch, local: true do |f| %>
+      <%= f.select :role,
+            [['뷰어', 'viewer'], ['멤버', 'member'], ['매니저', 'manager'], ['관리자', 'admin']],
+            { selected: user.role },
+            { class:    "text-xs border border-gray-200 dark:border-gray-600 rounded px-1.5 py-0.5 " \
+                        "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300",
+              onchange: "this.form.requestSubmit()" } %>
+    <% end %>
   </div>
 <% end %>
 ```
 
-### 2. 진행 중 주문 섹션 — 배지 + 드로어 연동
+### 3.6 View show.html.erb: 상태별 탭 (FR-04)
 
-```erb
-<%# 기존: link_to "보기" + status 텍스트 배지만 %>
-<%# 변경: onclick openOrderDrawer + status_badge + priority_badge + due_badge %>
-<div class="flex items-center justify-between px-5 py-3
-            hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
-     onclick="openOrderDrawer(<%= order.id %>, <%= order.title.to_json %>, '<%= order_path(order) %>')">
-  <div class="min-w-0">
-    <p class="text-sm font-medium text-gray-900 dark:text-white truncate"><%= order.title %></p>
-    <div class="flex items-center gap-1.5 mt-0.5">
-      <% if order.client %>
-        <span class="text-xs text-blue-600 dark:text-blue-400"><%= order.client.name %></span>
-      <% elsif order.customer_name.present? %>
-        <span class="text-xs text-gray-500 dark:text-gray-400"><%= order.customer_name %></span>
-      <% end %>
-      <% if order.project %>
-        <span class="text-xs text-green-600 dark:text-green-400"><%= order.project.name %></span>
-      <% end %>
-    </div>
-  </div>
-  <div class="flex items-center gap-2 shrink-0">
-    <%= status_badge(order) %>
-    <%= priority_badge(order) %>
-    <%= due_badge(order) %>
-  </div>
+헤더 하단에 탭 버튼 + JS 클라이언트 필터:
+
+```html
+<!-- 탭 버튼 -->
+<div class="flex gap-1" id="order-tabs">
+  <button class="tab-btn active-tab px-3 py-1.5 text-sm rounded-lg font-medium"
+          data-tab="all" onclick="filterOrders('all')">
+    전체 (<span id="count-all">N</span>)
+  </button>
+  <button class="tab-btn px-3 py-1.5 text-sm rounded-lg font-medium"
+          data-tab="overdue" onclick="filterOrders('overdue')">
+    지연 (<span id="count-overdue">N</span>)
+  </button>
+  <button class="tab-btn px-3 py-1.5 text-sm rounded-lg font-medium"
+          data-tab="active" onclick="filterOrders('active')">
+    진행 (<span id="count-active">N</span>)
+  </button>
 </div>
+
+<!-- 주문 행: data-overdue 속성으로 구분 -->
+<div class="order-row" data-overdue="true">...</div>
+<div class="order-row" data-overdue="false">...</div>
+
+<script>
+function filterOrders(tab) {
+  var rows = document.querySelectorAll('.order-row');
+  rows.forEach(function(row) {
+    var overdue = row.dataset.overdue === 'true';
+    var show = tab === 'all' || (tab === 'overdue' && overdue) || (tab === 'active' && !overdue);
+    row.style.display = show ? '' : 'none';
+  });
+  document.querySelectorAll('.tab-btn').forEach(function(btn) {
+    var isActive = btn.dataset.tab === tab;
+    btn.classList.toggle('bg-primary', isActive);
+    btn.classList.toggle('text-white', isActive);
+    btn.classList.toggle('bg-white', !isActive);
+    btn.classList.toggle('dark:bg-gray-800', !isActive);
+    btn.classList.toggle('text-gray-600', !isActive);
+    btn.classList.toggle('dark:text-gray-300', !isActive);
+    btn.classList.toggle('border', !isActive);
+    btn.classList.toggle('border-gray-200', !isActive);
+  });
+}
+// 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  var all   = document.querySelectorAll('.order-row').length;
+  var od    = document.querySelectorAll('.order-row[data-overdue="true"]').length;
+  var act   = document.querySelectorAll('.order-row[data-overdue="false"]').length;
+  document.getElementById('count-all').textContent     = all;
+  document.getElementById('count-overdue').textContent = od;
+  document.getElementById('count-active').textContent  = act;
+});
+</script>
 ```
 
 ---
 
-## 구현 순서
+## 4. UI Mockup
 
-1. `team_controller.rb` — index (@workloads 확장 + @summary) + show (@overdue_orders + includes)
-2. `team/index.html.erb` — FR-01 통계 바 삽입
-3. `team/index.html.erb` — FR-02 카드 강화 (과부하 배지 + 4개 숫자 + 워크로드 바 색상)
-4. `team/show.html.erb` — FR-03 지연 섹션 + 진행 중 주문 배지 + 드로어 연동
-5. rubocop 체크
+### 4.1 index 페이지 (개선 후)
+
+```
+┌──────────────────────────────────────────────────────────┐
+│ 팀 현황                                                   │
+│ [전체] [Abu Dhabi] [Seoul]   ← Branch 탭 필터             │
+├──────────────────────────────────────────────────────────┤
+│ [5 총팀원] [12 진행] [3 지연] [1 과부하]                  │
+├──────────────────────────────────────────────────────────┤
+│ ┌─────────────────────┐  ┌─────────────────────┐         │
+│ │ 홍길동  [매니저]    │  │ 김민준  [멤버]      │         │
+│ │ abu_dhabi    [D-3] ←┤  │ seoul       [D-12]  │         │
+│ │ [진행:5][지연:2]... │  │ [진행:3][지연:0]... │         │
+│ │ ────────────────── │  │ ─────────────────── │         │
+│ │ 역할변경: [매니저▼] │  │ 역할변경: [멤버▼]   │         │
+│ └─────────────────────┘  └─────────────────────┘         │
+└──────────────────────────────────────────────────────────┘
+```
+
+### 4.2 show 페이지 (개선 후)
+
+```
+┌──────────────────────────────────────────────────────┐
+│ ← 홍길동  [매니저]  hong@atozone.com                 │
+├──────────────────────────────────────────────────────┤
+│ [inbox:1] [reviewing:2] [confirmed:3] [procuring:1] │
+├──────────────────────────────────────────────────────┤
+│ [전체(7)] [지연(2)] [진행(5)]   ← 탭 필터            │
+├──────────────────────────────────────────────────────┤
+│ Valve Assembly    ABC Corp · Site-A   confirmed D+3 │
+│ Pump Unit         XYZ Ltd             procuring D-2  │
+│ Cable Tray        ...                 reviewing D-15  │
+└──────────────────────────────────────────────────────┘
+```
 
 ---
 
-## 완료 기준
+## 5. Implementation Order
 
-- [ ] 팀 통계 바 4개 카드 (총 팀원/총 진행/지연/과부하)
-- [ ] 팀원 카드 4개 숫자 (진행/지연/D-7/태스크)
-- [ ] active ≥ 8 → "과부하" 배지 + 빨간 테두리
-- [ ] 팀원 상세 — 지연 주문 별도 섹션 (빨간 헤더)
-- [ ] 팀원 상세 — status_badge + priority_badge + due_badge
-- [ ] 팀원 상세 — openOrderDrawer 연동
-- [ ] Gap Analysis Match Rate ≥ 90%
+1. `config/routes.rb` — `update_role_team` PATCH 라우트 추가
+2. `app/controllers/team_controller.rb` — Branch 필터 + nearest_due + update_role 액션
+3. `app/views/team/index.html.erb` — Branch 탭 필터 추가 (헤더 하단)
+4. `app/views/team/index.html.erb` — D-day 배지 추가 (카드 헤더 우측)
+5. `app/views/team/index.html.erb` — Admin Role 드롭다운 추가 (카드 하단)
+6. `app/views/team/show.html.erb` — 전체/지연/진행 탭 + JS 필터 + data-overdue 속성
+
+---
+
+## 6. Completion Criteria
+
+| # | Criteria | 검증 방법 |
+|---|----------|-----------|
+| 1 | 워크로드 카드에 nearest_due D-day 배지 표시 | 뷰 HTML 확인 |
+| 2 | Branch 탭 필터(All/Abu Dhabi/Seoul) 동작 | 링크 params 확인 |
+| 3 | Admin Role 드롭다운 → PATCH update_role 전송 | 라우트+컨트롤러 확인 |
+| 4 | show 탭(전체/지연/진행) JS 클라이언트 필터 | JS filterOrders 확인 |
+| 5 | Gap Analysis Match Rate >= 90% | gap-detector |
+
+---
+
+## Version History
+
+| Version | Date | Author |
+|---------|------|--------|
+| 1.0 | 2026-02-28 | bkit:pdca |

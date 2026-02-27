@@ -1,116 +1,205 @@
-# Plan: team-ux
+# team-ux Plan
 
-## 개요
+## 1. Feature Overview
 
-팀 현황 UX 강화 — 워크로드 히트맵 + 상태 분포 차트 + 업무 타임라인 + 과부하 경고
+**Feature Name**: team-ux
+**Created**: 2026-02-28
+**Priority**: High
+**Estimated Scope**: Small (3 files)
 
-## 실측 현황 (2026-02-28)
+### 1.1 Summary
 
-### 이미 구현된 항목
-- 팀원 카드 그리드 (이름/역할/지사) ✅
-- 진행 중 주문 수 + 대기 태스크 수 ✅
-- 워크로드 바 (active_orders × 10%) ✅
-- 팀원 상세 페이지 (상태별 배지 + 진행 중 주문 목록) ✅
+팀/담당자 관리 페이지 UX 개선 —
+현재 워크로드 카드 그리드와 개인 상세 페이지에 납기일 D-day 강조, Branch 필터링,
+Admin 전용 Role/Branch 인라인 편집, 상태별 주문 탭 분류를 추가하여
+팀 운영 효율성과 관리자 편의성을 높인다.
 
-### 누락 항목
-- 팀 전체 요약 통계 바 (총원/총 진행/지연/과부하) ❌
-- 워크로드 히트맵 (팀원별 우선순위별 주문 분포) ❌
-- 과부하 경고 배지 (active ≥ 8건) ❌
-- 팀원 상세 — 납기 D-day 배지 + priority_badge + 드로어 연동 ❌
-- 팀원 상세 — 지연 주문 별도 섹션 ❌
+### 1.2 Current State (실측)
 
-### 컨트롤러 현황
-```ruby
-# index: active_orders + tasks_pending 만 계산
-# show: active_orders (limit 10) + status_counts 만
-```
-- overdue, urgent 카운트 없음
-- `includes` 미흡 (N+1 가능성)
+**`app/controllers/team_controller.rb`** (38줄):
+- `index`: @members + @workloads(active/overdue/urgent/tasks) + @summary 계산 — 있음
+- `show`: @member, @overdue_orders, @active_orders, @status_counts — 있음
+- Branch별 그룹핑/필터링 없음
+- Role/Branch 변경 액션 없음
 
----
+**`app/views/team/index.html.erb`** (103줄):
+- 팀 전체 통계 4카드(total/active/overdue/overloaded) — 있음
+- 워크로드 카드 그리드(3열): 이름, 역할, 액티브/지연/긴급 건수, 진행률 바 — 있음
+- 납기 D-day 표시 없음 (건수만 표시)
+- Branch 필터 없음 (abu_dhabi/seoul 구분 없음)
+- Role 변경 UI 없음
 
-## 기능 요구사항
+**`app/views/team/show.html.erb`** (85줄):
+- 팀원 기본 정보 (이름, 역할, 이메일, 브랜치) — 있음
+- 상태별 카운트 배지 행 — 있음
+- 지연 주문 / 진행 주문 목록 (납기일 + 상태 뱃지) — 있음
+- 상태별 탭 없음 (지연/진행만 구분)
+- Admin 전용 편집 UI 없음
 
-### FR-01: 팀 전체 요약 통계 바
-- 헤더 하단 4개 카드:
-  - **총 팀원** — members.count
-  - **총 진행 주문** — 전체 active_orders 합계
-  - **지연 주문** — due_date < today (빨강)
-  - **과부하 팀원** — active ≥ 8명 수 (주황)
-
-### FR-02: 워크로드 카드 강화
-- 기존 2개 숫자 카드(진행/태스크) 유지
-- 지연(overdue) + 긴급(urgent, D-7) 카운트 추가
-- **과부하 경고 배지** — active ≥ 8건이면 카드 우상단에 "과부하" 빨간 배지
-- 워크로드 바 색상 기준 개선:
-  - 0~4건 → 초록, 5~7건 → 주황, 8건+ → 빨강
-
-### FR-03: 팀원 상세 (show) 강화
-- **지연 주문 섹션** 별도 분리 (due_date < today)
-- 진행 중 주문 목록:
-  - `priority_badge` + `due_badge` 추가
-  - `link_to "보기"` → `onclick openOrderDrawer()` 로 변경
-  - client/project 이름 표시
-- limit(10) → limit(20) 확장
+**문제점**:
+1. **납기 D-day 없음**: 워크로드 카드에 "지연 N건"만 표시, 가장 급한 납기가 언제인지 불명
+2. **Branch 필터 없음**: abu_dhabi/seoul 팀원 혼합 표시, 지사별 현황 파악 어려움
+3. **Role 편집 불가**: Admin이 팀원 Role을 UI에서 변경할 수 없음 (콘솔 필요)
+4. **상태 탭 없음**: show 페이지에서 all/overdue/active 탭 전환 불가
 
 ---
 
-## 기술 구현 계획
+## 2. Goals
 
-### 컨트롤러 변경
+| FR | 목표 |
+|----|------|
+| FR-01 | **납기 D-day 강조**: 워크로드 카드에 가장 급한 납기일 D-N 배지 표시 |
+| FR-02 | **Branch 필터**: index 페이지 상단에 All / Abu Dhabi / Seoul 탭 필터 |
+| FR-03 | **Admin Role 편집**: Admin 로그인 시 워크로드 카드에 Role 변경 드롭다운 표시 |
+| FR-04 | **상태별 탭**: show 페이지에 All / Overdue / Active 탭 전환 (JS 클라이언트 필터) |
+
+### Out of Scope
+- 담당자 일괄 재배정 (Drag & Drop)
+- 팀원 신규 초대/삭제
+- 주간/월간 워크로드 추이 차트
+
+---
+
+## 3. Technical Approach
+
+### 3.1 Files to Modify
+
+| File | Change |
+|------|--------|
+| `app/controllers/team_controller.rb` | Branch 필터 파라미터 처리 + Role 업데이트 액션 추가 |
+| `app/views/team/index.html.erb` | Branch 탭 필터 + D-day 배지 + Admin Role 드롭다운 |
+| `app/views/team/show.html.erb` | 상태별 탭 (JS 클라이언트 필터) |
+
+### 3.2 Controller: Branch 필터 + Role 업데이트 (FR-02, FR-03)
 
 ```ruby
-# index
-@workloads = @members.map do |u|
-  today  = Date.today
-  active = u.assigned_orders.active
-  {
-    user:           u,
-    active_orders:  active.count,
-    tasks_pending:  u.tasks.pending.count,
-    overdue_orders: active.count { |o| o.due_date && o.due_date < today },
-    urgent_orders:  active.count { |o| o.due_date && o.due_date >= today && o.due_date <= today + 7 }
-  }
+# index 액션 — Branch 필터
+def index
+  branch = params[:branch].presence
+  @members = User.order(:branch, :name).includes(:assigned_orders, :tasks)
+  @members = @members.where(branch: branch) if branch.present?
+  # ... 기존 workloads/summary 계산
 end
 
-# @summary (FR-01)
-@summary = {
-  total_members:   @members.count,
-  total_active:    @workloads.sum { |w| w[:active_orders] },
-  total_overdue:   @workloads.sum { |w| w[:overdue_orders] },
-  overloaded:      @workloads.count { |w| w[:active_orders] >= 8 }
-}
-
-# show
-@overdue_orders = @member.assigned_orders.overdue.by_due_date
-@active_orders  = @member.assigned_orders.active
-                          .where("due_date >= ? OR due_date IS NULL", Date.today)
-                          .by_due_date.limit(20)
-                          .includes(:client, :project)
+# Role 업데이트 액션 (Admin only)
+def update_role
+  authorize_admin!
+  @member = User.find(params[:id])
+  @member.update!(role: params[:role])
+  redirect_to team_index_path, notice: "#{@member.name} 역할이 변경되었습니다."
+end
 ```
 
-### 뷰 변경
-| 파일 | 변경 | 내용 |
-|------|------|------|
-| `app/controllers/team_controller.rb` | 수정 | overdue/urgent 카운트 + @summary + show 강화 |
-| `app/views/team/index.html.erb` | 수정 | FR-01 통계 바 + FR-02 카드 강화 |
-| `app/views/team/show.html.erb` | 수정 | FR-03 지연 섹션 + 배지 + 드로어 연동 |
+라우트 추가:
+```ruby
+resources :team, only: [:index, :show] do
+  member do
+    patch :update_role
+  end
+end
+```
+
+### 3.3 View: 납기 D-day 배지 (FR-01)
+
+워크로드 루프 내 `nearest_due` 계산 (컨트롤러에서 주입):
+
+```ruby
+# workloads 해시에 nearest_due 추가
+nearest = active.min_by { |o| o.due_date || Date.new(9999) }
+{
+  ...,
+  nearest_due: nearest&.due_date
+}
+```
+
+ERB 뷰 — D-day 배지:
+```erb
+<%
+  if w[:nearest_due]
+    days = (w[:nearest_due] - Date.today).to_i
+    d_color = days < 0 ? 'bg-red-100 text-red-700' :
+              days <= 7 ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'
+    d_label = days < 0 ? "D+#{days.abs}" : days == 0 ? 'D-Day' : "D-#{days}"
+  end
+%>
+<% if w[:nearest_due] %>
+  <span class="text-xs font-semibold px-2 py-0.5 rounded-full <%= d_color %>"><%= d_label %></span>
+<% end %>
+```
+
+### 3.4 View: Branch 탭 필터 (FR-02)
+
+```erb
+<% branches = [['전체', nil], ['Abu Dhabi', 'abu_dhabi'], ['Seoul', 'seoul']] %>
+<div class="flex gap-1 mb-4">
+  <% branches.each do |label, val| %>
+    <% active_tab = params[:branch] == val.to_s || (val.nil? && params[:branch].blank?) %>
+    <%= link_to label,
+          team_index_path(branch: val),
+          class: "px-3 py-1.5 text-sm rounded-lg #{active_tab ? 'bg-primary text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}" %>
+  <% end %>
+</div>
+```
+
+### 3.5 View: Admin Role 드롭다운 (FR-03)
+
+```erb
+<% if current_user.admin? %>
+  <%= form_with url: update_role_team_path(w[:user]), method: :patch, local: true do |f| %>
+    <%= f.select :role,
+          User.roles.keys.map { |r| [r.humanize, r] },
+          { selected: w[:user].role },
+          { class: "text-xs border rounded px-1 py-0.5",
+            onchange: "this.form.submit()" } %>
+  <% end %>
+<% else %>
+  <span class="text-xs text-gray-500"><%= w[:user].role&.humanize %></span>
+<% end %>
+```
+
+### 3.6 View: 상태별 탭 — show 페이지 (FR-04)
+
+JS 클라이언트 필터 (서버 요청 없이 탭 전환):
+
+```javascript
+function filterOrders(tab) {
+  document.querySelectorAll('.order-row').forEach(function(row) {
+    var show = tab === 'all' ||
+               (tab === 'overdue' && row.dataset.overdue === 'true') ||
+               (tab === 'active' && row.dataset.overdue !== 'true');
+    row.style.display = show ? '' : 'none';
+  });
+  document.querySelectorAll('.tab-btn').forEach(function(btn) {
+    btn.classList.toggle('active-tab', btn.dataset.tab === tab);
+  });
+}
+```
 
 ---
 
-## 영향 범위
+## 4. Completion Criteria
 
-| 파일 | 변경 유형 |
-|------|-----------|
-| `app/controllers/team_controller.rb` | 수정 |
-| `app/views/team/index.html.erb` | 수정 |
-| `app/views/team/show.html.erb` | 수정 |
+| # | Criteria |
+|---|----------|
+| 1 | 워크로드 카드에 가장 급한 납기일 D-day 배지 표시 (D+N/D-Day/D-N 색상 구분) |
+| 2 | index 페이지 Branch 탭 필터 (All/Abu Dhabi/Seoul) 동작 |
+| 3 | Admin 로그인 시 Role 드롭다운 표시 및 변경 동작 |
+| 4 | show 페이지 All/Overdue/Active 탭 전환 (JS 클라이언트 필터) |
+| 5 | Gap Analysis Match Rate >= 90% |
 
-## 완료 기준
+---
 
-- [ ] 팀 전체 통계 바 4개 카드 표시
-- [ ] 팀원 카드에 지연/긴급 카운트 표시
-- [ ] active ≥ 8건 → "과부하" 배지 + 카드 테두리 강조
-- [ ] 팀원 상세 — 지연 주문 별도 섹션
-- [ ] 팀원 상세 — priority_badge + due_badge + 드로어 연동
-- [ ] Gap Analysis Match Rate ≥ 90%
+## 5. Dependencies
+
+- `User.roles` enum — 기존 존재 (admin/manager/member/viewer)
+- `User#branch` — 기존 존재 (abu_dhabi/seoul)
+- `assigned_orders` 연관 — 기존 존재
+- `authorize_admin!` before_action — 기존 패턴 참조
+
+---
+
+## Version History
+
+| Version | Date | Author |
+|---------|------|--------|
+| 1.0 | 2026-02-28 | bkit:pdca |
