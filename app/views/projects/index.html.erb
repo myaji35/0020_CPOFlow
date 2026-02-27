@@ -13,13 +13,42 @@
     <% end %>
   </div>
 
-  <!-- 카테고리 필터 -->
-  <div class="flex gap-2 flex-wrap">
-    <%= link_to "전체", projects_path, class: "px-4 py-2 text-sm rounded-full #{params[:category].blank? ? 'bg-primary text-white' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-primary'}" %>
-    <% Project::SITE_CATEGORIES.each do |cat| %>
-      <% label = { "nuclear"=>"원전","hydro"=>"수력","tunnel"=>"터널","gtx"=>"GTX","general"=>"일반" }[cat] || cat %>
-      <%= link_to label, projects_path(category: cat), class: "px-4 py-2 text-sm rounded-full #{params[:category] == cat ? 'bg-primary text-white' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-primary'}" %>
-    <% end %>
+  <!-- 통계 카드 -->
+  <div class="grid grid-cols-3 gap-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
+      <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">총 예산</p>
+      <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">$<%= number_with_delimiter(@total_budget.round.to_i) %></p>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
+      <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">총 집행금액</p>
+      <p class="text-2xl font-bold text-primary mt-1">$<%= number_with_delimiter(@total_utilized.round.to_i) %></p>
+      <% if @total_budget > 0 %>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">예산 대비 <%= (@total_utilized / @total_budget * 100).round(1) %>%</p>
+      <% end %>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
+      <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">진행 현장</p>
+      <p class="text-2xl font-bold text-green-600 dark:text-green-400 mt-1"><%= @active_count %></p>
+      <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">전체 <%= @projects.size %>개 중</p>
+    </div>
+  </div>
+
+  <!-- 카테고리 + 상태 필터 -->
+  <div class="flex gap-2 flex-wrap items-center">
+    <div class="flex gap-2 flex-wrap">
+      <%= link_to "전체", projects_path(status: params[:status]), class: "px-4 py-2 text-sm rounded-full #{params[:category].blank? ? 'bg-primary text-white' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-primary'}" %>
+      <% Project::SITE_CATEGORIES.each do |cat| %>
+        <% label = { "nuclear"=>"원전","hydro"=>"수력","tunnel"=>"터널","gtx"=>"GTX","general"=>"일반" }[cat] || cat %>
+        <%= link_to label, projects_path(category: cat, status: params[:status]), class: "px-4 py-2 text-sm rounded-full #{params[:category] == cat ? 'bg-primary text-white' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-primary'}" %>
+      <% end %>
+    </div>
+    <div class="w-px h-6 bg-gray-200 dark:bg-gray-700"></div>
+    <div class="flex gap-2 flex-wrap">
+      <%= link_to "전체 상태", projects_path(category: params[:category]), class: "px-3 py-1.5 text-xs rounded-full #{params[:status].blank? ? 'bg-gray-700 text-white dark:bg-gray-300 dark:text-gray-900' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-gray-400'}" %>
+      <% [["진행중", "active", "text-green-700 bg-green-50 dark:bg-green-900/30 dark:text-green-400"], ["계획", "planning", "text-yellow-700 bg-yellow-50 dark:bg-yellow-900/30 dark:text-yellow-400"], ["완료", "completed", "text-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-400"], ["중단", "suspended", "text-red-700 bg-red-50 dark:bg-red-900/30 dark:text-red-400"]].each do |label, val, cls| %>
+        <%= link_to label, projects_path(category: params[:category], status: val), class: "px-3 py-1.5 text-xs rounded-full font-medium #{params[:status] == val ? cls : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-gray-400'}" %>
+      <% end %>
+    </div>
   </div>
 
   <!-- 현장 유형별 발주 비중 파이차트 -->

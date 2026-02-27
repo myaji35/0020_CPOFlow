@@ -9,6 +9,12 @@ class ProjectsController < ApplicationController
     @projects = @projects.where(status: params[:status]) if params[:status].present?
     @projects = @projects.where(client_id: params[:client_id]) if params[:client_id].present?
     @projects = @projects.where("projects.name LIKE ?", "%#{params[:q]}%") if params[:q].present?
+
+    # FR-07: 통계 카드
+    all_projects     = Project.includes(:orders).all
+    @total_budget    = all_projects.sum { |p| p.budget.to_f }
+    @total_utilized  = all_projects.sum(&:budget_utilized)
+    @active_count    = Project.active.count
   end
 
   def show

@@ -14,7 +14,7 @@
   </div>
 
   <!-- 검색 -->
-  <%= form_with url: suppliers_path, method: :get, local: true, class: "flex gap-3 items-center" do |f| %>
+  <%= form_with url: suppliers_path, method: :get, local: true, class: "flex gap-3 items-center flex-wrap" do |f| %>
     <div class="relative flex-1 max-w-xs">
       <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <%= f.text_field :q, placeholder: "거래처명, 코드 검색...", value: params[:q],
@@ -22,8 +22,27 @@
     </div>
     <%= f.select :country, options_for_select([["전체 국가", ""], ["AE", "AE"], ["KR", "KR"], ["CH", "CH"]], params[:country]),
         {}, class: "border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm" %>
+    <%= f.select :industry, options_for_select([["전체 산업", ""], ["전기", "전기"], ["기계", "기계"], ["배관", "배관"], ["계측", "계측"], ["토목", "토목"], ["건설", "건설"], ["IT", "IT"]], params[:industry]),
+        {}, class: "border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm" %>
     <%= f.submit "검색", class: "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer" %>
   <% end %>
+
+  <!-- 통계 카드 -->
+  <div class="grid grid-cols-3 gap-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
+      <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">총 거래처</p>
+      <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><%= @total_count %></p>
+      <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">현재 <%= @suppliers.size %>개 표시 중</p>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
+      <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">총 공급금액</p>
+      <p class="text-2xl font-bold text-primary mt-1">$<%= number_with_delimiter(@total_supply_value.round.to_i) %></p>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
+      <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">활성 거래처</p>
+      <p class="text-2xl font-bold text-green-600 dark:text-green-400 mt-1"><%= @active_count %></p>
+    </div>
+  </div>
 
   <!-- 테이블 -->
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
@@ -70,5 +89,32 @@
         <% end %>
       </tbody>
     </table>
+
+    <!-- 페이지네이션 -->
+    <% if @total_pages > 1 %>
+      <div class="px-4 py-3 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
+        <p class="text-xs text-gray-500 dark:text-gray-400">
+          총 <%= @filtered_count %>개 중 <%= [(@page - 1) * @per_page + 1, @filtered_count].min %>–<%= [@page * @per_page, @filtered_count].min %>개 표시
+        </p>
+        <div class="flex gap-1">
+          <% if @page > 1 %>
+            <%= link_to suppliers_path(params.permit(:q, :country, :industry).merge(page: @page - 1)),
+                class: "px-3 py-1 text-xs rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700" do %>
+              ← 이전
+            <% end %>
+          <% end %>
+          <% ([@page - 2, 1].max..[@page + 2, @total_pages].min).each do |p| %>
+            <%= link_to p, suppliers_path(params.permit(:q, :country, :industry).merge(page: p)),
+                class: "px-3 py-1 text-xs rounded-lg #{p == @page ? 'bg-primary text-white' : 'border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}" %>
+          <% end %>
+          <% if @page < @total_pages %>
+            <%= link_to suppliers_path(params.permit(:q, :country, :industry).merge(page: @page + 1)),
+                class: "px-3 py-1 text-xs rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700" do %>
+              다음 →
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
   </div>
 </div>

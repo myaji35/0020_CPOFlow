@@ -1,4 +1,7 @@
 <% content_for :title, @supplier.name %>
+<% content_for :head do %>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<% end %>
 
 <div class="flex flex-col gap-6">
   <!-- Header -->
@@ -124,6 +127,44 @@
     </div>
 
     <div x-show="tab==='orders'" class="p-4">
+      <!-- 월별 납품 추이 차트 (FR-05) -->
+      <% if @monthly_supply.any? { |m| m[:orders] > 0 || m[:delivered] > 0 } %>
+        <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+          <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-3">월별 납품 추이 (최근 12개월)</h4>
+          <canvas id="supplierMonthlyChart" height="80"></canvas>
+        </div>
+        <script>
+          (function() {
+            var isDark = document.documentElement.classList.contains('dark');
+            var labels = <%= raw @monthly_supply.map { |m| m[:label] }.to_json %>;
+            var orders = <%= raw @monthly_supply.map { |m| m[:orders] }.to_json %>;
+            var delivered = <%= raw @monthly_supply.map { |m| m[:delivered] }.to_json %>;
+            var values = <%= raw @monthly_supply.map { |m| m[:value] }.to_json %>;
+            var gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+            var textColor = isDark ? '#9CA3AF' : '#6B7280';
+            new Chart(document.getElementById('supplierMonthlyChart'), {
+              data: {
+                labels: labels,
+                datasets: [
+                  { type: 'bar', label: '발주', data: orders, backgroundColor: 'rgba(0,161,224,0.2)', borderColor: 'rgba(0,161,224,0.6)', borderWidth: 1, yAxisID: 'y' },
+                  { type: 'bar', label: '납품', data: delivered, backgroundColor: 'rgba(30,142,62,0.35)', borderColor: 'rgba(30,142,62,0.7)', borderWidth: 1, yAxisID: 'y' },
+                  { type: 'line', label: '납품금액(천$)', data: values, borderColor: '#1E3A5F', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 3, tension: 0.3, yAxisID: 'y2' }
+                ]
+              },
+              options: {
+                responsive: true, interaction: { mode: 'index', intersect: false },
+                plugins: { legend: { labels: { color: textColor, font: { size: 11 } } } },
+                scales: {
+                  x: { ticks: { color: textColor, font: { size: 10 } }, grid: { color: gridColor } },
+                  y: { position: 'left', ticks: { color: textColor, font: { size: 10 }, stepSize: 1 }, grid: { color: gridColor }, title: { display: true, text: '건수', color: textColor, font: { size: 10 } } },
+                  y2: { position: 'right', ticks: { color: textColor, font: { size: 10 } }, grid: { drawOnChartArea: false }, title: { display: true, text: '천$', color: textColor, font: { size: 10 } } }
+                }
+              }
+            });
+          })();
+        </script>
+      <% end %>
+
       <!-- FR-03: 상태별 분포 + 납기준수율 -->
       <div class="flex flex-wrap items-center gap-3 mb-4">
         <!-- 상태별 뱃지 바 -->

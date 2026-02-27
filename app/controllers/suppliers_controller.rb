@@ -7,6 +7,20 @@ class SuppliersController < ApplicationController
     @suppliers = @suppliers.where("name LIKE ? OR ecount_code LIKE ?", "%#{params[:q]}%", "%#{params[:q]}%") if params[:q].present?
     @suppliers = @suppliers.where(country: params[:country]) if params[:country].present?
     @suppliers = @suppliers.where(industry: params[:industry]) if params[:industry].present?
+
+    # 통계 카드
+    all_suppliers       = Supplier.all.to_a
+    @total_count        = all_suppliers.size
+    @total_supply_value = all_suppliers.sum(&:total_supply_value)
+    @active_count       = Supplier.active.count
+
+    # 수동 페이지네이션
+    @per_page    = 20
+    @page        = (params[:page] || 1).to_i
+    @filtered_count = @suppliers.count
+    @total_pages = [ (@filtered_count.to_f / @per_page).ceil, 1 ].max
+    @page        = [ [ @page, 1 ].max, @total_pages ].min
+    @suppliers   = @suppliers.offset((@page - 1) * @per_page).limit(@per_page)
   end
 
   def show
@@ -23,10 +37,10 @@ class SuppliersController < ApplicationController
 
     sort = params[:sort] || "due_date"
     orders_scope = case sort
-                   when "value"  then orders_scope.order(estimated_value: :desc)
-                   when "recent" then orders_scope.order(created_at: :desc)
-                   else               orders_scope.by_due_date
-                   end
+    when "value"  then orders_scope.order(estimated_value: :desc)
+    when "recent" then orders_scope.order(created_at: :desc)
+    else               orders_scope.by_due_date
+    end
 
     @orders              = orders_scope.includes(:client, :project)
     @order_status_counts = @supplier.orders.group(:status).count
@@ -34,6 +48,19 @@ class SuppliersController < ApplicationController
     overdue              = @supplier.orders.where("due_date < ? AND status != ?", Date.today, Order.statuses[:delivered]).count
     @on_time_rate        = total > 0 ? ((total - overdue).to_f / total * 100).round(1) : nil
     @performance_grade   = calculate_supplier_performance(@on_time_rate, total)
+
+    # FR-05: 월별 납품 추이 (최근 12개월)
+    @monthly_supply = (11.downto(0)).map do |i|
+      m = i.months.ago.to_date.beginning_of_month
+      r = m..m.end_of_month
+      delivered = @supplier.orders.where(status: :delivered).where(updated_at: r)
+      {
+        label:     m.strftime("%y.%m"),
+        orders:    @supplier.orders.where(created_at: r).count,
+        delivered: delivered.count,
+        value:     (delivered.sum(:estimated_value).to_f / 1000).round
+      }
+    end
   end
 
   def new
