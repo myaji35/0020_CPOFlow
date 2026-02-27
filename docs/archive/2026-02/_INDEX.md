@@ -16,3 +16,4 @@
 | kanban-ux | completed | 94% | 2026-02-28 | `kanban-ux/` |
 | calendar-ux | completed | 98% | 2026-02-28 | `calendar-ux/` |
 | team-ux | completed | 97% | 2026-02-28 | `team-ux/` |
+| notification-ux | completed | 96% | 2026-02-28 | `notification-ux/` |
