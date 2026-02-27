@@ -530,6 +530,94 @@
   </div>
 </div>
 
+<!-- ════════════════════════════════════════════════════════════
+     ROW 6: 담당자별 워크로드
+     ════════════════════════════════════════════════════════════ -->
+<div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 mb-6">
+  <div class="flex items-center justify-between px-5 py-3 border-b border-gray-100 dark:border-gray-700">
+    <h3 class="text-sm font-semibold text-gray-900 dark:text-white">담당자별 워크로드</h3>
+    <span class="text-xs text-gray-400 dark:text-gray-500">
+      총 <%= @assignee_workload.sum { |u| u.total_count.to_i } %>건 진행 중
+    </span>
+  </div>
+
+  <% if @assignee_workload.empty? %>
+    <div class="px-5 py-8 text-center text-sm text-gray-400 dark:text-gray-500">담당자가 배정된 발주 없음</div>
+  <% else %>
+    <% max_count = [@assignee_workload.map { |u| u.total_count.to_i }.max, 1].max %>
+    <% avatar_pairs = [
+         %w[bg-blue-100 text-blue-700],
+         %w[bg-purple-100 text-purple-700],
+         %w[bg-green-100 text-green-700],
+         %w[bg-orange-100 text-orange-700],
+         %w[bg-pink-100 text-pink-700]
+       ] %>
+    <% role_labels = {
+         "admin"   => ["관리자", "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400"],
+         "manager" => ["매니저", "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400"],
+         "member"  => ["멤버",   "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300"],
+         "viewer"  => ["뷰어",   "bg-gray-50 text-gray-400 dark:bg-gray-700/50 dark:text-gray-500"]
+       } %>
+
+    <div class="divide-y divide-gray-50 dark:divide-gray-700/50">
+      <% @assignee_workload.each_with_index do |u, idx| %>
+        <% overdue = u.overdue_count.to_i %>
+        <% urgent  = u.urgent_count.to_i %>
+        <% total   = u.total_count.to_i %>
+        <% row_bg = overdue > 0 ? "bg-red-50/50 dark:bg-red-900/10"
+                  : urgent  > 0 ? "bg-orange-50/50 dark:bg-orange-900/10"
+                  : "" %>
+        <% avatar = avatar_pairs[idx % 5] %>
+        <% bar_color = overdue > 0 ? "bg-red-400 dark:bg-red-500"
+                     : urgent  > 0 ? "bg-orange-400 dark:bg-orange-500"
+                     : "bg-blue-400 dark:bg-blue-500" %>
+        <% role_info   = role_labels[u.role] || ["멤버", "bg-gray-100 text-gray-600"] %>
+        <% branch_label = u.branch == "abu_dhabi" ? "Abu Dhabi" : "Seoul" %>
+
+        <div class="flex items-center gap-4 px-5 py-3 <%= row_bg %> transition-colors">
+          <%# 이니셜 아바타 %>
+          <div class="w-9 h-9 rounded-full <%= avatar[0] %> <%= avatar[1] %> flex items-center justify-center text-sm font-bold shrink-0">
+            <%= u.name.to_s.split.map(&:first).first(2).join.upcase.presence || u.name.to_s[0..1].upcase %>
+          </div>
+
+          <%# 담당자 정보 %>
+          <div class="w-40 shrink-0">
+            <p class="text-sm font-medium text-gray-900 dark:text-white truncate"><%= u.name.presence || u.id %></p>
+            <div class="flex items-center gap-1 mt-0.5">
+              <span class="text-xs px-1.5 py-0.5 rounded-md font-medium <%= role_info[1] %>"><%= role_info[0] %></span>
+              <span class="text-xs text-gray-400 dark:text-gray-500"><%= branch_label %></span>
+            </div>
+          </div>
+
+          <%# 워크로드 바 %>
+          <div class="flex-1">
+            <div class="bg-gray-100 dark:bg-gray-700 rounded-full h-2">
+              <div class="<%= bar_color %> h-2 rounded-full transition-all duration-500"
+                   style="width: <%= (total.to_f / max_count * 100).round %>%"></div>
+            </div>
+          </div>
+
+          <%# 총 건수 %>
+          <div class="w-14 text-right shrink-0">
+            <span class="text-sm font-bold text-gray-900 dark:text-white"><%= total %></span>
+            <span class="text-xs text-gray-400 dark:text-gray-500">건</span>
+          </div>
+
+          <%# 긴급/지연 배지 %>
+          <div class="flex items-center gap-1 w-24 justify-end shrink-0">
+            <% if urgent > 0 %>
+              <span class="text-xs px-1.5 py-0.5 rounded-md bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-400 font-medium whitespace-nowrap">긴급 <%= urgent %></span>
+            <% end %>
+            <% if overdue > 0 %>
+              <span class="text-xs px-1.5 py-0.5 rounded-md bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 font-medium whitespace-nowrap">지연 <%= overdue %></span>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>
+
 <script>
 function showPeriod(period) {
   ['weekly', 'monthly', 'quarterly', 'yearly'].forEach(p => {

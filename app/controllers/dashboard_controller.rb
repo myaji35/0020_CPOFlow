@@ -39,6 +39,20 @@ class DashboardController < ApplicationController
                              .order(Arel.sql("total_value DESC NULLS LAST"))
                              .limit(5)
 
+    # 담당자별 워크로드 (활성 발주 기준 Top10)
+    @assignee_workload = User
+      .joins(assignments: :order)
+      .where(orders: { status: Order.statuses.except("delivered").values })
+      .select(
+        "users.id, users.name, users.role, users.branch," \
+        " COUNT(orders.id) AS total_count," \
+        " SUM(CASE WHEN orders.due_date < date('now') THEN 1 ELSE 0 END) AS overdue_count," \
+        " SUM(CASE WHEN orders.due_date BETWEEN date('now') AND date('now', '+7 days') THEN 1 ELSE 0 END) AS urgent_count"
+      )
+      .group("users.id, users.name, users.role, users.branch")
+      .order(Arel.sql("total_count DESC"))
+      .limit(10)
+
     # 비자 만료 임박 (90일 이내)
     @expiring_visas = Visa.where(status: "active")
                           .where(expiry_date: Date.today..90.days.from_now)
