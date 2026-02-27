@@ -9,41 +9,80 @@
     </div>
   </div>
 
-  <%# 워크로드 카드 그리드 %>
+  <%# FR-01: 팀 전체 통계 바 %>
+  <div class="grid grid-cols-4 gap-3">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
+      <p class="text-2xl font-bold text-gray-900 dark:text-white"><%= @summary[:total_members] %></p>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">총 팀원</p>
+    </div>
+    <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800 p-4 text-center">
+      <p class="text-2xl font-bold text-blue-600 dark:text-blue-400"><%= @summary[:total_active] %></p>
+      <p class="text-xs text-blue-500 dark:text-blue-400 mt-1">총 진행 주문</p>
+    </div>
+    <div class="bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-800 p-4 text-center">
+      <p class="text-2xl font-bold text-red-600 dark:text-red-400"><%= @summary[:total_overdue] %></p>
+      <p class="text-xs text-red-500 dark:text-red-400 mt-1">지연 주문</p>
+    </div>
+    <div class="bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-100 dark:border-orange-800 p-4 text-center">
+      <p class="text-2xl font-bold text-orange-600 dark:text-orange-400"><%= @summary[:overloaded] %></p>
+      <p class="text-xs text-orange-500 dark:text-orange-400 mt-1">과부하 팀원</p>
+    </div>
+  </div>
+
+  <%# FR-02: 워크로드 카드 그리드 %>
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
     <% @workloads.each do |w| %>
       <% user = w[:user] %>
-      <%= link_to team_path(user), class: "bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md hover:border-primary/30 transition-all block" do %>
-        <div class="flex items-center gap-3 mb-4">
-          <div class="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary font-bold text-lg flex-shrink-0">
-            <%= user.name.first.upcase %>
-          </div>
-          <div class="min-w-0">
-            <p class="font-semibold text-gray-900 dark:text-white truncate"><%= user.name %></p>
-            <div class="flex items-center gap-2 mt-0.5">
-              <span class="text-xs px-2 py-0.5 rounded-full <%= user.role == 'admin' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' : user.role == 'manager' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400' %>">
-                <%= { 'admin' => '관리자', 'manager' => '매니저', 'member' => '멤버' }[user.role] || user.role %>
-              </span>
-              <% if user.branch.present? %>
-                <span class="text-xs text-gray-400 dark:text-gray-500"><%= user.branch %></span>
-              <% end %>
+      <% is_overloaded = w[:active_orders] >= 8 %>
+      <%= link_to team_path(user),
+          class: "bg-white dark:bg-gray-800 rounded-xl border p-5 hover:shadow-md transition-all block #{is_overloaded ? 'border-red-300 dark:border-red-700' : 'border-gray-200 dark:border-gray-700 hover:border-primary/30'}" do %>
+
+        <%# 이름 영역 + 과부하 배지 %>
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary font-bold text-lg flex-shrink-0">
+              <%= user.initials %>
+            </div>
+            <div class="min-w-0">
+              <p class="font-semibold text-gray-900 dark:text-white truncate"><%= user.display_name %></p>
+              <div class="flex items-center gap-2 mt-0.5">
+                <span class="text-xs px-2 py-0.5 rounded-full <%= user.role == 'admin' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' : user.role == 'manager' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400' %>">
+                  <%= { 'admin' => '관리자', 'manager' => '매니저', 'member' => '멤버' }[user.role] || user.role %>
+                </span>
+                <% if user.branch.present? %>
+                  <span class="text-xs text-gray-400 dark:text-gray-500"><%= user.branch %></span>
+                <% end %>
+              </div>
             </div>
           </div>
+          <% if is_overloaded %>
+            <span class="text-xs font-semibold bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-full shrink-0">
+              과부하
+            </span>
+          <% end %>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
-          <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center">
-            <p class="text-2xl font-bold text-gray-900 dark:text-white"><%= w[:active_orders] %></p>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">진행 중 주문</p>
+        <%# 4개 숫자 카드 %>
+        <div class="grid grid-cols-4 gap-2">
+          <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2 text-center">
+            <p class="text-xl font-bold text-gray-900 dark:text-white"><%= w[:active_orders] %></p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">진행</p>
           </div>
-          <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center">
-            <p class="text-2xl font-bold text-gray-900 dark:text-white"><%= w[:tasks_pending] %></p>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">대기 태스크</p>
+          <div class="bg-red-50 dark:bg-red-900/20 rounded-lg p-2 text-center">
+            <p class="text-xl font-bold text-red-600 dark:text-red-400"><%= w[:overdue_orders] %></p>
+            <p class="text-xs text-red-500 dark:text-red-400 mt-0.5">지연</p>
+          </div>
+          <div class="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-2 text-center">
+            <p class="text-xl font-bold text-orange-600 dark:text-orange-400"><%= w[:urgent_orders] %></p>
+            <p class="text-xs text-orange-500 dark:text-orange-400 mt-0.5">D-7</p>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2 text-center">
+            <p class="text-xl font-bold text-gray-900 dark:text-white"><%= w[:tasks_pending] %></p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">태스크</p>
           </div>
         </div>
 
         <%# 워크로드 바 %>
-        <% max_load = 10 %>
         <% load_pct = [[w[:active_orders] * 10, 100].min, 0].max %>
         <div class="mt-4">
           <div class="flex justify-between text-xs text-gray-400 dark:text-gray-500 mb-1">
@@ -51,7 +90,7 @@
             <span><%= load_pct %>%</span>
           </div>
           <div class="w-full h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-            <div class="h-full rounded-full transition-all <%= load_pct >= 80 ? 'bg-red-400' : load_pct >= 50 ? 'bg-yellow-400' : 'bg-green-400' %>"
+            <div class="h-full rounded-full transition-all <%= w[:active_orders] >= 8 ? 'bg-red-400' : w[:active_orders] >= 5 ? 'bg-orange-400' : 'bg-green-400' %>"
                  style="width: <%= load_pct %>%"></div>
           </div>
         </div>

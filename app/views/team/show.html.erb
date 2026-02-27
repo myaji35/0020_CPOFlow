@@ -9,10 +9,10 @@
       <% end %>
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary font-bold text-lg">
-          <%= @member.name.first.upcase %>
+          <%= @member.initials %>
         </div>
         <div>
-          <h1 class="text-2xl font-bold text-gray-900 dark:text-white"><%= @member.name %></h1>
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-white"><%= @member.display_name %></h1>
           <div class="flex items-center gap-2 mt-0.5">
             <span class="text-xs px-2 py-0.5 rounded-full <%= @member.role == 'admin' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' : @member.role == 'manager' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400' %>">
               <%= { 'admin' => '관리자', 'manager' => '매니저', 'member' => '멤버' }[@member.role] %>
@@ -24,7 +24,7 @@
     </div>
   </div>
 
-  <%# 상태별 통계 뱃지 %>
+  <%# 상태별 통계 배지 %>
   <% if @status_counts.any? %>
     <div class="flex flex-wrap gap-2">
       <% Order.statuses.keys.each do |status_key| %>
@@ -38,7 +38,44 @@
     </div>
   <% end %>
 
-  <%# 진행 중 주문 %>
+  <%# FR-03: 지연 주문 별도 섹션 %>
+  <% if @overdue_orders.any? %>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-red-200 dark:border-red-800 overflow-hidden">
+      <div class="px-5 py-4 border-b border-red-100 dark:border-red-800 bg-red-50 dark:bg-red-900/20">
+        <h2 class="text-sm font-semibold text-red-700 dark:text-red-400">
+          지연 주문 (<%= @overdue_orders.count %>건)
+        </h2>
+      </div>
+      <div class="divide-y divide-gray-50 dark:divide-gray-700">
+        <% @overdue_orders.each do |order| %>
+          <div class="flex items-center justify-between px-5 py-3
+                      hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
+               onclick="openOrderDrawer(<%= order.id %>, <%= order.title.to_json %>, '<%= order_path(order) %>')">
+            <div class="min-w-0">
+              <p class="text-sm font-medium text-gray-900 dark:text-white truncate"><%= order.title %></p>
+              <div class="flex items-center gap-1.5 mt-0.5">
+                <% if order.client %>
+                  <span class="text-xs text-blue-600 dark:text-blue-400"><%= order.client.name %></span>
+                <% elsif order.customer_name.present? %>
+                  <span class="text-xs text-gray-500 dark:text-gray-400"><%= order.customer_name %></span>
+                <% end %>
+                <% if order.project %>
+                  <span class="text-xs text-green-600 dark:text-green-400"><%= order.project.name %></span>
+                <% end %>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <%= status_badge(order) %>
+              <%= priority_badge(order) %>
+              <%= due_badge(order) %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <%# FR-03: 진행 중 주문 (배지 + 드로어 연동) %>
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
     <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700">
       <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">진행 중 주문 (<%= @active_orders.count %>건)</h2>
@@ -46,19 +83,26 @@
     <% if @active_orders.any? %>
       <div class="divide-y divide-gray-50 dark:divide-gray-700">
         <% @active_orders.each do |order| %>
-          <div class="flex items-center justify-between px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-            <div>
-              <p class="text-sm font-medium text-gray-900 dark:text-white"><%= order.title %></p>
-              <p class="text-xs text-gray-500 dark:text-gray-400"><%= order.customer_name %></p>
+          <div class="flex items-center justify-between px-5 py-3
+                      hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
+               onclick="openOrderDrawer(<%= order.id %>, <%= order.title.to_json %>, '<%= order_path(order) %>')">
+            <div class="min-w-0">
+              <p class="text-sm font-medium text-gray-900 dark:text-white truncate"><%= order.title %></p>
+              <div class="flex items-center gap-1.5 mt-0.5">
+                <% if order.client %>
+                  <span class="text-xs text-blue-600 dark:text-blue-400"><%= order.client.name %></span>
+                <% elsif order.customer_name.present? %>
+                  <span class="text-xs text-gray-500 dark:text-gray-400"><%= order.customer_name %></span>
+                <% end %>
+                <% if order.project %>
+                  <span class="text-xs text-green-600 dark:text-green-400"><%= order.project.name %></span>
+                <% end %>
+              </div>
             </div>
-            <div class="flex items-center gap-3">
-              <% if order.due_date %>
-                <span class="text-xs text-gray-400 dark:text-gray-500"><%= order.due_date.strftime("%m/%d") %></span>
-              <% end %>
-              <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
-                <%= Order::STATUS_LABELS[order.status] %>
-              </span>
-              <%= link_to "보기", order_path(order), class: "text-xs text-primary hover:underline" %>
+            <div class="flex items-center gap-2 shrink-0">
+              <%= status_badge(order) %>
+              <%= priority_badge(order) %>
+              <%= due_badge(order) %>
             </div>
           </div>
         <% end %>
