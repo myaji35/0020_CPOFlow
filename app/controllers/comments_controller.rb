@@ -4,7 +4,17 @@ class CommentsController < ApplicationController
   def create
     @comment = @order.comments.build(body: params[:body], user: current_user)
     @comment.save
-    redirect_to @order
+    respond_to do |format|
+      format.turbo_stream do
+        render turbo_stream: [
+          turbo_stream.append("comments-#{@order.id}",
+            partial: "comments/comment", locals: { comment: @comment }),
+          turbo_stream.replace("comment-form-#{@order.id}",
+            partial: "comments/form", locals: { order: @order })
+        ]
+      end
+      format.html { redirect_to @order }
+    end
   end
 
   def destroy

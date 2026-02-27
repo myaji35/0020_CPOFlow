@@ -229,72 +229,33 @@
     </div>
   <% end %>
 
-  <%# ── 4. 태스크 체크리스트 ──────────────────────────────── %>
+  <%# ── 4. 태스크 체크리스트 (Turbo Frame 인라인 토글) ──── %>
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
         <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></polyline></svg>
         태스크
       </h3>
-      <% prog = order.task_progress %>
-      <span class="text-xs text-gray-400 dark:text-gray-500"><%= prog[:done] %>/<%= prog[:total] %> 완료</span>
     </div>
 
-    <%# 진행률 바 %>
-    <% if tasks.any? %>
-      <% pct = prog[:total] > 0 ? (prog[:done].to_f / prog[:total] * 100).round : 0 %>
-      <div class="mb-4">
-        <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5">
-          <div class="h-1.5 rounded-full transition-all duration-500 <%= pct == 100 ? 'bg-green-400' : 'bg-accent' %>"
-               style="width: <%= pct %>%"></div>
-        </div>
-      </div>
-    <% end %>
+    <%# 진행률 바 (turbo_stream 교체 타겟) %>
+    <%= render "tasks/progress", order: order %>
 
-    <%# 태스크 목록 %>
-    <div class="space-y-1 mb-4" id="task-list-<%= order.id %>">
+    <%# 태스크 목록 (각 행이 turbo-frame, append 타겟) %>
+    <div id="task-list-<%= order.id %>" class="space-y-1 mb-4">
       <% tasks.each do |task| %>
-        <div class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 group">
-          <%= form_with url: order_task_path(order, task), method: :patch,
-              data: { turbo: false } do |f| %>
-            <input type="checkbox" name="task[completed]" value="1"
-                   <%= task.completed ? "checked" : "" %>
-                   onchange="this.form.submit()"
-                   class="rounded border-gray-300 dark:border-gray-600 text-accent cursor-pointer shrink-0">
-            <%= f.hidden_field :completed, value: task.completed ? "0" : "1" %>
-          <% end %>
-          <div class="flex-1 min-w-0">
-            <p class="text-sm <%= task.completed ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-white' %>">
-              <%= task.title %>
-            </p>
-            <% if task.assignee || task.due_date %>
-              <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-                <%= task.assignee&.display_name %>
-                <% if task.due_date %>· <%= task.due_date.strftime("%m/%d") %><% end %>
-              </p>
-            <% end %>
-          </div>
-          <% if task.due_date %>
-            <span class="text-xs <%= Date.today > task.due_date ? 'text-red-400' : 'text-gray-400 dark:text-gray-500' %>">
-              <%= task.due_date.strftime("%m/%d") %>
-            </span>
-          <% end %>
-        </div>
+        <%= render "tasks/task", task: task, order: order %>
+      <% end %>
+      <% if tasks.empty? %>
+        <p class="text-xs text-gray-400 dark:text-gray-500 px-3 py-2">태스크가 없습니다</p>
       <% end %>
     </div>
 
-    <%# 태스크 추가 %>
-    <%= form_with url: order_tasks_path(order), method: :post,
-        data: { turbo: false },
-        class: "flex gap-2" do |f| %>
-      <%= f.text_field :title, placeholder: "새 태스크 추가...",
-          class: "flex-1 px-3 py-2 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent/30 outline-none" %>
-      <%= f.submit "추가",
-          class: "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm px-3 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer whitespace-nowrap" %>
-    <% end %>
+    <%# 태스크 추가 폼 (turbo_stream.replace로 입력값 초기화) %>
+    <%= render "tasks/add_form", order: order %>
   </div>
 
-  <%# ── 5. 코멘트 ────────────────────────────────────────── %>
+  <%# ── 5. 코멘트 (Turbo Stream 실시간 추가) ──────────────── %>
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
     <h3 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
       <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -304,21 +265,11 @@
       <% end %>
     </h3>
 
-    <div class="space-y-4 mb-5">
+    <%# 코멘트 목록 (turbo_stream.append 타겟) %>
+    <div id="comments-<%= order.id %>" class="space-y-4 mb-5">
       <% if comments.any? %>
         <% comments.each do |comment| %>
-          <div class="flex gap-3">
-            <div class="w-7 h-7 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold shrink-0 mt-0.5">
-              <%= comment.user.initials %>
-            </div>
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2 mb-1">
-                <span class="text-sm font-medium text-gray-900 dark:text-white"><%= comment.user.display_name %></span>
-                <span class="text-xs text-gray-400 dark:text-gray-500"><%= comment.created_at.strftime("%m/%d %H:%M") %></span>
-              </div>
-              <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed"><%= comment.body %></p>
-            </div>
-          </div>
+          <%= render "comments/comment", comment: comment %>
         <% end %>
       <% else %>
         <div class="flex items-center justify-center py-6 text-center">
@@ -330,41 +281,64 @@
       <% end %>
     </div>
 
-    <%# 코멘트 작성 %>
-    <%= form_with url: order_comments_path(order), method: :post,
-        data: { turbo: false },
-        class: "flex gap-3" do |f| %>
-      <div class="w-7 h-7 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold shrink-0 mt-0.5">
-        <%= current_user.initials %>
-      </div>
-      <div class="flex-1 space-y-2">
-        <%= f.text_area :body, placeholder: "코멘트를 입력하세요...", rows: 2,
-            class: "w-full px-3 py-2 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent/30 outline-none resize-none" %>
-        <div class="flex justify-end">
-          <%= f.submit "등록",
-              class: "bg-accent text-white text-sm px-4 py-1.5 rounded-lg hover:bg-accent/90 cursor-pointer" %>
-        </div>
-      </div>
-    <% end %>
+    <%# 코멘트 작성 폼 (turbo_stream.replace로 초기화) %>
+    <%= render "comments/form", order: order %>
   </div>
 
-  <%# ── 6. 활동 로그 ──────────────────────────────────────── %>
+  <%# ── 6. 활동 로그 타임라인 ──────────────────────────────── %>
   <% if activities.any? %>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-      <h3 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+      <h3 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-5">
         <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         활동 기록
       </h3>
-      <div class="space-y-3">
-        <% activities.first(10).each do |act| %>
-          <div class="flex items-start gap-3 text-xs">
-            <div class="w-5 h-5 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center shrink-0 mt-0.5">
-              <svg class="w-3 h-3 text-gray-400 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      <div class="relative pl-5">
+        <%# 세로 타임라인 선 %>
+        <div class="absolute left-[7px] top-1 bottom-1 w-px bg-gray-100 dark:bg-gray-700"></div>
+
+        <% activities.first(15).each do |act| %>
+          <%
+            icon_svg, dot_color = case act.action
+            when "status_changed"
+              ['<polyline points="9 18 15 12 9 6"/>', "bg-accent"]
+            when "comment_added"
+              ['<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>', "bg-gray-400 dark:bg-gray-500"]
+            when "task_completed"
+              ['<polyline points="20 6 9 17 4 12"/>', "bg-green-400"]
+            when "created"
+              ['<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>', "bg-primary"]
+            else
+              ['<circle cx="12" cy="12" r="4"/>', "bg-gray-300"]
+            end
+          %>
+          <div class="relative flex gap-3 mb-4 last:mb-0">
+            <%# 타임라인 점 %>
+            <div class="w-3.5 h-3.5 rounded-full <%= dot_color %> shrink-0 mt-0.5 z-10 flex items-center justify-center">
+              <svg class="w-2 h-2 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><%= icon_svg.html_safe %></svg>
             </div>
-            <div class="flex-1 min-w-0">
-              <span class="font-medium text-gray-700 dark:text-gray-300"><%= act.user.display_name %></span>
-              <span class="text-gray-500 dark:text-gray-400"> <%= act.action.humanize.downcase %></span>
-              <span class="text-gray-400 dark:text-gray-500 block mt-0.5"><%= act.created_at.strftime("%Y/%m/%d %H:%M") %></span>
+            <%# 텍스트 %>
+            <div class="flex-1 min-w-0 -mt-0.5">
+              <div class="flex flex-wrap items-center gap-1.5 text-xs">
+                <span class="font-semibold text-gray-800 dark:text-gray-200"><%= act.user.display_name %></span>
+                <% case act.action %>
+                <% when "status_changed" %>
+                  <span class="text-gray-500 dark:text-gray-400">상태 변경</span>
+                  <% if act.from_label && act.to_label %>
+                    <span class="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"><%= act.from_label %></span>
+                    <svg class="w-3 h-3 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    <span class="px-1.5 py-0.5 rounded bg-accent/10 text-accent font-medium"><%= act.to_label %></span>
+                  <% end %>
+                <% when "comment_added" %>
+                  <span class="text-gray-500 dark:text-gray-400">코멘트 작성</span>
+                <% when "task_completed" %>
+                  <span class="text-gray-500 dark:text-gray-400">태스크 완료</span>
+                <% when "created" %>
+                  <span class="text-gray-500 dark:text-gray-400">오더 생성</span>
+                <% else %>
+                  <span class="text-gray-500 dark:text-gray-400"><%= act.action.humanize.downcase %></span>
+                <% end %>
+              </div>
+              <span class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 block"><%= act.created_at.strftime("%Y/%m/%d %H:%M") %></span>
             </div>
           </div>
         <% end %>

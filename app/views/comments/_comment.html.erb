@@ -1,0 +1,13 @@
+<%# 단일 코멘트 행 — turbo_stream.append 타겟 %>
+<div class="flex gap-3">
+  <div class="w-7 h-7 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold shrink-0 mt-0.5">
+    <%= comment.user.initials %>
+  </div>
+  <div class="flex-1 min-w-0">
+    <div class="flex items-center gap-2 mb-1">
+      <span class="text-sm font-medium text-gray-900 dark:text-white"><%= comment.user.display_name %></span>
+      <span class="text-xs text-gray-400 dark:text-gray-500"><%= comment.created_at.strftime("%m/%d %H:%M") %></span>
+    </div>
+    <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed"><%= comment.body %></p>
+  </div>
+</div>

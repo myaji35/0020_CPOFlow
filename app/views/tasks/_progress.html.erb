@@ -1,0 +1,17 @@
+<%# 태스크 진행률 바 — turbo_stream.replace 타겟 %>
+<% prog = order.task_progress %>
+<% pct  = prog[:total] > 0 ? (prog[:done].to_f / prog[:total] * 100).round : 0 %>
+<div id="task-progress-<%= order.id %>">
+  <% if prog[:total] > 0 %>
+    <div class="mb-4">
+      <div class="flex items-center justify-between mb-1.5">
+        <span class="text-xs text-gray-400 dark:text-gray-500"><%= prog[:done] %>/<%= prog[:total] %> 완료</span>
+        <span class="text-xs font-medium <%= pct == 100 ? 'text-green-500' : 'text-accent' %>"><%= pct %>%</span>
+      </div>
+      <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5">
+        <div class="h-1.5 rounded-full transition-all duration-500 <%= pct == 100 ? 'bg-green-400' : 'bg-accent' %>"
+             style="width: <%= pct %>%"></div>
+      </div>
+    </div>
+  <% end %>
+</div>

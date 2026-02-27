@@ -1,0 +1,28 @@
+<%# 태스크 단일 행 — turbo-frame으로 감싸서 인라인 교체 가능 %>
+<turbo-frame id="task-<%= task.id %>">
+  <div class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 group">
+    <%= form_with url: order_task_path(order, task), method: :patch do |f| %>
+      <%= f.hidden_field :completed, name: "task[completed]", value: task.completed ? "0" : "1" %>
+      <input type="checkbox"
+             <%= task.completed ? "checked" : "" %>
+             onchange="this.form.requestSubmit()"
+             class="rounded border-gray-300 dark:border-gray-600 text-accent cursor-pointer shrink-0">
+    <% end %>
+    <div class="flex-1 min-w-0">
+      <p class="text-sm <%= task.completed ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-white' %>">
+        <%= task.title %>
+      </p>
+      <% if task.assignee || task.due_date %>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+          <%= task.assignee&.display_name %>
+          <% if task.due_date %>· <%= task.due_date.strftime("%m/%d") %><% end %>
+        </p>
+      <% end %>
+    </div>
+    <% if task.due_date %>
+      <span class="text-xs <%= Date.today > task.due_date && !task.completed ? 'text-red-400' : 'text-gray-400 dark:text-gray-500' %>">
+        <%= task.due_date.strftime("%m/%d") %>
+      </span>
+    <% end %>
+  </div>
+</turbo-frame>
