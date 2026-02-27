@@ -1,138 +1,138 @@
-# Plan: calendar-ux
+# calendar-ux Plan
 
-## 개요
+## 1. Feature Overview
 
-캘린더 UX 개선 — 납기일 클릭 드로어 + 월별 통계 바 + 사이드패널 추가
+**Feature Name**: calendar-ux
+**Created**: 2026-02-28
+**Priority**: High
+**Estimated Scope**: Small (2 files)
 
-## 실측 현황 (2026-02-28)
+### 1.1 Summary
 
-### 이미 구현된 항목
-- 월별 그리드 캘린더 (7열, 날짜별 order 표시) ✅
-- 이전/다음 월 네비게이션 ✅
-- 날짜 셀 내 order 카드 (우선순위 색상, 제목 truncate) ✅
-- +N more 표시 (3건 초과 시) ✅
-- 하단 이번 달 마감 주문 목록 ✅
-- `includes(:assignees)` 쿼리 ✅
+납기일 캘린더 뷰 UX 개선 —
+현재 기본 캘린더에 히트맵 강도 표시, 날짜 셀 배경 위험도 색상, 사이드 패널 카드 정보 강화,
+그리고 캘린더 그리드 날짜 범위 조회 개선을 통해 납기 관리의 직관성을 높인다.
 
-### 누락 항목
-- 날짜 셀 클릭 → 해당 날 주문 사이드 패널 표시 ❌
-- 월별 납기 통계 요약 바 (총건수/지연/긴급/정상) ❌
-- 캘린더 카드 클릭 → 기존 Order 드로어 연동 ❌
-- 오늘로 이동 버튼 ❌
-- 하단 목록에 우선순위 배지 + 납기 D-day 배지 누락 ❌
+### 1.2 Current State (실측)
 
-### 컨트롤러 현황
-```ruby
-@orders = Order.where(due_date: @month..@month.end_of_month)
-               .includes(:assignees)
-               .by_due_date
-```
-- `client`, `project` 미포함 → includes 보강 필요
+**`app/controllers/calendar_controller.rb`** (16줄):
+- `@month..@month.end_of_month` 범위로 조회 → 그리드에 표시되는 전월 말/다음달 초 날짜의 주문 미포함
+- `@stats` 계산: total/overdue/urgent/normal 4개 — 있음
 
----
+**`app/views/calendar/index.html.erb`** (225줄):
+- 4개 통계 카드 (FR-01) — 있음
+- 7×6 캘린더 그리드 — 있음
+- 날짜 셀: 주문 최대 3개 + `+N more` 텍스트 표시
+- 날짜 셀 배경색: 현재 월/다른 월 구분만 있음 (위험도 배경 없음)
+- 우측 사이드 패널 슬라이드 (FR-02) — 있음
+  - 패널 카드: title + status + priority 배지만 표시 (client/project/assignee 없음)
+- 하단 이번 달 주문 목록 — 있음
 
-## 기능 요구사항
-
-### FR-01: 월별 납기 통계 바
-- 헤더 영역 하단에 4개 숫자 카드:
-  - **총 마감** — 해당 월 전체
-  - **지연** — due_date < today (빨강)
-  - **D-7 이내** — 0 ≤ days ≤ 7 (주황)
-  - **정상** — days > 7 (초록)
-- 서버 사이드 카운트 (컨트롤러 인스턴스 변수 추가)
-
-### FR-02: 날짜 클릭 → 사이드 패널
-- 날짜 셀 클릭 → 우측 슬라이드인 패널
-- 패널 내용: 해당 날짜 주문 목록
-  - 제목, 상태 배지, 우선순위 배지, 담당자 아바타
-  - 각 항목 클릭 → 기존 `openOrderDrawer()` 호출
-- 빈 날짜 클릭 시 패널 숨김 또는 "마감 주문 없음" 표시
-- Escape 키 / 외부 클릭으로 닫기
-
-### FR-03: 캘린더 카드 → Order 드로어 연동
-- 날짜 셀 내 order 카드 클릭 → `openOrderDrawer(id, title, path)` 호출
-- 기존 `link_to order_path` 대신 onclick 방식으로 변경
-
-### FR-04: 오늘로 이동 버튼
-- 헤더 네비게이션 영역에 "오늘" 버튼 추가
-- `calendar_path` (month 파라미터 없음) → 오늘 달로 이동
-
-### FR-05: 하단 목록 배지 강화
-- 기존 status 배지 유지
-- **우선순위 배지** 추가 (priority_badge helper)
-- **D-day 배지** 추가 (due_badge helper)
-- client/project 이름 표시 (있을 경우)
+**문제점**:
+1. **히트맵 없음**: 납기 건수가 많은 날짜를 시각적으로 구분 불가
+2. **위험도 배경 없음**: D-7/overdue 날짜 셀 배경이 일반 날짜와 동일
+3. **사이드 패널 정보 부족**: client, project, assignee 미표시
+4. **조회 범위 미흡**: 전월 말~다음달 초 그리드 날짜의 주문 누락
 
 ---
 
-## 기술 구현 계획
+## 2. Goals
 
-### 컨트롤러 변경
+| FR | 목표 |
+|----|------|
+| FR-01 | **히트맵 강도 표시**: 납기 건수에 따라 날짜 셀 배경색 진하기 조절 (1건=연한파랑, 4건+=진한파랑) |
+| FR-02 | **위험도 배경**: overdue(빨강)/D-7(주황) 주문이 있는 날짜 셀 배경 강조 |
+| FR-03 | **사이드 패널 카드 강화**: client, project, assignee, due_badge 추가 |
+| FR-04 | **조회 범위 개선**: 캘린더 그리드 첫날~마지막날 범위로 조회 확장 |
+
+### Out of Scope
+- 드래그앤드롭 납기일 변경
+- 주간/일간 뷰 추가
+- 캘린더 인쇄 기능
+
+---
+
+## 3. Technical Approach
+
+### 3.1 Files to Modify
+
+| File | Change |
+|------|--------|
+| `app/controllers/calendar_controller.rb` | 조회 범위 확장 (그리드 첫날~마지막날) |
+| `app/views/calendar/index.html.erb` | 히트맵 CSS + 위험도 배경 + 패널 카드 강화 |
+
+### 3.2 히트맵 강도 로직
+
 ```ruby
-# app/controllers/calendar_controller.rb
-def index
-  @month = params[:month] ? Date.parse(params[:month]) : Date.today.beginning_of_month
-  @orders = Order.where(due_date: @month..@month.end_of_month)
-                 .includes(:assignees, :client, :project)
-                 .by_due_date
-
-  # FR-01 통계
-  today = Date.today
-  @stats = {
-    total:   @orders.count,
-    overdue: @orders.count { |o| o.due_date < today },
-    urgent:  @orders.count { |o| o.due_date >= today && o.due_date <= today + 7 },
-    normal:  @orders.count { |o| o.due_date > today + 7 }
-  }
+# 뷰 헬퍼 로직 (ERB 내 인라인)
+def heatmap_class(count)
+  case count
+  when 0    then ''
+  when 1    then 'bg-blue-50 dark:bg-blue-900/10'
+  when 2..3 then 'bg-blue-100 dark:bg-blue-900/20'
+  when 4..6 then 'bg-blue-200 dark:bg-blue-900/30'
+  else           'bg-blue-300 dark:bg-blue-900/40'
+  end
 end
 ```
 
-### 뷰 변경
-| 파일 | 변경 | 내용 |
-|------|------|------|
-| `app/controllers/calendar_controller.rb` | 수정 | includes 보강 + @stats |
-| `app/views/calendar/index.html.erb` | 수정 | FR-01~05 전체 |
+### 3.3 위험도 배경 우선순위 (히트맵보다 우선)
 
-### FR-02 사이드 패널 JS 설계
-```javascript
-// 날짜 셀 클릭
-document.querySelectorAll('[data-calendar-date]').forEach(function(cell) {
-  cell.addEventListener('click', function() {
-    const date = cell.dataset.calendarDate;
-    const orders = JSON.parse(cell.dataset.orders || '[]');
-    showDatePanel(date, orders);
-  });
-});
-
-function showDatePanel(date, orders) {
-  // 패널 표시/갱신
-}
-
-// Escape / 외부 클릭
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') hideDatePanel();
-});
-document.getElementById('calendar-panel-overlay').addEventListener('click', hideDatePanel);
+```
+overdue 주문 있음  → bg-red-50/30 dark:bg-red-900/10
+urgent 주문 있음   → bg-orange-50/30 dark:bg-orange-900/10
+정상              → 히트맵 색상
 ```
 
-- 날짜 셀 `<div>`에 `data-calendar-date`, `data-orders` (JSON) 속성 추가
-- 패널은 fixed right-side div (z-50, transition)
+### 3.4 사이드 패널 카드 구조 개선
+
+```
+┌──────────────────────────────────────────┐
+│ [주문 제목]                     [D-badge] │
+│ client · project                         │
+│ [상태 배지]  [우선순위 배지]               │
+│ 담당자: 이름                              │
+└──────────────────────────────────────────┘
+```
+
+패널에 전달하는 JSON에 `client`, `project`, `assignee`, `due_date` 추가
+
+### 3.5 컨트롤러 조회 범위
+
+```ruby
+# 그리드 실제 표시 범위
+grid_start = @month.beginning_of_month - @month.beginning_of_month.wday.days
+grid_end   = grid_start + 41.days  # 6주
+
+@orders = Order.where(due_date: grid_start..grid_end)
+               .includes(:assignees, :client, :project)
+               .by_due_date
+```
 
 ---
 
-## 영향 범위
+## 4. Completion Criteria
 
-| 파일 | 변경 유형 | 내용 |
-|------|-----------|------|
-| `app/controllers/calendar_controller.rb` | 수정 | includes 보강 + @stats 추가 |
-| `app/views/calendar/index.html.erb` | 수정 | FR-01~05 전체 추가 |
+| # | Criteria |
+|---|----------|
+| 1 | 납기 건수에 따른 히트맵 배경색 (4단계) 적용 |
+| 2 | overdue/D-7 날짜 셀 위험도 배경색 우선 적용 |
+| 3 | 사이드 패널 카드에 client, project, assignee 표시 |
+| 4 | 컨트롤러 조회 범위가 그리드 첫날~마지막날로 확장 |
+| 5 | Gap Analysis Match Rate >= 90% |
 
-## 완료 기준
+---
 
-- [ ] 통계 바 4개 카드 표시 (총/지연/긴급/정상)
-- [ ] 날짜 클릭 → 우측 사이드 패널 표시
-- [ ] 패널 내 order 클릭 → openOrderDrawer 실행
-- [ ] 캘린더 카드 클릭 → openOrderDrawer 실행
-- [ ] "오늘" 버튼 동작
-- [ ] 하단 목록 배지 (우선순위 + D-day) 표시
-- [ ] Gap Analysis Match Rate ≥ 90%
+## 5. Dependencies
+
+- `Order.by_due_date` scope — 기존 존재
+- `order_path(order)` — 기존 존재
+- `openOrderDrawer()` JavaScript 함수 — layout에 기존 존재
+
+---
+
+## Version History
+
+| Version | Date | Author |
+|---------|------|--------|
+| 1.0 | 2026-02-28 | bkit:pdca |

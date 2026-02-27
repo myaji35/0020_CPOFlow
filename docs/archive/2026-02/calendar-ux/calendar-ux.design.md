@@ -1,119 +1,133 @@
-# Design: calendar-ux
+# calendar-ux Design
 
-## 개요
+## 1. Overview
 
-캘린더 UX 개선 — 통계 바(FR-01) + 날짜 사이드 패널(FR-02) + 카드→드로어(FR-03) + 오늘 버튼(FR-04) + 하단 목록 배지(FR-05)
+**Feature**: calendar-ux
+**Phase**: Design
+**Created**: 2026-02-28
+**References**: `docs/01-plan/features/calendar-ux.plan.md`
 
-- **Plan**: `docs/01-plan/features/calendar-ux.plan.md`
-- **작성일**: 2026-02-28
-
----
-
-## 실측 확인 사항
-
-| 항목 | 값 |
-|------|-----|
-| `openOrderDrawer(id, title, path)` | `app/views/layouts/application.html.erb` L152 전역 함수 |
-| `due_badge(order)` | `app/helpers/application_helper.rb` L19 |
-| `priority_badge(order)` | `app/helpers/application_helper.rb` L35 |
-| `status_badge(order)` | `app/helpers/application_helper.rb` L47 |
-| 컨트롤러 현재 includes | `:assignees` 만 |
-| 컨트롤러 확장 대상 | `includes(:assignees, :client, :project)` |
-| 날짜 셀 구조 | `div.min-h-24 border-b border-r` — JS용 data 속성 없음 |
-| 하단 목록 | 상태 배지 + "보기" 링크만 있음 |
+납기일 캘린더 UX 개선 — 히트맵 강도, 위험도 배경색, 사이드 패널 카드 강화, 조회 범위 확장.
 
 ---
 
-## 변경 파일
+## 2. Architecture
 
-| 파일 | 변경 | 내용 |
-|------|------|------|
-| `app/controllers/calendar_controller.rb` | 수정 | includes 보강 + @stats |
-| `app/views/calendar/index.html.erb` | 수정 | FR-01~05 전체 |
+### 2.1 Data Flow
+
+```
+CalendarController#index
+  ↓ (grid_start..grid_end 범위 쿼리)
+@orders (includes :assignees, :client, :project)
+  ↓
+orders_by_date Hash (group_by due_date)
+  ↓
+ERB 렌더링:
+  - 날짜 셀: heatmap_bg + risk_bg + 주문 배지
+  - data-orders JSON (client/project/assignee 포함)
+  ↓
+JavaScript:
+  - 날짜 셀 클릭 → 사이드 패널 열기
+  - 패널 카드 렌더링 (강화된 정보)
+```
+
+### 2.2 Files to Modify
+
+| File | 변경 내용 |
+|------|-----------|
+| `app/controllers/calendar_controller.rb` | 조회 범위 확장 |
+| `app/views/calendar/index.html.erb` | 히트맵 + 위험도 + 패널 강화 |
 
 ---
 
-## FR-01: 월별 통계 바
+## 3. Detailed Design
 
-### 컨트롤러 변경
+### 3.1 Controller: 조회 범위 확장 (FR-04)
 
+**변경 전**:
 ```ruby
-# app/controllers/calendar_controller.rb
-class CalendarController < ApplicationController
-  def index
-    @month  = params[:month] ? Date.parse(params[:month]) : Date.today.beginning_of_month
-    @orders = Order.where(due_date: @month..@month.end_of_month)
-                   .includes(:assignees, :client, :project)
-                   .by_due_date
-
-    today = Date.today
-    @stats = {
-      total:   @orders.count,
-      overdue: @orders.count { |o| o.due_date < today },
-      urgent:  @orders.count { |o| o.due_date >= today && o.due_date <= today + 7 },
-      normal:  @orders.count { |o| o.due_date > today + 7 }
-    }
-  end
-end
+@orders = Order.where(due_date: @month..@month.end_of_month)
 ```
 
-### 통계 바 ERB (헤더 `</div>` 직후, 캘린더 그리드 위)
+**변경 후**:
+```ruby
+first_day  = @month.beginning_of_month
+grid_start = first_day - first_day.wday.days
+grid_end   = grid_start + 41.days  # 6주 (42일 - 1)
 
+@orders = Order.where(due_date: grid_start..grid_end)
+               .includes(:assignees, :client, :project)
+               .by_due_date
+```
+
+`@stats`는 해당 월 주문만 카운트:
+```ruby
+month_orders = @orders.select { |o| o.due_date.month == @month.month && o.due_date.year == @month.year }
+@stats = {
+  total:   month_orders.count,
+  overdue: month_orders.count { |o| o.due_date < today },
+  urgent:  month_orders.count { |o| o.due_date >= today && o.due_date <= today + 7 },
+  normal:  month_orders.count { |o| o.due_date > today + 7 }
+}
+```
+
+### 3.2 View: 히트맵 강도 (FR-01)
+
+날짜 셀의 `day_orders` 수에 따라 배경색 강도 4단계:
+
+| 건수 | 클래스 (Light) | 클래스 (Dark) |
+|------|---------------|--------------|
+| 0 | (기본) | (기본) |
+| 1 | `bg-blue-50` | `dark:bg-blue-900/10` |
+| 2~3 | `bg-blue-100` | `dark:bg-blue-900/20` |
+| 4~6 | `bg-blue-200` | `dark:bg-blue-900/30` |
+| 7+ | `bg-blue-300` | `dark:bg-blue-900/40` |
+
+ERB 헬퍼 (인라인):
 ```erb
-<%# FR-01: 월별 납기 통계 바 %>
-<div class="grid grid-cols-4 gap-3">
-  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
-    <p class="text-2xl font-bold text-gray-900 dark:text-white"><%= @stats[:total] %></p>
-    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">총 마감</p>
-  </div>
-  <div class="bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-800 p-4 text-center">
-    <p class="text-2xl font-bold text-red-600 dark:text-red-400"><%= @stats[:overdue] %></p>
-    <p class="text-xs text-red-500 dark:text-red-400 mt-1">지연</p>
-  </div>
-  <div class="bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-100 dark:border-orange-800 p-4 text-center">
-    <p class="text-2xl font-bold text-orange-600 dark:text-orange-400"><%= @stats[:urgent] %></p>
-    <p class="text-xs text-orange-500 dark:text-orange-400 mt-1">D-7 이내</p>
-  </div>
-  <div class="bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800 p-4 text-center">
-    <p class="text-2xl font-bold text-green-600 dark:text-green-400"><%= @stats[:normal] %></p>
-    <p class="text-xs text-green-500 dark:text-green-400 mt-1">정상</p>
-  </div>
-</div>
+<%
+  heatmap_bg = case day_orders.size
+               when 0    then ''
+               when 1    then 'bg-blue-50 dark:bg-blue-900/10'
+               when 2..3 then 'bg-blue-100 dark:bg-blue-900/20'
+               when 4..6 then 'bg-blue-200 dark:bg-blue-900/30'
+               else           'bg-blue-300 dark:bg-blue-900/40'
+               end
+%>
 ```
 
----
+### 3.3 View: 위험도 배경색 (FR-02)
 
-## FR-04: 오늘 버튼
-
-헤더 네비게이션 영역 (`< YYYY년 MM월 >`) 에 "오늘" 버튼 추가:
-
-```erb
-<%# 기존 %>
-<div class="flex items-center gap-2">
-  <%= link_to calendar_path(month: (@month - 1.month)...), ... %>
-  <span ...><%= @month.strftime("%Y년 %m월") %></span>
-  <%= link_to calendar_path(month: (@month + 1.month)...), ... %>
-</div>
-
-<%# 변경: "오늘" 버튼 추가 %>
-<div class="flex items-center gap-2">
-  <%= link_to "오늘", calendar_path,
-      class: "text-xs px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" %>
-  <%= link_to calendar_path(month: (@month - 1.month).strftime("%Y-%m-%d")), ... %>
-  <span ...>...</span>
-  <%= link_to calendar_path(month: (@month + 1.month).strftime("%Y-%m-%d")), ... %>
-</div>
-```
-
----
-
-## FR-02 + FR-03: 날짜 셀 + 사이드 패널
-
-### 날짜 셀 변경 (data 속성 추가 + 카드 onclick)
+위험도가 히트맵보다 우선:
 
 ```erb
 <%
-  # orders JSON for JS panel
+  today = Date.today
+  has_overdue = day_orders.any? { |o| o.due_date < today }
+  has_urgent  = day_orders.any? { |o| o.due_date >= today && o.due_date <= today + 7 }
+
+  risk_bg = if has_overdue
+              'bg-red-50 dark:bg-red-900/15'
+            elsif has_urgent
+              'bg-orange-50 dark:bg-orange-900/15'
+            else
+              heatmap_bg
+            end
+%>
+```
+
+날짜 셀 클래스 적용:
+```html
+<div class="min-h-24 border-b border-r border-gray-50 dark:border-gray-700 p-2 cursor-pointer
+            hover:opacity-90 transition-colors
+            <%= is_current_month ? risk_bg || 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700/30' %>
+            <%= is_today ? 'ring-2 ring-inset ring-primary/30' : '' %>">
+```
+
+### 3.4 View: data-orders JSON 확장 (FR-03 준비)
+
+```erb
+<%
   day_orders_json = day_orders.map { |o|
     {
       id:       o.id,
@@ -121,178 +135,144 @@ end
       path:     order_path(o),
       status:   Order::STATUS_LABELS[o.status],
       priority: o.priority,
-      due_date: o.due_date.strftime("%m/%d")
+      due_date: o.due_date.strftime("%m/%d"),
+      client:   o.client&.name || o.customer_name,
+      project:  o.project&.name,
+      assignee: o.assignees.first&.name
     }
   }.to_json
 %>
-<div class="min-h-24 border-b border-r border-gray-50 dark:border-gray-700 p-2 cursor-pointer
-            <%= is_current_month ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700/30' %>
-            <%= is_today ? 'ring-2 ring-inset ring-primary/30' : '' %>
-            hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-     data-calendar-date="<%= date.strftime('%Y-%m-%d') %>"
-     data-orders="<%= html_escape(day_orders_json) %>">
-  <div class="flex justify-between items-center mb-1">
-    <span class="text-xs font-medium <%= is_today ? 'w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center' : is_current_month ? 'text-gray-700 dark:text-gray-300' : 'text-gray-300 dark:text-gray-600' %>">
-      <%= date.day %>
-    </span>
-  </div>
-  <% day_orders.first(3).each do |order| %>
-    <%# FR-03: onclick → openOrderDrawer %>
-    <div class="block text-xs truncate px-1.5 py-0.5 rounded mb-0.5 cursor-pointer <%= case order.priority
-      when 'urgent' then 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-      when 'high'   then 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
-      else               'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
-      end %>"
-         onclick="event.stopPropagation(); openOrderDrawer(<%= order.id %>, <%= order.title.to_json %>, '<%= order_path(order) %>')">
-      <%= order.title %>
-    </div>
-  <% end %>
-  <% if day_orders.size > 3 %>
-    <span class="text-xs text-gray-400 dark:text-gray-500">+<%= day_orders.size - 3 %> more</span>
-  <% end %>
-</div>
 ```
 
-### 사이드 패널 HTML (캘린더 그리드 div 뒤에 삽입)
+### 3.5 View: 사이드 패널 카드 강화 (FR-03)
 
-```erb
-<%# FR-02: 날짜 사이드 패널 %>
-<div id="calendar-panel-overlay" class="fixed inset-0 z-40 hidden"></div>
-<div id="calendar-side-panel"
-     class="fixed top-0 right-0 h-full w-80 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 shadow-xl z-50 transform translate-x-full transition-transform duration-200 flex flex-col">
-  <div class="flex items-center justify-between px-4 py-4 border-b border-gray-100 dark:border-gray-700">
-    <h3 id="panel-date-title" class="text-sm font-semibold text-gray-900 dark:text-white"></h3>
-    <button id="calendar-panel-close"
-            class="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-      <svg class="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    </button>
-  </div>
-  <div id="panel-orders-list" class="flex-1 overflow-y-auto py-2"></div>
-</div>
-```
-
-### 사이드 패널 JS (DOMContentLoaded 내)
-
+**변경 전** (JavaScript):
 ```javascript
-// ── FR-02: 날짜 사이드 패널 ──────────────────────────────
-const sidePanel  = document.getElementById('calendar-side-panel');
-const panelTitle = document.getElementById('panel-date-title');
-const panelList  = document.getElementById('panel-orders-list');
-const panelClose = document.getElementById('calendar-panel-close');
-const overlay    = document.getElementById('calendar-panel-overlay');
+'<p class="text-sm font-medium">' + o.title + '</p>' +
+'<p class="text-xs text-gray-500">' + o.status + '</p>' +
+'<span class="badge">' + o.priority + '</span>'
+```
 
-const PRIORITY_COLORS = {
+**변경 후** (JavaScript):
+```javascript
+// 카드 레이아웃
+┌─────────────────────────────────────────┐
+│ [주문 제목]                   [D-badge]  │
+│ client · project (있는 경우만)           │
+│ [상태 배지]  [우선순위 배지]             │
+│ 담당자: 이름 (있는 경우만)              │
+└─────────────────────────────────────────┘
+```
+
+D-badge 계산 (JS):
+```javascript
+function dueBadge(dueDateStr) {
+  // dueDateStr: "MM/DD" 형태
+  // 오늘 기준 D-N 계산 (단순 표시용)
+  return '<span class="text-xs text-gray-400">' + dueDateStr + '</span>';
+}
+```
+
+우선순위 배지 (JS):
+```javascript
+var PRIORITY_LABELS = { urgent: 'URGENT', high: 'HIGH', medium: 'MEDIUM', low: 'LOW' };
+var PRIORITY_COLORS = {
   urgent: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
   high:   'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-  medium: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  medium: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
   low:    'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
 };
+```
 
-function openDatePanel(dateStr, orders) {
-  panelTitle.textContent = dateStr + ' 마감 (' + orders.length + '건)';
-  if (orders.length === 0) {
-    panelList.innerHTML = '<p class="text-xs text-gray-400 text-center py-8">마감 주문 없음</p>';
-  } else {
-    panelList.innerHTML = orders.map(function(o) {
-      const priColor = PRIORITY_COLORS[o.priority] || PRIORITY_COLORS.low;
-      return '<div class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors border-b border-gray-50 dark:border-gray-700/50"' +
-             ' onclick="openOrderDrawer(' + o.id + ', ' + JSON.stringify(o.title) + ', \'' + o.path + '\')">' +
-             '<div class="flex-1 min-w-0">' +
-             '<p class="text-sm font-medium text-gray-900 dark:text-white truncate">' + o.title + '</p>' +
-             '<p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">' + o.status + '</p>' +
-             '</div>' +
-             '<span class="text-xs font-semibold px-2 py-0.5 rounded-full ' + priColor + '">' + o.priority.toUpperCase() + '</span>' +
-             '</div>';
-    }).join('');
-  }
-  overlay.classList.remove('hidden');
-  requestAnimationFrame(function() {
-    sidePanel.classList.remove('translate-x-full');
-  });
+완성된 카드 HTML (JS):
+```javascript
+function renderOrderCard(o) {
+  var priColor = PRIORITY_COLORS[o.priority] || PRIORITY_COLORS.low;
+  var priLabel = PRIORITY_LABELS[o.priority] || o.priority.toUpperCase();
+  var meta = [o.client, o.project].filter(Boolean).join(' · ');
+  return '<div class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer ' +
+         'border-b border-gray-50 dark:border-gray-700/50 transition-colors"' +
+         ' onclick="openOrderDrawer(' + o.id + ', ' + JSON.stringify(o.title) + ', \'' + o.path + '\')">' +
+         '<div class="flex items-start justify-between gap-2 mb-1">' +
+         '<p class="text-sm font-medium text-gray-900 dark:text-white truncate flex-1">' + o.title + '</p>' +
+         '<span class="text-xs text-gray-400 shrink-0">' + (o.due_date || '') + '</span>' +
+         '</div>' +
+         (meta ? '<p class="text-xs text-blue-600 dark:text-blue-400 truncate mb-1.5">' + meta + '</p>' : '') +
+         '<div class="flex items-center gap-1.5 flex-wrap">' +
+         '<span class="text-xs text-gray-500 dark:text-gray-400">' + o.status + '</span>' +
+         '<span class="text-xs font-semibold px-1.5 py-0.5 rounded-full ' + priColor + '">' + priLabel + '</span>' +
+         (o.assignee ? '<span class="text-xs text-gray-400 dark:text-gray-500 ml-auto">담당: ' + o.assignee + '</span>' : '') +
+         '</div>' +
+         '</div>';
 }
-
-function closeDatePanel() {
-  sidePanel.classList.add('translate-x-full');
-  overlay.classList.add('hidden');
-}
-
-// 날짜 셀 클릭
-document.querySelectorAll('[data-calendar-date]').forEach(function(cell) {
-  cell.addEventListener('click', function() {
-    const orders = JSON.parse(cell.dataset.orders || '[]');
-    openDatePanel(cell.dataset.calendarDate, orders);
-  });
-});
-
-panelClose.addEventListener('click', closeDatePanel);
-overlay.addEventListener('click', closeDatePanel);
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeDatePanel();
-});
 ```
 
 ---
 
-## FR-05: 하단 목록 배지 강화
+## 4. UI Mockup
 
-기존 `<div class="flex items-center gap-3 px-5 py-3 ...">` 내부 변경:
+### 4.1 캘린더 그리드 (개선 후)
 
-```erb
-<%# 기존: status 배지 + "보기" 링크 %>
-<%# 변경: 발주처/프로젝트 추가, priority_badge + due_badge 추가, 드로어 연동 %>
-<div class="flex items-center justify-between px-5 py-3
-            hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
-     onclick="openOrderDrawer(<%= order.id %>, <%= order.title.to_json %>, '<%= order_path(order) %>')">
-  <div class="flex items-center gap-3">
-    <div class="text-center w-10 shrink-0">
-      <p class="text-lg font-bold text-gray-900 dark:text-white"><%= order.due_date.day %></p>
-      <p class="text-xs text-gray-400 dark:text-gray-500"><%= order.due_date.strftime("%a") %></p>
-    </div>
-    <div class="min-w-0">
-      <p class="text-sm font-medium text-gray-900 dark:text-white truncate"><%= order.title %></p>
-      <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
-        <% if order.client %>
-          <span class="text-xs text-blue-600 dark:text-blue-400"><%= order.client.name %></span>
-        <% elsif order.customer_name.present? %>
-          <span class="text-xs text-gray-500 dark:text-gray-400"><%= order.customer_name %></span>
-        <% end %>
-        <% if order.project %>
-          <span class="text-xs text-green-600 dark:text-green-400"><%= order.project.name %></span>
-        <% end %>
-      </div>
-    </div>
-  </div>
-  <div class="flex items-center gap-2 shrink-0">
-    <%= status_badge(order) %>
-    <%= priority_badge(order) %>
-    <%= due_badge(order) %>
-  </div>
-</div>
+```
+┌──────────────────────────────────────────────────────────┐
+│  일    월    화    수    목    금    토                    │
+├──────────────────────────────────────────────────────────┤
+│  [연한회색 - 다른달]   1    2    3    4    5              │
+│                   [흰배경] [흰배경] [주황배경D-7]...      │
+│                                   ● RFQ-123              │
+│                                   ● Valve-456            │
+│                                   +1 more                │
+├──────────────────────────────────────────────────────────┤
+│  8    9    10   11   12   13   14                        │
+│ [연파랑=1건] [중파랑=3건] [빨강=overdue]                  │
+│  ● Pump    ● 3건   ● 긴급주문                             │
+└──────────────────────────────────────────────────────────┘
+```
+
+### 4.2 사이드 패널 카드 (개선 후)
+
+```
+┌──────────────────────────────────┐
+│ 2월 15일 마감 (3건)          [✕] │
+├──────────────────────────────────┤
+│ Valve Assembly        02/15      │
+│ ABC Corp · Site-A               │
+│ confirmed  [HIGH]  담당: 홍길동  │
+├──────────────────────────────────┤
+│ Pump Unit             02/15      │
+│ XYZ Ltd                         │
+│ procuring  [URGENT]             │
+└──────────────────────────────────┘
 ```
 
 ---
 
-## 구현 순서
+## 5. Implementation Order
 
-1. `calendar_controller.rb` — includes 보강 + @stats
-2. `calendar/index.html.erb` — FR-04 오늘 버튼
-3. `calendar/index.html.erb` — FR-01 통계 바
-4. `calendar/index.html.erb` — FR-02 사이드 패널 HTML
-5. `calendar/index.html.erb` — 날짜 셀 data 속성 + FR-03 카드 onclick
-6. `calendar/index.html.erb` — FR-05 하단 목록 배지
-7. `calendar/index.html.erb` — FR-02 사이드 패널 JS
-8. rubocop 체크
+1. `calendar_controller.rb` — 조회 범위 grid_start..grid_end + @stats 분리
+2. `index.html.erb` — 뷰 상단 `today` 변수 이동 (중복 제거)
+3. `index.html.erb` — heatmap_bg / risk_bg ERB 로직 추가
+4. `index.html.erb` — 날짜 셀 클래스 적용
+5. `index.html.erb` — data-orders JSON 필드 확장
+6. `index.html.erb` — JavaScript `renderOrderCard` 함수 교체
 
 ---
 
-## 완료 기준
+## 6. Completion Criteria
 
-- [ ] 통계 바 4개 카드 표시 (총/지연/D-7/정상)
-- [ ] 날짜 클릭 → 우측 사이드 패널 (해당 날 주문 목록)
-- [ ] 패널 내 order 클릭 → openOrderDrawer 실행
-- [ ] 캘린더 카드 클릭 → openOrderDrawer 실행 (셀 클릭과 충돌 없음)
-- [ ] "오늘" 버튼 → 오늘 달로 이동
-- [ ] 하단 목록 배지 (status + priority + due_badge) 표시
-- [ ] Gap Analysis Match Rate ≥ 90%
+| # | Criteria | 검증 방법 |
+|---|----------|-----------|
+| 1 | 납기 건수 히트맵 4단계 적용 | 뷰 HTML 확인 |
+| 2 | overdue/D-7 위험도 배경색 우선 적용 | ERB 로직 확인 |
+| 3 | 사이드 패널 카드: client/project/assignee/due_date 포함 | JS renderOrderCard 확인 |
+| 4 | 컨트롤러 조회 범위 grid_start..grid_end | controller 쿼리 확인 |
+| 5 | @stats는 해당 월 주문만 카운트 | controller 로직 확인 |
+| 6 | Gap Analysis Match Rate >= 90% | gap-detector |
+
+---
+
+## Version History
+
+| Version | Date | Author |
+|---------|------|--------|
+| 1.0 | 2026-02-28 | bkit:pdca |
