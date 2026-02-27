@@ -24,6 +24,7 @@ class Employee < ApplicationRecord
   def current_contract   = employment_contracts.where(status: "active").order(start_date: :desc).first
   def current_assignment = employee_assignments.where(status: "active").order(start_date: :desc).first
   def active_visa        = visas.where(status: "active").order(expiry_date: :asc).first
+  def current_project    = current_assignment&.project
 
   def nationality_label = NATIONALITIES[nationality] || nationality
 

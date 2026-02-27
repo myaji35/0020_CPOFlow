@@ -24,6 +24,20 @@
     </div>
   </div>
 
+  <%# 상태별 통계 뱃지 %>
+  <% if @status_counts.any? %>
+    <div class="flex flex-wrap gap-2">
+      <% Order.statuses.keys.each do |status_key| %>
+        <% count = @status_counts[status_key] || 0 %>
+        <% next if count == 0 %>
+        <span class="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium">
+          <%= Order::STATUS_LABELS[status_key] %>
+          <span class="bg-white dark:bg-gray-600 text-gray-800 dark:text-gray-200 px-1.5 py-0.5 rounded-full text-xs font-bold leading-none"><%= count %></span>
+        </span>
+      <% end %>
+    </div>
+  <% end %>
+
   <%# 진행 중 주문 %>
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
     <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700">

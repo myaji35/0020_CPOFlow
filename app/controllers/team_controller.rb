@@ -10,5 +10,6 @@ class TeamController < ApplicationController
   def show
     @member = User.find(params[:id])
     @active_orders = @member.assigned_orders.active.by_due_date.limit(10)
+    @status_counts = @member.assigned_orders.group(:status).count
   end
 end

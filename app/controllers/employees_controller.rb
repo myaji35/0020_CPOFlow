@@ -10,7 +10,7 @@ class EmployeesController < ApplicationController
       @employees = @employees.where("name LIKE ? OR name_en LIKE ?",
                                    "%#{params[:q]}%", "%#{params[:q]}%")
     end
-    @employees = @employees.where(department: params[:department]) if params[:department].present?
+    @employees = @employees.where(department_id: params[:department]) if params[:department].present?
     @employees = @employees.where(employment_type: params[:type]) if params[:type].present?
     @employees = @employees.dispatched if params[:deployed] == "1"
     if params[:expiring] == "visa"
@@ -76,5 +76,4 @@ class EmployeesController < ApplicationController
       :employment_type, :hire_date, :termination_date, :active, :notes
     )
   end
-
 end

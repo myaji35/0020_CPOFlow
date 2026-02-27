@@ -361,6 +361,37 @@
     </div>
   </div>
 
+  <!-- 계약 만료 현황 -->
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+    <div class="flex items-center justify-between px-5 py-3 border-b border-gray-100 dark:border-gray-700">
+      <h3 class="text-sm font-semibold text-gray-900 dark:text-white">계약 만료 임박</h3>
+      <% total_expiring_contracts = EmploymentContract.expiring_within(30).count %>
+      <% if total_expiring_contracts > 0 %>
+        <span class="text-xs bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400 px-2 py-0.5 rounded-full font-medium"><%= total_expiring_contracts %>건</span>
+      <% end %>
+    </div>
+    <div class="divide-y divide-gray-50 dark:divide-gray-700/50">
+      <% if @expiring_contracts.empty? %>
+        <div class="px-5 py-6 text-center text-xs text-gray-400 dark:text-gray-500">만료 임박 계약 없음</div>
+      <% else %>
+        <% @expiring_contracts.each do |contract| %>
+          <% days = (contract.end_date - Date.today).to_i %>
+          <% lvl_cls = days <= 7 ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20' : days <= 14 ? 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20' : 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20' %>
+          <div class="flex items-center gap-3 px-4 py-3">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 <%= lvl_cls.split.last(2).join(' ') %>">
+              <span class="text-xs font-bold <%= lvl_cls.split.first %>">D-<%= days %></span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs font-medium text-gray-900 dark:text-white truncate"><%= contract.employee&.name %></p>
+              <p class="text-xs text-gray-400 dark:text-gray-500"><%= contract.contract_type %> · <%= contract.end_date&.strftime("%Y.%m.%d") %></p>
+            </div>
+            <%= link_to employee_path(contract.employee), class: "text-xs text-primary hover:underline shrink-0" do %>보기<% end %>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
   <!-- Google Sheets 상태 + 최근 발주 -->
   <div class="flex flex-col gap-4">
     <!-- Sheets 동기화 -->

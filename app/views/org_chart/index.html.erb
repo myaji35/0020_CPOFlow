@@ -61,6 +61,37 @@
             </div>
           <% end %>
 
+          <%# 부서 미배정 직원 %>
+          <% unassigned = companies.flat_map { |c| c.employees.active.select { |e| e.department_id.nil? } }.sort_by(&:name) %>
+          <% if unassigned.any? %>
+            <div class="bg-white dark:bg-gray-800 rounded-xl border border-dashed border-gray-300 dark:border-gray-600 overflow-hidden">
+              <div class="flex items-center gap-2 px-5 py-3 border-b border-gray-100 dark:border-gray-700">
+                <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">부서 미배정 (<%= unassigned.count %>명)</h3>
+              </div>
+              <div class="px-5 py-4">
+                <div class="flex flex-wrap gap-2">
+                  <% unassigned.each do |emp| %>
+                    <%= link_to employee_path(emp), class: "flex items-center gap-2 px-3 py-1.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:border-primary/50 hover:shadow-sm transition-all" do %>
+                      <div class="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-300 text-xs font-bold flex-shrink-0">
+                        <%= emp.name.first.upcase %>
+                      </div>
+                      <div>
+                        <p class="text-xs font-medium text-gray-900 dark:text-white"><%= emp.name %></p>
+                        <% if emp.job_title.present? %>
+                          <p class="text-xs text-gray-400 dark:text-gray-500"><%= emp.job_title %></p>
+                        <% end %>
+                      </div>
+                      <% if emp.active_visa %>
+                        <span class="w-2 h-2 rounded-full flex-shrink-0 <%= emp.visa_expiring_soon? ? 'bg-red-400' : 'bg-green-400' %>"></span>
+                      <% end %>
+                    <% end %>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          <% end %>
+
           <% companies.each do |company| %>
             <div x-data="{ open: true }" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
               <%# 법인 헤더 %>

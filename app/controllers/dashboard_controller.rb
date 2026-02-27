@@ -46,6 +46,12 @@ class DashboardController < ApplicationController
                           .includes(:employee)
                           .limit(5)
 
+    # 계약 만료 임박 (30일 이내)
+    @expiring_contracts = EmploymentContract.expiring_within(30)
+                                            .order(:end_date)
+                                            .includes(:employee)
+                                            .limit(5)
+
     # Google Sheets 동기화 상태
     @last_sync   = SheetsSyncLog.recent.first
     @sheets_mock = Sheets::SheetsService.new.mock_mode?
