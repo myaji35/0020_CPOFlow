@@ -50,7 +50,11 @@ module Gmail
         llm_analysis:           @detection[:llm_raw].to_json,
         llm_analyzed_at:        Time.current,
         tags:                   build_tags,
-        user:                   @account.user
+        user:                   @account.user,
+        # Ariba 전용 필드
+        source_type:            @detection[:is_ariba] ? :ariba : :email,
+        ariba_event_url:        @detection[:is_ariba] ? extract_ariba_event_url : nil,
+        ariba_event_id:         @detection[:ariba_event_id]
       )
 
       if order.save
@@ -83,6 +87,12 @@ module Gmail
 
     def build_title
       subject = @email[:subject].to_s.strip
+      if @detection[:is_ariba]
+        event_id = @detection[:ariba_event_id]
+        return "[ARIBA] #{event_id} - #{subject}" if event_id.present?
+        return "[ARIBA] #{subject}" if subject.present?
+        return "[ARIBA] RFQ from #{@detection[:customer_name]}"
+      end
       return "RFQ — #{subject}" if subject.present?
       "RFQ from #{@detection[:customer_name]}"
     end
@@ -108,6 +118,7 @@ module Gmail
 
     def build_tags
       tags = [ "rfq", "auto-import" ]
+      tags << "ariba" if @detection[:is_ariba]
       tags << "sika" if @detection[:item_hints].present?
       tags << "urgent" if @detection[:score] >= 70
       tags.join(",")
@@ -115,6 +126,14 @@ module Gmail
 
     def extract_sender_domain
       @email[:from].to_s.match(/@([^>]+)>?/)&.[](1)&.strip&.downcase
+    end
+
+    # Ariba 포털 이벤트 링크 추출: HTML body → plain body 순으로 탐색
+    def extract_ariba_event_url
+      ariba_url_pattern = /(https?:\/\/[^\s<>"']*ariba\.com[^\s<>"']*)/i
+      combined = @email[:html_body].to_s + " " + @email[:body].to_s
+      match = combined.match(ariba_url_pattern)
+      match ? match[1].strip : nil
     end
 
     # Phase E: 같은 발주처(이메일 도메인) 최근 Order 담당자를 자동 배정

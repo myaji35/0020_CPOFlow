@@ -14,6 +14,8 @@ class HrExpiryNotificationJob < ApplicationJob
   def perform
     today = Date.today
 
+    managers = User.where(role: %w[manager admin])
+
     VISA_TRIGGER_DAYS.each do |days_ahead|
       target_date = today + days_ahead.days
       visas = Visa.active.where(expiry_date: target_date).includes(employee: :user)
@@ -21,13 +23,16 @@ class HrExpiryNotificationJob < ApplicationJob
         Rails.logger.warn "[HrExpiry] 비자 만료 D-#{days_ahead}: #{visa.employee.name} " \
                           "(#{visa.visa_type}/#{visa.issuing_country})"
         key = "visa_#{visa.id}_d#{days_ahead}"
-        unless Notification.where(notification_type: key).exists?
-          Notification.create!(
-            notifiable:        visa.employee,
-            notification_type: key,
-            title:             "비자 만료 D-#{days_ahead}: #{visa.employee.name}",
-            body:              "#{visa.visa_type} (#{visa.issuing_country}) — #{visa.expiry_date&.strftime('%Y-%m-%d')} 만료"
-          )
+        managers.each do |manager|
+          unless Notification.where(user: manager, notification_type: key).exists?
+            Notification.create!(
+              user:              manager,
+              notifiable:        visa.employee,
+              notification_type: key,
+              title:             "비자 만료 D-#{days_ahead}: #{visa.employee.name}",
+              body:              "#{visa.visa_type} (#{visa.issuing_country}) — #{visa.expiry_date&.strftime('%Y-%m-%d')} 만료"
+            )
+          end
         end
       end
       Rails.logger.info "[HrExpiry] D-#{days_ahead} 비자 만료 대상: #{visas.count}명"
@@ -41,13 +46,16 @@ class HrExpiryNotificationJob < ApplicationJob
       contracts.each do |contract|
         Rails.logger.warn "[HrExpiry] 계약 만료 D-#{days_ahead}: #{contract.employee.name}"
         key = "contract_#{contract.id}_d#{days_ahead}"
-        unless Notification.where(notification_type: key).exists?
-          Notification.create!(
-            notifiable:        contract.employee,
-            notification_type: key,
-            title:             "계약 만료 D-#{days_ahead}: #{contract.employee.name}",
-            body:              "고용계약 #{contract.end_date&.strftime('%Y-%m-%d')} 만료 예정"
-          )
+        managers.each do |manager|
+          unless Notification.where(user: manager, notification_type: key).exists?
+            Notification.create!(
+              user:              manager,
+              notifiable:        contract.employee,
+              notification_type: key,
+              title:             "계약 만료 D-#{days_ahead}: #{contract.employee.name}",
+              body:              "고용계약 #{contract.end_date&.strftime('%Y-%m-%d')} 만료 예정"
+            )
+          end
         end
       end
       Rails.logger.info "[HrExpiry] D-#{days_ahead} 계약 만료 대상: #{contracts.count}명"

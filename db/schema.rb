@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_24_175107) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_25_213842) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -308,6 +308,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_24_175107) do
   end
 
   create_table "orders", force: :cascade do |t|
+    t.string "ariba_event_id"
+    t.string "ariba_event_url"
     t.text "attachment_urls"
     t.integer "client_id"
     t.datetime "created_at", null: false
@@ -339,6 +341,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_24_175107) do
     t.datetime "risk_updated_at"
     t.string "sender_domain"
     t.string "source_email_id"
+    t.integer "source_type", default: 0, null: false
     t.integer "status", default: 0, null: false
     t.integer "supplier_id"
     t.string "tags"
@@ -347,6 +350,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_24_175107) do
     t.text "translated_subject"
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
+    t.index ["ariba_event_id"], name: "index_orders_on_ariba_event_id"
     t.index ["client_id"], name: "index_orders_on_client_id"
     t.index ["due_date"], name: "index_orders_on_due_date"
     t.index ["project_id"], name: "index_orders_on_project_id"

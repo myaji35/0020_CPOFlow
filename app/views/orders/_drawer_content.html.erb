@@ -18,6 +18,12 @@
           이메일 수신
         </span>
       <% end %>
+      <% if order.ariba? %>
+        <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-semibold">
+          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          SAP Ariba
+        </span>
+      <% end %>
     </div>
 
     <%# 주요 정보 그리드 %>
@@ -66,7 +72,28 @@
           </dd>
         </div>
       <% end %>
+      <% if order.ariba_event_id.present? %>
+        <div>
+          <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Ariba 이벤트 ID</dt>
+          <dd class="font-medium text-gray-900 dark:text-white font-mono"><%= order.ariba_event_id %></dd>
+        </div>
+      <% end %>
     </dl>
+
+    <%# Ariba 포털 링크 버튼 %>
+    <% if order.ariba_event_url.present? %>
+      <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+        <%= link_to order.ariba_event_url, target: "_blank", rel: "noopener noreferrer",
+            class: "inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors" do %>
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+            <polyline points="15 3 21 3 21 9"/>
+            <line x1="10" y1="14" x2="21" y2="3"/>
+          </svg>
+          Open in Ariba
+        <% end %>
+      </div>
+    <% end %>
 
     <%# 설명 %>
     <% if order.description.present? %>

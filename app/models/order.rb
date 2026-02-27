@@ -36,6 +36,11 @@ class Order < ApplicationRecord
     urgent: 3
   }, default: :medium
 
+  enum :source_type, {
+    email: 0,
+    ariba: 1
+  }, default: :email
+
   validates :title, presence: true
   validates :customer_name, presence: true
   validates :status, presence: true

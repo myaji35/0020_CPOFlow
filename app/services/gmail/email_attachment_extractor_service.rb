@@ -108,6 +108,25 @@ module Gmail
       urls.select { |url| url.length < 500 }.first(10)  # 최대 10개, 500자 이하
     end
 
+    # SAP Ariba 포털 이벤트 링크를 HTML/plain body에서 추출
+    # 정규식으로 ariba.com 포함 URL을 찾아 첫 번째 반환
+    def extract_ariba_event_link
+      ariba_url_pattern = /(https?:\/\/[^\s<>"']*ariba\.com[^\s<>"']*)/i
+
+      # HTML body 우선 탐색
+      html_body = extract_html_body(@message.payload)
+      if html_body.present?
+        match = html_body.match(ariba_url_pattern)
+        return match[1] if match
+      end
+
+      # plain text body 폴백
+      plain_body = extract_text_body(@message.payload)
+      match = plain_body.match(ariba_url_pattern)
+      match ? match[1] : nil
+    end
+
+
     def extract_text_body(payload)
       return "" unless payload
 
@@ -117,6 +136,22 @@ module Gmail
         plain = payload.parts.find { |p| p.mime_type == "text/plain" }
         return "" unless plain&.body&.data
         Base64.urlsafe_decode64(plain.body.data).force_encoding("UTF-8").encode("UTF-8", invalid: :replace)
+      else
+        ""
+      end
+    rescue
+      ""
+    end
+
+    def extract_html_body(payload)
+      return "" unless payload
+
+      if payload.mime_type == "text/html" && payload.body&.data
+        Base64.urlsafe_decode64(payload.body.data).force_encoding("UTF-8").encode("UTF-8", invalid: :replace)
+      elsif payload.parts
+        html_part = payload.parts.find { |p| p.mime_type == "text/html" }
+        return "" unless html_part&.body&.data
+        Base64.urlsafe_decode64(html_part.body.data).force_encoding("UTF-8").encode("UTF-8", invalid: :replace)
       else
         ""
       end

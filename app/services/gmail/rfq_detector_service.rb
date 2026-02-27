@@ -10,10 +10,25 @@ module Gmail
   #   result[:score]    # => 0..100
   #   result[:due_date] # => Date or nil
   class RfqDetectorService
-    # 자동 제외 발신 도메인 — 시스템 알림/송장 발송 서버
-    EXCLUDED_SENDER_DOMAINS = %w[
-      ansmtp.ariba.com
+    # SAP Ariba 초대 이메일 발신 도메인
+    ARIBA_SENDER_DOMAINS = %w[
       ariba.com
+      ansmtp.ariba.com
+    ].freeze
+
+    # SAP Ariba 이메일 감지 키워드 (제목/본문)
+    ARIBA_KEYWORDS = [
+      "has invited you to participate",
+      "invited you to participate in an event",
+      "ariba sourcing",
+      "sap ariba",
+      "ariba proposals",
+      "respond to this event",
+      "sourcing event"
+    ].freeze
+
+    # 자동 제외 발신 도메인 — 시스템 알림/송장 발송 서버 (Ariba 제외)
+    EXCLUDED_SENDER_DOMAINS = %w[
       sap.com
       noreply.github.com
       notifications.google.com
@@ -112,6 +127,11 @@ module Gmail
     end
 
     def detect
+      # 0단계: SAP Ariba 초대 이메일 즉시 감지 (LLM 스킵)
+      if ariba_sender?
+        return ariba_rfq_result
+      end
+
       # 1단계: 발신 도메인 / 제목 패턴으로 즉시 제외
       if excluded_sender? || excluded_subject?
         return not_rfq_result("발신자/제목 패턴으로 자동 제외 (알림성 이메일)", :excluded)
@@ -177,9 +197,46 @@ module Gmail
 
     private
 
+    def ariba_sender?
+      domain = sender_domain
+      return false if domain.blank?
+      ARIBA_SENDER_DOMAINS.any? { |d| domain == d || domain.end_with?(".#{d}") }
+    end
+
+    def ariba_rfq_result
+      # 이메일 제목에서 Ariba 이벤트 ID 추출 (10자리 숫자)
+      event_id_match = (@email[:subject].to_s + " " + @email[:body].to_s).match(/\b(\d{10})\b/)
+      event_id = event_id_match&.[](1)
+
+      # Ariba 이메일 본문에서 Owner(발주처) 파싱
+      owner_match = @email[:body].to_s.match(/Owner:\s*([^\n\r]+)/i)
+      customer = owner_match ? owner_match[1].strip : extract_customer_name
+
+      {
+        is_rfq:            true,
+        is_ariba:          true,
+        rfq_verdict:       :confirmed,
+        score:             95,
+        confidence:        "high",
+        reason:            "SAP Ariba 소싱 이벤트 초대 이메일",
+        subject_matches:   [ "ariba" ],
+        body_matches:      [],
+        due_date:          extract_due_date,
+        customer_name:     customer,
+        item_hints:        nil,
+        quantities:        [],
+        project_name:      nil,
+        delivery_location: nil,
+        currency:          nil,
+        estimated_value:   nil,
+        urgency:           "normal",
+        ariba_event_id:    event_id,
+        llm_raw:           {}
+      }
+    end
+
     def excluded_sender?
-      from_email = @email[:from].to_s
-      domain = from_email.match(/@([^>]+)>?/)&.[](1)&.strip&.downcase
+      domain = sender_domain
       return false if domain.blank?
       EXCLUDED_SENDER_DOMAINS.any? { |d| domain == d || domain.end_with?(".#{d}") }
     end
@@ -242,6 +299,10 @@ module Gmail
         end
       end
       nil
+    end
+
+    def sender_domain
+      @sender_domain ||= @email[:from].to_s.match(/@([^>]+)>?/)&.[](1)&.strip&.downcase
     end
 
     def extract_customer_name
