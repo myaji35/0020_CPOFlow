@@ -148,7 +148,8 @@ class ReportsController < ApplicationController
                      AND created_orders.due_date >= DATE(created_orders.updated_at)
                     THEN 1 ELSE 0 END) AS on_time_count"
         )
-        .order("order_count DESC")
+        .order("COUNT(created_orders.id) DESC")
+        .to_a
   end
 
   # ── CSV 생성 ───────────────────────────────────────────────
