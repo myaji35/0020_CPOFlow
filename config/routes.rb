@@ -31,6 +31,7 @@ Rails.application.routes.draw do
     end
     member do
       patch :move_status
+      patch :quick_update
       get  "pdf/quote",          to: "orders/pdf#quote",           as: :pdf_quote
       get  "pdf/purchase_order", to: "orders/pdf#purchase_order",  as: :pdf_purchase_order
     end

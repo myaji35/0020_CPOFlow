@@ -1,5 +1,5 @@
 class OrdersController < ApplicationController
-  before_action :set_order, only: %i[show edit update destroy move_status]
+  before_action :set_order, only: %i[show edit update destroy move_status quick_update]
 
   def index
     @orders = Order.all.includes(:assignees, :tasks, :user, :client, :project, :supplier).by_due_date
@@ -14,6 +14,10 @@ class OrdersController < ApplicationController
     @orders = @orders.where(supplier_id: params[:supplier_id]) if params[:supplier_id].present?
     @orders = @orders.where(project_id: params[:project_id])   if params[:project_id].present?
     @orders = @orders.joins(:assignments).where(assignments: { user_id: params[:user_id] }) if params[:user_id].present?
+
+    # 납기일 범위 필터
+    @orders = @orders.where(due_date: params[:due_from]..) if params[:due_from].present?
+    @orders = @orders.where(due_date: ..params[:due_to])   if params[:due_to].present?
 
     # 기간 필터
     case params[:period]
@@ -96,6 +100,16 @@ class OrdersController < ApplicationController
       redirect_back fallback_location: kanban_path, notice: t("orders.status_updated", status: t("orders.status.#{new_status}", default: new_status))
     else
       redirect_back fallback_location: kanban_path, alert: "Failed to update status."
+    end
+  end
+
+  def quick_update
+    permitted = params.require(:order).permit(:due_date, :status)
+    if @order.update(permitted)
+      Activity.create!(order: @order, user: current_user, action: "updated")
+      render json: { success: true }
+    else
+      render json: { success: false, errors: @order.errors.full_messages }, status: :unprocessable_entity
     end
   end
 

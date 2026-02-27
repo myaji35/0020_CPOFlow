@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 // 주문 목록 일괄 처리 — 체크박스 선택 및 하단 액션 바 제어
 export default class extends Controller {
-  static targets = ["checkbox", "selectAll", "actionBar", "count", "form"]
+  static targets = ["checkbox", "selectAll", "actionBar", "count", "form", "statusSelect", "assignSelect"]
 
   connect() {
     this.updateState()
@@ -41,28 +41,32 @@ export default class extends Controller {
       .map(cb => cb.value)
   }
 
-  bulkAction(e) {
-    const action = e.currentTarget.dataset.action_type
+  bulkAction() {
     const ids    = this.selectedIds()
     if (ids.length === 0) return
+    const status = this.hasStatusSelectTarget ? this.statusSelectTarget.value : ""
+    if (!status) { alert("상태를 선택해주세요."); return }
 
-    if (this.hasFormTarget) {
-      const form = this.formTarget
-      // hidden input으로 선택된 ID 전달
-      ids.forEach(id => {
-        const input = document.createElement("input")
-        input.type = "hidden"
-        input.name = "order_ids[]"
-        input.value = id
-        form.appendChild(input)
-      })
-      const actionInput = document.createElement("input")
-      actionInput.type  = "hidden"
-      actionInput.name  = "action_type"
-      actionInput.value = action
-      form.appendChild(actionInput)
-      form.submit()
-    }
+    const form = this.formTarget
+    this.#clearHidden(form, ["order_ids[]", "action_type", "status"])
+    ids.forEach(id => this.#addHidden(form, "order_ids[]", id))
+    this.#addHidden(form, "action_type", "status")
+    this.#addHidden(form, "status", status)
+    form.submit()
+  }
+
+  bulkAssign() {
+    const ids    = this.selectedIds()
+    if (ids.length === 0) return
+    const userId = this.hasAssignSelectTarget ? this.assignSelectTarget.value : ""
+    if (!userId) { alert("담당자를 선택해주세요."); return }
+
+    const form = this.formTarget
+    this.#clearHidden(form, ["order_ids[]", "action_type", "user_id"])
+    ids.forEach(id => this.#addHidden(form, "order_ids[]", id))
+    this.#addHidden(form, "action_type", "assign")
+    this.#addHidden(form, "user_id", userId)
+    form.submit()
   }
 
   exportCsv() {
@@ -70,5 +74,23 @@ export default class extends Controller {
     if (ids.length === 0) return
     const params = ids.map(id => `order_ids[]=${id}`).join("&")
     window.location.href = `/orders/bulk/export_csv?${params}`
+  }
+
+  clearAll() {
+    this.checkboxTargets.forEach(cb => cb.checked = false)
+    if (this.hasSelectAllTarget) this.selectAllTarget.checked = false
+    this.updateState()
+  }
+
+  #addHidden(form, name, value) {
+    const i = document.createElement("input")
+    i.type = "hidden"; i.name = name; i.value = value
+    form.appendChild(i)
+  }
+
+  #clearHidden(form, names) {
+    names.forEach(name => {
+      form.querySelectorAll(`input[name="${name}"]`).forEach(el => el.remove())
+    })
   }
 }

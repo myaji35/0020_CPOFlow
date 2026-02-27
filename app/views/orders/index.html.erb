@@ -49,8 +49,17 @@
           [["전체 담당자", ""], *@filter_users.map { |u| [u.display_name, u.id] }],
           { selected: params[:user_id] },
           class: "text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" %>
+      <%# 납기일 범위 (FR-03) %>
+      <div class="flex items-center gap-1">
+        <span class="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">납기</span>
+        <%= f.date_field :due_from, value: params[:due_from],
+            class: "text-xs border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 w-32" %>
+        <span class="text-xs text-gray-300 dark:text-gray-600">~</span>
+        <%= f.date_field :due_to, value: params[:due_to],
+            class: "text-xs border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 w-32" %>
+      </div>
       <%= f.submit "검색", class: "px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 cursor-pointer transition-colors" %>
-      <% if [ :q, :status, :period, :client_id, :supplier_id, :project_id, :user_id ].any? { |k| params[k].present? } %>
+      <% if [ :q, :status, :period, :client_id, :supplier_id, :project_id, :user_id, :due_from, :due_to ].any? { |k| params[k].present? } %>
         <%= link_to "필터 초기화", orders_path, class: "text-sm text-gray-400 dark:text-gray-500 hover:text-red-500 transition-colors" %>
       <% end %>
       <span class="ml-auto text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap"><%= @total_count %>건</span>
@@ -86,7 +95,7 @@
                 <input type="checkbox"
                        value="<%= order.id %>"
                        data-bulk-select-target="checkbox"
-                       data-action="change->bulk-select#updateCount"
+                       data-action="change->bulk-select#toggle"
                        class="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary/30 cursor-pointer">
               </td>
               <td class="px-5 py-3">
@@ -110,20 +119,25 @@
               <td class="px-5 py-3 text-sm text-gray-500 dark:text-gray-400 hidden md:table-cell">
                 <%= order.project&.name&.truncate(20) || "-" %>
               </td>
-              <td class="px-5 py-3">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                  <%= case order.status
-                      when 'inbox'      then 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
-                      when 'reviewing'  then 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400'
-                      when 'quoted'     then 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400'
-                      when 'confirmed'  then 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-400'
-                      when 'procuring'  then 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400'
-                      when 'qa'         then 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400'
-                      when 'delivered'  then 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400'
-                      else 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
-                      end %>">
-                  <%= Order::STATUS_LABELS[order.status] || order.status %>
-                </span>
+              <td class="px-5 py-3"
+                  data-controller="inline-edit"
+                  data-inline-edit-url-value="<%= quick_update_order_path(order) %>">
+                <select data-action="change->inline-edit#saveStatus"
+                        class="text-xs border-0 bg-transparent p-0 focus:ring-1 focus:ring-primary/30 rounded cursor-pointer font-medium
+                               <%= case order.status
+                                   when 'inbox'      then 'text-gray-700 dark:text-gray-300'
+                                   when 'reviewing'  then 'text-blue-700 dark:text-blue-400'
+                                   when 'quoted'     then 'text-purple-700 dark:text-purple-400'
+                                   when 'confirmed'  then 'text-indigo-700 dark:text-indigo-400'
+                                   when 'procuring'  then 'text-yellow-700 dark:text-yellow-400'
+                                   when 'qa'         then 'text-orange-700 dark:text-orange-400'
+                                   when 'delivered'  then 'text-green-700 dark:text-green-400'
+                                   else 'text-gray-700 dark:text-gray-300'
+                                   end %>">
+                  <% Order::STATUS_LABELS.each do |k, v| %>
+                    <option value="<%= k %>" <%= 'selected' if order.status == k %>><%= v %></option>
+                  <% end %>
+                </select>
               </td>
               <td class="px-5 py-3">
                 <% case order.priority
@@ -139,15 +153,14 @@
                   <span class="text-xs text-gray-400 dark:text-gray-500">보통</span>
                 <% end %>
               </td>
-              <td class="px-5 py-3 text-sm">
-                <% if order.due_date %>
-                  <% days_left = (order.due_date - Date.today).to_i %>
-                  <span class="<%= days_left < 0 ? 'text-red-600 dark:text-red-400 font-semibold' : days_left <= 7 ? 'text-red-500 dark:text-red-400' : days_left <= 14 ? 'text-orange-500 dark:text-orange-400' : 'text-gray-600 dark:text-gray-400' %>">
-                    <%= order.due_date.strftime("%m/%d") %>
-                  </span>
-                <% else %>
-                  <span class="text-gray-400">-</span>
-                <% end %>
+              <td class="px-5 py-3 text-sm"
+                  data-controller="inline-edit"
+                  data-inline-edit-url-value="<%= quick_update_order_path(order) %>">
+                <input type="date"
+                       value="<%= order.due_date&.strftime('%Y-%m-%d') %>"
+                       data-action="change->inline-edit#saveDueDate"
+                       class="text-xs border-0 bg-transparent p-0 w-24 focus:ring-1 focus:ring-primary/30 rounded cursor-pointer
+                              <%= order.due_date ? due_date_color_class(order.due_date) : 'text-gray-400 dark:text-gray-500' %>">
               </td>
               <td class="px-5 py-3">
                 <div class="flex -space-x-1">
@@ -180,9 +193,7 @@
   <%# 일괄 처리 액션 바 (하단 고정) %>
   <div data-bulk-select-target="actionBar"
        class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-30 bg-gray-900 dark:bg-gray-700 text-white rounded-2xl shadow-2xl px-5 py-3 flex items-center gap-4 min-w-72">
-    <span class="text-sm font-medium">
-      <span data-bulk-select-target="count">0</span>건 선택됨
-    </span>
+    <span data-bulk-select-target="count" class="text-sm font-medium">0개 선택됨</span>
     <div class="h-4 w-px bg-white/20"></div>
     <%# 상태 변경 %>
     <select data-bulk-select-target="statusSelect"
@@ -196,6 +207,19 @@
             data-url="<%= orders_bulk_path %>"
             class="text-xs bg-accent hover:bg-accent/80 px-3 py-1.5 rounded-lg transition-colors font-medium">
       적용
+    </button>
+    <div class="h-4 w-px bg-white/20"></div>
+    <%# 담당자 배정 (FR-02) %>
+    <select data-bulk-select-target="assignSelect"
+            class="text-xs bg-white/10 border border-white/20 rounded-lg px-2 py-1 text-white focus:outline-none focus:ring-1 focus:ring-white/40">
+      <option value="">담당자 배정...</option>
+      <% User.order(:name).each do |u| %>
+        <option value="<%= u.id %>"><%= u.display_name %></option>
+      <% end %>
+    </select>
+    <button data-action="click->bulk-select#bulkAssign"
+            class="text-xs bg-green-500 hover:bg-green-400 px-3 py-1.5 rounded-lg transition-colors font-medium">
+      배정
     </button>
     <div class="h-4 w-px bg-white/20"></div>
     <%# CSV 내보내기 %>
