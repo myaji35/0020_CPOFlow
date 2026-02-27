@@ -58,6 +58,15 @@ class ProjectsController < ApplicationController
     redirect_to projects_path, notice: t("projects.delete_success")
   end
 
+  # GET /projects/search?q=... (AJAX 자동완성용)
+  def search
+    q = params[:q].to_s.strip
+    projects = Project.includes(:client).active.by_name
+    projects = projects.where("projects.name LIKE ?", "%#{q}%") if q.present?
+    results = projects.limit(10).map { |p| { id: p.id, name: p.name, client_name: p.client&.name, status: p.status } }
+    render json: results
+  end
+
   private
 
   def set_project

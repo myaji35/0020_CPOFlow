@@ -15,11 +15,34 @@
 
     <div>
       <%= f.label :client_id, "발주처 (Client)", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
-      <%= f.select :client_id,
-          options_for_select([["선택 안함", ""]] + Client.active.by_name.map { |c| [c.name, c.id] }, order.client_id),
-          {},
-          id: "order_client_id",
-          class: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none" %>
+      <div data-controller="autocomplete"
+           data-autocomplete-url-value="<%= search_clients_path %>"
+           data-autocomplete-placeholder-value="발주처 검색..."
+           data-autocomplete-sublabel-value="code"
+           class="relative">
+        <%= f.hidden_field :client_id, data: { autocomplete_target: "hidden" } %>
+        <!-- 배지 (선택된 항목 표시) -->
+        <div data-autocomplete-target="badge"
+             class="<%= order.client_id.present? ? '' : 'hidden' %> flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg text-sm">
+          <span data-autocomplete-target="badgeLabel" class="text-gray-900 dark:text-white font-medium"><%= order.client&.name %></span>
+          <span data-autocomplete-target="badgeSub" class="text-gray-400 dark:text-gray-500 text-xs"><%= order.client&.code ? "(#{order.client.code})" : "" %></span>
+          <button type="button" data-action="click->autocomplete#clear"
+                  class="ml-auto text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <!-- 검색 input -->
+        <input type="text"
+               data-autocomplete-target="input"
+               data-action="input->autocomplete#onInput keydown->autocomplete#onKeydown"
+               placeholder="발주처 검색..."
+               autocomplete="off"
+               class="<%= order.client_id.present? ? 'hidden' : '' %> w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none">
+        <!-- 드롭다운 -->
+        <div data-autocomplete-target="dropdown"
+             class="hidden absolute z-50 left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-52 overflow-y-auto">
+        </div>
+      </div>
     </div>
 
     <div>
@@ -33,17 +56,59 @@
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div>
       <%= f.label :supplier_id, "공급사 (Supplier)", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
-      <%= f.select :supplier_id,
-          options_for_select([["선택 안함", ""]] + Supplier.by_name.map { |s| [s.name, s.id] }, order.supplier_id),
-          {},
-          class: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none" %>
+      <div data-controller="autocomplete"
+           data-autocomplete-url-value="<%= search_suppliers_path %>"
+           data-autocomplete-placeholder-value="공급사 검색..."
+           data-autocomplete-sublabel-value="code"
+           class="relative">
+        <%= f.hidden_field :supplier_id, data: { autocomplete_target: "hidden" } %>
+        <div data-autocomplete-target="badge"
+             class="<%= order.supplier_id.present? ? '' : 'hidden' %> flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg text-sm">
+          <span data-autocomplete-target="badgeLabel" class="text-gray-900 dark:text-white font-medium"><%= order.supplier&.name %></span>
+          <span data-autocomplete-target="badgeSub" class="text-gray-400 dark:text-gray-500 text-xs"><%= order.supplier&.ecount_code ? "(#{order.supplier.ecount_code})" : "" %></span>
+          <button type="button" data-action="click->autocomplete#clear"
+                  class="ml-auto text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <input type="text"
+               data-autocomplete-target="input"
+               data-action="input->autocomplete#onInput keydown->autocomplete#onKeydown"
+               placeholder="공급사 검색..."
+               autocomplete="off"
+               class="<%= order.supplier_id.present? ? 'hidden' : '' %> w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none">
+        <div data-autocomplete-target="dropdown"
+             class="hidden absolute z-50 left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-52 overflow-y-auto">
+        </div>
+      </div>
     </div>
     <div>
       <%= f.label :project_id, "현장/프로젝트", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
-      <%= f.select :project_id,
-          options_for_select([["선택 안함", ""]] + Project.active.by_name.map { |p| ["#{p.name} (#{p.client.name})", p.id] }, order.project_id),
-          {},
-          class: "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none" %>
+      <div data-controller="autocomplete"
+           data-autocomplete-url-value="<%= search_projects_path %>"
+           data-autocomplete-placeholder-value="현장/프로젝트 검색..."
+           data-autocomplete-sublabel-value="client_name"
+           class="relative">
+        <%= f.hidden_field :project_id, data: { autocomplete_target: "hidden" } %>
+        <div data-autocomplete-target="badge"
+             class="<%= order.project_id.present? ? '' : 'hidden' %> flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg text-sm">
+          <span data-autocomplete-target="badgeLabel" class="text-gray-900 dark:text-white font-medium"><%= order.project&.name %></span>
+          <span data-autocomplete-target="badgeSub" class="text-gray-400 dark:text-gray-500 text-xs"><%= order.project&.client&.name ? "(#{order.project.client.name})" : "" %></span>
+          <button type="button" data-action="click->autocomplete#clear"
+                  class="ml-auto text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <input type="text"
+               data-autocomplete-target="input"
+               data-action="input->autocomplete#onInput keydown->autocomplete#onKeydown"
+               placeholder="현장/프로젝트 검색..."
+               autocomplete="off"
+               class="<%= order.project_id.present? ? 'hidden' : '' %> w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent focus:border-transparent outline-none">
+        <div data-autocomplete-target="dropdown"
+             class="hidden absolute z-50 left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-52 overflow-y-auto">
+        </div>
+      </div>
     </div>
   </div>
 

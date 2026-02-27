@@ -76,17 +76,21 @@ Rails.application.routes.draw do
 
   # 발주처 (Clients)
   resources :clients do
+    collection { get :search }
     resources :contact_persons, only: %i[new create edit update destroy]
   end
 
   # 거래처 (Suppliers) - destroy 제외 (발주 이력 보존)
   resources :suppliers, except: [:destroy] do
+    collection { get :search }
     resources :contact_persons, only: %i[new create edit update destroy]
     resources :supplier_products, only: %i[create destroy]
   end
 
   # 프로젝트 (Projects)
-  resources :projects
+  resources :projects do
+    collection { get :search }
+  end
 
   # 조직도 (Org Chart)
   get "org_chart", to: "org_chart#index", as: :org_chart

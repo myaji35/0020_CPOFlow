@@ -86,6 +86,15 @@ class SuppliersController < ApplicationController
     end
   end
 
+  # GET /suppliers/search?q=... (AJAX 자동완성용)
+  def search
+    q = params[:q].to_s.strip
+    suppliers = Supplier.by_name
+    suppliers = suppliers.where("name LIKE ? OR ecount_code LIKE ?", "%#{q}%", "%#{q}%") if q.present?
+    results = suppliers.limit(10).map { |s| { id: s.id, name: s.name, code: s.ecount_code, industry: s.industry_label } }
+    render json: results
+  end
+
   private
 
   def calculate_supplier_performance(on_time_rate, total_orders)

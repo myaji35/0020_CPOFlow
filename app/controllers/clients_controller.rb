@@ -96,6 +96,15 @@ class ClientsController < ApplicationController
     redirect_to clients_path, notice: t("clients.delete_success")
   end
 
+  # GET /clients/search?q=... (AJAX 자동완성용)
+  def search
+    q = params[:q].to_s.strip
+    clients = Client.active.by_name
+    clients = clients.where("name LIKE ? OR code LIKE ?", "%#{q}%", "%#{q}%") if q.present?
+    results = clients.limit(10).map { |c| { id: c.id, name: c.name, code: c.code, country: c.country } }
+    render json: results
+  end
+
   private
 
   def set_client
