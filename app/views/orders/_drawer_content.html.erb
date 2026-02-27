@@ -1,351 +1,437 @@
 <%# ============================================================
     주문 상세 Drawer 콘텐츠 — Drawer / Full page 공용
 ============================================================ %>
-<div class="p-6 space-y-6">
+<div id="order-drawer-content-<%= order.id %>">
 
-  <%# ── 1. 헤더 메타 정보 ─────────────────────────────────── %>
-  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-    <%# 상태/우선순위/D-day 배지 %>
-    <div class="flex flex-wrap items-center gap-2 mb-4">
-      <%= status_badge(order) %>
-      <%= priority_badge(order) %>
-      <% if order.due_date %>
-        <%= due_badge(order) %>
-      <% end %>
-      <% if order.source_email_id.present? %>
-        <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400">
-          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          이메일 수신
-        </span>
-      <% end %>
-      <% if order.ariba? %>
-        <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-semibold">
-          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-          SAP Ariba
-        </span>
-      <% end %>
-    </div>
-
-    <%# 주요 정보 그리드 %>
-    <dl class="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
-      <div>
-        <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">고객사</dt>
-        <dd class="font-medium text-gray-900 dark:text-white">
-          <% if order.client %>
-            <%= link_to order.client.name, client_path(order.client), class: "text-accent hover:underline" %>
-          <% else %>
-            <%= order.customer_name %>
-          <% end %>
-        </dd>
-      </div>
-      <div>
-        <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">마감일</dt>
-        <dd class="font-medium text-gray-900 dark:text-white"><%= order.due_date&.strftime("%Y년 %m월 %d일") || "—" %></dd>
-      </div>
-      <% if order.project %>
-        <div>
-          <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">프로젝트</dt>
-          <dd class="font-medium text-gray-900 dark:text-white">
-            <%= link_to order.project.name, project_path(order.project), class: "text-accent hover:underline" %>
-          </dd>
-        </div>
-      <% end %>
-      <% if order.supplier %>
-        <div>
-          <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">공급사</dt>
-          <dd class="font-medium text-gray-900 dark:text-white">
-            <%= link_to order.supplier.name, supplier_path(order.supplier), class: "text-accent hover:underline" %>
-          </dd>
-        </div>
-      <% end %>
-      <% if order.item_name.present? %>
-        <div>
-          <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">품목</dt>
-          <dd class="font-medium text-gray-900 dark:text-white"><%= order.item_name %> <%= "× #{order.quantity}" if order.quantity %></dd>
-          <%# eCountERP 실시간 재고 표시 %>
-          <% product = Product.find_by(name: order.item_name) %>
-          <% if product&.ecount_code.present? %>
-            <% stock = EcountApi::InventoryService.stock_for(product.ecount_code) %>
-            <dd class="mt-1 flex items-center gap-1.5 text-xs">
-              <svg class="w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-              <span class="text-gray-500 dark:text-gray-400">재고</span>
-              <% if stock.nil? %>
-                <span class="text-gray-400 dark:text-gray-500">조회 불가</span>
-              <% elsif stock <= 0 %>
-                <span class="font-semibold text-red-600 dark:text-red-400">재고 없음</span>
-              <% elsif stock <= 10 %>
-                <span class="font-semibold text-orange-600 dark:text-orange-400"><%= stock %>개 (부족)</span>
-              <% else %>
-                <span class="font-medium text-green-600 dark:text-green-400"><%= stock %>개</span>
-              <% end %>
-            </dd>
-          <% end %>
-        </div>
-      <% end %>
-      <% if order.estimated_value.present? %>
-        <div>
-          <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">예상 금액</dt>
-          <dd class="font-medium text-gray-900 dark:text-white">
-            <%= number_to_currency(order.estimated_value, unit: order.currency.presence || "$", format: "%u %n") %>
-          </dd>
-        </div>
-      <% end %>
-      <% if order.ariba_event_id.present? %>
-        <div>
-          <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Ariba 이벤트 ID</dt>
-          <dd class="font-medium text-gray-900 dark:text-white font-mono"><%= order.ariba_event_id %></dd>
-        </div>
-      <% end %>
-    </dl>
-
-    <%# Ariba 포털 링크 버튼 %>
-    <% if order.ariba_event_url.present? %>
-      <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-        <%= link_to order.ariba_event_url, target: "_blank", rel: "noopener noreferrer",
-            class: "inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors" do %>
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-            <polyline points="15 3 21 3 21 9"/>
-            <line x1="10" y1="14" x2="21" y2="3"/>
-          </svg>
-          Open in Ariba
+  <%# ── 탭 바 ─────────────────────────────────────────────── %>
+  <div class="flex border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 sticky top-0 z-10"
+       id="drawer-tabs-<%= order.id %>">
+    <% [
+      ['detail',   '상세'],
+      ['tasks',    '태스크'],
+      ['comments', '코멘트'],
+      ['history',  '히스토리']
+    ].each_with_index do |(tab_id, label), i| %>
+      <button onclick="switchDrawerTab('<%= order.id %>', '<%= tab_id %>')"
+              id="drawer-tab-<%= order.id %>-<%= tab_id %>"
+              class="flex items-center gap-1.5 px-4 py-3 text-sm font-medium transition-colors border-b-2
+                     <%= i == 0 ? 'border-primary text-primary' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300' %>">
+        <%= label %>
+        <% if tab_id == 'tasks' && tasks.any? %>
+          <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-1.5 py-0.5 rounded-full"><%= tasks.count %></span>
         <% end %>
-      </div>
-    <% end %>
-
-    <%# 설명 %>
-    <% if order.description.present? %>
-      <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-        <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">설명</p>
-        <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap"><%= order.description %></p>
-      </div>
-    <% end %>
-
-    <%# 태그 %>
-    <% if order.tags_array.any? %>
-      <div class="mt-4 flex flex-wrap gap-1.5">
-        <% order.tags_array.each do |tag| %>
-          <span class="text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-2.5 py-0.5 rounded-full">#<%= tag %></span>
+        <% if tab_id == 'comments' && comments.any? %>
+          <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-1.5 py-0.5 rounded-full"><%= comments.count %></span>
         <% end %>
-      </div>
+      </button>
     <% end %>
   </div>
 
-  <%# ── 2. 담당자 + 스테이지 이동 (인라인) ───────────────── %>
-  <div class="grid grid-cols-2 gap-4">
-    <%# 담당자 %>
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4" x-data="{ showAssignMenu: false }">
-      <div class="flex items-center justify-between mb-3">
-        <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">담당자</h4>
-        <button @click="showAssignMenu = !showAssignMenu"
-                class="w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-accent hover:text-white text-gray-500 dark:text-gray-400 transition-colors text-sm font-bold"
-                title="담당자 추가">+</button>
-      </div>
+  <%# ══════════════════════════════════════════════════════════
+      탭 패널 1: 상세 (기본 표시)
+  ══════════════════════════════════════════════════════════ %>
+  <div id="drawer-panel-<%= order.id %>-detail" class="p-6 space-y-6">
 
-      <%# 담당자 추가 드롭다운 %>
-      <div x-show="showAssignMenu" @click.outside="showAssignMenu = false"
-           class="mb-3 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
-        <% unassigned_users = User.where.not(id: order.assignee_ids).order(:name) %>
-        <% if unassigned_users.any? %>
-          <% unassigned_users.each do |u| %>
-            <%= form_with url: order_assignments_path(order), method: :post, local: true do |f| %>
-              <%= f.hidden_field :user_id, value: u.id %>
-              <button type="submit"
-                      class="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors text-left">
-                <div class="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold shrink-0">
-                  <%= u.initials %>
-                </div>
-                <span><%= u.display_name %></span>
-                <span class="ml-auto text-gray-400 text-xs"><%= u.role %></span>
-              </button>
-            <% end %>
-          <% end %>
-        <% else %>
-          <p class="px-3 py-2 text-xs text-gray-400 dark:text-gray-500">모든 팀원이 배정됨</p>
-        <% end %>
-      </div>
+    <%# ── 1. 헤더 메타 정보 ─────────────────────────────────── %>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+      <%# 상태/우선순위/D-day 배지 %>
+      <div class="flex flex-wrap items-center gap-2 mb-4">
+        <%= status_badge(order) %>
 
-      <%# 현재 담당자 목록 %>
-      <% if order.assignees.any? %>
-        <div class="space-y-1">
-          <% order.assignments.includes(:user).each do |assignment| %>
-            <div class="flex items-center gap-2 group">
-              <div class="w-7 h-7 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold shrink-0">
-                <%= assignment.user.initials %>
-              </div>
-              <div class="min-w-0 flex-1">
-                <p class="text-sm font-medium text-gray-900 dark:text-white truncate"><%= assignment.user.display_name %></p>
-                <p class="text-xs text-gray-400 dark:text-gray-500"><%= assignment.user.role.capitalize %></p>
-              </div>
-              <%= form_with url: order_assignment_path(order, assignment), method: :delete, local: true do |f| %>
+        <%# 우선순위 인라인 드롭다운 %>
+        <div class="relative inline-block" id="priority-dropdown-<%= order.id %>">
+          <button onclick="togglePriorityDropdown('<%= order.id %>', event)"
+                  class="cursor-pointer focus:outline-none">
+            <%= priority_badge(order) %>
+          </button>
+          <div id="priority-menu-<%= order.id %>"
+               class="hidden absolute left-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-20 py-1 w-32">
+            <% [['low', '낮음'], ['medium', '보통'], ['high', '높음'], ['urgent', '긴급']].each do |val, label| %>
+              <%= form_with url: quick_update_order_path(order), method: :patch, local: true do |f| %>
+                <%= f.hidden_field :priority, value: val %>
                 <button type="submit"
-                        class="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded-full text-gray-400 hover:bg-red-100 hover:text-red-500 dark:hover:bg-red-900/30 transition-all text-xs"
-                        title="담당자 제거"
-                        onclick="return confirm('<%= assignment.user.display_name %>을(를) 담당자에서 제거할까요?')">✕</button>
+                        class="w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-gray-50 dark:hover:bg-gray-700
+                               <%= order.priority == val ? 'font-semibold text-primary' : 'text-gray-700 dark:text-gray-300' %>">
+                  <%= label %>
+                  <% if order.priority == val %>
+                    <span class="float-right text-primary">✓</span>
+                  <% end %>
+                </button>
               <% end %>
-            </div>
-          <% end %>
-        </div>
-      <% else %>
-        <p class="text-xs text-gray-400 dark:text-gray-500">배정된 담당자 없음</p>
-      <% end %>
-    </div>
-
-    <%# 스테이지 이동 %>
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-      <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">스테이지 이동</h4>
-      <div class="space-y-1">
-        <% Order::KANBAN_COLUMNS.each do |status| %>
-          <% is_current = order.status == status %>
-          <%= form_with url: move_status_order_path(order), method: :patch do |f| %>
-            <%= f.hidden_field :status, value: status %>
-            <%= f.submit Order::STATUS_LABELS[status],
-                disabled: is_current,
-                class: "w-full text-left text-xs py-1.5 px-2.5 rounded-lg cursor-pointer transition-colors #{is_current ? 'bg-accent text-white font-semibold' : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:cursor-default'}" %>
-          <% end %>
-        <% end %>
-      </div>
-    </div>
-  </div>
-
-  <%# ── 3. 이메일 원문 (있을 때만) ───────────────────────── %>
-  <% if order.original_email_body.present? %>
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-      <div class="flex items-center justify-between px-5 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
-        <div class="flex items-center gap-2">
-          <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">원본 이메일</span>
-        </div>
-        <span class="text-xs text-gray-400 dark:text-gray-500"><%= order.original_email_from %></span>
-      </div>
-      <div class="p-5">
-        <% if order.original_email_subject.present? %>
-          <p class="text-sm font-medium text-gray-900 dark:text-white mb-3"><%= order.original_email_subject %></p>
-        <% end %>
-        <div class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-wrap font-mono bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 max-h-48 overflow-y-auto border border-gray-100 dark:border-gray-700">
-          <%= order.original_email_body %>
-        </div>
-      </div>
-    </div>
-  <% end %>
-
-  <%# ── 4. 태스크 체크리스트 (Turbo Frame 인라인 토글) ──── %>
-  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-    <div class="flex items-center justify-between mb-4">
-      <h3 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-        <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></polyline></svg>
-        태스크
-      </h3>
-    </div>
-
-    <%# 진행률 바 (turbo_stream 교체 타겟) %>
-    <%= render "tasks/progress", order: order %>
-
-    <%# 태스크 목록 (각 행이 turbo-frame, append 타겟) %>
-    <div id="task-list-<%= order.id %>" class="space-y-1 mb-4">
-      <% tasks.each do |task| %>
-        <%= render "tasks/task", task: task, order: order %>
-      <% end %>
-      <% if tasks.empty? %>
-        <p class="text-xs text-gray-400 dark:text-gray-500 px-3 py-2">태스크가 없습니다</p>
-      <% end %>
-    </div>
-
-    <%# 태스크 추가 폼 (turbo_stream.replace로 입력값 초기화) %>
-    <%= render "tasks/add_form", order: order %>
-  </div>
-
-  <%# ── 5. 코멘트 (Turbo Stream 실시간 추가) ──────────────── %>
-  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-    <h3 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
-      <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      코멘트
-      <% if comments.any? %>
-        <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-1.5 py-0.5 rounded-full"><%= comments.count %></span>
-      <% end %>
-    </h3>
-
-    <%# 코멘트 목록 (turbo_stream.append 타겟) %>
-    <div id="comments-<%= order.id %>" class="space-y-4 mb-5">
-      <% if comments.any? %>
-        <% comments.each do |comment| %>
-          <%= render "comments/comment", comment: comment %>
-        <% end %>
-      <% else %>
-        <div class="flex items-center justify-center py-6 text-center">
-          <div>
-            <svg class="w-8 h-8 text-gray-200 dark:text-gray-600 mx-auto mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            <p class="text-xs text-gray-400 dark:text-gray-500">아직 코멘트가 없습니다</p>
+            <% end %>
           </div>
         </div>
+
+        <% if order.due_date %>
+          <%= due_badge(order) %>
+        <% end %>
+        <% if order.source_email_id.present? %>
+          <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400">
+            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            이메일 수신
+          </span>
+        <% end %>
+        <% if order.ariba? %>
+          <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-semibold">
+            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            SAP Ariba
+          </span>
+        <% end %>
+      </div>
+
+      <%# 주요 정보 그리드 %>
+      <dl class="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
+        <div>
+          <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">고객사</dt>
+          <dd class="font-medium text-gray-900 dark:text-white">
+            <% if order.client %>
+              <%= link_to order.client.name, client_path(order.client), class: "text-accent hover:underline" %>
+            <% else %>
+              <%= order.customer_name %>
+            <% end %>
+          </dd>
+        </div>
+        <div>
+          <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">마감일</dt>
+          <dd class="font-medium text-gray-900 dark:text-white"><%= order.due_date&.strftime("%Y년 %m월 %d일") || "—" %></dd>
+        </div>
+        <% if order.project %>
+          <div>
+            <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">프로젝트</dt>
+            <dd class="font-medium text-gray-900 dark:text-white">
+              <%= link_to order.project.name, project_path(order.project), class: "text-accent hover:underline" %>
+            </dd>
+          </div>
+        <% end %>
+        <% if order.supplier %>
+          <div>
+            <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">공급사</dt>
+            <dd class="font-medium text-gray-900 dark:text-white">
+              <%= link_to order.supplier.name, supplier_path(order.supplier), class: "text-accent hover:underline" %>
+            </dd>
+          </div>
+        <% end %>
+        <% if order.item_name.present? %>
+          <div>
+            <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">품목</dt>
+            <dd class="font-medium text-gray-900 dark:text-white"><%= order.item_name %> <%= "× #{order.quantity}" if order.quantity %></dd>
+            <%# eCountERP 실시간 재고 표시 %>
+            <% product = Product.find_by(name: order.item_name) %>
+            <% if product&.ecount_code.present? %>
+              <% stock = EcountApi::InventoryService.stock_for(product.ecount_code) %>
+              <dd class="mt-1 flex items-center gap-1.5 text-xs">
+                <svg class="w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                <span class="text-gray-500 dark:text-gray-400">재고</span>
+                <% if stock.nil? %>
+                  <span class="text-gray-400 dark:text-gray-500">조회 불가</span>
+                <% elsif stock <= 0 %>
+                  <span class="font-semibold text-red-600 dark:text-red-400">재고 없음</span>
+                <% elsif stock <= 10 %>
+                  <span class="font-semibold text-orange-600 dark:text-orange-400"><%= stock %>개 (부족)</span>
+                <% else %>
+                  <span class="font-medium text-green-600 dark:text-green-400"><%= stock %>개</span>
+                <% end %>
+              </dd>
+            <% end %>
+          </div>
+        <% end %>
+        <% if order.estimated_value.present? %>
+          <div>
+            <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">예상 금액</dt>
+            <dd class="font-medium text-gray-900 dark:text-white">
+              <%= number_to_currency(order.estimated_value, unit: order.currency.presence || "$", format: "%u %n") %>
+            </dd>
+          </div>
+        <% end %>
+        <% if order.ariba_event_id.present? %>
+          <div>
+            <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Ariba 이벤트 ID</dt>
+            <dd class="font-medium text-gray-900 dark:text-white font-mono"><%= order.ariba_event_id %></dd>
+          </div>
+        <% end %>
+      </dl>
+
+      <%# Ariba 포털 링크 버튼 %>
+      <% if order.ariba_event_url.present? %>
+        <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+          <%= link_to order.ariba_event_url, target: "_blank", rel: "noopener noreferrer",
+              class: "inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors" do %>
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+              <polyline points="15 3 21 3 21 9"/>
+              <line x1="10" y1="14" x2="21" y2="3"/>
+            </svg>
+            Open in Ariba
+          <% end %>
+        </div>
+      <% end %>
+
+      <%# 설명 %>
+      <% if order.description.present? %>
+        <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+          <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">설명</p>
+          <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap"><%= order.description %></p>
+        </div>
+      <% end %>
+
+      <%# 태그 %>
+      <% if order.tags_array.any? %>
+        <div class="mt-4 flex flex-wrap gap-1.5">
+          <% order.tags_array.each do |tag| %>
+            <span class="text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-2.5 py-0.5 rounded-full">#<%= tag %></span>
+          <% end %>
+        </div>
       <% end %>
     </div>
 
-    <%# 코멘트 작성 폼 (turbo_stream.replace로 초기화) %>
-    <%= render "comments/form", order: order %>
-  </div>
-
-  <%# ── 6. 활동 로그 타임라인 ──────────────────────────────── %>
-  <% if activities.any? %>
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-      <h3 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-5">
-        <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-        활동 기록
-      </h3>
-      <div class="relative pl-5">
-        <%# 세로 타임라인 선 %>
-        <div class="absolute left-[7px] top-1 bottom-1 w-px bg-gray-100 dark:bg-gray-700"></div>
-
-        <% activities.first(15).each do |act| %>
-          <%
-            icon_svg, dot_color = case act.action
-            when "status_changed"
-              ['<polyline points="9 18 15 12 9 6"/>', "bg-accent"]
-            when "comment_added"
-              ['<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>', "bg-gray-400 dark:bg-gray-500"]
-            when "task_completed"
-              ['<polyline points="20 6 9 17 4 12"/>', "bg-green-400"]
-            when "created"
-              ['<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>', "bg-primary"]
-            else
-              ['<circle cx="12" cy="12" r="4"/>', "bg-gray-300"]
-            end
-          %>
-          <div class="relative flex gap-3 mb-4 last:mb-0">
-            <%# 타임라인 점 %>
-            <div class="w-3.5 h-3.5 rounded-full <%= dot_color %> shrink-0 mt-0.5 z-10 flex items-center justify-center">
-              <svg class="w-2 h-2 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><%= icon_svg.html_safe %></svg>
-            </div>
-            <%# 텍스트 %>
-            <div class="flex-1 min-w-0 -mt-0.5">
-              <div class="flex flex-wrap items-center gap-1.5 text-xs">
-                <span class="font-semibold text-gray-800 dark:text-gray-200"><%= act.user.display_name %></span>
-                <% case act.action %>
-                <% when "status_changed" %>
-                  <span class="text-gray-500 dark:text-gray-400">상태 변경</span>
-                  <% if act.from_label && act.to_label %>
-                    <span class="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"><%= act.from_label %></span>
-                    <svg class="w-3 h-3 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-                    <span class="px-1.5 py-0.5 rounded bg-accent/10 text-accent font-medium"><%= act.to_label %></span>
-                  <% end %>
-                <% when "comment_added" %>
-                  <span class="text-gray-500 dark:text-gray-400">코멘트 작성</span>
-                <% when "task_completed" %>
-                  <span class="text-gray-500 dark:text-gray-400">태스크 완료</span>
-                <% when "created" %>
-                  <span class="text-gray-500 dark:text-gray-400">오더 생성</span>
-                <% else %>
-                  <span class="text-gray-500 dark:text-gray-400"><%= act.action.humanize.downcase %></span>
+    <%# ── 2. 담당자 + 스테이지 이동 ─────────────────────────── %>
+    <div class="grid grid-cols-2 gap-4">
+      <%# 담당자 %>
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4" x-data="{ showAssignMenu: false }">
+        <div class="flex items-center justify-between mb-3">
+          <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">담당자</h4>
+          <button @click="showAssignMenu = !showAssignMenu"
+                  class="w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-accent hover:text-white text-gray-500 dark:text-gray-400 transition-colors text-sm font-bold"
+                  title="담당자 추가">+</button>
+        </div>
+        <div x-show="showAssignMenu" @click.outside="showAssignMenu = false"
+             class="mb-3 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
+          <% unassigned_users = User.where.not(id: order.assignee_ids).order(:name) %>
+          <% if unassigned_users.any? %>
+            <% unassigned_users.each do |u| %>
+              <%= form_with url: order_assignments_path(order), method: :post, local: true do |f| %>
+                <%= f.hidden_field :user_id, value: u.id %>
+                <button type="submit"
+                        class="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors text-left">
+                  <div class="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold shrink-0"><%= u.initials %></div>
+                  <span><%= u.display_name %></span>
+                  <span class="ml-auto text-gray-400 text-xs"><%= u.role %></span>
+                </button>
+              <% end %>
+            <% end %>
+          <% else %>
+            <p class="px-3 py-2 text-xs text-gray-400 dark:text-gray-500">모든 팀원이 배정됨</p>
+          <% end %>
+        </div>
+        <% if order.assignees.any? %>
+          <div class="space-y-1">
+            <% order.assignments.includes(:user).each do |assignment| %>
+              <div class="flex items-center gap-2 group">
+                <div class="w-7 h-7 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold shrink-0"><%= assignment.user.initials %></div>
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm font-medium text-gray-900 dark:text-white truncate"><%= assignment.user.display_name %></p>
+                  <p class="text-xs text-gray-400 dark:text-gray-500"><%= assignment.user.role.capitalize %></p>
+                </div>
+                <%= form_with url: order_assignment_path(order, assignment), method: :delete, local: true do |f| %>
+                  <button type="submit"
+                          class="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded-full text-gray-400 hover:bg-red-100 hover:text-red-500 dark:hover:bg-red-900/30 transition-all text-xs"
+                          title="담당자 제거"
+                          onclick="return confirm('<%= assignment.user.display_name %>을(를) 담당자에서 제거할까요?')">✕</button>
                 <% end %>
               </div>
-              <span class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 block"><%= act.created_at.strftime("%Y/%m/%d %H:%M") %></span>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="text-xs text-gray-400 dark:text-gray-500">배정된 담당자 없음</p>
+        <% end %>
+      </div>
+
+      <%# 스테이지 이동 %>
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+        <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">스테이지 이동</h4>
+        <div class="space-y-1">
+          <% Order::KANBAN_COLUMNS.each do |status| %>
+            <% is_current = order.status == status %>
+            <%= form_with url: move_status_order_path(order), method: :patch do |f| %>
+              <%= f.hidden_field :status, value: status %>
+              <%= f.submit Order::STATUS_LABELS[status],
+                  disabled: is_current,
+                  class: "w-full text-left text-xs py-1.5 px-2.5 rounded-lg cursor-pointer transition-colors #{is_current ? 'bg-accent text-white font-semibold' : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:cursor-default'}" %>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <%# ── 3. 이메일 원문 (있을 때만) ─────────────────────────── %>
+    <% if order.original_email_body.present? %>
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">원본 이메일</span>
+          </div>
+          <span class="text-xs text-gray-400 dark:text-gray-500"><%= order.original_email_from %></span>
+        </div>
+        <div class="p-5">
+          <% if order.original_email_subject.present? %>
+            <p class="text-sm font-medium text-gray-900 dark:text-white mb-3"><%= order.original_email_subject %></p>
+          <% end %>
+          <div class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-wrap font-mono bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 max-h-48 overflow-y-auto border border-gray-100 dark:border-gray-700">
+            <%= order.original_email_body %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <div class="h-4"></div>
+  </div>
+
+  <%# ══════════════════════════════════════════════════════════
+      탭 패널 2: 태스크
+  ══════════════════════════════════════════════════════════ %>
+  <div id="drawer-panel-<%= order.id %>-tasks" class="p-6 hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+          <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          태스크
+        </h3>
+      </div>
+      <%= render "tasks/progress", order: order %>
+      <div id="task-list-<%= order.id %>" class="space-y-1 mb-4">
+        <% tasks.each do |task| %>
+          <%= render "tasks/task", task: task, order: order %>
+        <% end %>
+        <% if tasks.empty? %>
+          <p class="text-xs text-gray-400 dark:text-gray-500 px-3 py-2">태스크가 없습니다</p>
+        <% end %>
+      </div>
+      <%= render "tasks/add_form", order: order %>
+    </div>
+    <div class="h-4"></div>
+  </div>
+
+  <%# ══════════════════════════════════════════════════════════
+      탭 패널 3: 코멘트
+  ══════════════════════════════════════════════════════════ %>
+  <div id="drawer-panel-<%= order.id %>-comments" class="p-6 hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+      <h3 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+        <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        코멘트
+        <% if comments.any? %>
+          <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-1.5 py-0.5 rounded-full"><%= comments.count %></span>
+        <% end %>
+      </h3>
+      <div id="comments-<%= order.id %>" class="space-y-4 mb-5">
+        <% if comments.any? %>
+          <% comments.each do |comment| %>
+            <%= render "comments/comment", comment: comment %>
+          <% end %>
+        <% else %>
+          <div class="flex items-center justify-center py-6 text-center">
+            <div>
+              <svg class="w-8 h-8 text-gray-200 dark:text-gray-600 mx-auto mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <p class="text-xs text-gray-400 dark:text-gray-500">아직 코멘트가 없습니다</p>
             </div>
           </div>
         <% end %>
       </div>
+      <%= render "comments/form", order: order %>
     </div>
-  <% end %>
+    <div class="h-4"></div>
+  </div>
 
-  <%# 하단 여백 %>
-  <div class="h-4"></div>
+  <%# ══════════════════════════════════════════════════════════
+      탭 패널 4: 히스토리
+  ══════════════════════════════════════════════════════════ %>
+  <div id="drawer-panel-<%= order.id %>-history" class="p-6 hidden">
+    <% if activities.any? %>
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+        <h3 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-5">
+          <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          활동 기록
+        </h3>
+        <div class="relative pl-5">
+          <div class="absolute left-[7px] top-1 bottom-1 w-px bg-gray-100 dark:bg-gray-700"></div>
+          <% activities.first(15).each do |act| %>
+            <%
+              icon_svg, dot_color = case act.action
+              when "status_changed"
+                ['<polyline points="9 18 15 12 9 6"/>', "bg-accent"]
+              when "comment_added"
+                ['<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>', "bg-gray-400 dark:bg-gray-500"]
+              when "task_completed"
+                ['<polyline points="20 6 9 17 4 12"/>', "bg-green-400"]
+              when "created"
+                ['<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>', "bg-primary"]
+              else
+                ['<circle cx="12" cy="12" r="4"/>', "bg-gray-300"]
+              end
+            %>
+            <div class="relative flex gap-3 mb-4 last:mb-0">
+              <div class="w-3.5 h-3.5 rounded-full <%= dot_color %> shrink-0 mt-0.5 z-10 flex items-center justify-center">
+                <svg class="w-2 h-2 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><%= icon_svg.html_safe %></svg>
+              </div>
+              <div class="flex-1 min-w-0 -mt-0.5">
+                <div class="flex flex-wrap items-center gap-1.5 text-xs">
+                  <span class="font-semibold text-gray-800 dark:text-gray-200"><%= act.user.display_name %></span>
+                  <% case act.action %>
+                  <% when "status_changed" %>
+                    <span class="text-gray-500 dark:text-gray-400">상태 변경</span>
+                    <% if act.from_label && act.to_label %>
+                      <span class="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"><%= act.from_label %></span>
+                      <svg class="w-3 h-3 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                      <span class="px-1.5 py-0.5 rounded bg-accent/10 text-accent font-medium"><%= act.to_label %></span>
+                    <% end %>
+                  <% when "comment_added" %>
+                    <span class="text-gray-500 dark:text-gray-400">코멘트 작성</span>
+                  <% when "task_completed" %>
+                    <span class="text-gray-500 dark:text-gray-400">태스크 완료</span>
+                  <% when "created" %>
+                    <span class="text-gray-500 dark:text-gray-400">오더 생성</span>
+                  <% else %>
+                    <span class="text-gray-500 dark:text-gray-400"><%= act.action.humanize.downcase %></span>
+                  <% end %>
+                </div>
+                <span class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 block"><%= act.created_at.strftime("%Y/%m/%d %H:%M") %></span>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% else %>
+      <div class="p-12 text-center">
+        <svg class="w-10 h-10 mx-auto text-gray-200 dark:text-gray-600 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <p class="text-sm text-gray-400 dark:text-gray-500">활동 기록이 없습니다</p>
+      </div>
+    <% end %>
+    <div class="h-4"></div>
+  </div>
+
 </div>
+
+<script>
+  function switchDrawerTab(orderId, tabId) {
+    var panels = ['detail', 'tasks', 'comments', 'history'];
+    panels.forEach(function(p) {
+      var panel = document.getElementById('drawer-panel-' + orderId + '-' + p);
+      var tab   = document.getElementById('drawer-tab-' + orderId + '-' + p);
+      if (!panel || !tab) return;
+      if (p === tabId) {
+        panel.classList.remove('hidden');
+        tab.classList.add('border-primary', 'text-primary');
+        tab.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+      } else {
+        panel.classList.add('hidden');
+        tab.classList.remove('border-primary', 'text-primary');
+        tab.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+      }
+    });
+  }
+
+  function togglePriorityDropdown(orderId, event) {
+    if (event) event.stopPropagation();
+    var menu = document.getElementById('priority-menu-' + orderId);
+    if (menu) menu.classList.toggle('hidden');
+  }
+
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('[id^="priority-dropdown-"]')) {
+      document.querySelectorAll('[id^="priority-menu-"]').forEach(function(m) {
+        m.classList.add('hidden');
+      });
+    }
+  });
+</script>

@@ -4,6 +4,77 @@
 
 ---
 
+## [2026-02-28] - drawer-ux (주문 드로어 UX 개선 — 탭 구조 + 헤더 빠른 액션 + 우선순위 인라인 변경) v1.0 완료
+
+### Added
+- **FR-01: 드로어 탭 구조** — 상세/태스크/코멘트/히스토리 4개 탭
+  - 클라이언트 사이드 전환 (JS classList 토글, Turbo/서버 요청 0)
+  - 탭 클릭 시 해당 패널만 표시 (기본: detail)
+  - 태스크/코멘트 탭에 카운트 배지 표시
+- **FR-02: 드로어 헤더 빠른 액션** — "다음 단계 →" 버튼
+  - openOrderDrawer() 4번째 인자 (orderStatus) 확장
+  - 현재 상태 → 다음 Kanban 스테이지 자동 계산
+  - delivered 상태이면 버튼 자동 숨김
+- **FR-03: 우선순위 인라인 변경** — 배지 클릭 드롭다운
+  - quick_update PATCH 폼 (페이지 이동 불필요)
+  - 현재 우선순위 선택지에 체크마크 표시
+  - 외부 클릭으로 드롭다운 자동 닫힘
+- **빈 상태 UI** — 태스크/히스토리 없을 때 안내 메시지 + 아이콘
+- **KANBAN_COLUMNS/STATUS_LABELS 전역화** — 다른 기능에서 재사용 가능
+
+### Technical Achievements
+- **Design Match Rate**: 96% (PASS ✅)
+  - PASS: 35 items (67% — 설계 완벽 일치)
+  - CHANGED: 11 items (21% — 모두 기능 동등 또는 개선)
+  - ADDED: 6 items (12% — UX/안정성 강화)
+  - FAIL: 0 items (0% — 누락 없음)
+- **구현 규모**: 2개 파일, 129줄 추가
+  - `app/views/layouts/application.html.erb` (+25줄)
+  - `app/views/orders/_drawer_content.html.erb` (+104줄)
+- **Code Quality**: 96/100
+  - DRY 원칙: KANBAN_COLUMNS/STATUS_LABELS 전역화 ✅
+  - null safety: csrfMeta && csrfInput 이중 확인 ✅
+  - Event handling: event.stopPropagation() 추가 (드롭다운 안정성) ✅
+  - Dark Mode: 100% 지원 ✅
+  - Backward compatibility: 기존 3인자 호출 모두 유지 ✅
+
+### Changed
+- `app/views/layouts/application.html.erb` — 드로어 헤더 구조 개편
+  - 다음 단계 폼 구조 추가 (hidden → JS로 표시/숨김)
+  - openOrderDrawer() 함수 확장 (4번째 인자 + nextStatus 계산)
+  - KANBAN_COLUMNS, STATUS_LABELS 전역 변수 추가
+- `app/views/orders/_drawer_content.html.erb` — 완전 탭 구조 전환
+  - 단일 스크롤 → 4개 탭 패널 분리 (detail/tasks/comments/history)
+  - switchDrawerTab(orderId, tabId) JS 함수 추가 (클라이언트 전환)
+  - togglePriorityDropdown(orderId, event) 함수 추가 (event.stopPropagation)
+  - 우선순위 배지 → 인라인 드롭다운 UI 변경
+
+### Improvements (Beyond Design)
+- event.stopPropagation() 추가 (드롭다운 이벤트 전파 방지)
+- csrfInput null safety 추가 (이중 방어)
+- 빈 상태 UI (태스크 없음, 히스토리 없음) 구현
+- 탭 카운트 배지 중복 표시 (탭 헤더 + 패널 내부)
+- STATUS_LABELS 레이블 상세화 (qa: "QA" → "QA Inspection")
+- 메뉴 폭 최적화 (w-36 → w-32, 한글 4글자)
+- 체크마크 색상 강조 (text-primary 추가)
+
+### Files Changed: 2개
+- `app/views/layouts/application.html.erb` (MODIFIED, +25줄)
+- `app/views/orders/_drawer_content.html.erb` (MODIFIED, +104줄)
+
+### Documentation
+- Plan: [drawer-ux.plan.md](../01-plan/features/drawer-ux.plan.md)
+- Design: [drawer-ux.design.md](../02-design/features/drawer-ux.design.md)
+- Analysis: [drawer-ux.analysis.md](../03-analysis/drawer-ux.analysis.md)
+- Report: [drawer-ux.report.md](features/drawer-ux.report.md)
+
+### Status
+- PDCA 완료도: ✅ 100% (4/4)
+- Quality Gate: ✅ PASS (96% Match Rate)
+- Production Ready: ✅ Yes
+
+---
+
 ## [2026-02-28] - search-ux (검색 UX 개선 — 최근 검색어 + Order 드로어 + 하이라이팅) v1.0 완료
 
 ### Added
