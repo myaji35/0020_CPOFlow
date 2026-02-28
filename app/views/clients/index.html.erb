@@ -54,7 +54,8 @@
           <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">회사명</th>
           <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">국가</th>
           <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">산업</th>
-          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">등급</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">신용</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">리스크</th>
           <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">오더</th>
           <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">거래금액</th>
           <th class="px-4 py-3"></th>
@@ -79,6 +80,29 @@
                 <span class="inline-flex px-2 py-0.5 text-xs font-bold rounded-full <%= grade_class %>"><%= client.credit_grade %>등급</span>
               <% end %>
             </td>
+            <td class="px-4 py-3">
+              <%
+                c_total     = client.orders.count
+                c_delivered = client.orders.where(status: :delivered).count
+                c_overdue   = client.orders.where("due_date < ? AND status != ?", Date.today, Order.statuses[:delivered]).count
+                c_rate      = c_total > 0 ? (c_delivered.to_f / c_total * 100).round(1) : nil
+                risk_grade  = if c_rate.nil? then nil
+                              elsif c_rate >= 90 && c_overdue == 0 then "A"
+                              elsif c_rate >= 75 || c_overdue <= 1  then "B"
+                              elsif c_rate >= 60 || c_overdue <= 3  then "C"
+                              else "D"
+                              end
+                risk_cls = { "A" => "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+                             "B" => "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+                             "C" => "bg-yellow-50 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+                             "D" => "bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400" }
+              %>
+              <% if risk_grade %>
+                <span class="inline-flex px-2 py-0.5 text-xs font-bold rounded-full <%= risk_cls[risk_grade] %>"><%= risk_grade %></span>
+              <% else %>
+                <span class="text-xs text-gray-300 dark:text-gray-600">-</span>
+              <% end %>
+            </td>
             <td class="px-4 py-3 text-right text-sm text-gray-700 dark:text-gray-300"><%= client.orders.count %></td>
             <td class="px-4 py-3 text-right text-sm font-medium text-gray-900 dark:text-white">$<%= number_with_delimiter(client.total_order_value.round.to_i) %></td>
             <td class="px-4 py-3 text-right">
@@ -87,7 +111,7 @@
           </tr>
         <% end %>
         <% if @clients.empty? %>
-          <tr><td colspan="7" class="px-4 py-12 text-center text-gray-400 dark:text-gray-500 text-sm">등록된 발주처가 없습니다.</td></tr>
+          <tr><td colspan="8" class="px-4 py-12 text-center text-gray-400 dark:text-gray-500 text-sm">등록된 발주처가 없습니다.</td></tr>
         <% end %>
       </tbody>
     </table>

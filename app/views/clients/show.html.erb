@@ -74,7 +74,7 @@
   </div>
 
   <!-- 탭 -->
-  <div x-data="{ tab: 'contacts' }" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
+  <div x-data="{ tab: '<%= params[:tab].presence&.then { |t| %w[contacts projects orders].include?(t) ? t : 'contacts' } || 'contacts' %>' }" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
     <div class="border-b border-gray-100 dark:border-gray-700 px-4">
       <nav class="flex gap-6">
         <button @click="tab='contacts'" :class="tab==='contacts' ? 'border-primary text-primary' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
@@ -116,15 +116,31 @@
                   <% end %>
                 </div>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5"><%= cp.title %></p>
-                <div class="flex items-center gap-3 mt-1">
+                <div class="flex items-center gap-1.5 mt-1.5">
                   <% if cp.email.present? %>
-                    <a href="mailto:<%= cp.email %>" class="text-xs text-primary hover:underline"><%= cp.email %></a>
+                    <a href="mailto:<%= cp.email %>" title="<%= cp.email %>"
+                       class="inline-flex items-center justify-center w-7 h-7 rounded-full border border-gray-200 dark:border-gray-600 text-gray-400 hover:text-primary hover:border-primary transition-colors">
+                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                        <polyline points="22,6 12,13 2,6"/>
+                      </svg>
+                    </a>
                   <% end %>
                   <% if cp.phone.present? %>
-                    <span class="text-xs text-gray-400 dark:text-gray-500"><%= cp.phone %></span>
+                    <a href="tel:<%= cp.phone %>" title="<%= cp.phone %>"
+                       class="inline-flex items-center justify-center w-7 h-7 rounded-full border border-gray-200 dark:border-gray-600 text-gray-400 hover:text-green-600 hover:border-green-400 transition-colors">
+                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.61 4.37 2 2 0 0 1 3.58 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.18 6.18l1.97-1.97a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+                      </svg>
+                    </a>
                   <% end %>
                   <% if cp.whatsapp.present? %>
-                    <span class="text-xs text-green-600 dark:text-green-400">WhatsApp: <%= cp.whatsapp %></span>
+                    <a href="https://wa.me/<%= cp.whatsapp.gsub(/\D/, '') %>" target="_blank" rel="noopener" title="WhatsApp: <%= cp.whatsapp %>"
+                       class="inline-flex items-center justify-center w-7 h-7 rounded-full border border-gray-200 dark:border-gray-600 text-gray-400 hover:text-green-500 hover:border-green-400 transition-colors">
+                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                      </svg>
+                    </a>
                   <% end %>
                 </div>
               </div>
