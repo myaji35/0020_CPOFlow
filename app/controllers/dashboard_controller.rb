@@ -69,6 +69,16 @@ class DashboardController < ApplicationController
     # Google Sheets 동기화 상태
     @last_sync   = SheetsSyncLog.recent.first
     @sheets_mock = Sheets::SheetsService.new.mock_mode?
+
+    # FR-02: KPI 드릴다운 데이터
+    @overdue_orders_brief = Order.overdue.by_due_date.limit(8).includes(:client, :assignees)
+    @urgent_orders_brief  = Order.urgent.by_due_date.limit(8).includes(:client, :assignees)
+
+    # FR-03: 7일 스파크라인
+    @daily_sparkline = (6.downto(0)).map do |i|
+      day = Date.today - i.days
+      Order.where(created_at: day.beginning_of_day..day.end_of_day).count
+    end
   end
 
   def sync_sheets
