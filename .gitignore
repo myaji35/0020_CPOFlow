@@ -42,3 +42,4 @@
 # Claude / bkit
 .claude/
 .bkit-memory.json
+.kamal/secrets
