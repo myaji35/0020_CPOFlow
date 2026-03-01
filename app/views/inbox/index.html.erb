@@ -443,27 +443,43 @@
             </div>
           <% end %>
 
-          <%# AI 판정 불확실 피드백 배너 %>
-          <% if order.respond_to?(:rfq_status) && order.rfq_status == "rfq_uncertain" %>
+          <%# RFQ 판정 배너 — inbox 상태인 이메일 전체에 표시 %>
+          <% if order.status.to_s == "inbox" && order.respond_to?(:rfq_status) %>
+            <% rfq_s = order.rfq_status.to_s %>
             <div id="feedback-banner-<%= order.id %>"
-                 class="mx-6 mb-0 mt-3 px-4 py-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg flex items-center justify-between gap-4">
+                 class="mx-6 mb-0 mt-3 px-4 py-3 rounded-lg flex items-center justify-between gap-4
+                        <%= rfq_s == 'rfq_confirmed' ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800' :
+                            rfq_s == 'rfq_excluded'  ? 'bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700' :
+                                                       'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800' %>">
               <div class="flex items-center gap-2 flex-1 min-w-0">
-                <svg class="w-4 h-4 text-yellow-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                <span class="text-xs text-yellow-800 dark:text-yellow-300 font-medium">AI가 이 이메일을 RFQ로 확신하지 못했습니다. 판정해주세요.</span>
+                <% if rfq_s == 'rfq_confirmed' %>
+                  <svg class="w-4 h-4 text-blue-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span class="text-xs text-blue-800 dark:text-blue-300 font-medium">RFQ로 확정된 이메일입니다. 판정을 변경할 수 있습니다.</span>
+                <% elsif rfq_s == 'rfq_excluded' %>
+                  <svg class="w-4 h-4 text-gray-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                  <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">일반 메일로 처리됐습니다. 판정을 변경할 수 있습니다.</span>
+                <% else %>
+                  <svg class="w-4 h-4 text-yellow-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                  <span class="text-xs text-yellow-800 dark:text-yellow-300 font-medium">AI가 이 이메일을 RFQ로 확신하지 못했습니다. 판정해주세요.</span>
+                <% end %>
               </div>
               <div class="flex items-center gap-2 flex-shrink-0">
-                <button onclick="submitFeedback(<%= order.id %>, 'confirmed', '<%= inbox_feedback_path(order.id) %>')"
-                        id="feedback-confirmed-<%= order.id %>"
-                        class="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition-colors">
-                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  RFQ 맞음
-                </button>
-                <button onclick="submitFeedback(<%= order.id %>, 'rejected', '<%= inbox_feedback_path(order.id) %>')"
-                        id="feedback-rejected-<%= order.id %>"
-                        class="flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors">
-                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                  RFQ 아님
-                </button>
+                <% unless rfq_s == 'rfq_confirmed' %>
+                  <button onclick="submitFeedback(<%= order.id %>, 'confirmed', '<%= inbox_feedback_path(order.id) %>')"
+                          id="feedback-confirmed-<%= order.id %>"
+                          class="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition-colors">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    RFQ 맞음
+                  </button>
+                <% end %>
+                <% unless rfq_s == 'rfq_excluded' %>
+                  <button onclick="submitFeedback(<%= order.id %>, 'rejected', '<%= inbox_feedback_path(order.id) %>')"
+                          id="feedback-rejected-<%= order.id %>"
+                          class="flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    RFQ 아님
+                  </button>
+                <% end %>
               </div>
             </div>
             <div id="feedback-done-<%= order.id %>" class="hidden mx-6 mb-0 mt-3 px-4 py-2.5 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
@@ -1076,20 +1092,67 @@
     .then(r => r.json())
     .then(data => {
       if (data.status === 'ok') {
-        if (banner) banner.classList.add('hidden');
-        if (doneBanner) {
-          const p = doneBanner.querySelector('p');
-          if (p) p.textContent = data.message;
-          doneBanner.classList.remove('hidden');
+        // 배너 색상·메시지·버튼을 새 상태에 맞게 즉시 업데이트
+        if (banner) {
+          // 색상 클래스 교체
+          banner.className = banner.className
+            .replace(/bg-\w+-50|bg-\w+-800|bg-\w+-900\/20|border-\w+-200|border-\w+-800|dark:bg-\w+-900\/20|dark:border-\w+-800/g, '');
+          if (verdict === 'confirmed') {
+            banner.classList.add('bg-blue-50', 'dark:bg-blue-900/20', 'border', 'border-blue-200', 'dark:border-blue-800');
+          } else {
+            banner.classList.add('bg-gray-50', 'dark:bg-gray-800', 'border', 'border-gray-200', 'dark:border-gray-700');
+          }
+
+          // 아이콘+텍스트 업데이트
+          const msgArea = banner.querySelector('.flex-1');
+          if (msgArea) {
+            if (verdict === 'confirmed') {
+              msgArea.innerHTML = '<svg class="w-4 h-4 text-blue-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="text-xs text-blue-800 dark:text-blue-300 font-medium">RFQ로 확정된 이메일입니다. 판정을 변경할 수 있습니다.</span>';
+            } else {
+              msgArea.innerHTML = '<svg class="w-4 h-4 text-gray-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg><span class="text-xs text-gray-600 dark:text-gray-400 font-medium">일반 메일로 처리됐습니다. 판정을 변경할 수 있습니다.</span>';
+            }
+          }
+
+          // 버튼 교체: 방금 누른 버튼은 숨기고, 반대 버튼만 활성화
+          const btnArea = banner.querySelector('.flex-shrink-0.flex');
+          if (btnArea) {
+            if (verdict === 'confirmed') {
+              // "RFQ 아님" 버튼만 남김
+              btnArea.innerHTML = '<button onclick="submitFeedback(' + orderId + ', \'rejected\', \'' + url + '\')" id="feedback-rejected-' + orderId + '" class="flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>RFQ 아님</button>';
+            } else {
+              // "RFQ 맞음" 버튼만 남김
+              btnArea.innerHTML = '<button onclick="submitFeedback(' + orderId + ', \'confirmed\', \'' + url + '\')" id="feedback-confirmed-' + orderId + '" class="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition-colors"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>RFQ 맞음</button>';
+            }
+          }
         }
-        // 목록 카드에서 AI 불확실 뱃지 제거
+
+        // 완료 토스트 메시지
+        showSyncNotification(data.message, 'success');
+
+        // 목록 카드 뱃지 업데이트
         const listItem = document.getElementById('email-item-' + orderId);
         if (listItem) {
-          listItem.querySelectorAll('[class*="AI 불확실"], .uncertain-badge').forEach(el => el.remove());
           const badges = listItem.querySelectorAll('span');
-          badges.forEach(b => { if (b.textContent.trim() === 'AI 불확실') b.remove(); });
+          badges.forEach(b => {
+            const t = b.textContent.trim();
+            if (t === 'AI 불확실' || t === 'RFQ' || t === '일반메일') b.remove();
+          });
+          // 새 뱃지 추가 (status badge 바로 뒤)
+          const statusBadge = listItem.querySelector('span');
+          if (statusBadge && verdict === 'confirmed') {
+            const newBadge = document.createElement('span');
+            newBadge.className = 'text-[10px] px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 rounded font-medium';
+            newBadge.textContent = 'RFQ';
+            statusBadge.after(newBadge);
+          } else if (statusBadge && verdict === 'rejected') {
+            const newBadge = document.createElement('span');
+            newBadge.className = 'text-[10px] px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded font-medium';
+            newBadge.textContent = '일반메일';
+            statusBadge.after(newBadge);
+          }
         }
-        // confirmed → 답변 초안 탭 활성화 안내
+
+        // confirmed → 답변 초안 탭 하이라이트
         if (verdict === 'confirmed') {
           const draftTab = document.querySelector('[data-order="' + orderId + '"][data-tab="reply-draft"]');
           if (draftTab) {
