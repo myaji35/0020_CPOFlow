@@ -32,6 +32,11 @@ class EmailSyncJob < ApplicationJob
   def sync_account(account)
     return if account.synced_recently?
 
+    unless account.ready?
+      Rails.logger.warn "[EmailSyncJob] #{account.email}: skipped — token expired and no refresh_token. Re-auth required."
+      return
+    end
+
     Rails.logger.info "[EmailSyncJob] Syncing account: #{account.email}"
 
     svc = Gmail::GmailService.new(account)

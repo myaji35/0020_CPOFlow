@@ -18,15 +18,18 @@ class EmailAccount < ApplicationRecord
   end
 
   def token_expired?
-    token_expires_at.present? && token_expires_at <= Time.current
+    # access_token이 없거나 만료 시각이 지났으면 만료로 판단
+    gmail_access_token.blank? || token_expires_at.blank? || token_expires_at <= Time.current
   end
 
   def needs_refresh?
+    # refresh_token이 있고 access_token이 만료(또는 없음)이면 갱신 필요
     gmail_refresh_token.present? && token_expired?
   end
 
   def ready?
-    connected? && gmail_access_token.present?
+    # 연결됨 + (access_token 있거나 refresh로 갱신 가능)
+    connected? && (gmail_access_token.present? || needs_refresh?)
   end
 
   def mark_synced!

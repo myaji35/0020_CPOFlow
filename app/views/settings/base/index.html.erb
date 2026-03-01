@@ -45,19 +45,25 @@
         <% @email_accounts.each do |account| %>
           <li class="px-6 py-4 flex items-center justify-between">
             <div class="flex items-center gap-3">
-              <%# Status dot %>
-              <span class="w-2 h-2 rounded-full <%= account.connected? ? 'bg-green-500' : 'bg-gray-300' %>"></span>
+              <%# Status dot — 연결됐어도 토큰 만료면 노란색 경고 %>
+              <% token_ok = account.connected? && !account.token_expired? %>
+              <% needs_reauth = account.connected? && account.token_expired? && !account.needs_refresh? %>
+              <span class="w-2 h-2 rounded-full <%= token_ok ? 'bg-green-500' : (account.connected? ? 'bg-yellow-400' : 'bg-gray-300') %>"></span>
               <div>
                 <p class="text-sm font-medium text-gray-900"><%= account.email %></p>
                 <p class="text-xs text-gray-500">
                   <% if account.connected? %>
-                    <% if account.last_synced_at %>
+                    <% if needs_reauth %>
+                      <span class="text-red-500 font-medium">재인증 필요 — 토큰 만료됨</span>
+                    <% elsif account.token_expired? %>
+                      <span class="text-yellow-600 font-medium">토큰 갱신 중...</span>
+                    <% elsif account.last_synced_at %>
                       Last synced <%= time_ago_in_words(account.last_synced_at) %> ago
                     <% else %>
                       Connected — not synced yet
                     <% end %>
                     &nbsp;·&nbsp;
-                    <span class="text-green-600 font-medium">Active</span>
+                    <span class="<%= token_ok ? 'text-green-600' : 'text-yellow-600' %> font-medium"><%= token_ok ? 'Active' : 'Warning' %></span>
                   <% else %>
                     Disconnected
                   <% end %>

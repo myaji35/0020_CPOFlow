@@ -116,25 +116,34 @@ module Gmail
     def refresh_token_if_needed!
       return unless @account.needs_refresh?
 
+      Rails.logger.info "[GmailService] Refreshing token for #{@account.email}"
       credentials = build_credentials
       credentials.refresh!
 
       @account.update!(
         gmail_access_token: credentials.access_token,
-        token_expires_at:   credentials.expires_at
+        token_expires_at:   Time.at(credentials.expires_at.to_i)
       )
 
-      # Rebuild client with fresh token
       @gmail = build_client
+      Rails.logger.info "[GmailService] Token refreshed for #{@account.email}, expires: #{@account.token_expires_at}"
     rescue Signet::AuthorizationError => e
-      Rails.logger.error "[GmailService] Token refresh failed: #{e.message}"
+      # refresh_token 자체가 revoked된 경우만 disconnected 처리 (재인증 필요)
+      Rails.logger.error "[GmailService] Token refresh failed for #{@account.email}: #{e.message} — re-auth required"
       @account.update!(connected: false)
       raise
     end
 
     def handle_auth_error
-      @account.update!(connected: false)
-      Rails.logger.warn "[GmailService] Auth error — account #{@account.email} disconnected"
+      if @account.needs_refresh?
+        # access_token 만료 → refresh_token으로 갱신 후 재시도 가능 (연결 유지)
+        Rails.logger.warn "[GmailService] AuthorizationError for #{@account.email} — retrying with token refresh"
+        refresh_token_if_needed!
+      else
+        # refresh_token도 없으면 재인증 필요
+        Rails.logger.warn "[GmailService] Auth error — no refresh_token for #{@account.email}, re-auth required"
+        @account.update!(connected: false)
+      end
     end
 
     def extract_body(payload)
