@@ -9,3 +9,4 @@
 | team-ux | 97% | 2026-02-28 | completed |
 | dashboard-ux | 97% | 2026-02-28 | completed |
 | client-supplier-ux | 98% | 2026-02-28 | completed |
+| migrate (HR System + 다크모드) | 98% | 2026-02-22 | completed |
