@@ -107,18 +107,18 @@ Rails.application.routes.draw do
     end
   end
 
+  # 직원 폼 내 부서/직책 인라인 관리 (AJAX) — resources :employees 보다 먼저 선언해야 /employees/departments가 올바르게 라우팅됨
+  namespace :employees do
+    resources :departments,  only: %i[index create destroy]
+    resources :job_titles,   only: %i[index create destroy]
+  end
+
   # 직원 관리 (HR System)
   resources :employees do
     resources :visas,                only: %i[new create edit update destroy]
     resources :employment_contracts, only: %i[new create edit update destroy]
     resources :employee_assignments, only: %i[new create edit update destroy]
     resources :certifications,       only: %i[new create edit update destroy]
-  end
-
-  # 직원 폼 내 부서/직책 인라인 관리 (AJAX)
-  namespace :employees do
-    resources :departments,  only: %i[index create destroy]
-    resources :job_titles,   only: %i[index create destroy]
   end
 
   # 외부 담당자 전체 목록
