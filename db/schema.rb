@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_01_043012) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_01_044938) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -356,6 +356,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_01_043012) do
     t.date "due_date"
     t.string "ecount_slip_no"
     t.datetime "ecount_synced_at"
+    t.text "email_signature_json"
     t.decimal "estimated_value", precision: 12, scale: 2
     t.text "extracted_links"
     t.string "extracted_project_name"

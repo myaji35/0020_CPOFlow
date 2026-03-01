@@ -49,11 +49,27 @@ module Gmail
 
     private
 
+    # 서명 인라인 이미지(Content-ID 보유, 파일명 없는 image/*) 판별
+    def inline_attachment?(part)
+      # Content-Disposition: inline
+      disposition = part.headers&.find { |h| h.name.downcase == "content-disposition" }&.value.to_s
+      return true if disposition.downcase.start_with?("inline")
+
+      # Content-ID 헤더 있으면 서명 로고 등 인라인 이미지
+      content_id = part.headers&.find { |h| h.name.downcase == "content-id" }
+      return true if content_id.present?
+
+      # 파일명 없는 image/* 타입
+      return true if part.mime_type&.start_with?("image/") && part.filename.blank?
+
+      false
+    end
+
     def find_attachments(payload)
       attachments = []
       return attachments unless payload
 
-      if payload.filename.present? && payload.body&.attachment_id
+      if payload.filename.present? && payload.body&.attachment_id && !inline_attachment?(payload)
         attachments << payload
       end
 

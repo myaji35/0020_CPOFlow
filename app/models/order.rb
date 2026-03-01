@@ -94,6 +94,25 @@ class Order < ApplicationRecord
     tags.to_s.split(",").map(&:strip).reject(&:blank?)
   end
 
+  # 이메일 서명 JSON → Hash
+  def email_signature
+    return {} if email_signature_json.blank?
+    JSON.parse(email_signature_json).transform_keys(&:to_sym)
+  rescue JSON::ParserError
+    {}
+  end
+
+  # 서명에서 추출한 발신자 이름
+  def sender_name
+    email_signature[:name].presence ||
+      original_email_from.to_s.match(/^([^<]+)</)&.[](1)&.strip
+  end
+
+  # 서명에서 추출한 발신자 회사명
+  def sender_company
+    email_signature[:company].presence || customer_name
+  end
+
   # eCountERP 전표 자동 생성 — confirmed 상태 전환 시 트리거
   after_update_commit :enqueue_ecount_slip, if: :saved_change_to_status?
 

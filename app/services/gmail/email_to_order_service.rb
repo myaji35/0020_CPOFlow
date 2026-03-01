@@ -45,6 +45,7 @@ module Gmail
         currency:               @detection[:currency],
         estimated_value:        @detection[:estimated_value],
         sender_domain:          extract_sender_domain,
+        email_signature_json:   parse_email_signature,
         rfq_confidence:         @detection[:confidence],
         rfq_score:              @detection[:score],
         llm_analysis:           @detection[:llm_raw].to_json,
@@ -151,6 +152,18 @@ module Gmail
       cp&.update_column(:last_contacted_at, Time.current)
     rescue => e
       Rails.logger.warn "[EmailToOrder] ContactPerson update failed: #{e.message}"
+    end
+
+    # 이메일 서명 파싱 → JSON 문자열로 저장
+    def parse_email_signature
+      result = EmailSignatureParserService.parse(
+        @email[:body],
+        @email[:html_body]
+      )
+      result.present? ? result.to_json : nil
+    rescue => e
+      Rails.logger.warn "[EmailToOrder] Signature parse failed: #{e.message}"
+      nil
     end
 
     # Phase E: 같은 발주처(이메일 도메인) 최근 Order 담당자를 자동 배정
