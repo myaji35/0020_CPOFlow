@@ -22,8 +22,21 @@
       <%= f.email_field :email, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
     </div>
     <div>
-      <%= f.label :phone, "전화", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
-      <%= f.text_field :phone, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
+      <%= f.label :department, "부서", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+      <%= f.select :department,
+          options_for_select([["선택 안 함", ""]] + ContactPerson::DEPARTMENTS.map { |d| [d, d] }, @contact_person.department),
+          {}, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <%= f.label :phone, "전화 (사무실)", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+      <%= f.tel_field :phone, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary", placeholder: "+971-2-000-0000" %>
+    </div>
+    <div>
+      <%= f.label :mobile, "모바일", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+      <%= f.tel_field :mobile, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary", placeholder: "+971-50-000-0000" %>
     </div>
   </div>
 
@@ -40,14 +53,21 @@
 
   <div class="grid grid-cols-2 gap-4">
     <div>
-      <%= f.label :language, "언어", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
-      <%= f.select :language,
-          options_for_select(ContactPerson::LANGUAGES.map { |k, v| [v, k] }, @contact_person.language || "en"),
-          {}, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
+      <%= f.label :linkedin, "LinkedIn URL", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+      <%= f.url_field :linkedin, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary", placeholder: "https://linkedin.com/in/..." %>
     </div>
     <div>
       <%= f.label :nationality, "국적", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
       <%= f.text_field :nationality, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <%= f.label :language, "언어", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+      <%= f.select :language,
+          options_for_select(ContactPerson::LANGUAGES.map { |k, v| [v, k] }, @contact_person.language || "en"),
+          {}, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
     </div>
   </div>
 

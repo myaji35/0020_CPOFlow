@@ -64,6 +64,9 @@ module Gmail
         # Phase E: 발주처 이력 기반 담당자 자동 배정
         auto_assign_from_history(order)
 
+        # 이메일 발신자와 일치하는 ContactPerson last_contacted_at 업데이트
+        update_contact_person_last_contacted(order)
+
         Activity.create!(
           order:  order,
           user:   @account.user,
@@ -136,6 +139,18 @@ module Gmail
       combined = @email[:html_body].to_s + " " + @email[:body].to_s
       match = combined.match(ariba_url_pattern)
       match ? match[1].strip : nil
+    end
+
+    # 이메일 발신자와 매칭되는 ContactPerson의 last_contacted_at 자동 업데이트
+    def update_contact_person_last_contacted(order)
+      from_raw = @email[:from].to_s
+      sender_email = from_raw.match(/<(.+?)>/)&.[](1) || from_raw.strip.downcase
+      return if sender_email.blank?
+
+      cp = ContactPerson.find_by("LOWER(email) = ?", sender_email.downcase)
+      cp&.update_column(:last_contacted_at, Time.current)
+    rescue => e
+      Rails.logger.warn "[EmailToOrder] ContactPerson update failed: #{e.message}"
     end
 
     # Phase E: 같은 발주처(이메일 도메인) 최근 Order 담당자를 자동 배정

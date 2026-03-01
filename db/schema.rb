@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_01_024631) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_01_043012) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -144,20 +144,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_01_024631) do
     t.integer "contactable_id", null: false
     t.string "contactable_type", null: false
     t.datetime "created_at", null: false
+    t.string "department"
     t.string "email"
     t.string "language", default: "en"
+    t.datetime "last_contacted_at"
+    t.string "linkedin"
+    t.string "mobile"
     t.string "name", null: false
     t.string "nationality"
     t.text "notes"
     t.string "phone"
     t.boolean "primary", default: false
+    t.string "source", default: "manual"
     t.string "title"
     t.datetime "updated_at", null: false
     t.string "wechat"
     t.string "whatsapp"
     t.index ["contactable_type", "contactable_id"], name: "index_contact_persons_on_contactable"
     t.index ["contactable_type", "contactable_id"], name: "index_contact_persons_on_contactable_type_and_contactable_id"
+    t.index ["department"], name: "index_contact_persons_on_department"
     t.index ["email"], name: "index_contact_persons_on_email"
+    t.index ["last_contacted_at"], name: "index_contact_persons_on_last_contacted_at"
   end
 
   create_table "countries", force: :cascade do |t|

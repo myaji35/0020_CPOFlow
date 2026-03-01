@@ -1,0 +1,86 @@
+<%# Client/Supplier 상세 페이지 인라인 담당자 추가 폼 %>
+<div id="new-contact-form-<%= contactable.id %>"
+     class="mb-4 p-4 border border-primary/20 rounded-lg bg-blue-50/30 dark:bg-blue-900/10">
+  <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">새 담당자 추가</h4>
+
+  <% contactable_type = contactable.is_a?(Client) ? :client : :supplier %>
+  <%= form_with model: [contactable, contact_person],
+                data: { turbo: true } do |f| %>
+    <% if contact_person.errors.any? %>
+      <div class="mb-3 p-2 rounded bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+        <% contact_person.errors.full_messages.each do |msg| %>
+          <p class="text-xs text-red-600 dark:text-red-400"><%= msg %></p>
+        <% end %>
+      </div>
+    <% end %>
+
+    <div class="grid grid-cols-2 gap-3 mb-3">
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">이름 <span class="text-red-500">*</span></label>
+        <%= f.text_field :name, required: true,
+            class: "w-full text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:border-primary",
+            placeholder: "홍길동" %>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">직책</label>
+        <%= f.text_field :title,
+            class: "w-full text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:border-primary",
+            placeholder: "Sales Manager" %>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">부서</label>
+        <%= f.select :department,
+            [["선택 안 함", ""]] + ContactPerson::DEPARTMENTS.map { |d| [d, d] },
+            { selected: contact_person.department },
+            class: "w-full text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:border-primary" %>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">이메일</label>
+        <%= f.email_field :email,
+            class: "w-full text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:border-primary",
+            placeholder: "name@company.com" %>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">전화 (사무실)</label>
+        <%= f.tel_field :phone,
+            class: "w-full text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:border-primary",
+            placeholder: "+971-2-000-0000" %>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">모바일</label>
+        <%= f.tel_field :mobile,
+            class: "w-full text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:border-primary",
+            placeholder: "+971-50-000-0000" %>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">WhatsApp</label>
+        <%= f.tel_field :whatsapp,
+            class: "w-full text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:border-primary",
+            placeholder: "+971-50-000-0000" %>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">언어</label>
+        <%= f.select :language,
+            [["선택 안 함", ""]] + ContactPerson::LANGUAGES.map { |code, name| [name, code] },
+            { selected: contact_person.language },
+            class: "w-full text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:border-primary" %>
+      </div>
+    </div>
+
+    <!-- 주 담당자 체크박스 -->
+    <div class="flex items-center gap-2 mb-3">
+      <%= f.check_box :primary, class: "rounded border-gray-300 text-primary focus:ring-primary" %>
+      <label class="text-xs text-gray-600 dark:text-gray-400">주 담당자로 설정</label>
+    </div>
+
+    <div class="flex gap-2 justify-end">
+      <button type="button"
+              onclick="document.getElementById('new-contact-form-<%= contactable.id %>').classList.add('hidden')"
+              class="text-sm text-gray-500 dark:text-gray-400 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+        취소
+      </button>
+      <%= f.submit "저장",
+          class: "text-sm text-white bg-primary px-4 py-1.5 rounded-lg hover:bg-primary/90 cursor-pointer transition-colors" %>
+    </div>
+  <% end %>
+</div>

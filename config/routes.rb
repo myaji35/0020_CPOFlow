@@ -120,6 +120,13 @@ Rails.application.routes.draw do
     resources :departments, only: %i[index create destroy]
   end
 
+  # 외부 담당자 전체 목록
+  resources :contact_persons, only: %i[index] do
+    collection do
+      post :create_from_signature
+    end
+  end
+
   # 통합 검색 (Command Palette)
   get "/search", to: "search#index", as: :search
 

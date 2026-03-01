@@ -1,0 +1,94 @@
+<% content_for :title, "외부 담당자" %>
+
+<div class="flex flex-col gap-6">
+  <!-- 페이지 헤더 -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">외부 담당자</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        총 <span class="font-semibold text-gray-900 dark:text-white"><%= @total_count %></span>명
+      </p>
+    </div>
+  </div>
+
+  <!-- 검색 + 필터 바 -->
+  <%= form_with url: contact_persons_path, method: :get, data: { turbo: false } do |f| %>
+    <div class="flex flex-wrap gap-3 items-center bg-white dark:bg-gray-800 p-3 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
+      <!-- 검색창 -->
+      <div class="relative flex-1 min-w-56">
+        <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <%= f.text_field :q, value: params[:q],
+            placeholder: "이름, 이메일, 전화번호 검색...",
+            class: "w-full pl-9 pr-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-primary" %>
+      </div>
+
+      <!-- 타입 필터 -->
+      <%= f.select :type,
+          [["전체", ""], ["발주처만", "clients"], ["거래처만", "suppliers"]],
+          { selected: params[:type] },
+          class: "text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-2 focus:outline-none focus:border-primary" %>
+
+      <!-- 부서 필터 -->
+      <%= f.select :department,
+          [["전체 부서", ""]] + ContactPerson::DEPARTMENTS.map { |d| [d, d] },
+          { selected: params[:department] },
+          class: "text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-2 focus:outline-none focus:border-primary" %>
+
+      <!-- 정렬 -->
+      <%= f.select :sort,
+          [["이름순", ""], ["최근 연락순", "recent"], ["회사명순", "company"]],
+          { selected: params[:sort] },
+          class: "text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-2 focus:outline-none focus:border-primary" %>
+
+      <%= f.submit "검색",
+          class: "text-sm text-white bg-primary px-4 py-2 rounded-lg hover:bg-primary/90 cursor-pointer" %>
+
+      <% if params[:q].present? || params[:type].present? || params[:department].present? %>
+        <%= link_to "초기화", contact_persons_path,
+            class: "text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 px-2 py-2" %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <!-- 카드 그리드 -->
+  <% if @contact_persons.empty? %>
+    <div class="text-center py-16 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
+      <svg class="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        <% if params[:q].present? || params[:type].present? || params[:department].present? %>
+          검색 결과가 없습니다.
+        <% else %>
+          등록된 외부 담당자가 없습니다.
+        <% end %>
+      </p>
+    </div>
+  <% else %>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <% @contact_persons.each do |cp| %>
+        <%= render "contact_persons/card", contact_person: cp %>
+      <% end %>
+    </div>
+
+    <!-- 페이지네이션 -->
+    <% if @contact_persons.total_pages > 1 %>
+      <div class="flex justify-center gap-1 mt-2">
+        <% if @contact_persons.prev_page %>
+          <%= link_to "이전", contact_persons_path(q: params[:q], type: params[:type], department: params[:department], sort: params[:sort], page: @contact_persons.prev_page),
+              class: "px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700" %>
+        <% end %>
+        <span class="px-3 py-1.5 text-sm text-gray-500 dark:text-gray-400">
+          <%= @contact_persons.current_page %> / <%= @contact_persons.total_pages %>
+        </span>
+        <% if @contact_persons.next_page %>
+          <%= link_to "다음", contact_persons_path(q: params[:q], type: params[:type], department: params[:department], sort: params[:sort], page: @contact_persons.next_page),
+              class: "px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700" %>
+        <% end %>
+      </div>
+    <% end %>
+  <% end %>
+</div>
