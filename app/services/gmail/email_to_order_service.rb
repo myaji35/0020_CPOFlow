@@ -70,8 +70,8 @@ module Gmail
           action: "auto_created_from_email"
         )
 
-        # confirmed 판정 시 답변 초안 자동 생성 (백그라운드)
-        if verdict == :confirmed
+        # confirmed 판정 시에만 답변 초안 자동 생성 (non-RFQ 메일은 스킵)
+        if verdict == :confirmed && @detection[:is_rfq]
           RfqReplyDraftJob.perform_later(order.id)
         end
 
@@ -93,6 +93,8 @@ module Gmail
         return "[ARIBA] #{subject}" if subject.present?
         return "[ARIBA] RFQ from #{@detection[:customer_name]}"
       end
+      # RFQ: "RFQ — 제목" 형식, non-RFQ: 제목 그대로 표시
+      return subject if subject.present? && !@detection[:is_rfq]
       return "RFQ — #{subject}" if subject.present?
       "RFQ from #{@detection[:customer_name]}"
     end

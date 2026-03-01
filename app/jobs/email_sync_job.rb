@@ -64,22 +64,13 @@ class EmailSyncJob < ApplicationJob
       total_processed += 1
 
       detection = Gmail::RfqDetectorService.new(parsed).detect
-      next unless detection[:is_rfq]
 
+      # RFQ 여부와 무관하게 모든 수신 메일을 Inbox에 저장
       order = Gmail::EmailToOrderService.new(account, parsed, detection).create_order!
 
       if order
-        # 첨부파일 및 링크 추출
         Gmail::EmailAttachmentExtractorService.new(svc, msg, order).extract_and_attach!
-
-        # LLM 분석 결과 저장
-        order.update_columns(
-          rfq_confidence:  detection[:confidence],
-          rfq_score:       detection[:score],
-          llm_analysis:    detection[:llm_raw].to_json,
-          llm_analyzed_at: Time.current
-        )
-        new_rfq_count += 1
+        new_rfq_count += 1 if detection[:is_rfq]
       end
     end
 

@@ -195,14 +195,16 @@
                     <%= Order::STATUS_LABELS[order.status] || order.status.humanize %>
                   </span>
 
-                  <%# RFQ badge %>
-                  <% if order.source_email_id.present? %>
-                    <span class="text-[10px] px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 rounded font-medium">RFQ</span>
-                  <% end %>
-
-                  <%# AI 불확실 뱃지 %>
-                  <% if order.respond_to?(:rfq_status) && order.rfq_status == "rfq_uncertain" %>
-                    <span class="text-[10px] px-1.5 py-0.5 bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400 rounded font-semibold border border-yellow-200 dark:border-yellow-800">AI 불확실</span>
+                  <%# RFQ / 메일 타입 badge %>
+                  <% if order.respond_to?(:rfq_status) %>
+                    <% case order.rfq_status
+                       when "rfq_confirmed" %>
+                      <span class="text-[10px] px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 rounded font-medium">RFQ</span>
+                    <% when "rfq_uncertain" %>
+                      <span class="text-[10px] px-1.5 py-0.5 bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400 rounded font-semibold border border-yellow-200 dark:border-yellow-800">AI 불확실</span>
+                    <% when "rfq_excluded" %>
+                      <span class="text-[10px] px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded font-medium">일반메일</span>
+                    <% end %>
                   <% end %>
 
                   <%# Priority indicator %>
