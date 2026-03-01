@@ -115,6 +115,11 @@ Rails.application.routes.draw do
     resources :certifications,       only: %i[new create edit update destroy]
   end
 
+  # 직원 폼 내 부서 인라인 관리 (AJAX)
+  namespace :employees do
+    resources :departments, only: %i[index create destroy]
+  end
+
   # 통합 검색 (Command Palette)
   get "/search", to: "search#index", as: :search
 
