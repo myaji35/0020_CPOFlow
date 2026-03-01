@@ -3,20 +3,29 @@
 <div class="flex flex-col gap-6">
   <!-- Header -->
   <div class="flex items-start justify-between">
-    <div>
-      <div class="flex items-center gap-2 text-sm text-gray-400 dark:text-gray-500 mb-1">
-        <%= link_to "직원 관리", employees_path, class: "hover:text-primary" %>
-        <span>/</span>
-        <span><%= @employee.name %></span>
+    <div class="flex items-center gap-4">
+      <!-- FR-01: 아바타 (64px) -->
+      <div class="w-16 h-16 rounded-full <%= @employee.avatar_color %> flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
+        <%= @employee.initials %>
       </div>
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white"><%= @employee.name %></h1>
-      <div class="flex items-center gap-3 mt-2 text-sm text-gray-500 dark:text-gray-400">
-        <% if @employee.name_en.present? %><span><%= @employee.name_en %></span><% end %>
-        <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"><%= @employee.nationality_label %></span>
-        <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"><%= @employee.employment_type_label %></span>
-        <% unless @employee.active? %>
-          <span class="inline-flex px-2 py-0.5 text-xs font-bold rounded-full bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400">퇴직</span>
-        <% end %>
+      <div>
+        <div class="flex items-center gap-2 text-sm text-gray-400 dark:text-gray-500 mb-1">
+          <%= link_to "직원 관리", employees_path, class: "hover:text-primary" %>
+          <span>/</span>
+          <span><%= @employee.name %></span>
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white"><%= @employee.name %></h1>
+        <div class="flex items-center gap-3 mt-1.5 text-sm text-gray-500 dark:text-gray-400">
+          <% if @employee.name_en.present? %><span><%= @employee.name_en %></span><% end %>
+          <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"><%= @employee.nationality_label %></span>
+          <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"><%= @employee.employment_type_label %></span>
+          <% if @employee.job_title.present? %>
+            <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400"><%= @employee.job_title %></span>
+          <% end %>
+          <% unless @employee.active? %>
+            <span class="inline-flex px-2 py-0.5 text-xs font-bold rounded-full bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400">퇴직</span>
+          <% end %>
+        </div>
       </div>
     </div>
     <div class="flex gap-2">
@@ -39,8 +48,9 @@
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
       <p class="text-xs text-gray-500 dark:text-gray-400">재직 기간</p>
       <% if @employee.hire_date %>
-        <p class="text-xl font-bold text-gray-900 dark:text-white mt-1"><%= @employee.tenure_days %>일</p>
-        <p class="text-xs text-gray-400 dark:text-gray-500"><%= @employee.hire_date.strftime("%Y.%m.%d") %> 입사</p>
+        <!-- FR-05: tenure_label -->
+        <p class="text-xl font-bold text-gray-900 dark:text-white mt-1"><%= @employee.tenure_label %></p>
+        <p class="text-xs text-gray-400 dark:text-gray-500"><%= @employee.hire_date.strftime("%Y.%m.%d") %> 입사 (<%= @employee.tenure_days %>일)</p>
       <% else %>
         <p class="text-xl font-bold text-gray-400 dark:text-gray-500 mt-1">-</p>
       <% end %>
@@ -83,19 +93,27 @@
     </div>
   </div>
 
-  <!-- 탭 -->
-  <div x-data="{ tab: 'info' }" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
+  <!-- FR-02: 탭 URL 직링크 -->
+  <div x-data="{
+    tab: new URLSearchParams(window.location.search).get('tab') || 'info',
+    switchTab(t) {
+      this.tab = t;
+      const url = new URL(window.location);
+      url.searchParams.set('tab', t);
+      window.history.pushState({}, '', url);
+    }
+  }" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
     <div class="border-b border-gray-100 dark:border-gray-700 px-4">
       <nav class="flex gap-6">
-        <button @click="tab='info'" :class="tab==='info' ? 'border-primary text-primary' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+        <button @click="switchTab('info')" :class="tab==='info' ? 'border-primary text-primary' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
             class="py-3 border-b-2 text-sm font-medium transition-colors">기본정보</button>
-        <button @click="tab='visas'" :class="tab==='visas' ? 'border-primary text-primary' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+        <button @click="switchTab('visas')" :class="tab==='visas' ? 'border-primary text-primary' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
             class="py-3 border-b-2 text-sm font-medium transition-colors">비자 (<%= @visas.count %>)</button>
-        <button @click="tab='contracts'" :class="tab==='contracts' ? 'border-primary text-primary' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+        <button @click="switchTab('contracts')" :class="tab==='contracts' ? 'border-primary text-primary' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
             class="py-3 border-b-2 text-sm font-medium transition-colors">계약 (<%= @contracts.count %>)</button>
-        <button @click="tab='assignments'" :class="tab==='assignments' ? 'border-primary text-primary' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+        <button @click="switchTab('assignments')" :class="tab==='assignments' ? 'border-primary text-primary' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
             class="py-3 border-b-2 text-sm font-medium transition-colors">현장 배정 (<%= @assignments.count %>)</button>
-        <button @click="tab='certs'" :class="tab==='certs' ? 'border-primary text-primary' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+        <button @click="switchTab('certs')" :class="tab==='certs' ? 'border-primary text-primary' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
             class="py-3 border-b-2 text-sm font-medium transition-colors">자격증 (<%= @certifications.count %>)</button>
       </nav>
     </div>
@@ -110,9 +128,41 @@
         <% if current_user.manager? || current_user.admin? %>
           <div><dt class="text-gray-500 dark:text-gray-400">여권번호</dt><dd class="font-medium text-gray-900 dark:text-white mt-1"><%= @employee.passport_number.presence || "-" %></dd></div>
         <% end %>
-        <div><dt class="text-gray-500 dark:text-gray-400">전화번호</dt><dd class="font-medium text-gray-900 dark:text-white mt-1"><%= @employee.phone.presence || "-" %></dd></div>
+        <!-- FR-03: 전화번호 원클릭 -->
+        <div>
+          <dt class="text-gray-500 dark:text-gray-400">전화번호</dt>
+          <dd class="mt-1">
+            <% if @employee.phone.present? %>
+              <div class="flex items-center gap-2">
+                <a href="tel:<%= @employee.phone %>" class="font-medium text-gray-900 dark:text-white hover:text-primary flex items-center gap-1">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.6 19.79 19.79 0 0 1 1.63 5a2 2 0 0 1 1.99-2.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 10.1a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 17.58z"/></svg>
+                  <%= @employee.phone %>
+                </a>
+                <a href="https://wa.me/<%= @employee.phone.gsub(/\D/, '') %>" target="_blank" rel="noopener"
+                   class="w-6 h-6 flex items-center justify-center rounded-full bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/50"
+                   title="WhatsApp으로 연락">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+                </a>
+              </div>
+            <% else %>
+              <span class="font-medium text-gray-400 dark:text-gray-500">-</span>
+            <% end %>
+          </dd>
+        </div>
         <div><dt class="text-gray-500 dark:text-gray-400">비상 연락처</dt><dd class="font-medium text-gray-900 dark:text-white mt-1"><%= @employee.emergency_contact.presence || "-" %></dd></div>
-        <div><dt class="text-gray-500 dark:text-gray-400">비상 연락전화</dt><dd class="font-medium text-gray-900 dark:text-white mt-1"><%= @employee.emergency_phone.presence || "-" %></dd></div>
+        <div>
+          <dt class="text-gray-500 dark:text-gray-400">비상 연락전화</dt>
+          <dd class="mt-1">
+            <% if @employee.emergency_phone.present? %>
+              <a href="tel:<%= @employee.emergency_phone %>" class="font-medium text-gray-900 dark:text-white hover:text-primary flex items-center gap-1 w-fit">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.6 19.79 19.79 0 0 1 1.63 5a2 2 0 0 1 1.99-2.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 10.1a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 17.58z"/></svg>
+                <%= @employee.emergency_phone %>
+              </a>
+            <% else %>
+              <span class="font-medium text-gray-400 dark:text-gray-500">-</span>
+            <% end %>
+          </dd>
+        </div>
         <div><dt class="text-gray-500 dark:text-gray-400">부서</dt><dd class="font-medium text-gray-900 dark:text-white mt-1"><%= @employee.department&.name || "-" %></dd></div>
         <div><dt class="text-gray-500 dark:text-gray-400">직급</dt><dd class="font-medium text-gray-900 dark:text-white mt-1"><%= @employee.job_title.presence || "-" %></dd></div>
         <div><dt class="text-gray-500 dark:text-gray-400">고용형태</dt><dd class="font-medium text-gray-900 dark:text-white mt-1"><%= @employee.employment_type_label %></dd></div>
@@ -155,8 +205,17 @@
             </div>
           </div>
         <% end %>
+        <!-- FR-04: 빈 상태 CTA -->
         <% if @visas.empty? %>
-          <p class="text-center text-gray-400 dark:text-gray-500 text-sm py-8">등록된 비자가 없습니다.</p>
+          <div class="flex flex-col items-center justify-center py-10 gap-3">
+            <svg class="w-10 h-10 text-gray-200 dark:text-gray-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <p class="text-sm text-gray-400 dark:text-gray-500">등록된 비자가 없습니다.</p>
+            <%= link_to new_employee_visa_path(@employee),
+                class: "inline-flex items-center gap-1 text-sm text-primary border border-primary/30 rounded-lg px-3 py-1.5 hover:bg-primary/5 transition-colors" do %>
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              비자 추가
+            <% end %>
+          </div>
         <% end %>
       </div>
     </div>
@@ -198,8 +257,17 @@
             </div>
           </div>
         <% end %>
+        <!-- FR-04: 빈 상태 CTA -->
         <% if @contracts.empty? %>
-          <p class="text-center text-gray-400 dark:text-gray-500 text-sm py-8">등록된 계약이 없습니다.</p>
+          <div class="flex flex-col items-center justify-center py-10 gap-3">
+            <svg class="w-10 h-10 text-gray-200 dark:text-gray-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            <p class="text-sm text-gray-400 dark:text-gray-500">등록된 계약이 없습니다.</p>
+            <%= link_to new_employee_employment_contract_path(@employee),
+                class: "inline-flex items-center gap-1 text-sm text-primary border border-primary/30 rounded-lg px-3 py-1.5 hover:bg-primary/5 transition-colors" do %>
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              계약 추가
+            <% end %>
+          </div>
         <% end %>
       </div>
     </div>
@@ -235,8 +303,17 @@
             </div>
           </div>
         <% end %>
+        <!-- FR-04: 빈 상태 CTA -->
         <% if @assignments.empty? %>
-          <p class="text-center text-gray-400 dark:text-gray-500 text-sm py-8">현장 배정 이력이 없습니다.</p>
+          <div class="flex flex-col items-center justify-center py-10 gap-3">
+            <svg class="w-10 h-10 text-gray-200 dark:text-gray-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <p class="text-sm text-gray-400 dark:text-gray-500">현장 배정 이력이 없습니다.</p>
+            <%= link_to new_employee_employee_assignment_path(@employee),
+                class: "inline-flex items-center gap-1 text-sm text-primary border border-primary/30 rounded-lg px-3 py-1.5 hover:bg-primary/5 transition-colors" do %>
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              현장 배정
+            <% end %>
+          </div>
         <% end %>
       </div>
     </div>
@@ -276,8 +353,17 @@
             </div>
           </div>
         <% end %>
+        <!-- FR-04: 빈 상태 CTA -->
         <% if @certifications.empty? %>
-          <p class="text-center text-gray-400 dark:text-gray-500 text-sm py-8">등록된 자격증이 없습니다.</p>
+          <div class="flex flex-col items-center justify-center py-10 gap-3">
+            <svg class="w-10 h-10 text-gray-200 dark:text-gray-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+            <p class="text-sm text-gray-400 dark:text-gray-500">등록된 자격증이 없습니다.</p>
+            <%= link_to new_employee_certification_path(@employee),
+                class: "inline-flex items-center gap-1 text-sm text-primary border border-primary/30 rounded-lg px-3 py-1.5 hover:bg-primary/5 transition-colors" do %>
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              자격증 추가
+            <% end %>
+          </div>
         <% end %>
       </div>
     </div>

@@ -13,6 +13,12 @@ class Employee < ApplicationRecord
     "IN" => "인도", "PH" => "필리핀", "PK" => "파키스탄", "EG" => "이집트",
     "JP" => "일본", "CN" => "중국", "DE" => "독일", "FR" => "프랑스"
   }.freeze
+  AVATAR_COLORS = {
+    "KR" => "bg-blue-500",   "AE" => "bg-emerald-500", "PH" => "bg-yellow-500",
+    "IN" => "bg-orange-500", "PK" => "bg-green-600",   "EG" => "bg-amber-600",
+    "US" => "bg-indigo-500", "GB" => "bg-violet-500",  "JP" => "bg-rose-500",
+    "CN" => "bg-red-500",    "DE" => "bg-cyan-600",    "FR" => "bg-purple-500"
+  }.freeze
 
   validates :name, :nationality, :employment_type, presence: true
   validates :employment_type, inclusion: { in: EMPLOYMENT_TYPES }
@@ -28,6 +34,7 @@ class Employee < ApplicationRecord
 
   def display_name = name
   def initials = name.split.map(&:first).first(2).join.upcase
+  def avatar_color = AVATAR_COLORS[nationality] || "bg-gray-500"
 
   def nationality_label = NATIONALITIES[nationality] || nationality
 
@@ -48,5 +55,19 @@ class Employee < ApplicationRecord
   def tenure_days
     return nil unless hire_date
     ((termination_date || Date.today) - hire_date).to_i
+  end
+
+  def tenure_label
+    return nil unless hire_date
+    total = tenure_days
+    years  = total / 365
+    months = (total % 365) / 30
+    if years > 0
+      "#{years}년 #{months}개월"
+    elsif months > 0
+      "#{months}개월"
+    else
+      "#{total}일"
+    end
   end
 end

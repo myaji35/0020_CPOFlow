@@ -12,6 +12,7 @@ class EmployeesController < ApplicationController
     end
     @employees = @employees.where(department_id: params[:department]) if params[:department].present?
     @employees = @employees.where(employment_type: params[:type]) if params[:type].present?
+    @employees = @employees.where(job_title: params[:job_title]) if params[:job_title].present?
     @employees = @employees.dispatched if params[:deployed] == "1"
     if params[:expiring] == "visa"
       @employees = @employees.joins(:visas).merge(Visa.expiring_within(60)).distinct
@@ -26,6 +27,8 @@ class EmployeesController < ApplicationController
       contract_expiring: Employee.active.joins(:employment_contracts)
                                  .merge(EmploymentContract.expiring_within(30)).distinct.count
     }
+    @departments = Department.active.by_sort
+    @job_titles  = JobTitle.active.by_sort
   end
 
   def show
