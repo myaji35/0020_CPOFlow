@@ -29,29 +29,19 @@ class GmailOauthController < ApplicationController
 
       email = fetch_gmail_email(client.access_token)
 
-      account = current_user.email_accounts.find_or_initialize_by(email: email)
+      # 글로벌 중복 방지: email 기준으로 기존 레코드 찾기 (어떤 user로 등록됐든 통합)
+      account = EmailAccount.find_or_initialize_by(email: email)
+      account.user = current_user
+
+      # refresh_token: Google는 최초 동의 시에만 발급 → 기존 값 보존
       new_refresh_token = client.refresh_token.presence || (account.persisted? ? account.gmail_refresh_token : nil)
 
-      if account.new_record?
-        account.assign_attributes(
-          gmail_access_token:  client.access_token,
-          gmail_refresh_token: new_refresh_token,
-          token_expires_at:    Time.at(client.expires_at.to_i),
-          oauth_scope:         EmailAccount::GMAIL_SCOPES.join(" "),
-          connected:           true
-        )
-        account.save!
-      else
-        # force-write encrypted columns via direct attribute assignment + save
-        account.gmail_access_token  = client.access_token
-        account.gmail_refresh_token = new_refresh_token if new_refresh_token.present?
-        account.token_expires_at    = Time.at(client.expires_at.to_i)
-        account.oauth_scope         = EmailAccount::GMAIL_SCOPES.join(" ")
-        account.connected           = true
-        account.save!
-        # Lockbox 암호화 컬럼 save 시 connected 변경이 누락되는 경우 대비
-        account.update_column(:connected, true) unless account.connected?
-      end
+      account.gmail_access_token  = client.access_token
+      account.gmail_refresh_token = new_refresh_token if new_refresh_token.present?
+      account.token_expires_at    = Time.at(client.expires_at.to_i)
+      account.oauth_scope         = EmailAccount::GMAIL_SCOPES.join(" ")
+      account.connected           = true
+      account.save!
 
       redirect_to settings_root_path, notice: t("settings.gmail.connect_success")
     rescue Signet::AuthorizationError => e
