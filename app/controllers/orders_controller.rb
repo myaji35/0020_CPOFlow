@@ -36,7 +36,7 @@ class OrdersController < ApplicationController
     @filter_clients   = Client.active.by_name
     @filter_suppliers = Supplier.active.by_name
     @filter_projects  = Project.active.by_name
-    @filter_users     = User.order(:name)
+    @filter_users     = User.includes(:employee).order(:name)
 
     @total_count = @orders.count
     @orders = @orders.limit(50).offset((params[:page].to_i > 0 ? params[:page].to_i - 1 : 0) * 50)
@@ -48,7 +48,7 @@ class OrdersController < ApplicationController
     @tasks    = @order.tasks.by_due.includes(:assignee)
     @comments = @order.comments.chronological.includes(:user)
     @activities = @order.activities.recent.includes(:user).limit(20)
-    @team_members = User.all.order(:name)
+    @team_members = User.includes(:employee).order(:name)
   end
 
   def new

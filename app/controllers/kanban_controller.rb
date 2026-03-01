@@ -6,6 +6,8 @@ class KanbanController < ApplicationController
                     .includes(:assignees, :tasks, :user)
       [ status, orders ]
     end.to_h
+    # 담당자 필터 드롭다운: Employee 이름 표시를 위해 employee preload
+    @filter_users = User.includes(:employee).order(:name)
   end
 
   def move

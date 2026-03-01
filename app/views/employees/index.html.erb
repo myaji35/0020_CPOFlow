@@ -89,7 +89,19 @@
           %>
           <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors <%= emp.active? ? '' : 'opacity-50' %>">
             <td class="px-4 py-3">
-              <div class="font-medium text-gray-900 dark:text-white"><%= emp.name %></div>
+              <div class="flex items-center gap-2">
+                <div class="font-medium text-gray-900 dark:text-white"><%= emp.name %></div>
+                <% if emp.user_id.present? %>
+                  <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400" title="시스템 계정 연결됨: <%= emp.user&.email %>">
+                    <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    계정연결
+                  </span>
+                <% else %>
+                  <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500" title="시스템 계정 미연결">
+                    미연결
+                  </span>
+                <% end %>
+              </div>
               <% if emp.name_en.present? %>
                 <div class="text-xs text-gray-400 dark:text-gray-500"><%= emp.name_en %></div>
               <% end %>

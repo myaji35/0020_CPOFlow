@@ -1,7 +1,7 @@
 class User < ApplicationRecord
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable,
-         :omniauthable, omniauth_providers: [:google_oauth2]
+         :omniauthable, omniauth_providers: [ :google_oauth2 ]
 
   def self.from_omniauth(auth)
     where(provider: auth.provider, uid: auth.uid).first_or_create do |user|
@@ -31,17 +31,23 @@ class User < ApplicationRecord
   has_many :comments, dependent: :nullify
   has_many :activities, dependent: :nullify
   has_many :notifications, dependent: :destroy
+  has_one  :employee, dependent: :nullify
 
   validates :name, presence: true
   validates :locale, inclusion: { in: LOCALES }, allow_blank: true
   validates :theme,  inclusion: { in: THEMES },  allow_blank: true
 
+  # Employee 연결 시 직원 이름 우선 표시, 없으면 User.name
   def display_name
-    name.presence || email.split("@").first
+    employee&.name.presence || name.presence || email.split("@").first
   end
 
   def initials
-    name.to_s.split.map(&:first).first(2).join.upcase
+    display_name.split.map(&:first).first(2).join.upcase
+  end
+
+  def linked_to_employee?
+    employee.present?
   end
 
   def admin_or_manager?
