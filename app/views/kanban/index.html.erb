@@ -21,9 +21,8 @@
   <select id="filter-assignee"
           class="text-xs border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-accent/40">
     <option value="">전체 담당자</option>
-    <option value="me" data-user-id="<%= current_user.id %>">내 발주</option>
-    <% @filter_users.each do |u| %>
-      <option value="<%= u.id %>"><%= u.display_name %></option>
+    <% @filter_employees.each do |emp| %>
+      <option value="<%= emp.id %>"><%= emp.display_name %></option>
     <% end %>
   </select>
 
@@ -149,7 +148,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const filterAssignee = document.getElementById('filter-assignee');
   const filterKeyword  = document.getElementById('filter-keyword');
   const filterReset    = document.getElementById('filter-reset');
-  const meId           = '<%= current_user.id %>';
   let   activePriority = '';
   let   activeDue      = '';
 
@@ -172,9 +170,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.querySelectorAll('[data-order-id]').forEach(function(card) {
       const assigneeIds = (card.dataset.assigneeIds || '').split(',').filter(Boolean);
-      const assigneeOk  = !assigneeVal ? true
-        : assigneeVal === 'me' ? assigneeIds.includes(meId)
-        : assigneeIds.includes(assigneeVal);
+      const assigneeOk  = !assigneeVal || assigneeIds.includes(assigneeVal);
 
       const priorityOk  = !activePriority || card.dataset.priority === activePriority;
 

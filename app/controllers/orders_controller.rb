@@ -13,7 +13,7 @@ class OrdersController < ApplicationController
     @orders = @orders.where(client_id: params[:client_id])     if params[:client_id].present?
     @orders = @orders.where(supplier_id: params[:supplier_id]) if params[:supplier_id].present?
     @orders = @orders.where(project_id: params[:project_id])   if params[:project_id].present?
-    @orders = @orders.joins(:assignments).where(assignments: { user_id: params[:user_id] }) if params[:user_id].present?
+    @orders = @orders.joins(:assignments).where(assignments: { employee_id: params[:employee_id] }) if params[:employee_id].present?
 
     # 납기일 범위 필터
     @orders = @orders.where(due_date: params[:due_from]..) if params[:due_from].present?
@@ -36,7 +36,7 @@ class OrdersController < ApplicationController
     @filter_clients   = Client.active.by_name
     @filter_suppliers = Supplier.active.by_name
     @filter_projects  = Project.active.by_name
-    @filter_users     = User.includes(:employee).order(:name)
+    @filter_employees = Employee.active.by_name
 
     @total_count = @orders.count
     @orders = @orders.limit(50).offset((params[:page].to_i > 0 ? params[:page].to_i - 1 : 0) * 50)
@@ -48,7 +48,7 @@ class OrdersController < ApplicationController
     @tasks    = @order.tasks.by_due.includes(:assignee)
     @comments = @order.comments.chronological.includes(:user)
     @activities = @order.activities.recent.includes(:user).limit(20)
-    @team_members = User.includes(:employee).order(:name)
+    @team_members = Employee.active.by_name
   end
 
   def new

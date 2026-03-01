@@ -151,9 +151,8 @@ module Gmail
       return unless last_order
 
       last_order.assignees.each do |assignee|
-        next if assignee == @account.user  # 이미 기본 배정된 경우 스킵
-        Assignment.find_or_create_by!(order: order, user: assignee)
-        Rails.logger.info "[EmailToOrder] Auto-assigned #{assignee.email} from domain history"
+        Assignment.find_or_create_by!(order: order, employee: assignee)
+        Rails.logger.info "[EmailToOrder] Auto-assigned #{assignee.display_name} from domain history"
       end
     end
   end

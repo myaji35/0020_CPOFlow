@@ -45,9 +45,9 @@
           [["전체 현장", ""], *@filter_projects.map { |p| [p.name, p.id] }],
           { selected: params[:project_id] },
           class: "text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" %>
-      <%= f.select :user_id,
-          [["전체 담당자", ""], *@filter_users.map { |u| [u.display_name, u.id] }],
-          { selected: params[:user_id] },
+      <%= f.select :employee_id,
+          [["전체 담당자", ""], *@filter_employees.map { |emp| [emp.display_name, emp.id] }],
+          { selected: params[:employee_id] },
           class: "text-sm border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30" %>
       <%# 납기일 범위 (FR-03) %>
       <div class="flex items-center gap-1">
@@ -59,7 +59,7 @@
             class: "text-xs border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30 w-32" %>
       </div>
       <%= f.submit "검색", class: "px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 cursor-pointer transition-colors" %>
-      <% if [ :q, :status, :period, :client_id, :supplier_id, :project_id, :user_id, :due_from, :due_to ].any? { |k| params[k].present? } %>
+      <% if [ :q, :status, :period, :client_id, :supplier_id, :project_id, :employee_id, :due_from, :due_to ].any? { |k| params[k].present? } %>
         <%= link_to "필터 초기화", orders_path, class: "text-sm text-gray-400 dark:text-gray-500 hover:text-red-500 transition-colors" %>
       <% end %>
       <span class="ml-auto text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap"><%= @total_count %>건</span>

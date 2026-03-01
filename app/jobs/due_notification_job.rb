@@ -35,12 +35,14 @@ class DueNotificationJob < ApplicationJob
     title = build_title(days_ahead, order)
     body  = build_body(order, days_ahead)
 
-    # 1) 인앱 Notification (담당자별, 중복 방지)
-    order.assignees.each do |user|
-      next if already_notified_today?(order, user, days_ahead)
+    # 1) 인앱 Notification (담당자별, 중복 방지) — Employee에 연결된 User에게 발송
+    order.assignees.each do |employee|
+      linked_user = employee.user
+      next unless linked_user
+      next if already_notified_today?(order, linked_user, days_ahead)
 
       Notification.create!(
-        user:              user,
+        user:              linked_user,
         notifiable:        order,
         title:             title,
         body:              body,

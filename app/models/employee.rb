@@ -26,6 +26,9 @@ class Employee < ApplicationRecord
   def active_visa        = visas.where(status: "active").order(expiry_date: :asc).first
   def current_project    = current_assignment&.project
 
+  def display_name = name
+  def initials = name.split.map(&:first).first(2).join.upcase
+
   def nationality_label = NATIONALITIES[nationality] || nationality
 
   def employment_type_label

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_01_013344) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_01_024631) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -70,10 +70,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_01_013344) do
 
   create_table "assignments", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.integer "employee_id"
     t.integer "order_id", null: false
     t.string "role"
     t.datetime "updated_at", null: false
-    t.integer "user_id", null: false
+    t.integer "user_id"
+    t.index ["employee_id"], name: "index_assignments_on_employee_id"
+    t.index ["order_id", "employee_id"], name: "index_assignments_on_order_id_and_employee_id", unique: true
     t.index ["order_id"], name: "index_assignments_on_order_id"
     t.index ["user_id"], name: "index_assignments_on_user_id"
   end
