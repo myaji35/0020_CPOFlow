@@ -534,9 +534,21 @@
                         attributes: %w[href src alt style class target rel]) %>
                   </div>
                 <% elsif plain_body.present? %>
+                  <% split = Gmail::EmailSignatureParserService.split(plain_body) %>
                   <div class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap font-mono bg-gray-50 dark:bg-gray-800 rounded-lg p-5 border border-gray-100 dark:border-gray-700 max-h-[480px] overflow-y-auto">
-<%= plain_body %>
+<%= split[:body] %>
                   </div>
+                  <% if split[:signature].present? %>
+                    <div class="mt-3 border-t border-dashed border-gray-200 dark:border-gray-600 pt-3">
+                      <div class="flex items-center gap-2 mb-2">
+                        <svg class="w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><path d="M8.12 8.12L12 12"/><path d="M20 4L8.12 15.88"/><circle cx="6" cy="18" r="3"/><path d="M14.8 14.8L20 20"/></svg>
+                        <span class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider font-semibold">발신자 서명</span>
+                      </div>
+                      <div class="bg-gray-50/80 dark:bg-gray-700/20 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap border border-gray-100 dark:border-gray-700">
+<%= split[:signature] %>
+                      </div>
+                    </div>
+                  <% end %>
                 <% end %>
               </div>
 

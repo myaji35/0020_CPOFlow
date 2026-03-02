@@ -31,9 +31,29 @@ module Gmail
       new(plain_body, html_body).parse
     end
 
+    # 본문과 서명 블록을 분리하여 반환
+    # @return [Hash] { body: String, signature: String|nil }
+    def self.split(plain_body, html_body = nil)
+      new(plain_body, html_body).split
+    end
+
     def initialize(plain_body, html_body = nil)
       @plain_body = plain_body.to_s
       @html_body  = html_body.to_s
+    end
+
+    def split
+      lines = @plain_body.lines
+      delimiter_idx = find_delimiter_index(lines)
+
+      if delimiter_idx
+        {
+          body: lines[0...delimiter_idx].join.rstrip,
+          signature: lines[delimiter_idx..].join.strip
+        }
+      else
+        { body: @plain_body, signature: nil }
+      end
     end
 
     def parse
@@ -66,17 +86,18 @@ module Gmail
     # 서명 블록 추출
     # ──────────────────────────────
 
-    def extract_signature_block(text)
-      lines = text.lines
-      delimiter_idx = nil
-
+    # 구분자 라인의 인덱스를 반환 (없으면 nil)
+    def find_delimiter_index(lines)
       lines.each_with_index do |line, idx|
         stripped = line.strip
-        if SIGNATURE_DELIMITERS.any? { |pat| stripped.match?(pat) }
-          delimiter_idx = idx
-          break
-        end
+        return idx if SIGNATURE_DELIMITERS.any? { |pat| stripped.match?(pat) }
       end
+      nil
+    end
+
+    def extract_signature_block(text)
+      lines = text.lines
+      delimiter_idx = find_delimiter_index(lines)
 
       if delimiter_idx
         lines[(delimiter_idx + 1)..].join.strip

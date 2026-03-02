@@ -113,6 +113,20 @@ class Order < ApplicationRecord
     email_signature[:company].presence || customer_name
   end
 
+  # 이메일 본문에서 서명을 분리한 본문만 반환
+  def body_without_signature
+    Gmail::EmailSignatureParserService.split(
+      original_email_body.to_s, original_email_html_body
+    )[:body]
+  end
+
+  # 이메일 본문에서 분리된 서명 블록 텍스트 반환
+  def signature_block_text
+    Gmail::EmailSignatureParserService.split(
+      original_email_body.to_s, original_email_html_body
+    )[:signature]
+  end
+
   # eCountERP 전표 자동 생성 — confirmed 상태 전환 시 트리거
   after_update_commit :enqueue_ecount_slip, if: :saved_change_to_status?
 

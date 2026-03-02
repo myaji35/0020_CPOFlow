@@ -117,13 +117,46 @@
       </div>
     <% end %>
 
-    <%# Email Body %>
+    <%# Email Body — HTML 우선, plain text fallback + 서명 분리 %>
+    <style>
+      .email-html-body { font-size: 0.875rem; color: #374151; line-height: 1.6; }
+      .email-html-body a { color: #00A1E0; text-decoration: underline; }
+      .email-html-body img { max-width: 100%; height: auto; }
+      .email-html-body table { border-collapse: collapse; max-width: 100%; }
+      .email-html-body blockquote { border-left: 3px solid #e5e7eb; padding-left: 0.75rem; margin-left: 0; color: #6b7280; }
+      .dark .email-html-body { color: #d1d5db; }
+      .dark .email-html-body a { color: #38bdf8; }
+    </style>
     <div class="px-6 py-6">
-      <% body = @order.original_email_body.presence || @order.description %>
-      <% if body.present? %>
-        <div class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap font-mono bg-gray-50 dark:bg-gray-800/50 rounded-lg p-5 border border-gray-100 dark:border-gray-700 max-h-96 overflow-y-auto">
-          <%= body %>
+      <% html_body = @order.original_email_html_body if @order.respond_to?(:original_email_html_body) %>
+      <% plain_body = @order.original_email_body.presence || @order.description %>
+
+      <% if html_body.present? %>
+        <%# HTML 이메일: sanitize로 안전 렌더링 (서명 포함 원본 그대로) %>
+        <div class="email-html-body bg-white dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700 p-5 max-h-96 overflow-y-auto">
+          <%= sanitize(html_body,
+              tags: %w[p br div span a b i u strong em h1 h2 h3 h4 h5 h6 ul ol li
+                       table thead tbody tr th td blockquote pre code img hr],
+              attributes: %w[href src alt style class target rel]) %>
         </div>
+      <% elsif plain_body.present? %>
+        <%# Plain text 이메일: 본문과 서명 분리 %>
+        <% split = Gmail::EmailSignatureParserService.split(plain_body) %>
+        <div class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap font-mono bg-gray-50 dark:bg-gray-800/50 rounded-lg p-5 border border-gray-100 dark:border-gray-700 max-h-96 overflow-y-auto">
+<%= split[:body] %>
+        </div>
+        <% if split[:signature].present? %>
+          <%# 서명 분리 카드 %>
+          <div class="mt-3 border-t border-dashed border-gray-200 dark:border-gray-600 pt-3">
+            <div class="flex items-center gap-2 mb-2">
+              <svg class="w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><path d="M8.12 8.12L12 12"/><path d="M20 4L8.12 15.88"/><circle cx="6" cy="18" r="3"/><path d="M14.8 14.8L20 20"/></svg>
+              <span class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider font-semibold">발신자 서명</span>
+            </div>
+            <div class="bg-gray-50/80 dark:bg-gray-700/20 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap border border-gray-100 dark:border-gray-700">
+<%= split[:signature] %>
+            </div>
+          </div>
+        <% end %>
       <% else %>
         <div class="flex flex-col items-center justify-center py-12 text-center">
           <svg class="w-10 h-10 text-gray-200 dark:text-gray-600 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
