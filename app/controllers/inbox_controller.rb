@@ -7,7 +7,8 @@ class InboxController < ApplicationController
 
   def index
     base_scope = Order.where.not(original_email_from: [ nil, "" ])
-                      .includes(:user, :assignees, :client, :supplier, :project)
+                      .includes(:user, :assignees, :client, :supplier, :project,
+                                attachments_attachments: :blob)
 
     # Filter support: all (default), rfq (inbox only), converted (non-inbox)
     @current_filter = params[:filter].presence || "all"
@@ -41,8 +42,10 @@ class InboxController < ApplicationController
   end
 
   def show
-    @order = Order.find_by(source_email_id: params[:id]) ||
-             Order.find(params[:id])
+    @order = Order.includes(attachments_attachments: :blob)
+                  .find_by(source_email_id: params[:id]) ||
+             Order.includes(attachments_attachments: :blob)
+                  .find(params[:id])
   rescue ActiveRecord::RecordNotFound
     redirect_to inbox_path, alert: "해당 이메일을 찾을 수 없습니다."
   end
