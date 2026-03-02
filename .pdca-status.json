@@ -152,9 +152,10 @@
     "archivedTo": "docs/archive/2026-03/job-title-ux/"
   },
   "email-signature-split": {
-    "phase": "check",
+    "phase": "completed",
     "matchRate": 100,
     "iterationCount": 0,
-    "startedAt": "2026-03-02T00:00:00Z"
+    "startedAt": "2026-03-02T00:00:00Z",
+    "completedAt": "2026-03-02T23:00:00Z"
   }
 }
