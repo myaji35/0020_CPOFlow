@@ -42,14 +42,15 @@ class EmailSyncJob < ApplicationJob
     svc = Gmail::GmailService.new(account)
 
     # Fetch messages: 첫 동기화는 최근 90일치 전체, 이후는 마지막 동기화 이후 신규
+    # 프로모션/소셜/스팸 카테고리 제외 — 기본 받은편지함(PRIMARY)만 동기화
     if account.last_synced_at.nil?
       # 초회 동기화: 최근 90일치 전체 (read/unread 모두)
       after_ts = 90.days.ago.to_i
-      query = "after:#{after_ts}"
+      query = "after:#{after_ts} category:primary"
       max_fetch = 100
     else
       # 이후 동기화: 마지막 동기화 이후 신규 메일
-      query = "after:#{account.last_synced_at.to_i}"
+      query = "after:#{account.last_synced_at.to_i} category:primary"
       max_fetch = 50
     end
     messages = svc.fetch_recent_messages(max: max_fetch, query: query)
@@ -65,7 +66,13 @@ class EmailSyncJob < ApplicationJob
 
       detection = Gmail::RfqDetectorService.new(parsed).detect
 
-      # RFQ 여부와 무관하게 모든 수신 메일을 Inbox에 저장
+      # excluded 판정 이메일은 저장하지 않음 (프로모션, 알림성 등)
+      if detection[:rfq_verdict] == :excluded
+        Rails.logger.debug "[EmailSyncJob] Skipped excluded email: #{parsed[:subject]}"
+        next
+      end
+
+      # RFQ confirmed 또는 uncertain 이메일만 Inbox에 저장
       order = Gmail::EmailToOrderService.new(account, parsed, detection).create_order!
 
       if order

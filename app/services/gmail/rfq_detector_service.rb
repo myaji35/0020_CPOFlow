@@ -27,7 +27,7 @@ module Gmail
       "sourcing event"
     ].freeze
 
-    # 자동 제외 발신 도메인 — 시스템 알림/송장 발송 서버 (Ariba 제외)
+    # 자동 제외 발신 도메인 — 시스템 알림/프로모션/뉴스레터 발송 서버 (Ariba 제외)
     EXCLUDED_SENDER_DOMAINS = %w[
       sap.com
       noreply.github.com
@@ -38,9 +38,25 @@ module Gmail
       mailchimp.com
       bounce.linkedin.com
       reply.github.com
+      mandrillapp.com
+      mailgun.org
+      postmarkapp.com
+      constantcontact.com
+      campaignmonitor.com
+      hubspot.com
+      hubspotmail.com
+      salesforce.com
+      exacttarget.com
+      klaviyo.com
+      sendinblue.com
+      brevo.com
+      intercom.io
+      intercom-mail.com
+      mailjet.com
+      sparkpost.com
     ].freeze
 
-    # 제목에서 자동 제외할 패턴 — 알림성 이메일 식별
+    # 제목에서 자동 제외할 패턴 — 알림성/프로모션/뉴스레터 이메일 식별
     EXCLUDED_SUBJECT_PATTERNS = [
       /invoice\s*(notification|alert|sent|ready)/i,
       /payment\s*(received|confirmation|notification)/i,
@@ -52,7 +68,19 @@ module Gmail
       /unsubscribe/i,
       /do\s+not\s+reply/i,
       /no-?reply/i,
-      /auto-?generated/i
+      /auto-?generated/i,
+      # 프로모션/마케팅/뉴스레터
+      /\b(sale|discount|off|coupon|promo|deal)\b.*(%|\d+원)/i,
+      /놓치지\s*마세요/i,
+      /기회를\s*놓치지/i,
+      /한정\s*(수량|기간|특가|할인)/i,
+      /\b(newsletter|뉴스레터|소식지)\b/i,
+      /구독\s*(취소|해지)/i,
+      /\b(black\s*friday|cyber\s*monday|flash\s*sale)\b/i,
+      /limited\s*time\s*offer/i,
+      /special\s*offer/i,
+      /\bfree\s+(shipping|trial|gift)\b/i,
+      /\b(맞이할|맞이하여|이벤트|경품|추첨|당첨)\b/i
     ].freeze
 
     # Weighted keyword groups (subject gets 2x weight)
