@@ -446,6 +446,9 @@
           <%# RFQ 판정 배너 — inbox 상태인 이메일 전체에 표시 %>
           <% if order.status.to_s == "inbox" && order.respond_to?(:rfq_status) %>
             <% rfq_s = order.rfq_status.to_s %>
+            <%# RFQ 대기 필터: 이미 RFQ 판정된 목록 → "RFQ 아님" 버튼만 표시 %>
+            <% show_confirmed_btn = @current_filter != 'rfq' && rfq_s != 'rfq_confirmed' %>
+            <% show_rejected_btn  = rfq_s != 'rfq_excluded' %>
             <div id="feedback-banner-<%= order.id %>"
                  class="mx-6 mb-0 mt-3 px-4 py-3 rounded-lg flex items-center justify-between gap-4
                         <%= rfq_s == 'rfq_confirmed' ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800' :
@@ -454,17 +457,20 @@
               <div class="flex items-center gap-2 flex-1 min-w-0">
                 <% if rfq_s == 'rfq_confirmed' %>
                   <svg class="w-4 h-4 text-blue-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  <span class="text-xs text-blue-800 dark:text-blue-300 font-medium">RFQ로 확정된 이메일입니다. 판정을 변경할 수 있습니다.</span>
+                  <span class="text-xs text-blue-800 dark:text-blue-300 font-medium">RFQ로 확정된 이메일입니다.</span>
                 <% elsif rfq_s == 'rfq_excluded' %>
                   <svg class="w-4 h-4 text-gray-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
                   <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">일반 메일로 처리됐습니다. 판정을 변경할 수 있습니다.</span>
+                <% elsif @current_filter == 'rfq' %>
+                  <svg class="w-4 h-4 text-blue-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                  <span class="text-xs text-blue-800 dark:text-blue-300 font-medium">RFQ 판정 이메일입니다. 아닌 경우 제외할 수 있습니다.</span>
                 <% else %>
                   <svg class="w-4 h-4 text-yellow-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                   <span class="text-xs text-yellow-800 dark:text-yellow-300 font-medium">AI가 이 이메일을 RFQ로 확신하지 못했습니다. 판정해주세요.</span>
                 <% end %>
               </div>
               <div class="flex items-center gap-2 flex-shrink-0">
-                <% unless rfq_s == 'rfq_confirmed' %>
+                <% if show_confirmed_btn %>
                   <button onclick="submitFeedback(<%= order.id %>, 'confirmed', '<%= inbox_feedback_path(order.id) %>')"
                           id="feedback-confirmed-<%= order.id %>"
                           class="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition-colors">
@@ -472,7 +478,7 @@
                     RFQ 맞음
                   </button>
                 <% end %>
-                <% unless rfq_s == 'rfq_excluded' %>
+                <% if show_rejected_btn %>
                   <button onclick="submitFeedback(<%= order.id %>, 'rejected', '<%= inbox_feedback_path(order.id) %>')"
                           id="feedback-rejected-<%= order.id %>"
                           class="flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors">
