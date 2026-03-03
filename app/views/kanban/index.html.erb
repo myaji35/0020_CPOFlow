@@ -82,23 +82,12 @@
       <div class="kanban-cards flex flex-col gap-3 flex-1 min-h-[60px] p-2 bg-gray-100 dark:bg-gray-700/50 rounded-xl"
            data-status="<%= status %>"
            id="column-<%= status %>">
-        <% if status == "inbox" %>
-          <% @inbox_grouped.each do |group| %>
-            <%= render "kanban/card",
-                       order: group[:order],
-                       prev_status: prev_stat,
-                       next_status: next_stat,
-                       thread_count: group[:thread_count],
-                       is_thread: group[:is_thread] %>
-          <% end %>
-        <% else %>
-          <% orders.each do |order| %>
-            <%= render "kanban/card", order: order, prev_status: prev_stat, next_status: next_stat %>
-          <% end %>
+        <% orders.each do |order| %>
+          <%= render "kanban/card", order: order, prev_status: prev_stat, next_status: next_stat %>
         <% end %>
 
         <!-- Empty state -->
-        <% empty_check = status == "inbox" ? @inbox_grouped.empty? : orders.empty? %>
+        <% empty_check = orders.empty? %>
         <div class="empty-state flex-1 flex items-center justify-center text-xs text-gray-400 dark:text-gray-500 py-8<%= empty_check ? '' : ' hidden' %>">
           <div class="text-center">
             <i class="lni lni-inbox text-2xl block mb-1 opacity-50"></i>

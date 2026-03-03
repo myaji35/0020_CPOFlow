@@ -49,8 +49,15 @@ class OrdersController < ApplicationController
     @comments = @order.comments.chronological.includes(:user)
     @activities = @order.activities.recent.includes(:user).limit(20)
     @team_members = Employee.active.by_name
-    # 동일 발주번호 관련 메일 스레드 (시간 순)
-    @thread_orders = if @order.reference_no.present?
+    # 관련 메일 스레드: sub_orders 우선, 없으면 reference_no 기반 fallback
+    @thread_orders = if @order.sub_orders.exists?
+      @order.sub_orders.order(created_at: :asc)
+    elsif @order.parent_order_id.present?
+      Order.where(parent_order_id: @order.parent_order_id)
+           .or(Order.where(id: @order.parent_order_id))
+           .where.not(id: @order.id)
+           .order(created_at: :asc)
+    elsif @order.reference_no.present?
       Order.where(reference_no: @order.reference_no)
            .where.not(id: @order.id)
            .order(created_at: :asc)

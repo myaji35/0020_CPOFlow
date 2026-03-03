@@ -58,11 +58,12 @@
     <%= order.title %>
   </h4>
 
-  <%# 스레드 뱃지 — 동일 발주번호 메일 묶음 %>
-  <% if local_assigns[:is_thread] %>
+  <%# 스레드 뱃지 — 서브 이벤트 수 (parent_order_id 기반) %>
+  <% sub_count = order.sub_orders.size %>
+  <% if sub_count > 0 %>
     <div class="inline-flex items-center gap-1 text-xs text-accent bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded-full mb-1.5">
       <svg class="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      스레드 <%= local_assigns[:thread_count] %>건
+      +<%= sub_count %>건
     </div>
   <% end %>
 

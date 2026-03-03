@@ -24,16 +24,15 @@ module Gmail
       else                  Order.rfq_statuses[:rfq_excluded]
       end
 
-      # 발주번호 추출 + 중복 체크
+      # 발주번호 추출 + 메인 카드 탐색
       ref_no = ReferenceNumberExtractor.extract(
         @email[:subject].to_s,
         @email[:body].to_s
       )
-      thread_excluded = check_thread_duplicate(ref_no, verdict)
-      rfq_status_val = Order.rfq_statuses[:rfq_excluded] if thread_excluded
+      parent = find_parent_order(ref_no)
 
       order = Order.new(
-        title:                  thread_excluded ? "[스레드 추가] #{build_title}" : build_title,
+        title:                  build_title,
         customer_name:          @detection[:customer_name].presence || "Unknown",
         description:            build_description,
         status:                 :inbox,
@@ -48,6 +47,7 @@ module Gmail
         original_email_from:    @email[:from],
         item_name:              @detection[:item_hints],
         reference_no:           ref_no,
+        parent_order_id:        parent&.id,
         # LLM 추출 필드 전체 저장
         extracted_quantities:   @detection[:quantities]&.join(", "),
         extracted_project_name: @detection[:project_name],
@@ -60,7 +60,7 @@ module Gmail
         rfq_score:              @detection[:score],
         llm_analysis:           @detection[:llm_raw].to_json,
         llm_analyzed_at:        Time.current,
-        tags:                   build_tags(ref_no, thread_excluded),
+        tags:                   build_tags(ref_no),
         user:                   @account.user,
         # Ariba 전용 필드
         source_type:            @detection[:is_ariba] ? :ariba : :email,
@@ -69,27 +69,25 @@ module Gmail
       )
 
       if order.save
-        # 기본 담당자: 계정 소유자
-        Assignment.find_or_create_by!(order: order, user: @account.user)
-
-        # Phase E: 발주처 이력 기반 담당자 자동 배정
-        auto_assign_from_history(order)
-
-        # 이메일 발신자와 일치하는 ContactPerson last_contacted_at 업데이트
-        update_contact_person_last_contacted(order)
-
-        Activity.create!(
-          order:  order,
-          user:   @account.user,
-          action: "auto_created_from_email"
-        )
-
-        # confirmed 판정 시에만 답변 초안 자동 생성 (non-RFQ 메일은 스킵)
-        if verdict == :confirmed && @detection[:is_rfq]
-          RfqReplyDraftJob.perform_later(order.id)
+        if parent
+          # 서브 카드: 메인 카드에 Activity 추가 (담당자 배정/초안 생성 스킵)
+          Activity.create!(
+            order:  parent,
+            user:   @account.user,
+            action: "thread_email_received"
+          )
+          update_contact_person_last_contacted(order)
+          Rails.logger.info "[EmailToOrder] Sub-order ##{order.id} linked to parent ##{parent.id} (ref: #{ref_no})"
+        else
+          # 메인 카드: 기존 로직 동일
+          Assignment.find_or_create_by!(order: order, user: @account.user)
+          auto_assign_from_history(order)
+          update_contact_person_last_contacted(order)
+          Activity.create!(order: order, user: @account.user, action: "auto_created_from_email")
+          RfqReplyDraftJob.perform_later(order.id) if verdict == :confirmed && @detection[:is_rfq]
+          Rails.logger.info "[EmailToOrder] Created order ##{order.id} verdict=#{verdict} from Gmail #{@email[:id]}"
         end
 
-        Rails.logger.info "[EmailToOrder] Created order ##{order.id} verdict=#{verdict} from Gmail #{@email[:id]}"
         order
       else
         Rails.logger.warn "[EmailToOrder] Failed to create order: #{order.errors.full_messages}"
@@ -132,28 +130,23 @@ module Gmail
       end
     end
 
-    def build_tags(ref_no = nil, thread_excluded = false)
+    def build_tags(ref_no = nil)
       tags = [ "rfq", "auto-import" ]
       tags << "ariba" if @detection[:is_ariba]
       tags << "sika" if @detection[:item_hints].present?
       tags << "urgent" if @detection[:score] >= 70
-      if thread_excluded && ref_no.present?
-        existing = Order.where(reference_no: ref_no)
-                        .where.not(status: :inbox)
-                        .order(created_at: :desc).first
-        tags << "thread:#{existing.id}" if existing
-      end
       tags.join(",")
     end
 
-    # 동일 발주번호가 이미 진행 중인지 확인 → 중복이면 true 반환
-    def check_thread_duplicate(ref_no, verdict)
-      return false if ref_no.blank?
-      return false if verdict == :excluded  # 이미 excluded 처리 예정
+    # 동일 reference_no의 메인 카드(parent_order_id: nil) 탐색
+    # 1순위: inbox 이외 진행 중인 카드, 2순위: inbox 중 가장 오래된 카드
+    def find_parent_order(ref_no)
+      return nil if ref_no.blank?
 
-      Order.where(reference_no: ref_no)
-           .where.not(status: %i[inbox])
-           .exists?
+      base = Order.where(reference_no: ref_no).where(parent_order_id: nil)
+
+      base.where.not(status: :inbox).order(created_at: :asc).first ||
+        base.order(created_at: :asc).first
     end
 
     def extract_sender_domain

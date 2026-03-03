@@ -3,6 +3,9 @@ class Order < ApplicationRecord
   belongs_to :client,   optional: true
   belongs_to :supplier, optional: true
   belongs_to :project,  optional: true
+  belongs_to :parent_order, class_name: "Order", optional: true
+  has_many   :sub_orders, class_name: "Order", foreign_key: :parent_order_id,
+             dependent: :nullify, inverse_of: :parent_order
   has_many :tasks, dependent: :destroy
   has_many :comments, dependent: :destroy
   has_many :activities, dependent: :destroy
@@ -51,6 +54,7 @@ class Order < ApplicationRecord
   scope :due_soon, -> { where(due_date: Date.today..14.days.from_now).where.not(status: :delivered) }
   scope :by_due_date, -> { order(due_date: :asc) }
   scope :by_reference_no, ->(ref) { where(reference_no: ref).order(created_at: :asc) }
+  scope :root_orders, -> { where(parent_order_id: nil) }
 
   KANBAN_COLUMNS = %w[inbox reviewing quoted confirmed procuring qa delivered].freeze
 
