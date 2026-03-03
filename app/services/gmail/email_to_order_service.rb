@@ -24,8 +24,16 @@ module Gmail
       else                  Order.rfq_statuses[:rfq_excluded]
       end
 
+      # 발주번호 추출 + 중복 체크
+      ref_no = ReferenceNumberExtractor.extract(
+        @email[:subject].to_s,
+        @email[:body].to_s
+      )
+      thread_excluded = check_thread_duplicate(ref_no, verdict)
+      rfq_status_val = Order.rfq_statuses[:rfq_excluded] if thread_excluded
+
       order = Order.new(
-        title:                  build_title,
+        title:                  thread_excluded ? "[스레드 추가] #{build_title}" : build_title,
         customer_name:          @detection[:customer_name].presence || "Unknown",
         description:            build_description,
         status:                 :inbox,
@@ -38,6 +46,7 @@ module Gmail
         original_email_html_body: @email[:html_body].to_s.truncate(100_000).presence,
         original_email_from:    @email[:from],
         item_name:              @detection[:item_hints],
+        reference_no:           ref_no,
         # LLM 추출 필드 전체 저장
         extracted_quantities:   @detection[:quantities]&.join(", "),
         extracted_project_name: @detection[:project_name],
@@ -50,7 +59,7 @@ module Gmail
         rfq_score:              @detection[:score],
         llm_analysis:           @detection[:llm_raw].to_json,
         llm_analyzed_at:        Time.current,
-        tags:                   build_tags,
+        tags:                   build_tags(ref_no, thread_excluded),
         user:                   @account.user,
         # Ariba 전용 필드
         source_type:            @detection[:is_ariba] ? :ariba : :email,
@@ -122,12 +131,28 @@ module Gmail
       end
     end
 
-    def build_tags
+    def build_tags(ref_no = nil, thread_excluded = false)
       tags = [ "rfq", "auto-import" ]
       tags << "ariba" if @detection[:is_ariba]
       tags << "sika" if @detection[:item_hints].present?
       tags << "urgent" if @detection[:score] >= 70
+      if thread_excluded && ref_no.present?
+        existing = Order.where(reference_no: ref_no)
+                        .where.not(status: :inbox)
+                        .order(created_at: :desc).first
+        tags << "thread:#{existing.id}" if existing
+      end
       tags.join(",")
+    end
+
+    # 동일 발주번호가 이미 진행 중인지 확인 → 중복이면 true 반환
+    def check_thread_duplicate(ref_no, verdict)
+      return false if ref_no.blank?
+      return false if verdict == :excluded  # 이미 excluded 처리 예정
+
+      Order.where(reference_no: ref_no)
+           .where.not(status: %i[inbox])
+           .exists?
     end
 
     def extract_sender_domain

@@ -50,6 +50,7 @@ class Order < ApplicationRecord
   scope :urgent, -> { where("due_date <= ?", 7.days.from_now).where.not(status: :delivered) }
   scope :due_soon, -> { where(due_date: Date.today..14.days.from_now).where.not(status: :delivered) }
   scope :by_due_date, -> { order(due_date: :asc) }
+  scope :by_reference_no, ->(ref) { where(reference_no: ref).order(created_at: :asc) }
 
   KANBAN_COLUMNS = %w[inbox reviewing quoted confirmed procuring qa delivered].freeze
 

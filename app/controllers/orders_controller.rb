@@ -49,6 +49,14 @@ class OrdersController < ApplicationController
     @comments = @order.comments.chronological.includes(:user)
     @activities = @order.activities.recent.includes(:user).limit(20)
     @team_members = Employee.active.by_name
+    # 동일 발주번호 관련 메일 스레드 (시간 순)
+    @thread_orders = if @order.reference_no.present?
+      Order.where(reference_no: @order.reference_no)
+           .where.not(id: @order.id)
+           .order(created_at: :asc)
+    else
+      Order.none
+    end
   end
 
   def new

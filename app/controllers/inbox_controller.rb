@@ -33,6 +33,14 @@ class InboxController < ApplicationController
 
     @all_orders = base_scope.order(created_at: :desc).limit(100)
 
+    # reference_no 기준 그룹핑: 동일 발주번호 메일을 스레드로 묶음
+    # key: reference_no (있으면) / "single_{id}" (없으면 단건)
+    @grouped_orders = @all_orders
+      .group_by { |o| o.reference_no.presence || "single_#{o.id}" }
+      .sort_by { |_key, orders| orders.map(&:created_at).max }
+      .reverse
+      .to_h
+
     # Counts for sidebar badges (unfiltered, unsearched)
     email_scope = Order.where.not(original_email_from: [ nil, "" ])
     @count_all       = email_scope.count

@@ -7,7 +7,7 @@
       layout 없이 이 div만 fetch로 추출
   ============================================================ %>
   <div id="order-drawer-content">
-    <%= render "orders/drawer_content", order: @order, tasks: @tasks, comments: @comments, activities: @activities, team_members: @team_members %>
+    <%= render "orders/drawer_content", order: @order, tasks: @tasks, comments: @comments, activities: @activities, team_members: @team_members, thread_orders: @thread_orders %>
   </div>
 <% else %>
   <%# ============================================================
@@ -38,7 +38,7 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div class="lg:col-span-2">
-        <%= render "orders/drawer_content", order: @order, tasks: @tasks, comments: @comments, activities: @activities, team_members: @team_members %>
+        <%= render "orders/drawer_content", order: @order, tasks: @tasks, comments: @comments, activities: @activities, team_members: @team_members, thread_orders: @thread_orders %>
       </div>
       <%# 우측 사이드바 %>
       <div class="space-y-4">

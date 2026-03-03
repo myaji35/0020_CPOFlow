@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_03_065201) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_03_090147) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -381,6 +381,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_03_065201) do
     t.integer "priority", default: 1, null: false
     t.integer "project_id"
     t.integer "quantity"
+    t.string "reference_no"
     t.text "reply_draft"
     t.string "rfq_confidence", default: "none"
     t.integer "rfq_score", default: 0
@@ -404,6 +405,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_03_065201) do
     t.index ["due_date"], name: "index_orders_on_due_date"
     t.index ["ecount_slip_no"], name: "index_orders_on_ecount_slip_no"
     t.index ["project_id"], name: "index_orders_on_project_id"
+    t.index ["reference_no"], name: "index_orders_on_reference_no"
     t.index ["source_email_id"], name: "index_orders_on_source_email_id", unique: true, where: "source_email_id IS NOT NULL"
     t.index ["status"], name: "index_orders_on_status"
     t.index ["supplier_id"], name: "index_orders_on_supplier_id"

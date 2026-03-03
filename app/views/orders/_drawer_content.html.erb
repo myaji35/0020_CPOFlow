@@ -1,6 +1,7 @@
 <%# ============================================================
     주문 상세 Drawer 콘텐츠 — Drawer / Full page 공용
 ============================================================ %>
+<% thread_orders ||= Order.none %>
 <div id="order-drawer-content-<%= order.id %>">
 
   <%# ── 탭 바 ─────────────────────────────────────────────── %>
@@ -337,6 +338,60 @@
       탭 패널 4: 히스토리
   ══════════════════════════════════════════════════════════ %>
   <div id="drawer-panel-<%= order.id %>-history" class="p-6 hidden">
+    <%# 관련 메일 스레드 (동일 발주번호) %>
+    <% if order.reference_no.present? && thread_orders.any? %>
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-blue-100 dark:border-blue-900/40 p-5 mb-4">
+        <h3 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+          <svg class="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          관련 메일 스레드
+          <span class="ml-1 text-[11px] font-mono bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded">
+            <%= order.reference_no %>
+          </span>
+          <span class="ml-auto text-[11px] text-gray-400 dark:text-gray-500 font-normal">
+            총 <%= thread_orders.size + 1 %>건
+          </span>
+        </h3>
+        <div class="space-y-0 divide-y divide-gray-100 dark:divide-gray-700">
+          <%# 현재 오더 (기준점) %>
+          <div class="flex items-center gap-3 py-2.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0"></span>
+            <span class="text-[11px] text-gray-400 dark:text-gray-500 flex-shrink-0 w-14">
+              <%= order.created_at.strftime("%m/%d") %>
+            </span>
+            <span class="text-xs text-gray-600 dark:text-gray-400 truncate flex-1 font-medium">
+              <%= order.original_email_subject.presence || order.title %>
+            </span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 font-medium flex-shrink-0">현재</span>
+          </div>
+          <%# 관련 오더들 (시간 순) %>
+          <% (thread_orders.sort_by(&:created_at)).each do |t_order| %>
+            <% t_status_colors = {
+              "inbox"     => "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400",
+              "reviewing" => "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400",
+              "quoted"    => "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400",
+              "confirmed" => "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400",
+              "procuring" => "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400",
+              "qa"        => "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-400",
+              "delivered" => "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400"
+            } %>
+            <a href="<%= order_path(t_order) %>"
+               class="flex items-center gap-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/30 -mx-1 px-1 rounded transition-colors">
+              <span class="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600 flex-shrink-0"></span>
+              <span class="text-[11px] text-gray-400 dark:text-gray-500 flex-shrink-0 w-14">
+                <%= t_order.created_at.strftime("%m/%d") %>
+              </span>
+              <span class="text-xs text-gray-600 dark:text-gray-400 truncate flex-1">
+                <%= t_order.original_email_subject.presence || t_order.title %>
+              </span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded <%= t_status_colors[t_order.status] || 'bg-gray-100 text-gray-500' %> font-medium flex-shrink-0">
+                <%= Order::STATUS_LABELS[t_order.status] || t_order.status.humanize %>
+              </span>
+            </a>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
     <% if activities.any? %>
       <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
         <h3 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-5">

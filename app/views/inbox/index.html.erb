@@ -171,101 +171,158 @@
         </div>
       </div>
 
-      <%# Email list items %>
+      <%# Email list items — reference_no 기준 그룹 뷰 %>
+      <% status_colors = {
+        "inbox"     => "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400",
+        "reviewing" => "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400",
+        "quoted"    => "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400",
+        "confirmed" => "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400",
+        "procuring" => "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400",
+        "qa"        => "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-400",
+        "delivered" => "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400"
+      } %>
+      <% confidence_colors = { "high" => "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400", "medium" => "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-500", "low" => "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400" } %>
+      <% confidence_labels = { "high" => "확실", "medium" => "가능성", "low" => "낮음" } %>
+
       <div class="flex-1 overflow-y-auto">
         <% if @all_orders.any? %>
           <ul id="email-list" class="divide-y divide-gray-100 dark:divide-gray-700">
-            <% @all_orders.each_with_index do |order, idx| %>
-              <li class="email-item cursor-pointer px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                  onclick="showEmail(<%= order.id %>)"
-                  data-order-id="<%= order.id %>"
-                  id="email-item-<%= order.id %>">
-                <div class="flex items-center gap-2 mb-1">
-                  <%# Status badge %>
-                  <% status_colors = {
-                    "inbox"     => "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400",
-                    "reviewing" => "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400",
-                    "quoted"    => "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400",
-                    "confirmed" => "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400",
-                    "procuring" => "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400",
-                    "qa"        => "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-400",
-                    "delivered" => "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400"
-                  } %>
-                  <span class="text-[10px] px-1.5 py-0.5 rounded font-semibold <%= status_colors[order.status] || 'bg-gray-100 text-gray-600' %>">
-                    <%= Order::STATUS_LABELS[order.status] || order.status.humanize %>
-                  </span>
+            <% @grouped_orders.each do |ref_key, group_orders| %>
+              <% is_thread = !ref_key.start_with?("single_") && group_orders.size > 1 %>
+              <% latest = group_orders.max_by(&:created_at) %>
 
-                  <%# RFQ / 메일 타입 badge %>
-                  <% if order.respond_to?(:rfq_status) %>
-                    <% case order.rfq_status
-                       when "rfq_confirmed" %>
-                      <span class="text-[10px] px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 rounded font-medium">RFQ</span>
-                    <% when "rfq_uncertain" %>
-                      <span class="text-[10px] px-1.5 py-0.5 bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400 rounded font-semibold border border-yellow-200 dark:border-yellow-800">AI 불확실</span>
-                    <% when "rfq_excluded" %>
-                      <span class="text-[10px] px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded font-medium">일반메일</span>
+              <% if is_thread %>
+                <%# ===== 그룹 헤더 (Alpine.js fold/unfold) ===== %>
+                <li x-data="{ open: false }" class="border-b border-gray-100 dark:border-gray-700">
+                  <%# 그룹 헤더 행 %>
+                  <div class="flex items-center gap-2 px-4 py-3 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors select-none"
+                       @click="open = !open">
+                    <%# 토글 화살표 %>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-blue-500 flex-shrink-0 transition-transform duration-150"
+                         :class="open ? 'rotate-90' : ''"
+                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                    <%# 발주번호 뱃지 %>
+                    <span class="text-[11px] font-mono font-semibold text-blue-700 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 rounded flex-shrink-0">
+                      <%= ref_key %>
+                    </span>
+                    <%# 고객명 + 건수 %>
+                    <span class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate flex-1">
+                      <%= latest.customer_name %>
+                    </span>
+                    <span class="text-[11px] bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-full px-2 py-0.5 font-semibold flex-shrink-0">
+                      <%= group_orders.size %>건
+                    </span>
+                    <%# 최신 날짜 %>
+                    <span class="text-[11px] text-gray-400 dark:text-gray-500 flex-shrink-0">
+                      <%= latest.created_at.strftime("%m/%d") %>
+                    </span>
+                  </div>
+                  <%# 펼침 시 개별 메일 목록 %>
+                  <div x-show="open" x-transition:enter="transition ease-out duration-150"
+                       x-transition:enter-start="opacity-0 -translate-y-1"
+                       x-transition:enter-end="opacity-100 translate-y-0"
+                       class="bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-700">
+                    <% group_orders.sort_by(&:created_at).each do |order| %>
+                      <div class="email-item cursor-pointer px-4 py-2.5 pl-10 hover:bg-white dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-0"
+                           onclick="showEmail(<%= order.id %>)"
+                           data-order-id="<%= order.id %>"
+                           id="email-item-<%= order.id %>">
+                        <div class="flex items-center gap-2 mb-1">
+                          <span class="text-[10px] px-1.5 py-0.5 rounded font-semibold <%= status_colors[order.status] || 'bg-gray-100 text-gray-600' %>">
+                            <%= Order::STATUS_LABELS[order.status] || order.status.humanize %>
+                          </span>
+                          <% if order.rfq_status == "rfq_excluded" %>
+                            <span class="text-[10px] px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 rounded">스레드 추가</span>
+                          <% end %>
+                          <span class="ml-auto text-[11px] text-gray-400 dark:text-gray-500 flex-shrink-0">
+                            <%= order.created_at.strftime("%m/%d %H:%M") %>
+                          </span>
+                        </div>
+                        <p class="text-xs text-gray-700 dark:text-gray-300 truncate font-medium">
+                          <%= order.original_email_subject.presence || order.title %>
+                        </p>
+                        <p class="text-[11px] text-gray-400 dark:text-gray-500 truncate mt-0.5">
+                          <%= order.original_email_from.presence || order.customer_name %>
+                        </p>
+                      </div>
                     <% end %>
-                  <% end %>
+                  </div>
+                </li>
 
-                  <%# Priority indicator %>
-                  <% case order.priority
-                     when "urgent" %>
-                    <span class="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" title="긴급"></span>
-                  <% when "high" %>
-                    <span class="w-2 h-2 rounded-full bg-orange-400 flex-shrink-0" title="높음"></span>
-                  <% end %>
-
-                  <%# Date %>
-                  <span class="ml-auto text-[11px] text-gray-400 dark:text-gray-500 flex-shrink-0">
-                    <%= order.created_at.strftime("%m/%d") %>
-                  </span>
-                </div>
-                <p class="text-sm text-gray-900 dark:text-white truncate font-medium">
-                  <%= order.original_email_subject.presence || order.title %>
-                </p>
-                <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
-                  <%= order.original_email_from.presence || order.customer_name %>
-                </p>
-                <% if order.description.present? %>
-                  <p class="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">
-                    <%= order.description.truncate(80) %>
-                  </p>
-                <% end %>
-
-                <%# 신뢰도 뱃지 (LLM 분석 결과) %>
-                <% confidence_colors = { "high" => "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400", "medium" => "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-500", "low" => "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400" } %>
-                <% conf = order.respond_to?(:rfq_confidence) ? order.rfq_confidence.to_s : "" %>
-                <% confidence_labels = { "high" => "확실", "medium" => "가능성", "low" => "낮음" } %>
-
-                <%# Due date chip + confidence badge row %>
-                <div class="mt-1.5 flex items-center gap-1.5 flex-wrap">
-                  <% if order.due_date %>
-                    <% days = order.days_until_due %>
-                    <% due_class = if days && days < 0
-                                     "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20"
-                                   elsif days && days <= 7
-                                     "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20"
-                                   elsif days && days <= 14
-                                     "text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20"
-                                   else
-                                     "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20"
-                                   end %>
-                    <span class="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded <%= due_class %>">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                      <% if days && days < 0 %>
-                        <%= days.abs %>일 초과
-                      <% else %>
-                        D-<%= days %>
+              <% else %>
+                <%# ===== 단건 메일 (기존 방식) ===== %>
+                <% order = group_orders.first %>
+                <li class="email-item cursor-pointer px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                    onclick="showEmail(<%= order.id %>)"
+                    data-order-id="<%= order.id %>"
+                    id="email-item-<%= order.id %>">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-[10px] px-1.5 py-0.5 rounded font-semibold <%= status_colors[order.status] || 'bg-gray-100 text-gray-600' %>">
+                      <%= Order::STATUS_LABELS[order.status] || order.status.humanize %>
+                    </span>
+                    <% if order.respond_to?(:rfq_status) %>
+                      <% case order.rfq_status
+                         when "rfq_confirmed" %>
+                        <span class="text-[10px] px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 rounded font-medium">RFQ</span>
+                      <% when "rfq_uncertain" %>
+                        <span class="text-[10px] px-1.5 py-0.5 bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400 rounded font-semibold border border-yellow-200 dark:border-yellow-800">AI 불확실</span>
+                      <% when "rfq_excluded" %>
+                        <span class="text-[10px] px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded font-medium">일반메일</span>
                       <% end %>
+                    <% end %>
+                    <% case order.priority
+                       when "urgent" %>
+                      <span class="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" title="긴급"></span>
+                    <% when "high" %>
+                      <span class="w-2 h-2 rounded-full bg-orange-400 flex-shrink-0" title="높음"></span>
+                    <% end %>
+                    <span class="ml-auto text-[11px] text-gray-400 dark:text-gray-500 flex-shrink-0">
+                      <%= order.created_at.strftime("%m/%d") %>
                     </span>
+                  </div>
+                  <p class="text-sm text-gray-900 dark:text-white truncate font-medium">
+                    <%= order.original_email_subject.presence || order.title %>
+                  </p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
+                    <%= order.original_email_from.presence || order.customer_name %>
+                  </p>
+                  <% if order.description.present? %>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">
+                      <%= order.description.truncate(80) %>
+                    </p>
                   <% end %>
-                  <% if conf.in?(%w[high medium low]) %>
-                    <span class="text-[10px] px-1.5 py-0.5 rounded <%= confidence_colors[conf] %> font-medium flex-shrink-0">
-                      <%= confidence_labels[conf] %>
-                    </span>
-                  <% end %>
-                </div>
-              </li>
+                  <% conf = order.respond_to?(:rfq_confidence) ? order.rfq_confidence.to_s : "" %>
+                  <div class="mt-1.5 flex items-center gap-1.5 flex-wrap">
+                    <% if order.due_date %>
+                      <% days = order.days_until_due %>
+                      <% due_class = if days && days < 0
+                                       "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20"
+                                     elsif days && days <= 7
+                                       "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20"
+                                     elsif days && days <= 14
+                                       "text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20"
+                                     else
+                                       "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20"
+                                     end %>
+                      <span class="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded <%= due_class %>">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <% if days && days < 0 %>
+                          <%= days.abs %>일 초과
+                        <% else %>
+                          D-<%= days %>
+                        <% end %>
+                      </span>
+                    <% end %>
+                    <% if conf.in?(%w[high medium low]) %>
+                      <span class="text-[10px] px-1.5 py-0.5 rounded <%= confidence_colors[conf] %> font-medium flex-shrink-0">
+                        <%= confidence_labels[conf] %>
+                      </span>
+                    <% end %>
+                  </div>
+                </li>
+              <% end %>
             <% end %>
           </ul>
         <% else %>
