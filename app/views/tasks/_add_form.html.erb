@@ -1,8 +1,20 @@
 <%# 태스크 추가 폼 — turbo_stream.replace로 초기화 (입력값 클리어) %>
 <div id="task-add-form-<%= order.id %>">
-  <%= form_with url: order_tasks_path(order), method: :post, class: "flex gap-2" do |f| %>
-    <%= f.text_field :title, name: "task[title]", placeholder: "새 태스크 추가...",
-        class: "flex-1 px-3 py-2 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent/30 outline-none" %>
+  <%= form_with url: order_tasks_path(order), method: :post,
+      class: "flex gap-2",
+      data: { controller: "mention", mention_mode_value: "task", mention_url_value: mention_suggestions_path } do |f| %>
+    <div class="relative flex-1">
+      <%= f.text_field :title, name: "task[title]", placeholder: "새 태스크 추가... (@ 로 담당자 지정)",
+          class: "w-full px-3 py-2 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-accent/30 outline-none",
+          data: { mention_target: "input", action: "input->mention#onInput" } %>
+      <%# 드롭다운 %>
+      <div data-mention-target="dropdown"
+           class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg overflow-hidden"
+           style="display:none"></div>
+      <%# 선택된 담당자 employee_id hidden input %>
+      <%= f.hidden_field :assignee_id, name: "task[assignee_id]", value: "",
+          data: { mention_target: "employeeId" } %>
+    </div>
     <%= f.submit "추가",
         class: "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm px-3 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer whitespace-nowrap" %>
   <% end %>

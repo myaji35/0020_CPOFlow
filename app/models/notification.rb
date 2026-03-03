@@ -8,7 +8,7 @@ class Notification < ApplicationRecord
   scope :recent,  -> { order(created_at: :desc) }
   scope :for_user, ->(user) { where(user: user) }
 
-  TYPES = %w[due_date status_changed assigned system].freeze
+  TYPES = %w[due_date status_changed assigned system mentioned].freeze
 
   def read?
     read_at.present?

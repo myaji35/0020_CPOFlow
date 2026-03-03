@@ -3,7 +3,9 @@ class CommentsController < ApplicationController
 
   def create
     @comment = @order.comments.build(body: params[:body], user: current_user)
-    @comment.save
+    if @comment.save
+      MentionParserService.new(@comment, current_user).call
+    end
     respond_to do |format|
       format.turbo_stream do
         render turbo_stream: [
