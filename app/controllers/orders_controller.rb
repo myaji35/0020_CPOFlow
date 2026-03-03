@@ -105,7 +105,13 @@ class OrdersController < ApplicationController
         from_status: Order.statuses[old_status],
         to_status: Order.statuses[@order.status]
       )
-      redirect_back fallback_location: kanban_path, notice: t("orders.status_updated", status: t("orders.status.#{new_status}", default: new_status))
+
+      # 동일 gmail_thread_id의 inbox 상태 Order도 함께 변경
+      synced_count = sync_thread_siblings_status(new_status)
+
+      notice_msg = t("orders.status_updated", status: t("orders.status.#{new_status}", default: new_status))
+      notice_msg += " (연관 #{synced_count}건도 함께 변경됨)" if synced_count > 0
+      redirect_back fallback_location: kanban_path, notice: notice_msg
     else
       redirect_back fallback_location: kanban_path, alert: "Failed to update status."
     end
@@ -125,6 +131,31 @@ class OrdersController < ApplicationController
 
   def set_order
     @order = Order.find(params[:id])
+  end
+
+  def sync_thread_siblings_status(new_status)
+    return 0 if @order.gmail_thread_id.blank?
+
+    siblings = Order.where(gmail_thread_id: @order.gmail_thread_id)
+                    .where(status: :inbox)
+                    .where.not(id: @order.id)
+
+    count = siblings.count
+    return 0 if count == 0
+
+    siblings.find_each do |sibling|
+      old = sibling.status
+      sibling.update!(status: new_status)
+      Activity.create!(
+        order: sibling,
+        user: current_user,
+        action: "status_changed",
+        from_status: Order.statuses[old],
+        to_status: Order.statuses[sibling.status]
+      )
+    end
+
+    count
   end
 
   def order_params
