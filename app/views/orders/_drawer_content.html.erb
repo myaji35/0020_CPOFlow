@@ -457,36 +457,4 @@
 
 </div>
 
-<script>
-  function switchDrawerTab(orderId, tabId) {
-    var panels = ['detail', 'tasks', 'comments', 'history'];
-    panels.forEach(function(p) {
-      var panel = document.getElementById('drawer-panel-' + orderId + '-' + p);
-      var tab   = document.getElementById('drawer-tab-' + orderId + '-' + p);
-      if (!panel || !tab) return;
-      if (p === tabId) {
-        panel.classList.remove('hidden');
-        tab.classList.add('border-primary', 'text-primary');
-        tab.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
-      } else {
-        panel.classList.add('hidden');
-        tab.classList.remove('border-primary', 'text-primary');
-        tab.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
-      }
-    });
-  }
-
-  function togglePriorityDropdown(orderId, event) {
-    if (event) event.stopPropagation();
-    var menu = document.getElementById('priority-menu-' + orderId);
-    if (menu) menu.classList.toggle('hidden');
-  }
-
-  document.addEventListener('click', function(e) {
-    if (!e.target.closest('[id^="priority-dropdown-"]')) {
-      document.querySelectorAll('[id^="priority-menu-"]').forEach(function(m) {
-        m.classList.add('hidden');
-      });
-    }
-  });
-</script>
+<%# switchDrawerTab / togglePriorityDropdown 은 layouts/application.html.erb 전역 정의 %>
