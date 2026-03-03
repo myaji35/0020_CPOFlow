@@ -134,14 +134,8 @@ class OrdersController < ApplicationController
   end
 
   def sync_thread_siblings_status(new_status)
-    return 0 if @order.gmail_thread_id.blank?
-
-    siblings = Order.where(gmail_thread_id: @order.gmail_thread_id)
-                    .where(status: :inbox)
-                    .where.not(id: @order.id)
-
-    count = siblings.count
-    return 0 if count == 0
+    siblings = find_thread_siblings
+    return 0 if siblings.empty?
 
     siblings.find_each do |sibling|
       old = sibling.status
@@ -155,7 +149,22 @@ class OrdersController < ApplicationController
       )
     end
 
-    count
+    siblings.count
+  end
+
+  # gmail_thread_id 또는 제목의 이벤트 번호로 연관 inbox 건 탐색
+  def find_thread_siblings
+    base = Order.where(status: :inbox).where.not(id: @order.id)
+
+    # 1순위: 동일 gmail_thread_id
+    by_thread = base.where(gmail_thread_id: @order.gmail_thread_id) if @order.gmail_thread_id.present?
+    return by_thread if by_thread.present? && by_thread.exists?
+
+    # 2순위: 제목에서 숫자 이벤트 번호 추출 후 LIKE 검색
+    event_number = @order.original_email_subject&.match(/\b(\d{8,})\b/)&.captures&.first
+    return Order.none if event_number.blank?
+
+    base.where("original_email_subject LIKE ?", "%#{event_number}%")
   end
 
   def order_params
