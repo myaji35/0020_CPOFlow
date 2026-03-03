@@ -66,13 +66,13 @@ class EmailSyncJob < ApplicationJob
 
       detection = Gmail::RfqDetectorService.new(parsed).detect
 
-      # excluded 판정 이메일은 저장하지 않음 (프로모션, 알림성 등)
-      if detection[:rfq_verdict] == :excluded
-        Rails.logger.debug "[EmailSyncJob] Skipped excluded email: #{parsed[:subject]}"
+      # confirmed 판정만 Order로 생성 — uncertain/excluded는 건너뜀
+      unless detection[:rfq_verdict] == :confirmed
+        Rails.logger.debug "[EmailSyncJob] Skipped #{detection[:rfq_verdict]} email (score=#{detection[:score]}): #{parsed[:subject]}"
         next
       end
 
-      # RFQ confirmed 또는 uncertain 이메일만 Inbox에 저장
+      # RFQ confirmed 이메일만 Inbox에 저장
       order = Gmail::EmailToOrderService.new(account, parsed, detection).create_order!
 
       if order

@@ -27,6 +27,13 @@ module Gmail
       "sourcing event"
     ].freeze
 
+    # 자사 도메인 — 자체 발송/회신 메일은 RFQ가 아님
+    OWN_SENDER_DOMAINS = %w[
+      atoz2010.com
+      koreabmt.com
+      ddtl.co.kr
+    ].freeze
+
     # 자동 제외 발신 도메인 — 시스템 알림/프로모션/뉴스레터 발송 서버 (Ariba 제외)
     EXCLUDED_SENDER_DOMAINS = %w[
       sap.com
@@ -54,6 +61,12 @@ module Gmail
       intercom-mail.com
       mailjet.com
       sparkpost.com
+      allbirds.co.kr
+      gabia.com
+      korcham.net
+      coupang.com
+      mz.co.kr
+      pcfc.ae
     ].freeze
 
     # 제목에서 자동 제외할 패턴 — 알림성/프로모션/뉴스레터 이메일 식별
@@ -80,7 +93,14 @@ module Gmail
       /limited\s*time\s*offer/i,
       /special\s*offer/i,
       /\bfree\s+(shipping|trial|gift)\b/i,
-      /\b(맞이할|맞이하여|이벤트|경품|추첨|당첨)\b/i
+      /\b(맞이할|맞이하여|이벤트|경품|추첨|당첨)\b/i,
+      # 광고/프로모션/결제 알림
+      /\A\(광고\)/i,
+      /도메인을?\s*연장/i,
+      /인보이스/i,
+      /\b(신제품|new\s*product)\b.*살펴보기/i,
+      /수강.*안내/i,
+      /\b(세일|アーカイブ|メガ割)\b/i
     ].freeze
 
     # Weighted keyword groups (subject gets 2x weight)
@@ -158,6 +178,11 @@ module Gmail
       # 0단계: SAP Ariba 초대 이메일 즉시 감지 (LLM 스킵)
       if ariba_sender?
         return ariba_rfq_result
+      end
+
+      # 0.5단계: 자사 도메인 메일 즉시 제외 (자체 발송/회신)
+      if own_sender?
+        return not_rfq_result("자사 도메인 발송 메일 자동 제외", :excluded)
       end
 
       # 1단계: 발신 도메인 / 제목 패턴으로 즉시 제외
@@ -261,6 +286,12 @@ module Gmail
         ariba_event_id:    event_id,
         llm_raw:           {}
       }
+    end
+
+    def own_sender?
+      domain = sender_domain
+      return false if domain.blank?
+      OWN_SENDER_DOMAINS.any? { |d| domain == d || domain.end_with?(".#{d}") }
     end
 
     def excluded_sender?
