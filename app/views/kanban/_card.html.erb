@@ -1,4 +1,16 @@
-<div class="relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 shadow-sm hover:shadow-md hover:border-accent/40 dark:hover:border-accent/40 transition-all group"
+<%
+  card_bg = case order.status
+  when "inbox"      then "bg-white dark:bg-gray-800"
+  when "reviewing"  then "bg-blue-50 dark:bg-blue-900/20"
+  when "quoted"     then "bg-purple-50 dark:bg-purple-900/20"
+  when "confirmed"  then "bg-green-50 dark:bg-green-900/20"
+  when "procuring"  then "bg-amber-50 dark:bg-amber-900/20"
+  when "qa"         then "bg-orange-50 dark:bg-orange-900/20"
+  when "delivered"  then "bg-emerald-50 dark:bg-emerald-900/20"
+  else "bg-white dark:bg-gray-800"
+  end
+%>
+<div class="relative <%= card_bg %> rounded-lg border border-gray-200 dark:border-gray-700 p-3 shadow-sm hover:shadow-md hover:border-accent/40 dark:hover:border-accent/40 transition-all group"
      data-order-id="<%= order.id %>"
      data-priority="<%= order.priority %>"
      data-due-days="<%= order.days_until_due.to_i %>"
