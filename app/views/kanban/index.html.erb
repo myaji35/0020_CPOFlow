@@ -69,7 +69,7 @@
       <div class="flex items-center justify-between mb-3 px-1">
         <div class="flex items-center gap-2">
           <span class="column-name text-sm font-semibold text-gray-700 dark:text-gray-300"><%= label %></span>
-          <span class="column-count text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full px-2 py-0.5"><%= status == "inbox" ? @inbox_grouped.size : orders.count %></span>
+          <span class="column-count text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full px-2 py-0.5"><%= orders.count %></span>
         </div>
         <% if status == "inbox" %>
           <%= link_to inbox_path, class: "text-xs text-accent hover:underline" do %>
