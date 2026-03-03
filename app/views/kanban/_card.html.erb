@@ -1,16 +1,27 @@
 <%
-  card_bg = case order.status
-  when "inbox"      then "bg-white dark:bg-gray-800"
-  when "reviewing"  then "bg-blue-50 dark:bg-blue-900/20"
-  when "quoted"     then "bg-purple-50 dark:bg-purple-900/20"
-  when "confirmed"  then "bg-green-50 dark:bg-green-900/20"
-  when "procuring"  then "bg-amber-50 dark:bg-amber-900/20"
-  when "qa"         then "bg-orange-50 dark:bg-orange-900/20"
-  when "delivered"  then "bg-emerald-50 dark:bg-emerald-900/20"
-  else "bg-white dark:bg-gray-800"
+  card_bg_style = case order.status
+  when "inbox"      then "background-color:#F8FAFF;"
+  when "reviewing"  then "background-color:#EFF6FF;"
+  when "quoted"     then "background-color:#F5F3FF;"
+  when "confirmed"  then "background-color:#F0FDF4;"
+  when "procuring"  then "background-color:#FFFBEB;"
+  when "qa"         then "background-color:#FFF7ED;"
+  when "delivered"  then "background-color:#ECFDF5;"
+  else "background-color:#FFFFFF;"
+  end
+  card_border_style = case order.status
+  when "inbox"      then "border-color:#BFDBFE;"
+  when "reviewing"  then "border-color:#93C5FD;"
+  when "quoted"     then "border-color:#C4B5FD;"
+  when "confirmed"  then "border-color:#86EFAC;"
+  when "procuring"  then "border-color:#FCD34D;"
+  when "qa"         then "border-color:#FDBA74;"
+  when "delivered"  then "border-color:#6EE7B7;"
+  else "border-color:#E5E7EB;"
   end
 %>
-<div class="relative <%= card_bg %> rounded-lg border border-gray-200 dark:border-gray-700 p-3 shadow-sm hover:shadow-md hover:border-accent/40 dark:hover:border-accent/40 transition-all group"
+<div class="relative rounded-lg border p-3 shadow-sm hover:shadow-md transition-all group"
+     style="<%= card_bg_style %> <%= card_border_style %>"
      data-order-id="<%= order.id %>"
      data-priority="<%= order.priority %>"
      data-due-days="<%= order.days_until_due.to_i %>"
