@@ -1,22 +1,14 @@
 <%
-  card_bg_style = case order.status
-  when "inbox"      then "background-color:#F8FAFF;"
-  when "reviewing"  then "background-color:#EFF6FF;"
-  when "quoted"     then "background-color:#F5F3FF;"
-  when "confirmed"  then "background-color:#F0FDF4;"
-  when "procuring"  then "background-color:#FFFBEB;"
-  when "qa"         then "background-color:#FFF7ED;"
-  when "delivered"  then "background-color:#ECFDF5;"
+  card_bg_style = case order.priority
+  when "urgent" then "background-color:#FFF1F2;"
+  when "high"   then "background-color:#FFF7ED;"
+  when "medium" then "background-color:#FAFAFA;"
   else "background-color:#FFFFFF;"
   end
-  card_border_style = case order.status
-  when "inbox"      then "border-color:#BFDBFE;"
-  when "reviewing"  then "border-color:#93C5FD;"
-  when "quoted"     then "border-color:#C4B5FD;"
-  when "confirmed"  then "border-color:#86EFAC;"
-  when "procuring"  then "border-color:#FCD34D;"
-  when "qa"         then "border-color:#FDBA74;"
-  when "delivered"  then "border-color:#6EE7B7;"
+  card_border_style = case order.priority
+  when "urgent" then "border-color:#FECDD3;"
+  when "high"   then "border-color:#FED7AA;"
+  when "medium" then "border-color:#E5E7EB;"
   else "border-color:#E5E7EB;"
   end
 %>
