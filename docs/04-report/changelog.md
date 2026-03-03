@@ -4,6 +4,169 @@
 
 ---
 
+## [2026-03-03] - chatbot-quality (RFQ 챗봇 품질 개선: 5단계 판정 파이프라인 & 자사 도메인 제외) v1.0 완료
+
+### 기능 요약
+
+RFQ(견적요청) 이메일 감지 시스템의 품질을 근본적으로 강화했습니다. 광고/프로모션/자사발송 메일이 Inbox에 올라오는 문제를 **5단계 판정 파이프라인**과 **자사 도메인 제외 (Stage 0.5)**로 해결했습니다.
+
+### Added
+
+- **Stage 0.5: 자사 도메인 제외 (NEW)** — RfqDetectorService에 `own_sender?()` 메서드 추가
+  - atoz2010.com, koreabmt.com, ddtl.co.kr 자동 제외
+  - Ariba 감지와 도메인 필터 사이에 삽입 (우선순위 조정)
+  - 자사 메일 오인으로 인한 담당자 자동 배정 오류 방지
+
+- **제외 도메인 6개 추가** — EXCLUDED_SENDER_DOMAINS 확장
+  - allbirds.co.kr (신발 브랜드 쇼핑)
+  - gabia.com (도메인 호스팅)
+  - korcham.net (상공회의소)
+  - coupang.com (이커머스 배송알림)
+  - mz.co.kr (뉴스/미디어)
+  - pcfc.ae (전자/부품 대행사)
+
+- **제목 패턴 6개 추가** — EXCLUDED_SUBJECT_PATTERNS 확장
+  - `(광고)` (명시적 광고 표시)
+  - `도메인 연장` (호스팅 도메인 갱신)
+  - `/invoice|청구서/i` (인보이스 발송)
+  - `신제품 출시` (신제품 안내)
+  - `수강 안내` (교육/세미나)
+  - `/세일|할인|쿠폰/i` (판촉 활동)
+
+- **Inbox 필터 정확도 향상** — EmailSyncJob에서 `confirmed`만 Order 생성
+  - Before: uncertain도 Inbox에 표시 (혼란 가중)
+  - After: confirmed만 Order 생성 (uncertain/excluded 제외)
+  - 결과: Inbox 정밀도 33% 오류율 → ~5% (추정)
+
+- **데이터 정리 마이그레이션** — 기존 비RFQ Inbox Order 15건 삭제
+  - rfq_excluded 10건 (광고/프로모션)
+  - rfq_uncertain 중 자사 도메인 6건
+  - 최종: 45건 → 30건 (대다수가 정상 RFQ)
+
+### Technical Achievements
+
+- **Design Match Rate**: 100% (PASS ✅ — 최고 점수)
+  - PASS: 15 items (100%)
+  - FAIL: 0 items
+  - 설계 요구사항 전부 구현 완료
+
+- **Overall Quality Score**: 93/100
+  - Design Match: 100% (15/15)
+  - Code Quality: 88/100 (Service 구조 우수, 중복 로직 개선 가능)
+  - Security: 95/100 (OAuth 암호화, 보안 이슈 없음)
+  - Architecture: 92/100 (관심사 분리 명확)
+  - Performance: 85/100 (Gmail API N+1, Batch 권장)
+  - Error Handling: 90/100 (Graceful degradation 구현)
+
+- **Files Modified**: 4개
+  - app/services/gmail/rfq_detector_service.rb (+25줄)
+  - app/jobs/email_sync_job.rb (~4줄 수정)
+  - db/migrate/20260303065201_cleanup_non_rfq_inbox_orders.rb (+15건 정리)
+  - db/schema.rb (마이그레이션 반영)
+
+- **Total Lines of Code**: ~29줄 (Service 강화)
+
+- **Deployment**: Vultr (커밋 67f35a5)
+  - 마이그레이션 성공
+  - 동기화 정상 작동 (15분 주기)
+
+- **Production Ready**: ✅ Yes (데이터 정합성 확인: Inbox 30건, rfq_confirmed 32건)
+
+- **Breaking Changes**: None (기존 Order 구조 유지)
+
+### 5단계 판정 파이프라인 아키텍처
+
+```
+Stage 0:   SAP Ariba 즉시 감지 (100% trusted)
+           └─ ariba.com 도메인 + 특정 키워드
+
+Stage 0.5: 자사 도메인 제외 (NEW, 100% excluded)
+           └─ atoz2010.com, koreabmt.com, ddtl.co.kr
+
+Stage 1:   제외 도메인/제목 패턴 필터 (고속 제외)
+           └─ 25개 도메인 + 24개 제목 패턴 (총 31개 강화)
+
+Stage 2:   LLM + 키워드 하이브리드 판정
+           └─ keyword_score (0.4) + llm_score (0.6)
+
+Stage 3:   3단계 Verdict
+           └─ >= 70: confirmed
+           └─ 30-70: uncertain
+           └─ < 30: excluded
+```
+
+### Changed
+
+- RfqDetectorService 우선순위 재조정
+  - Ariba (Stage 0) → 자사 도메인 (Stage 0.5) → 패턴 필터 (Stage 1) 순서
+  - LLM 호출 전 대부분 빠르게 제외 (효율성 향상)
+
+- EmailSyncJob Order 생성 로직
+  - Before: `unless detection[:rfq_verdict] != :confirmed` (double negative)
+  - After: `if detection[:rfq_verdict] == :confirmed` (명확)
+  - 결과: uncertain/excluded는 분석만 수행, Order 미생성
+
+### Fixed
+
+- 비RFQ 이메일이 Inbox에 올라오는 문제
+  - 광고 메일 → 제외 도메인 확장으로 해결
+  - 자사 메일 → Stage 0.5 추가로 해결
+  - uncertain 노출 → EmailSyncJob 필터로 해결
+
+- 담당자 자동 배정 오류
+  - 자사 도메인 메일도 발주처로 인식 → 제외로 방지
+
+- 데이터 정합성 문제
+  - 45건 Inbox 중 실제 15건 비RFQ → 정리 마이그레이션
+
+### Security
+
+- Lockbox 암호화 유지 (Gmail OAuth 토큰)
+- Stage 0.5에서 자사 도메인 메일 사전 필터링 (프라이버시)
+- Rate limiting 유지 (분당 10회)
+- 토큰 자동 갱신 + 만료 시 connected=false 처리
+
+### Known Issues
+
+- **Medium**: Gmail API Batch 미활용 (50건 동기화 시 51회 API 호출)
+  - 권장: Batch API 전환으로 1회로 감소 (Phase 5)
+
+- **Medium**: Body 추출 로직 중복 (GmailService ↔ EmailAttachmentExtractorService)
+  - 권장: 공통 유틸로 추출 (코드 재사용성)
+
+- **Low**: Rescue blanket 패턴 3곳 (예외 클래스 미명시)
+  - 권장: 구체적 예외 클래스 지정
+
+- **Low**: sender_domain 인덱스 미존재
+  - 권장: 인덱스 추가 + `LIKE '%domain%'` → 정확 매치 변경
+
+- **High**: Gmail OAuth 재인증 필요 (kds@ddtl.co.kr 만료)
+  - 즉시: Admin이 Settings > Re-authenticate 실행
+  - 권장: 관리자 자동 알림 (이메일/Google Chat)
+
+### Lessons Learned (KPT)
+
+**Keep**: 5단계 판정 파이프라인 (각 stage가 명확, LLM 호출 최소화)
+**Problem**: Gmail API Batch 미활용, Body 로직 중복, Rescue blanket
+**Try**: 제외 도메인 동적 관리 (Admin UI), RFQ 판정 통계 대시보드, LLM 비용 트래킹
+
+### Next Steps
+
+- [High] Gmail OAuth 재인증 (kds@ddtl.co.kr)
+- [Medium] Gmail Batch API 전환 (1-2주)
+- [Medium] Body 추출 로직 중복 제거 (1주)
+- [Low] sender_domain 인덱스 추가 (1주)
+- [Backlog] 제외 도메인 동적 관리, RFQ 판정 통계 대시보드
+
+### Related Documents
+
+- **Report**: `/docs/04-report/features/chatbot-quality.report.md`
+- **Analysis**: `/docs/03-analysis/chatbot-quality.analysis.md`
+- **Requirements**: `/docs/prd.md` (RFQ Auto-Detection)
+- **PDCA**: `https://bkit.pages.dev` (Complete cycle)
+
+---
+
 ## [2026-03-02] - email-signature-split (이메일 본문과 서명 자동 분리 & HTML 렌더링) v1.0 완료
 
 ### Added
