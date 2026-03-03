@@ -14,10 +14,10 @@ class KanbanController < ApplicationController
 
   private
 
-  # Inbox 컬럼 전용: reference_no 기준으로 그룹핑하여 대표 카드 목록 반환
+  # Inbox 컬럼 전용: gmail_thread_id → reference_no 우선순위로 그룹핑
   # 반환: [{order: Order, thread_count: Integer, is_thread: Boolean}]
   def build_inbox_groups(orders)
-    orders.group_by { |o| o.reference_no.presence || "single_#{o.id}" }
+    orders.group_by { |o| o.gmail_thread_id.presence || o.reference_no.presence || "single_#{o.id}" }
           .map do |_key, group|
             { order: group.first, thread_count: group.size, is_thread: group.size > 1 }
           end

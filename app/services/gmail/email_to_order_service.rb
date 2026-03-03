@@ -41,6 +41,7 @@ module Gmail
         priority:               infer_priority,
         due_date:               @detection[:due_date],
         source_email_id:        @email[:id],
+        gmail_thread_id:        @email[:thread_id],
         original_email_subject: @email[:subject],
         original_email_body:    @email[:body].to_s.truncate(10_000),
         original_email_html_body: @email[:html_body].to_s.truncate(100_000).presence,

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_03_090147) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_03_100002) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -371,6 +371,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_03_090147) do
     t.text "extracted_links"
     t.string "extracted_project_name"
     t.text "extracted_quantities"
+    t.string "gmail_thread_id"
     t.string "item_name"
     t.text "llm_analysis"
     t.datetime "llm_analyzed_at"
@@ -404,6 +405,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_03_090147) do
     t.index ["client_id"], name: "index_orders_on_client_id"
     t.index ["due_date"], name: "index_orders_on_due_date"
     t.index ["ecount_slip_no"], name: "index_orders_on_ecount_slip_no"
+    t.index ["gmail_thread_id"], name: "index_orders_on_gmail_thread_id"
     t.index ["project_id"], name: "index_orders_on_project_id"
     t.index ["reference_no"], name: "index_orders_on_reference_no"
     t.index ["source_email_id"], name: "index_orders_on_source_email_id", unique: true, where: "source_email_id IS NOT NULL"
