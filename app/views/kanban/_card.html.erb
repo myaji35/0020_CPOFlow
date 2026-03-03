@@ -3,12 +3,14 @@
   when "urgent" then "background-color:#FFF1F2;"
   when "high"   then "background-color:#FFF7ED;"
   when "medium" then "background-color:#FAFAFA;"
+  when "low"    then "background-color:#F0FDF4;"
   else "background-color:#FFFFFF;"
   end
   card_border_style = case order.priority
   when "urgent" then "border-color:#FECDD3;"
   when "high"   then "border-color:#FED7AA;"
   when "medium" then "border-color:#E5E7EB;"
+  when "low"    then "border-color:#BBF7D0;"
   else "border-color:#E5E7EB;"
   end
 %>
