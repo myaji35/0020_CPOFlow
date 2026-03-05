@@ -13,11 +13,13 @@ class EmailSyncJob < ApplicationJob
   retry_on StandardError, wait: 5.minutes, attempts: 3
   discard_on ActiveRecord::RecordNotFound
 
-  def perform(account_id: nil)
+  # since_date: Date 또는 Time — 이 날짜 이후 메일만 가져옴 (백필용)
+  # force: true — synced_recently? 체크를 무시하고 강제 실행 (백필용)
+  def perform(account_id: nil, since_date: nil, force: false)
     accounts = account_id ? [ EmailAccount.find(account_id) ] : connected_accounts
 
     accounts.each do |account|
-      sync_account(account)
+      sync_account(account, since_date: since_date, force: force)
     rescue => e
       Rails.logger.error "[EmailSyncJob] Error syncing #{account.email}: #{e.class} — #{e.message}"
     end
@@ -29,21 +31,26 @@ class EmailSyncJob < ApplicationJob
     EmailAccount.where(connected: true).includes(:user)
   end
 
-  def sync_account(account)
-    return if account.synced_recently?
+  def sync_account(account, since_date: nil, force: false)
+    return if !force && account.synced_recently?
 
     unless account.ready?
       Rails.logger.warn "[EmailSyncJob] #{account.email}: skipped — token expired and no refresh_token. Re-auth required."
       return
     end
 
-    Rails.logger.info "[EmailSyncJob] Syncing account: #{account.email}"
+    Rails.logger.info "[EmailSyncJob] Syncing account: #{account.email}#{since_date ? " (since: #{since_date})" : ""}"
 
     svc = Gmail::GmailService.new(account)
 
-    # Fetch messages: 첫 동기화는 최근 90일치 전체, 이후는 마지막 동기화 이후 신규
+    # Fetch messages: 우선순위 — since_date 지정 > 마지막 동기화 이후 > 초회 90일
     # 프로모션/소셜/스팸 카테고리 제외 — 기본 받은편지함(PRIMARY)만 동기화
-    if account.last_synced_at.nil?
+    if since_date.present?
+      # 백필 모드: 지정 날짜 이후 전체 가져오기
+      after_ts = since_date.to_time.to_i
+      query = "after:#{after_ts} category:primary"
+      max_fetch = 500
+    elsif account.last_synced_at.nil?
       # 초회 동기화: 최근 90일치 전체 (read/unread 모두)
       after_ts = 90.days.ago.to_i
       query = "after:#{after_ts} category:primary"

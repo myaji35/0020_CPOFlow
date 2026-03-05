@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_03_125902) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_05_081652) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -391,6 +391,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_03_125902) do
     t.string "risk_level"
     t.integer "risk_score"
     t.datetime "risk_updated_at"
+    t.text "sap_portal_links"
     t.string "sender_domain"
     t.string "source_email_id"
     t.integer "source_type", default: 0, null: false

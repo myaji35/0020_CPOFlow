@@ -16,7 +16,14 @@ module Gmail
       application/vnd.openxmlformats-officedocument.wordprocessingml.document
       image/jpeg image/png image/gif
       text/plain text/csv
+      application/octet-stream
     ].freeze
+
+    # .url / .lnk 파일 확장자 — SAP/ERP 포털 링크 파일
+    LINK_FILE_EXTENSIONS = %w[.url .lnk .webloc].freeze
+
+    # SAP/Ariba 포털 URL 패턴
+    SAP_URL_PATTERN = /(https?:\/\/[^\s<>"']*(?:ariba|sap|sourcing|supplier)[^\s<>"']*)/i
 
     def initialize(gmail_service, gmail_message, order)
       @svc     = gmail_service
@@ -26,25 +33,41 @@ module Gmail
 
     def extract_and_attach!
       attachment_infos = []
+      link_file_infos  = []
       links = extract_links_from_body
+      sap_links = extract_sap_links_from_body
 
-      # 첨부파일 처리
+      # 첨부파일 처리 (일반 첨부파일 + SAP 링크 파일 구분)
       attachments = find_attachments(@message.payload)
       attachments.each do |att|
-        info = process_attachment(att)
-        attachment_infos << info if info
+        if link_file?(att.filename)
+          info = process_link_file(att)
+          link_file_infos << info if info
+        else
+          info = process_attachment(att)
+          attachment_infos << info if info
+        end
       end
+
+      # SAP 링크 파일에서 URL 추출하여 sap_links에 병합
+      link_file_infos.each do |lf|
+        sap_links << lf[:url] if lf[:url].present?
+      end
+      sap_links = sap_links.uniq.compact
+
+      Rails.logger.info "[AttachmentExtractor] Order##{@order.id}: #{attachment_infos.size}개 첨부파일, #{sap_links.size}개 SAP/포털 링크, #{link_file_infos.size}개 링크파일"
 
       # Order에 메타데이터 저장
       @order.update_columns(
         attachment_urls: attachment_infos.to_json,
-        extracted_links: links.to_json
+        extracted_links: links.to_json,
+        sap_portal_links: sap_links.to_json
       )
 
-      { attachments: attachment_infos, links: links }
+      { attachments: attachment_infos, links: links, sap_links: sap_links, link_files: link_file_infos }
     rescue => e
       Rails.logger.error "[AttachmentExtractor] Error for order ##{@order.id}: #{e.message}"
-      { attachments: [], links: [] }
+      { attachments: [], links: [], sap_links: [], link_files: [] }
     end
 
     private
@@ -113,6 +136,54 @@ module Gmail
     rescue => e
       Rails.logger.warn "[AttachmentExtractor] Failed to process #{part.filename}: #{e.message}"
       nil
+    end
+
+    def link_file?(filename)
+      return false if filename.blank?
+      ext = File.extname(filename.to_s).downcase
+      LINK_FILE_EXTENSIONS.include?(ext)
+    end
+
+    # .url / .lnk / .webloc 파일 내용을 파싱하여 URL 추출 후 ActiveStorage에도 저장
+    def process_link_file(part)
+      return nil if part.body.attachment_id.blank?
+
+      data = @svc.fetch_attachment(@message.id, part.body.attachment_id)
+      return nil unless data
+
+      content = data.force_encoding("UTF-8").encode("UTF-8", invalid: :replace)
+
+      # .url 파일 형식: [InternetShortcut]\nURL=https://...
+      url = content.match(/^URL=(.+)$/i)&.[](1)&.strip
+      # .webloc (plist xml): <string>https://...</string>
+      url ||= content.match(/<string>(https?:\/\/[^<]+)<\/string>/)&.[](1)&.strip
+      # 일반 fallback: 첫 번째 http URL
+      url ||= content.match(%r{https?://[^\s]+})&.[](0)&.strip
+
+      # ActiveStorage에도 저장 (원본 파일)
+      blob = ActiveStorage::Blob.create_and_upload!(
+        io:           StringIO.new(data),
+        filename:     part.filename,
+        content_type: "application/octet-stream"
+      )
+      @order.attachments.attach(blob)
+
+      Rails.logger.info "[AttachmentExtractor] 링크파일 #{part.filename} → URL: #{url}"
+      { filename: part.filename, url: url, blob_key: blob.key }
+    rescue => e
+      Rails.logger.warn "[AttachmentExtractor] 링크파일 처리 실패 #{part.filename}: #{e.message}"
+      nil
+    end
+
+    # SAP/Ariba 관련 URL을 body에서 추출 (일반 링크와 구분)
+    def extract_sap_links_from_body
+      html_body  = extract_html_body(@message.payload)
+      plain_body = extract_text_body(@message.payload)
+      combined   = "#{html_body} #{plain_body}"
+      return [] if combined.blank?
+
+      urls = combined.scan(SAP_URL_PATTERN).flatten.uniq
+      urls.select { |u| u.length < 1000 }.first(5)
     end
 
     def extract_links_from_body
