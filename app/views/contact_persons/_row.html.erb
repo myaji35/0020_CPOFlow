@@ -73,19 +73,11 @@
         </span>
       <% end %>
       <div class="flex gap-2">
-        <% if contactable.is_a?(Client) %>
-          <%= link_to edit_client_contact_person_path(contactable, contact_person),
-              class: "text-xs text-gray-400 dark:text-gray-500 hover:text-primary transition-colors" do %>수정<% end %>
-          <%= link_to client_contact_person_path(contactable, contact_person),
-              data: { turbo_method: :delete, turbo_confirm: "#{contact_person.name}을(를) 삭제할까요?" },
-              class: "text-xs text-gray-400 dark:text-gray-500 hover:text-red-500 transition-colors" do %>삭제<% end %>
-        <% else %>
-          <%= link_to edit_supplier_contact_person_path(contactable, contact_person),
-              class: "text-xs text-gray-400 dark:text-gray-500 hover:text-primary transition-colors" do %>수정<% end %>
-          <%= link_to supplier_contact_person_path(contactable, contact_person),
-              data: { turbo_method: :delete, turbo_confirm: "#{contact_person.name}을(를) 삭제할까요?" },
-              class: "text-xs text-gray-400 dark:text-gray-500 hover:text-red-500 transition-colors" do %>삭제<% end %>
-        <% end %>
+        <%= link_to edit_contactable_contact_person_path(contactable, contact_person),
+            class: "text-xs text-gray-400 dark:text-gray-500 hover:text-primary transition-colors" do %>수정<% end %>
+        <%= link_to contactable_contact_person_path(contactable, contact_person),
+            data: { turbo_method: :delete, turbo_confirm: "#{contact_person.name}을(를) 삭제할까요?" },
+            class: "text-xs text-gray-400 dark:text-gray-500 hover:text-red-500 transition-colors" do %>삭제<% end %>
       </div>
     </div>
   </div>
