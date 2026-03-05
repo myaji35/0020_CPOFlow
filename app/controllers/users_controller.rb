@@ -16,7 +16,8 @@ class UsersController < ApplicationController
         employee_id:  e.id,
         display_name: e.display_name,
         initials:     e.initials,
-        branch:       e.branch.presence || ""
+        branch:       e.branch.presence || "",
+        job_title:    e.job_title.presence || ""
       }
     }
   end

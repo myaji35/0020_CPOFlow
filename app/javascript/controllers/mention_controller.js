@@ -101,7 +101,7 @@ export default class extends Controller {
           ${item.initials}
         </span>
         <span class="flex-1 text-gray-800 dark:text-gray-200">${item.display_name}</span>
-        ${item.branch ? `<span class="text-xs text-gray-400">${item.branch}</span>` : ""}
+        ${item.job_title ? `<span class="text-xs text-gray-400">${item.job_title}</span>` : (item.branch ? `<span class="text-xs text-gray-400">${item.branch}</span>` : "")}
       </div>
     `).join("")
 
