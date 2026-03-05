@@ -111,7 +111,14 @@ class ContactPersonsController < ApplicationController
       format.turbo_stream do
         render turbo_stream: turbo_stream.remove("contact-person-#{@contact_person.id}")
       end
-      format.html { redirect_to @contactable, notice: t("contact_persons.delete_success") }
+      format.html do
+        # 상세 페이지에서 삭제 시 목록으로, 탭에서 삭제 시 회사 상세로
+        if request.referer&.include?("/contact_persons/")
+          redirect_to contact_persons_path, notice: t("contact_persons.delete_success")
+        else
+          redirect_to @contactable, notice: t("contact_persons.delete_success")
+        end
+      end
     end
   end
 

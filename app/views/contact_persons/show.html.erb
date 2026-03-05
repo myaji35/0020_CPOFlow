@@ -110,8 +110,8 @@
         </div>
       </div>
 
-      <!-- 우측: 수정 버튼 -->
-      <div class="flex-shrink-0">
+      <!-- 우측: 수정/삭제 버튼 -->
+      <div class="flex-shrink-0 flex items-center gap-2">
         <% if @contactable.is_a?(Client) %>
           <%= link_to edit_client_contact_person_path(@contactable, @contact_person),
               class: "inline-flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:text-primary hover:border-primary transition-colors" do %>
@@ -121,6 +121,14 @@
             </svg>
             수정
           <% end %>
+          <%= link_to client_contact_person_path(@contactable, @contact_person),
+              data: { turbo_method: :delete, turbo_confirm: "#{@contact_person.name}을(를) 삭제할까요?" },
+              class: "inline-flex items-center gap-1.5 px-3 py-1.5 text-sm border border-red-200 dark:border-red-800 rounded-lg text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" do %>
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6m4-6v6"/><path d="M9 6V4h6v2"/>
+            </svg>
+            삭제
+          <% end %>
         <% else %>
           <%= link_to edit_supplier_contact_person_path(@contactable, @contact_person),
               class: "inline-flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:text-primary hover:border-primary transition-colors" do %>
@@ -129,6 +137,14 @@
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
             </svg>
             수정
+          <% end %>
+          <%= link_to supplier_contact_person_path(@contactable, @contact_person),
+              data: { turbo_method: :delete, turbo_confirm: "#{@contact_person.name}을(를) 삭제할까요?" },
+              class: "inline-flex items-center gap-1.5 px-3 py-1.5 text-sm border border-red-200 dark:border-red-800 rounded-lg text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" do %>
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6m4-6v6"/><path d="M9 6V4h6v2"/>
+            </svg>
+            삭제
           <% end %>
         <% end %>
       </div>
