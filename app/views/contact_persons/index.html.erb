@@ -75,17 +75,17 @@
     </div>
 
     <!-- 페이지네이션 -->
-    <% if @contact_persons.total_pages > 1 %>
+    <% if @total_pages > 1 %>
       <div class="flex justify-center gap-1 mt-2">
-        <% if @contact_persons.prev_page %>
-          <%= link_to "이전", contact_persons_path(q: params[:q], type: params[:type], department: params[:department], sort: params[:sort], page: @contact_persons.prev_page),
+        <% if @prev_page %>
+          <%= link_to "이전", contact_persons_path(q: params[:q], type: params[:type], department: params[:department], sort: params[:sort], page: @prev_page),
               class: "px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700" %>
         <% end %>
         <span class="px-3 py-1.5 text-sm text-gray-500 dark:text-gray-400">
-          <%= @contact_persons.current_page %> / <%= @contact_persons.total_pages %>
+          <%= @current_page %> / <%= @total_pages %>
         </span>
-        <% if @contact_persons.next_page %>
-          <%= link_to "다음", contact_persons_path(q: params[:q], type: params[:type], department: params[:department], sort: params[:sort], page: @contact_persons.next_page),
+        <% if @next_page %>
+          <%= link_to "다음", contact_persons_path(q: params[:q], type: params[:type], department: params[:department], sort: params[:sort], page: @next_page),
               class: "px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700" %>
         <% end %>
       </div>

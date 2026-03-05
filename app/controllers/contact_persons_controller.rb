@@ -21,8 +21,14 @@ class ContactPersonsController < ApplicationController
     else rel.primary_first
     end
 
-    @total_count = @contact_persons.count
-    @contact_persons = @contact_persons.page(params[:page]).per(24)
+    @per_page     = 24
+    @current_page = [params[:page].to_i, 1].max
+    @total_count  = @contact_persons.count
+    @total_pages  = (@total_count / @per_page.to_f).ceil
+    @total_pages  = 1 if @total_pages < 1
+    @prev_page    = @current_page > 1 ? @current_page - 1 : nil
+    @next_page    = @current_page < @total_pages ? @current_page + 1 : nil
+    @contact_persons = @contact_persons.offset((@current_page - 1) * @per_page).limit(@per_page)
   end
 
   def new
