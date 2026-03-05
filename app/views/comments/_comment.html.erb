@@ -8,6 +8,6 @@
       <span class="text-sm font-medium text-gray-900 dark:text-white"><%= comment.user.display_name %></span>
       <span class="text-xs text-gray-400 dark:text-gray-500"><%= comment.created_at.strftime("%m/%d %H:%M") %></span>
     </div>
-    <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed"><%= comment.body %></p>
+    <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed"><%= highlight_mentions(comment.body) %></p>
   </div>
 </div>

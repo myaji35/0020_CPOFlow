@@ -1,0 +1,280 @@
+<% content_for :title, @contact_person.name %>
+
+<div class="flex flex-col gap-6">
+  <!-- 뒤로가기 -->
+  <div>
+    <%= link_to contact_persons_path, class: "inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-primary transition-colors" do %>
+      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+      외부 담당자 목록
+    <% end %>
+  </div>
+
+  <!-- 담당자 프로필 카드 -->
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-6">
+    <div class="flex flex-col sm:flex-row gap-5">
+      <!-- 아바타 -->
+      <div class="flex-shrink-0">
+        <div class="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-700 dark:text-blue-400 font-bold text-xl">
+          <%= @contact_person.name.first(2).upcase %>
+        </div>
+      </div>
+
+      <!-- 기본 정보 -->
+      <div class="flex-1 min-w-0">
+        <div class="flex flex-wrap items-center gap-2 mb-1">
+          <h1 class="text-xl font-bold text-gray-900 dark:text-white"><%= @contact_person.name %></h1>
+          <% if @contact_person.primary? %>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 font-medium">주 담당자</span>
+          <% end %>
+          <% if @contact_person.department.present? %>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400">
+              <%= @contact_person.department %>
+            </span>
+          <% end %>
+        </div>
+
+        <% if @contact_person.title.present? %>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-2"><%= @contact_person.title %></p>
+        <% end %>
+
+        <!-- 회사 연결 정보 -->
+        <div class="flex items-center gap-2 mb-4">
+          <span class="text-xs px-2 py-0.5 rounded font-medium
+            <%= @contactable.is_a?(Client) ?
+                'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400' :
+                'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400' %>">
+            <%= @contact_person.contactable_label %>
+          </span>
+          <% if @contactable.is_a?(Client) %>
+            <%= link_to @contactable.name, client_path(@contactable),
+                class: "text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary transition-colors" %>
+          <% else %>
+            <%= link_to @contactable.name, supplier_path(@contactable),
+                class: "text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary transition-colors" %>
+          <% end %>
+          <% if @contact_person.language.present? %>
+            <span class="text-xs text-gray-400 dark:text-gray-500">(<%= @contact_person.language_label %>)</span>
+          <% end %>
+        </div>
+
+        <!-- 연락처 버튼 -->
+        <div class="flex flex-wrap items-center gap-2">
+          <% if @contact_person.email.present? %>
+            <a href="mailto:<%= @contact_person.email %>"
+               class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:text-primary hover:border-primary transition-colors">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+              </svg>
+              <%= @contact_person.email %>
+            </a>
+          <% end %>
+          <% if @contact_person.phone.present? %>
+            <a href="tel:<%= @contact_person.phone %>"
+               class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:text-green-600 hover:border-green-400 transition-colors">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.61 4.37 2 2 0 0 1 3.58 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.18 6.18l1.97-1.97a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+              <%= @contact_person.phone %>
+            </a>
+          <% end %>
+          <% if @contact_person.mobile.present? %>
+            <a href="tel:<%= @contact_person.mobile %>"
+               class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:text-blue-600 hover:border-blue-400 transition-colors">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>
+              </svg>
+              <%= @contact_person.mobile %>
+            </a>
+          <% end %>
+          <% if @contact_person.whatsapp.present? %>
+            <a href="https://wa.me/<%= @contact_person.whatsapp.gsub(/\D/, '') %>" target="_blank" rel="noopener"
+               class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:text-green-500 hover:border-green-400 transition-colors">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+              </svg>
+              WhatsApp
+            </a>
+          <% end %>
+          <% if @contact_person.linkedin.present? %>
+            <a href="<%= @contact_person.linkedin %>" target="_blank" rel="noopener"
+               class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:text-blue-700 hover:border-blue-500 transition-colors">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
+                <rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>
+              </svg>
+              LinkedIn
+            </a>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- 우측: 수정 버튼 -->
+      <div class="flex-shrink-0">
+        <% if @contactable.is_a?(Client) %>
+          <%= link_to edit_client_contact_person_path(@contactable, @contact_person),
+              class: "inline-flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:text-primary hover:border-primary transition-colors" do %>
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            수정
+          <% end %>
+        <% else %>
+          <%= link_to edit_supplier_contact_person_path(@contactable, @contact_person),
+              class: "inline-flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:text-primary hover:border-primary transition-colors" do %>
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            수정
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- 메모 -->
+    <% if @contact_person.notes.present? %>
+      <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+        <p class="text-xs text-gray-400 dark:text-gray-500 mb-1">메모</p>
+        <p class="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line"><%= @contact_person.notes %></p>
+      </div>
+    <% end %>
+
+    <!-- 추가 정보 -->
+    <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 grid grid-cols-2 sm:grid-cols-3 gap-3">
+      <div>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">마지막 연락</p>
+        <p class="text-sm text-gray-700 dark:text-gray-300"><%= @contact_person.last_contacted_label %></p>
+      </div>
+      <% if @contact_person.nationality.present? %>
+        <div>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">국적</p>
+          <p class="text-sm text-gray-700 dark:text-gray-300"><%= @contact_person.nationality %></p>
+        </div>
+      <% end %>
+      <div>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">등록 경로</p>
+        <p class="text-sm text-gray-700 dark:text-gray-300">
+          <%= case @contact_person.source
+              when "email_signature" then "이메일 서명"
+              when "import" then "가져오기"
+              else "수동 등록"
+              end %>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 관련 오더 목록 -->
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+      <h2 class="text-sm font-semibold text-gray-900 dark:text-white">
+        관련 오더
+        <span class="ml-1.5 text-xs font-normal text-gray-400 dark:text-gray-500">(<%= @contactable.name %>)</span>
+      </h2>
+      <% if @contactable.is_a?(Client) %>
+        <%= link_to client_path(@contactable, tab: "orders"), class: "text-xs text-primary hover:underline" do %>모두 보기<% end %>
+      <% else %>
+        <%= link_to supplier_path(@contactable, tab: "orders"), class: "text-xs text-primary hover:underline" do %>모두 보기<% end %>
+      <% end %>
+    </div>
+
+    <% if @related_orders.empty? %>
+      <div class="text-center py-10">
+        <svg class="w-10 h-10 mx-auto text-gray-300 dark:text-gray-600 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+          <rect x="9" y="3" width="6" height="4" rx="1" ry="1"/>
+        </svg>
+        <p class="text-sm text-gray-400 dark:text-gray-500">관련 오더가 없습니다</p>
+      </div>
+    <% else %>
+      <div class="divide-y divide-gray-50 dark:divide-gray-700/50">
+        <% @related_orders.each do |order| %>
+          <%= link_to order_path(order), class: "flex items-center justify-between px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors group" do %>
+            <div class="flex items-center gap-3 min-w-0">
+              <!-- 상태 뱃지 -->
+              <span class="flex-shrink-0 text-xs px-2 py-0.5 rounded-full font-medium
+                <%= case order.status
+                    when 'inbox'      then 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                    when 'reviewing'  then 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                    when 'quoted'     then 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400'
+                    when 'confirmed'  then 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                    when 'procuring'  then 'bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
+                    when 'qa'         then 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                    when 'delivered'  then 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                    end %>">
+                <%= case order.status
+                    when 'inbox'      then '수신'
+                    when 'reviewing'  then '검토중'
+                    when 'quoted'     then '견적완료'
+                    when 'confirmed'  then '확정'
+                    when 'procuring'  then '발주중'
+                    when 'qa'         then 'QA'
+                    when 'delivered'  then '납품완료'
+                    end %>
+              </span>
+              <div class="min-w-0">
+                <p class="text-sm text-gray-800 dark:text-gray-200 truncate group-hover:text-primary transition-colors">
+                  <%= order.title %>
+                </p>
+                <p class="text-xs text-gray-400 dark:text-gray-500">
+                  <%= order.created_at.strftime("%Y-%m-%d") %>
+                  <% if order.customer_name.present? %>
+                    · <%= order.customer_name %>
+                  <% end %>
+                </p>
+              </div>
+            </div>
+            <% if order.due_date.present? %>
+              <% days_left = (order.due_date.to_date - Date.today).to_i %>
+              <span class="flex-shrink-0 text-xs ml-3
+                <%= if days_left < 0 then 'text-red-600 dark:text-red-400 font-semibold'
+                    elsif days_left <= 7 then 'text-red-500 dark:text-red-400'
+                    elsif days_left <= 14 then 'text-orange-500 dark:text-orange-400'
+                    else 'text-gray-400 dark:text-gray-500'
+                    end %>">
+                <%= if days_left < 0 then "D+#{days_left.abs}"
+                    elsif days_left == 0 then "D-Day"
+                    else "D-#{days_left}"
+                    end %>
+              </span>
+            <% end %>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- 같은 회사 담당자들 -->
+  <% other_contacts = @contactable.contact_persons.where.not(id: @contact_person.id).order(primary: :desc, name: :asc).limit(10) %>
+  <% if other_contacts.any? %>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
+      <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+        <h2 class="text-sm font-semibold text-gray-900 dark:text-white">
+          같은 회사 담당자
+          <span class="ml-1.5 text-xs font-normal text-gray-400 dark:text-gray-500">(<%= @contactable.name %>)</span>
+        </h2>
+      </div>
+      <div class="divide-y divide-gray-50 dark:divide-gray-700/50">
+        <% other_contacts.each do |cp| %>
+          <%= link_to contact_person_path(cp), class: "flex items-center gap-3 px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors group" do %>
+            <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-700 dark:text-blue-400 font-bold text-xs flex-shrink-0">
+              <%= cp.name.first(2).upcase %>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-1.5">
+                <span class="text-sm text-gray-800 dark:text-gray-200 group-hover:text-primary transition-colors"><%= cp.name %></span>
+                <% if cp.primary? %>
+                  <span class="text-xs px-1 py-0.5 rounded bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400">주</span>
+                <% end %>
+              </div>
+              <p class="text-xs text-gray-400 dark:text-gray-500"><%= [cp.title, cp.department].compact.join(" · ") %></p>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

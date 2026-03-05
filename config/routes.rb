@@ -121,8 +121,8 @@ Rails.application.routes.draw do
     resources :certifications,       only: %i[new create edit update destroy]
   end
 
-  # 외부 담당자 전체 목록
-  resources :contact_persons, only: %i[index] do
+  # 외부 담당자 전체 목록 + 상세
+  resources :contact_persons, only: %i[index show] do
     collection do
       post :create_from_signature
     end

@@ -70,6 +70,15 @@ module ApplicationHelper
     end
   end
 
+  # @이름 멘션 파란색 하이라이트 (FR-08)
+  def highlight_mentions(text)
+    return "" if text.blank?
+    html = ERB::Util.html_escape(text)
+    html.gsub(/@([\w가-힣]+(?:\s[\w가-힣]+)?)/) do |match|
+      "<span class=\"text-blue-600 dark:text-blue-400 font-medium\">#{ERB::Util.html_escape(match)}</span>"
+    end.html_safe
+  end
+
   # Task progress bar
   def task_progress_bar(order)
     prog = order.task_progress

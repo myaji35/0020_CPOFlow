@@ -1,7 +1,8 @@
 class ContactPersonsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_contactable, except: %i[index create_from_signature]
+  before_action :set_contactable, except: %i[index show create_from_signature]
   before_action :set_contact_person, only: %i[edit update destroy]
+  before_action :set_contact_person_standalone, only: %i[show]
 
   # GET /contact_persons — 전체 담당자 목록
   def index
@@ -29,6 +30,21 @@ class ContactPersonsController < ApplicationController
     @prev_page    = @current_page > 1 ? @current_page - 1 : nil
     @next_page    = @current_page < @total_pages ? @current_page + 1 : nil
     @contact_persons = @contact_persons.offset((@current_page - 1) * @per_page).limit(@per_page)
+  end
+
+  # GET /contact_persons/:id — 담당자 상세
+  def show
+    @contactable = @contact_person.contactable
+    # 관련 Order: 발주처(Client) 또는 거래처(Supplier)를 통해 연결된 Order
+    if @contactable.is_a?(Client)
+      @related_orders = Order.where(client: @contactable)
+                             .order(created_at: :desc)
+                             .limit(20)
+    else
+      @related_orders = Order.where(supplier: @contactable)
+                             .order(created_at: :desc)
+                             .limit(20)
+    end
   end
 
   def new
@@ -147,6 +163,10 @@ class ContactPersonsController < ApplicationController
 
   def set_contact_person
     @contact_person = @contactable.contact_persons.find(params[:id])
+  end
+
+  def set_contact_person_standalone
+    @contact_person = ContactPerson.find(params[:id])
   end
 
   def contact_person_params

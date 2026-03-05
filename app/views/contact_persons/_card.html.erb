@@ -1,5 +1,5 @@
 <%# 전체 담당자 목록 (/contact_persons) 용 카드 %>
-<div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-4 hover:border-primary/40 hover:shadow-md transition-all">
+<div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-4 hover:border-primary/40 hover:shadow-md transition-all relative">
   <!-- 상단: 아바타 + 이름 -->
   <div class="flex items-start gap-3 mb-3">
     <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-700 dark:text-blue-400 font-bold text-sm flex-shrink-0">
@@ -80,8 +80,12 @@
     <% end %>
   </div>
 
-  <!-- 마지막 연락일 -->
-  <p class="text-xs text-gray-400 dark:text-gray-500">
-    마지막 연락: <%= contact_person.last_contacted_label %>
-  </p>
+  <!-- 마지막 연락일 + 상세 보기 -->
+  <div class="flex items-center justify-between">
+    <p class="text-xs text-gray-400 dark:text-gray-500">
+      마지막 연락: <%= contact_person.last_contacted_label %>
+    </p>
+    <%= link_to contact_person_path(contact_person),
+        class: "text-xs text-primary hover:underline" do %>상세 보기<% end %>
+  </div>
 </div>
