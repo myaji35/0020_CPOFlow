@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "cgi"
+
 # SAP Ariba 공급자 포털 자동 로그인 및 PDF 수집 서비스
 # Playwright를 통한 브라우저 자동화 → ActiveStorage에 저장
 module Sap
@@ -38,16 +40,25 @@ module Sap
     end
 
     # Order에서 Ariba 링크 추출
+    # HTML 본문의 href에서 itemID 포함 딥링크를 우선 추출
     def self.extract_ariba_links(order)
       sap_links = JSON.parse(order.sap_portal_links.to_s) rescue []
-      # sap_portal_links에서 Ariba 패턴 필터링
       ariba_links = sap_links.select { |url| url.match?(ARIBA_LINK_PATTERN) }
 
-      # 이메일 본문에서도 추가 추출
-      body_text = [order.original_email_body.to_s, order.original_email_html_body.to_s].join(" ")
-      body_links = body_text.scan(ARIBA_LINK_PATTERN).uniq
+      # 이메일 HTML 본문에서 href 속성의 Ariba 링크 추출 (HTML 엔티티 디코딩)
+      html_body = order.original_email_html_body.to_s
+      href_links = html_body.scan(/href=["']([^"']*ariba\.com\/ad\/[^"']*)["']/i)
+                            .flatten
+                            .map { |u| CGI.unescapeHTML(u) }
+                            .select { |u| u.match?(ARIBA_LINK_PATTERN) }
 
-      (ariba_links + body_links).uniq
+      # 플레인 텍스트 본문에서도 추출
+      body_text = order.original_email_body.to_s
+      body_links = body_text.scan(ARIBA_LINK_PATTERN)
+
+      # itemID가 포함된 딥링크를 우선 정렬
+      all_links = (href_links + ariba_links + body_links).uniq
+      all_links.sort_by { |u| u.include?("itemID") ? 0 : 1 }
     end
 
     private
