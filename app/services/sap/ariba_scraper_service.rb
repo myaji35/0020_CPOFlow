@@ -56,8 +56,11 @@ module Sap
       body_text = order.original_email_body.to_s
       body_links = body_text.scan(ARIBA_LINK_PATTERN)
 
+      # URL 끝의 문장부호(마침표, 쉼표 등) 제거 후 중복 제거
+      all_links = (href_links + ariba_links + body_links)
+                    .map { |u| u.sub(/[.,;:)\]]+\z/, "") }
+                    .uniq
       # itemID가 포함된 딥링크를 우선 정렬
-      all_links = (href_links + ariba_links + body_links).uniq
       all_links.sort_by { |u| u.include?("itemID") ? 0 : 1 }
     end
 
