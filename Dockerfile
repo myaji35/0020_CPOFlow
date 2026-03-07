@@ -26,8 +26,8 @@ RUN apt-get update -qq && \
 
 # Install Playwright + Chromium globally so rails user can access it
 ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
-RUN npm install -g playwright@1.52.0 && \
-    npx playwright install --with-deps chromium
+RUN npm install -g playwright && \
+    playwright install --with-deps chromium
 
 # Set production environment variables and enable jemalloc for reduced memory usage and latency.
 ENV RAILS_ENV="production" \
