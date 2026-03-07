@@ -835,7 +835,7 @@
                   <% end %>
 
                   <%# SAP Ariba 링크 분리 표시 %>
-                  <% sap_links_json = order.sap_portal_links.to_s %>
+                  <% sap_links_json = order.respond_to?(:sap_portal_links) && order.sap_portal_links.present? ? order.sap_portal_links.to_s : "[]" %>
                   <% sap_urls = (JSON.parse(sap_links_json) rescue []) %>
                   <% if sap_urls.any? %>
                     <div class="mt-1 mb-2">
