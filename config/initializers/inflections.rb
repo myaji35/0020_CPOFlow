@@ -10,7 +10,8 @@
 #   inflect.uncountable %w( fish sheep )
 # end
 
-# These inflection rules are supported but not enabled by default:
-# ActiveSupport::Inflector.inflections(:en) do |inflect|
-#   inflect.acronym "RESTful"
-# end
+# contact_person → contact_persons (not contact_people)
+# 라우트와 일치시키기 위한 설정
+ActiveSupport::Inflector.inflections(:en) do |inflect|
+  inflect.irregular "contact_person", "contact_persons"
+end
