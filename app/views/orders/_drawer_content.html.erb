@@ -217,6 +217,7 @@
         <% if order.assignees.any? %>
           <div class="space-y-1">
             <% order.assignments.includes(:employee).each do |assignment| %>
+              <% next unless assignment.employee %>
               <div class="flex items-center gap-2 group">
                 <div class="w-7 h-7 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold shrink-0"><%= assignment.employee.initials %></div>
                 <div class="min-w-0 flex-1">
