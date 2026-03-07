@@ -132,9 +132,10 @@
       <% plain_body = @order.original_email_body.presence || @order.description %>
 
       <% if html_body.present? %>
-        <%# HTML 이메일: sanitize로 안전 렌더링 (서명 포함 원본 그대로) %>
+        <%# HTML 이메일: style 블록 제거 후 sanitize로 안전 렌더링 %>
+        <% cleaned_html = html_body.gsub(/<style[^>]*>.*?<\/style>/mi, "") %>
         <div class="email-html-body bg-white dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700 p-5 max-h-96 overflow-y-auto">
-          <%= sanitize(html_body,
+          <%= sanitize(cleaned_html,
               tags: %w[p br div span a b i u strong em h1 h2 h3 h4 h5 h6 ul ol li
                        table thead tbody tr th td blockquote pre code img hr],
               attributes: %w[href src alt style class target rel]) %>
