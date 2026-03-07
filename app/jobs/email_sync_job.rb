@@ -85,6 +85,12 @@ class EmailSyncJob < ApplicationJob
       if order
         Gmail::EmailAttachmentExtractorService.new(svc, msg, order).extract_and_attach!
         new_rfq_count += 1 if detection[:is_rfq]
+
+        # Ariba 링크가 포함된 이메일이면 자동으로 문서 수집 잡 큐잉
+        if Sap::AribaScraperService.extract_ariba_links(order).any?
+          AribaFetchJob.perform_later(order_id: order.id)
+          Rails.logger.info "[EmailSyncJob] Order##{order.id}: Ariba 링크 감지 → AribaFetchJob 큐잉"
+        end
       end
     end
 
