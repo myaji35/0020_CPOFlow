@@ -142,12 +142,24 @@ class InboxController < ApplicationController
   end
 
   # AJAX: 이메일 본문 링크 URL 내용 추출 + AI 요약
+  # Ariba 링크인 경우 AribaFetchJob으로 비동기 문서 수집
   def analyze_link
     require "net/http"
     url = params[:url].to_s.strip
+    order_id = params[:order_id]
 
     if url.blank? || !url.match?(/\Ahttps?:\/\//i)
       return render json: { success: false, error: "유효하지 않은 URL입니다" }, status: :unprocessable_entity
+    end
+
+    # Ariba 링크 감지 → 비동기 문서 수집 (수동 요청이므로 force: true)
+    if url.match?(Sap::AribaScraperService::ARIBA_LINK_PATTERN) && order_id.present?
+      AribaFetchJob.perform_later(order_id: order_id.to_i, force: true)
+      return render json: {
+        success: true,
+        ariba: true,
+        summary: "Ariba 포털 문서 수집을 시작했습니다. 잠시 후 첨부파일 목록을 새로고침하세요."
+      }
     end
 
     result = LinkAnalyzerService.analyze(url)

@@ -847,10 +847,10 @@
                         <div class="flex items-center gap-2 p-2 rounded-lg border border-orange-200 dark:border-orange-800/50 bg-orange-50 dark:bg-orange-900/10 mb-1">
                           <svg class="w-4 h-4 text-orange-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                           <a href="<%= sap_url %>" target="_blank" rel="noopener noreferrer" class="flex-1 text-xs text-orange-700 dark:text-orange-300 hover:underline truncate"><%= sap_url.truncate(60) %></a>
-                          <button onclick="analyzeLinkUrl(this, '<%= j sap_url %>', '<%= j inbox_analyze_link_path %>')"
+                          <button onclick="fetchAribaDoc(this, '<%= j sap_url %>', <%= order.id %>)"
                                   class="flex-shrink-0 px-2 py-1 text-xs font-medium bg-orange-500 hover:bg-orange-600 text-white rounded transition-colors flex items-center gap-1">
-                            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-                            AI 분석
+                            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            문서 수집
                           </button>
                           <a href="<%= sap_url %>" target="_blank" rel="noopener noreferrer" class="flex-shrink-0 text-orange-400 hover:text-orange-600">
                             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
@@ -1135,6 +1135,40 @@
     btn.classList.add('border-[#00A1E0]', 'text-[#00A1E0]', 'bg-white', 'dark:bg-gray-900');
     btn.classList.remove('border-transparent', 'text-gray-500');
   });
+
+  // --- Ariba 문서 수집 ---
+  function fetchAribaDoc(btn, url, orderId) {
+    btn.disabled = true;
+    btn.textContent = '수집 요청 중...';
+    const csrf = document.querySelector('meta[name=csrf-token]')?.content;
+
+    fetch('<%= inbox_analyze_link_path %>', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+      body: JSON.stringify({ url: url, order_id: orderId })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.ariba) {
+        btn.classList.remove('bg-orange-500', 'hover:bg-orange-600');
+        btn.classList.add('bg-green-500', 'hover:bg-green-600');
+        btn.innerHTML = '<svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 수집 시작됨';
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.classList.remove('bg-green-500', 'hover:bg-green-600');
+          btn.classList.add('bg-orange-500', 'hover:bg-orange-600');
+          btn.innerHTML = '<svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> 문서 수집';
+        }, 5000);
+      } else {
+        btn.textContent = '실패';
+        btn.disabled = false;
+      }
+    })
+    .catch(() => {
+      btn.textContent = '오류';
+      btn.disabled = false;
+    });
+  }
 
   // --- 링크 AI 분석 ---
   const _analyzingLinks = new Set();

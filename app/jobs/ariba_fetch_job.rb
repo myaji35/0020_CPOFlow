@@ -11,13 +11,15 @@ class AribaFetchJob < ApplicationJob
   retry_on StandardError, wait: 10.minutes, attempts: 2
   discard_on ActiveRecord::RecordNotFound
 
-  def perform(order_id:)
+  def perform(order_id:, force: false)
     order = Order.find(order_id)
 
-    # 이미 Ariba 문서가 첨부된 경우 스킵 (중복 방지)
-    if order.attachments.any? { |a| a.filename.to_s.match?(/ariba/i) }
-      Rails.logger.info "[AribaFetchJob] Order##{order.id}: Ariba 문서 이미 존재, 스킵"
-      return
+    # 자동 수집(EmailSyncJob) 시에만 중복 체크, 수동 수집(버튼)은 force=true
+    unless force
+      if order.attachments.any? { |a| a.filename.to_s.match?(/ariba_page_/i) }
+        Rails.logger.info "[AribaFetchJob] Order##{order.id}: Ariba 문서 이미 존재, 스킵"
+        return
+      end
     end
 
     Rails.logger.info "[AribaFetchJob] Order##{order.id}: Ariba 문서 자동 수집 시작"
