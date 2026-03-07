@@ -14,7 +14,7 @@ FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
 # Rails app lives here
 WORKDIR /rails
 
-# Install base packages + Node.js for Playwright (SAP Ariba PDF scraping)
+# Install base packages + Node.js + Chromium deps for Playwright (SAP Ariba PDF scraping)
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y curl libjemalloc2 libvips sqlite3 \
       nodejs npm \
@@ -22,8 +22,12 @@ RUN apt-get update -qq && \
       libxcomposite1 libxdamage1 libxrandr2 libgbm1 libpango-1.0-0 \
       libcairo2 libasound2 libxshmfence1 fonts-liberation && \
     ln -s /usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2 /usr/local/lib/libjemalloc.so && \
-    npx playwright@1.52.0 install chromium && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+# Install Playwright + Chromium globally so rails user can access it
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
+RUN npm install -g playwright@1.52.0 && \
+    npx playwright install --with-deps chromium
 
 # Set production environment variables and enable jemalloc for reduced memory usage and latency.
 ENV RAILS_ENV="production" \
