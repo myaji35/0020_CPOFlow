@@ -117,12 +117,14 @@ module Sap
         "ARIBA_USERNAME"   => @username,
         "ARIBA_PASSWORD"   => @password,
         "ARIBA_TARGET_URL" => ariba_url,
-        "ARIBA_OUTPUT_DIR" => Rails.root.join("storage", "attachments", "ariba").to_s
+        "ARIBA_OUTPUT_DIR" => Rails.root.join("storage", "attachments", "ariba").to_s,
+        "NODE_PATH"        => "/usr/local/lib/node_modules",
+        "PLAYWRIGHT_BROWSERS_PATH" => ENV.fetch("PLAYWRIGHT_BROWSERS_PATH", "/opt/playwright-browsers")
       }
 
-      system(env, "node #{script_path} #{output_file}",
-             out: Rails.root.join("log", "ariba_scraper.log").to_s,
-             err: Rails.root.join("log", "ariba_scraper.log").to_s)
+      log_path = Rails.root.join("log", "ariba_scraper.log").to_s
+      system(env, "node", script_path.to_s, output_file.to_s,
+             out: log_path, err: log_path)
 
       saved  = []
       errors = []
