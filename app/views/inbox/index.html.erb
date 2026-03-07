@@ -590,8 +590,9 @@
               <%# 원문 패널 — HTML 우선, plain text fallback %>
               <div id="tab-original-<%= order.id %>" class="email-tab-panel">
                 <% if html_body.present? %>
+                  <% cleaned_html = html_body.gsub(/<style[^>]*>.*?<\/style>/mi, "") %>
                   <div class="email-html-body bg-white dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700 p-5 max-h-[480px] overflow-y-auto">
-                    <%= sanitize(html_body,
+                    <%= sanitize(cleaned_html,
                         tags: %w[p br div span a b i u strong em h1 h2 h3 h4 h5 h6 ul ol li
                                  table thead tbody tr th td blockquote pre code img hr],
                         attributes: %w[href src alt style class target rel]) %>
@@ -782,22 +783,36 @@
                   <% end %>
                 </div>
                 <div class="px-4 py-3 space-y-2">
-                  <%# ActiveStorage 첨부파일 (실제 다운로드 가능) %>
+                  <%# ActiveStorage 첨부파일 (뷰어 + 다운로드) %>
                   <% active_storage_attachments.each do |att| %>
                     <% blob = att.blob %>
-                    <% icon_color = blob.content_type.to_s.include?("pdf") ? "text-red-500" : blob.content_type.to_s.include?("sheet") || blob.content_type.to_s.include?("excel") ? "text-green-600" : "text-blue-500" %>
-                    <%= link_to rails_blob_path(blob, disposition: "attachment"),
-                          class: "flex items-center gap-2.5 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors group" do %>
+                    <% is_pdf = blob.content_type.to_s.include?("pdf") %>
+                    <% is_image = blob.content_type.to_s.start_with?("image/") %>
+                    <% is_viewable = is_pdf || is_image %>
+                    <% icon_color = is_pdf ? "text-red-500" : blob.content_type.to_s.include?("sheet") || blob.content_type.to_s.include?("excel") ? "text-green-600" : is_image ? "text-purple-500" : "text-blue-500" %>
+                    <div class="relative flex items-center gap-2.5 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors group">
+                      <%# 카드 전체 클릭: 뷰어(PDF/이미지) 또는 다운로드 %>
+                      <% if is_viewable %>
+                        <a href="<%= rails_blob_path(blob, disposition: "inline") %>" target="_blank" class="absolute inset-0 z-0 rounded-lg"></a>
+                      <% else %>
+                        <a href="<%= rails_blob_path(blob, disposition: "attachment") %>" class="absolute inset-0 z-0 rounded-lg"></a>
+                      <% end %>
                       <svg class="w-8 h-8 p-1.5 rounded bg-gray-100 dark:bg-gray-700 <%= icon_color %> flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                       <div class="flex-1 min-w-0">
                         <p class="text-xs font-medium text-gray-800 dark:text-gray-200 truncate"><%= blob.filename %></p>
                         <p class="text-xs text-gray-400 dark:text-gray-500">
                           <%= blob.content_type&.split("/")&.last&.upcase %>
                           · <%= number_to_human_size(blob.byte_size) %>
+                          <% if is_viewable %>
+                            · <span class="text-blue-500">미리보기 가능</span>
+                          <% end %>
                         </p>
                       </div>
-                      <svg class="w-3.5 h-3.5 text-gray-300 dark:text-gray-600 group-hover:text-blue-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    <% end %>
+                      <%# 다운로드 버튼 (z-10으로 카드 클릭과 분리) %>
+                      <a href="<%= rails_blob_path(blob, disposition: "attachment") %>" class="relative z-10 p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" title="다운로드">
+                        <svg class="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                      </a>
+                    </div>
                   <% end %>
 
                   <%# attachment_urls 메타만 있는 경우 (ActiveStorage 미저장) %>
@@ -819,7 +834,34 @@
                     <% end %>
                   <% end %>
 
-                  <% links.each_with_index do |url, li| %>
+                  <%# SAP Ariba 링크 분리 표시 %>
+                  <% sap_links_json = order.sap_portal_links.to_s %>
+                  <% sap_urls = (JSON.parse(sap_links_json) rescue []) %>
+                  <% if sap_urls.any? %>
+                    <div class="mt-1 mb-2">
+                      <p class="text-xs font-semibold text-orange-600 dark:text-orange-400 mb-1.5 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        SAP / Ariba Portal Links
+                      </p>
+                      <% sap_urls.each do |sap_url| %>
+                        <div class="flex items-center gap-2 p-2 rounded-lg border border-orange-200 dark:border-orange-800/50 bg-orange-50 dark:bg-orange-900/10 mb-1">
+                          <svg class="w-4 h-4 text-orange-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                          <a href="<%= sap_url %>" target="_blank" rel="noopener noreferrer" class="flex-1 text-xs text-orange-700 dark:text-orange-300 hover:underline truncate"><%= sap_url.truncate(60) %></a>
+                          <button onclick="analyzeLinkUrl(this, '<%= j sap_url %>', '<%= j inbox_analyze_link_path %>')"
+                                  class="flex-shrink-0 px-2 py-1 text-xs font-medium bg-orange-500 hover:bg-orange-600 text-white rounded transition-colors flex items-center gap-1">
+                            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                            AI 분석
+                          </button>
+                          <a href="<%= sap_url %>" target="_blank" rel="noopener noreferrer" class="flex-shrink-0 text-orange-400 hover:text-orange-600">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                          </a>
+                        </div>
+                      <% end %>
+                    </div>
+                  <% end %>
+
+                  <%# 일반 링크 (SAP 링크 제외) %>
+                  <% links.reject { |u| sap_urls.include?(u) }.each_with_index do |url, li| %>
                     <% link_id = "link-#{order.id}-#{li}" %>
                     <div class="rounded-lg border border-gray-100 dark:border-gray-700 overflow-hidden">
                       <%# 링크 헤더 %>
