@@ -25,6 +25,9 @@ module Gmail
     # SAP/Ariba 포털 URL 패턴
     SAP_URL_PATTERN = /(https?:\/\/[^\s<>"']*(?:ariba|sap|sourcing|supplier)[^\s<>"']*)/i
 
+    # Ariba /ad/ 하위 경로 전용 정밀 패턴 (인증 링크 제외)
+    ARIBA_AD_PATTERN = %r{https?://(?:[a-z0-9\-]+\.)*ariba\.com/ad/(?!pswdRe|Authenticator)[^\s"'<>]*}i
+
     def initialize(gmail_service, gmail_message, order)
       @svc     = gmail_service
       @message = gmail_message
