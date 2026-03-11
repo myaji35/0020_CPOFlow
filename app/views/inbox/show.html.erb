@@ -235,28 +235,41 @@
               <% blob = att.blob %>
               <% is_pdf = blob.content_type.to_s.include?("pdf") %>
               <% is_image = blob.content_type.to_s.start_with?("image/") %>
-              <% is_viewable = is_pdf || is_image %>
-              <% icon_color = is_pdf ? "text-red-500" : blob.content_type.to_s.include?("sheet") || blob.content_type.to_s.include?("excel") ? "text-green-600" : is_image ? "text-purple-500" : "text-blue-500" %>
-              <div class="relative flex items-center gap-2.5 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors group">
-                <%# 카드 전체 클릭: 뷰어(PDF/이미지) 또는 다운로드 %>
-                <% if is_viewable %>
-                  <a href="<%= rails_blob_path(blob, disposition: "inline") %>" target="_blank" class="absolute inset-0 z-0 rounded-lg"></a>
-                <% else %>
+              <% is_html = blob.content_type.to_s.include?("html") || (blob.filename.to_s.end_with?(".doc") && blob.content_type.to_s.include?("html")) %>
+              <% is_excel = blob.content_type.to_s.include?("spreadsheet") || blob.content_type.to_s.include?("excel") || blob.filename.to_s.match?(/\.xlsx?\z/i) %>
+              <% is_viewable = is_pdf || is_image || is_html || is_excel %>
+              <% preview_url = inbox_attachment_preview_path(@order, blob_id: blob.id) %>
+              <% icon_color = is_pdf ? "text-red-500" : is_excel ? "text-green-600" : is_image ? "text-purple-500" : is_html ? "text-blue-500" : "text-gray-500" %>
+              <div class="relative flex items-center gap-2.5 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors group cursor-pointer"
+                   <% if is_viewable %>onclick="openPreviewModal('<%= j(blob.filename.to_s) %>', '<%= j(preview_url) %>')"<% end %>>
+                <% unless is_viewable %>
                   <a href="<%= rails_blob_path(blob, disposition: "attachment") %>" class="absolute inset-0 z-0 rounded-lg"></a>
                 <% end %>
                 <svg class="w-8 h-8 p-1.5 rounded bg-gray-100 dark:bg-gray-700 <%= icon_color %> flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                 <div class="flex-1 min-w-0">
                   <p class="text-xs font-medium text-gray-800 dark:text-gray-200 truncate"><%= blob.filename %></p>
                   <p class="text-xs text-gray-400 dark:text-gray-500">
-                    <%= blob.content_type&.split("/")&.last&.upcase %>
-                    · <%= number_to_human_size(blob.byte_size) %>
+                    <% if is_html %>
+                      <span class="text-blue-500">HTML 보고서</span> ·
+                    <% elsif is_excel %>
+                      <span class="text-green-600">Excel</span> ·
+                    <% else %>
+                      <%= blob.content_type&.split("/")&.last&.upcase %> ·
+                    <% end %>
+                    <%= number_to_human_size(blob.byte_size) %>
                     <% if is_viewable %>
-                      · <span class="text-blue-500">미리보기 가능</span>
+                      · <span class="text-blue-500">클릭하여 미리보기</span>
                     <% end %>
                   </p>
                 </div>
-                <%# 다운로드 버튼 (z-10으로 카드 클릭과 분리) %>
-                <a href="<%= rails_blob_path(blob, disposition: "attachment") %>" class="relative z-10 p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" title="다운로드">
+                <%# 미리보기 아이콘 %>
+                <% if is_viewable %>
+                  <span class="relative z-10 p-1.5 rounded hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors" title="미리보기">
+                    <svg class="w-3.5 h-3.5 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </span>
+                <% end %>
+                <%# 다운로드 버튼 %>
+                <a href="<%= rails_blob_path(blob, disposition: "attachment") %>" class="relative z-10 p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" title="다운로드" onclick="event.stopPropagation()">
                   <svg class="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 </a>
               </div>
@@ -467,3 +480,64 @@
   </div>
 
 </div>
+
+<%# ── 첨부파일 미리보기 모달 (iframe) ──────────────────────── %>
+<div id="preview-modal" class="fixed inset-0 z-50 hidden" onclick="closePreviewModal(event)">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+  <div class="relative flex flex-col mx-auto mt-8 mb-8 w-[95vw] max-w-6xl h-[calc(100vh-4rem)] bg-white dark:bg-gray-900 rounded-xl shadow-2xl overflow-hidden" onclick="event.stopPropagation()">
+    <%# 모달 헤더 %>
+    <div class="flex items-center justify-between px-5 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+      <div class="flex items-center gap-2 min-w-0">
+        <svg class="w-4 h-4 text-gray-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span id="preview-modal-title" class="text-sm font-semibold text-gray-700 dark:text-gray-200 truncate"></span>
+      </div>
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <a id="preview-modal-newtab" href="#" target="_blank" class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" title="새 탭에서 열기">
+          <svg class="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </a>
+        <button onclick="closePreviewModal()" class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" title="닫기">
+          <svg class="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+    <%# 로딩 스피너 %>
+    <div id="preview-modal-loading" class="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-gray-900/80 z-10" style="top:48px;">
+      <div class="flex flex-col items-center gap-3">
+        <div class="w-8 h-8 border-3 border-blue-200 border-t-blue-500 rounded-full animate-spin"></div>
+        <span class="text-sm text-gray-500">미리보기 로딩 중...</span>
+      </div>
+    </div>
+    <%# iframe 콘텐츠 %>
+    <iframe id="preview-modal-iframe" class="flex-1 w-full border-0" src="about:blank" onload="document.getElementById('preview-modal-loading').style.display='none'"></iframe>
+  </div>
+</div>
+
+<script>
+  function openPreviewModal(filename, url) {
+    const modal = document.getElementById('preview-modal');
+    const iframe = document.getElementById('preview-modal-iframe');
+    const title = document.getElementById('preview-modal-title');
+    const newtab = document.getElementById('preview-modal-newtab');
+    const loading = document.getElementById('preview-modal-loading');
+
+    title.textContent = filename;
+    newtab.href = url;
+    loading.style.display = 'flex';
+    iframe.src = url;
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closePreviewModal(event) {
+    if (event && event.target !== event.currentTarget) return;
+    const modal = document.getElementById('preview-modal');
+    const iframe = document.getElementById('preview-modal-iframe');
+    modal.classList.add('hidden');
+    iframe.src = 'about:blank';
+    document.body.style.overflow = '';
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closePreviewModal();
+  });
+</script>
