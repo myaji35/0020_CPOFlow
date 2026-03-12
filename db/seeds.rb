@@ -208,7 +208,7 @@ emp_kim = Employee.find_or_create_by!(passport_number: "M12345678") do |e|
   e.nationality = "KR"; e.date_of_birth = Date.new(1985, 3, 15)
   e.phone = "+82-10-1234-5678"
   e.emergency_contact = "김철수 (부)"; e.emergency_phone = "+82-10-9876-5432"
-  e.department = "구매팀"; e.job_title = "선임 구매 담당"
+  e.job_title = "선임 구매 담당"
   e.employment_type = "regular"; e.hire_date = Date.new(2018, 1, 2)
   e.active = true
 end
@@ -216,7 +216,7 @@ emp_arif = Employee.find_or_create_by!(passport_number: "PK98765432") do |e|
   e.name = "Muhammad Arif"; e.name_en = "Muhammad Arif"
   e.nationality = "PK"; e.date_of_birth = Date.new(1990, 7, 20)
   e.phone = "+971-55-234-5678"
-  e.department = "현장지원"; e.job_title = "현장 조달 담당"
+  e.job_title = "현장 조달 담당"
   e.employment_type = "dispatch"; e.hire_date = Date.new(2021, 6, 1)
   e.active = true
 end
@@ -224,7 +224,7 @@ emp_ravi = Employee.find_or_create_by!(passport_number: "IN87654321") do |e|
   e.name = "Ravi Kumar"; e.name_en = "Ravi Kumar"
   e.nationality = "IN"; e.date_of_birth = Date.new(1988, 11, 5)
   e.phone = "+971-50-345-6789"
-  e.department = "물류팀"; e.job_title = "물류 담당"
+  e.job_title = "물류 담당"
   e.employment_type = "contract"; e.hire_date = Date.new(2022, 3, 1)
   e.active = true
 end
