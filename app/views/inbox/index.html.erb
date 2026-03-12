@@ -1563,7 +1563,7 @@
     if (!modal || !iframe) return;
     title.textContent = filename || '미리보기';
     iframe.src = url;
-    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
   }
 
@@ -1571,7 +1571,7 @@
     const modal = document.getElementById('preview-modal');
     const iframe = document.getElementById('preview-iframe');
     if (!modal) return;
-    modal.classList.add('hidden');
+    modal.style.display = 'none';
     iframe.src = 'about:blank';
     document.body.style.overflow = '';
   }
@@ -1583,7 +1583,7 @@
 </script>
 
 <%# 첨부파일 미리보기 모달 (iframe) %>
-<div id="preview-modal" class="preview-modal-backdrop hidden" onclick="if(event.target===this)closePreviewModal()">
+<div id="preview-modal" class="preview-modal-backdrop" style="display:none" onclick="if(event.target===this)closePreviewModal()">
   <div class="preview-modal-content">
     <div class="preview-modal-header">
       <div class="flex items-center gap-2 min-w-0">
