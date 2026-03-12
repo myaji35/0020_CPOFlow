@@ -266,6 +266,7 @@ class InboxController < ApplicationController
             document.querySelectorAll('.sheet-tab').forEach((el, i) => { el.style.display = i === idx ? 'block' : 'none'; });
             document.querySelectorAll('.tab-btn').forEach((el, i) => { el.classList.toggle('active', i === idx); });
           }
+          document.addEventListener('keydown', function(e) { if (e.key === 'Escape') window.parent.postMessage('close-preview-modal', '*'); });
         </script>
       </body></html>
     HTML
@@ -292,6 +293,9 @@ class InboxController < ApplicationController
     elsif content_type.include?("html")
       blob.open do |tempfile|
         html_content = File.read(tempfile.path, encoding: "UTF-8")
+        # iframe 내 ESC 키 → 부모 모달 닫기
+        esc_script = '<script>document.addEventListener("keydown",function(e){if(e.key==="Escape")window.parent.postMessage("close-preview-modal","*")});</script>'
+        html_content = html_content.sub("</body>", "#{esc_script}</body>")
         render html: html_content.html_safe, layout: false
       end
     # PDF, 이미지 → inline redirect

@@ -37,9 +37,9 @@
   .dark .email-html-body a { color: #38bdf8; }
   /* 미리보기 모달 */
   .preview-modal-backdrop { position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; }
-  .preview-modal-content { background: #fff; border-radius: 0.75rem; width: 90vw; height: 85vh; max-width: 1200px; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+  .preview-modal-content { background: #fff; border-radius: 0.75rem; width: 90vw; height: 85vh; max-width: 1200px; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); position: relative; }
   .dark .preview-modal-content { background: #1f2937; }
-  .preview-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; border-bottom: 1px solid #e5e7eb; flex-shrink: 0; }
+  .preview-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; border-bottom: 1px solid #e5e7eb; flex-shrink: 0; position: relative; z-index: 10; }
   .dark .preview-modal-header { border-color: #374151; }
   .preview-modal-iframe { flex: 1; border: none; border-radius: 0 0 0.75rem 0.75rem; width: 100%; }
   /* 발신자 로고 */
@@ -1576,22 +1576,45 @@
     document.body.style.overflow = '';
   }
 
-  // ESC 키로 모달 닫기
-  document.addEventListener('keydown', function(e) {
+  // ESC 키로 모달 닫기 (iframe 포커스 대응: window blur + interval 체크)
+  window.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closePreviewModal();
+  }, true);
+
+  // iframe이 포커스를 가져가면 부모의 keydown이 안 먹으므로 blur 감지로 대응
+  (function() {
+    var escTimer = null;
+    window.addEventListener('blur', function() {
+      // iframe으로 포커스 이동 시 ESC 감지용 interval 시작
+      var modal = document.getElementById('preview-modal');
+      if (modal && modal.style.display !== 'none') {
+        escTimer = setInterval(function() {
+          if (modal.style.display === 'none') { clearInterval(escTimer); return; }
+          // 부모로 포커스 복귀 시도 (사용자가 iframe 밖 클릭하면 자연 복귀)
+        }, 200);
+      }
+    });
+    window.addEventListener('focus', function() {
+      if (escTimer) { clearInterval(escTimer); escTimer = null; }
+    });
+  })();
+
+  // iframe 내부에서도 ESC 감지: postMessage 방식 (같은 도메인)
+  window.addEventListener('message', function(e) {
+    if (e.data === 'close-preview-modal') closePreviewModal();
   });
 </script>
 
 <%# 첨부파일 미리보기 모달 (iframe) %>
-<div id="preview-modal" class="preview-modal-backdrop" style="display:none" onclick="if(event.target===this)closePreviewModal()">
-  <div class="preview-modal-content">
+<div id="preview-modal" class="preview-modal-backdrop" style="display:none" onclick="closePreviewModal()">
+  <div class="preview-modal-content" onclick="event.stopPropagation()">
     <div class="preview-modal-header">
       <div class="flex items-center gap-2 min-w-0">
         <svg class="w-4 h-4 text-gray-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         <span id="preview-title" class="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">미리보기</span>
       </div>
-      <button onclick="closePreviewModal()" class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" title="닫기 (ESC)">
-        <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      <button onclick="closePreviewModal()" class="p-2 rounded-lg bg-gray-100 hover:bg-red-100 dark:bg-gray-700 dark:hover:bg-red-900/30 transition-colors" title="닫기 (ESC)">
+        <svg class="w-5 h-5 text-gray-600 hover:text-red-500 dark:text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
     <iframe id="preview-iframe" class="preview-modal-iframe" src="about:blank"></iframe>
