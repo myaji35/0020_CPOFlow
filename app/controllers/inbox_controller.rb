@@ -288,8 +288,14 @@ class InboxController < ApplicationController
         html = build_excel_preview_html(spreadsheet, blob.filename.to_s)
         render html: html.html_safe, layout: false
       end
-    # PDF, 이미지, HTML → inline redirect
-    elsif content_type.include?("pdf") || content_type.start_with?("image/") || content_type.include?("html")
+    # HTML content → 직접 읽어서 렌더링 (iframe 내 redirect 다운로드 방지)
+    elsif content_type.include?("html")
+      blob.open do |tempfile|
+        html_content = File.read(tempfile.path, encoding: "UTF-8")
+        render html: html_content.html_safe, layout: false
+      end
+    # PDF, 이미지 → inline redirect
+    elsif content_type.include?("pdf") || content_type.start_with?("image/")
       redirect_to rails_blob_path(blob, disposition: "inline"), allow_other_host: false
     else
       redirect_to rails_blob_path(blob, disposition: "attachment"), allow_other_host: false
