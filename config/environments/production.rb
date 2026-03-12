@@ -18,6 +18,9 @@ Rails.application.configure do
   # Cache assets for far-future expiry since they are all digest stamped.
   config.public_file_server.headers = { "cache-control" => "public, max-age=#{1.year.to_i}" }
 
+  # GZip compression — 응답 크기 50~70% 감소 (UAE 등 느린 네트워크에서 효과 큼)
+  config.middleware.insert_after ActionDispatch::Static, Rack::Deflater
+
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
   # config.asset_host = "http://assets.example.com"
 

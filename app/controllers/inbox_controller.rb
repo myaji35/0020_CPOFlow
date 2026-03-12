@@ -5,6 +5,8 @@ class InboxController < ApplicationController
 
   before_action :check_rate_limit!, only: %i[translate analyze_link generate_reply]
 
+  PER_PAGE = 30
+
   def index
     base_scope = Order.where.not(original_email_from: [ nil, "" ])
                       .includes(:user, :assignees, :client, :supplier, :project,
@@ -31,7 +33,13 @@ class InboxController < ApplicationController
       )
     end
 
-    @all_orders = base_scope.order(created_at: :desc).limit(100)
+    # Pagination: 30건씩 로드 (UAE 느린 네트워크 대응)
+    @page = [ params[:page].to_i, 1 ].max
+    @total_filtered = base_scope.count
+    @all_orders = base_scope.order(created_at: :desc)
+                            .offset((@page - 1) * PER_PAGE)
+                            .limit(PER_PAGE)
+    @total_pages = (@total_filtered.to_f / PER_PAGE).ceil
 
     # reference_no 기준 그룹핑: 동일 발주번호 메일을 스레드로 묶음
     # key: reference_no (있으면) / "single_{id}" (없으면 단건)
@@ -41,12 +49,17 @@ class InboxController < ApplicationController
       .reverse
       .to_h
 
-    # Counts for sidebar badges (unfiltered, unsearched)
+    # Counts for sidebar badges — 단일 쿼리로 통합 (4회 → 1회)
+    inbox_val     = Order.statuses[:inbox]
+    uncertain_val = Order.rfq_statuses[:rfq_uncertain]
     email_scope = Order.where.not(original_email_from: [ nil, "" ])
-    @count_all       = email_scope.count
-    @count_rfq       = email_scope.where(status: :inbox).count
-    @count_uncertain = email_scope.where(status: :inbox, rfq_status: Order.rfq_statuses[:rfq_uncertain]).count
-    @count_converted = email_scope.where.not(status: :inbox).count
+    counts = email_scope.pick(
+      Arel.sql("COUNT(*)"),
+      Arel.sql("SUM(CASE WHEN status = #{inbox_val} THEN 1 ELSE 0 END)"),
+      Arel.sql("SUM(CASE WHEN status = #{inbox_val} AND rfq_status = #{uncertain_val} THEN 1 ELSE 0 END)"),
+      Arel.sql("SUM(CASE WHEN status != #{inbox_val} THEN 1 ELSE 0 END)")
+    )
+    @count_all, @count_rfq, @count_uncertain, @count_converted = counts.map(&:to_i)
   end
 
   def show
