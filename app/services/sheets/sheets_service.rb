@@ -151,7 +151,7 @@ module Sheets
         pe = month.end_of_month
 
         mo   = Order.where(created_at: ps..pe)
-        del  = mo.where(status: "delivered")
+        del  = mo.where(status: "get_grn")
         ot   = del.where("due_date >= date(updated_at)")
         rate = del.count > 0 ? (ot.count.to_f / del.count * 100).round(1) : 0
         avg  = del.where.not(due_date: nil)
@@ -159,7 +159,7 @@ module Sheets
         [
           month.strftime("%Y-%m"),
           mo.count, del.count,
-          mo.where.not(status: "delivered").count,
+          mo.where.not(status: ["get_grn", "give_up"]).count,
           rate,
           mo.sum(:estimated_value).to_f.round(0),
           avg&.round(1) || 0
@@ -179,7 +179,7 @@ module Sheets
         q_start = base.beginning_of_quarter
         q_end   = base.end_of_quarter
         orders  = Order.where(created_at: q_start..q_end)
-        del     = orders.where(status: "delivered")
+        del     = orders.where(status: "get_grn")
         ot      = del.where("due_date >= date(updated_at)")
         rate    = del.count > 0 ? (ot.count.to_f / del.count * 100).round(1) : 0
         rows << [
@@ -200,7 +200,7 @@ module Sheets
 
       Project.includes(:client).order(:site_category, :name).each do |project|
         po  = project.orders
-        del = po.where(status: "delivered")
+        del = po.where(status: "get_grn")
         ot  = del.where("due_date >= date(updated_at)")
         rate = del.count > 0 ? (ot.count.to_f / del.count * 100).round(1) : 0
         rows << [
@@ -213,7 +213,7 @@ module Sheets
 
       un = Order.where(project_id: nil)
       if un.count > 0
-        del  = un.where(status: "delivered")
+        del  = un.where(status: "get_grn")
         ot   = del.where("due_date >= date(updated_at)")
         rate = del.count > 0 ? (ot.count.to_f / del.count * 100).round(1) : 0
         rows << [ "미분류", "현장 미배정", un.count, del.count, rate,
@@ -342,12 +342,12 @@ module Sheets
     def write_dashboard_kpi_header
       today = Date.today
 
-      active   = Order.where.not(status: "delivered").count
-      overdue  = Order.where.not(status: "delivered").where("due_date < ?", today).count
-      del_m    = Order.where(status: "delivered", updated_at: today.beginning_of_month..).count
+      active   = Order.where.not(status: ["get_grn", "give_up"]).count
+      overdue  = Order.where.not(status: ["get_grn", "give_up"]).where("due_date < ?", today).count
+      del_m    = Order.where(status: "get_grn", updated_at: today.beginning_of_month..).count
       val_m    = Order.where(created_at: today.beginning_of_month..).sum(:estimated_value).to_f
 
-      del_all  = Order.where(status: "delivered",
+      del_all  = Order.where(status: "get_grn",
                              updated_at: today.beginning_of_month..today.end_of_month)
       ot       = del_all.where("due_date >= date(updated_at)").count
       rate     = del_all.count > 0 ? (ot.to_f / del_all.count * 100).round(1) : 0

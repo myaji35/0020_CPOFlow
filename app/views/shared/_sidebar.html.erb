@@ -12,7 +12,7 @@
   <div class="flex flex-col flex-1 py-4 gap-1 overflow-hidden">
     <%= nav_link_to dashboard_path, icon: "lni lni-grid-alt", label: "Dashboard" %>
     <%= nav_link_to inbox_path, icon: "lni lni-envelope", label: "Inbox" do %>
-      <% rfq_count = Order.inbox.count %>
+      <% rfq_count = Order.new_rfq.count %>
       <% if rfq_count > 0 %>
         <span class="ml-auto bg-accent text-white text-xs rounded-full px-1.5 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity"><%= rfq_count %></span>
       <% end %>

@@ -190,7 +190,7 @@ end
 puts "  ✓ #{Order.count} orders"
 
 # ─── Sample Tasks for reviewing order ────────────────────────────────────────
-order = Order.find_by(status: "reviewing")
+order = Order.find_by(status: "make_quo")
 if order&.tasks&.empty?
   [
     { title: "Review RFQ specifications",       assignee: officer_ahmed, completed: true  },
