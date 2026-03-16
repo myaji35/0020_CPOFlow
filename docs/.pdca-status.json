@@ -2,6 +2,7 @@
   "version": "2.0",
   "lastUpdated": "2026-03-16T02:14:59.230Z",
   "activeFeatures": [
+    "inbox-subject-cleanup",
     "0020_CPOFlow",
     "db",
     "config",
@@ -14,8 +15,28 @@
     "seeds",
     "sheets"
   ],
-  "primaryFeature": "0020_CPOFlow",
+  "primaryFeature": "inbox-subject-cleanup",
   "features": {
+    "inbox-subject-cleanup": {
+      "phase": "plan",
+      "phaseNumber": 1,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [
+        "RE/FW 접두사 제거",
+        "reference_no 배지 분리",
+        "상태 키워드 태그 추출",
+        "원본 제목 보존"
+      ],
+      "documents": {
+        "plan": "docs/01-plan/features/inbox-subject-cleanup.plan.md"
+      },
+      "timestamps": {
+        "started": "2026-03-16T15:30:00.000Z",
+        "lastUpdated": "2026-03-16T15:30:00.000Z"
+      },
+      "lastFile": "docs/01-plan/features/inbox-subject-cleanup.plan.md"
+    },
     "kanban-rename": {
       "phase": "archived",
       "matchRate": 100,
