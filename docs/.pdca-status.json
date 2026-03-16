@@ -18,9 +18,9 @@
   "primaryFeature": "inbox-subject-cleanup",
   "features": {
     "inbox-subject-cleanup": {
-      "phase": "do",
-      "phaseNumber": 3,
-      "matchRate": null,
+      "phase": "check",
+      "phaseNumber": 4,
+      "matchRate": 100,
       "iterationCount": 0,
       "requirements": [
         "RE/FW 접두사 제거",
