@@ -1,8 +1,7 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-03-16T02:06:21.090Z",
+  "lastUpdated": "2026-03-16T02:14:59.230Z",
   "activeFeatures": [
-    "kanban-rename",
     "0020_CPOFlow",
     "db",
     "config",
@@ -12,28 +11,18 @@
     "gmail",
     "jobs",
     "ecount",
-    "seeds"
+    "seeds",
+    "sheets"
   ],
-  "primaryFeature": "kanban-rename",
+  "primaryFeature": "0020_CPOFlow",
   "features": {
     "kanban-rename": {
-      "phase": "plan",
-      "phaseNumber": 1,
-      "matchRate": null,
-      "iterationCount": 0,
-      "requirements": [
-        "칸반 7→8단계 리네이밍",
-        "give_up 신규 추가",
-        "DB 정수값 유지"
-      ],
-      "documents": {
-        "plan": "docs/01-plan/features/kanban-rename.plan.md"
-      },
-      "timestamps": {
-        "started": "2026-03-16T10:00:00.000Z",
-        "lastUpdated": "2026-03-16T10:00:00.000Z"
-      },
-      "lastFile": "docs/01-plan/features/kanban-rename.plan.md"
+      "phase": "archived",
+      "matchRate": 100,
+      "iterationCount": 1,
+      "startedAt": "2026-03-16T10:00:00.000Z",
+      "archivedAt": "2026-03-16T15:00:00.000Z",
+      "archivedTo": "docs/archive/2026-03/kanban-rename/"
     },
     "0020_CPOFlow": {
       "phase": "do",
@@ -57,7 +46,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-10T23:55:50.173Z",
-        "lastUpdated": "2026-03-16T02:00:54.813Z"
+        "lastUpdated": "2026-03-16T02:14:39.961Z"
       },
       "lastFile": "/Volumes/E_SSD/02_GitHub.nosync/0020_CPOFlow/db/seeds.rb"
     },
@@ -164,6 +153,19 @@
         "lastUpdated": "2026-03-16T02:01:31.960Z"
       },
       "lastFile": "/Volumes/E_SSD/02_GitHub.nosync/0020_CPOFlow/db/seeds/mockup_data.rb"
+    },
+    "sheets": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-16T02:14:51.215Z",
+        "lastUpdated": "2026-03-16T02:14:59.230Z"
+      },
+      "lastFile": "/Volumes/E_SSD/02_GitHub.nosync/0020_CPOFlow/app/services/sheets/sheets_service.rb"
     }
   },
   "pipeline": {
@@ -174,7 +176,7 @@
   "session": {
     "startedAt": "2026-03-10T23:51:12.436Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-03-16T02:06:21.090Z"
+    "lastActivity": "2026-03-16T02:14:59.230Z"
   },
   "history": [
     {
@@ -486,6 +488,48 @@
     {
       "timestamp": "2026-03-16T02:06:21.090Z",
       "feature": "0020_CPOFlow",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-16T02:14:39.961Z",
+      "feature": "db",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-16T02:14:51.215Z",
+      "feature": "sheets",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-16T02:14:52.580Z",
+      "feature": "sheets",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-16T02:14:53.902Z",
+      "feature": "sheets",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-16T02:14:55.669Z",
+      "feature": "sheets",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-16T02:14:58.302Z",
+      "feature": "sheets",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-16T02:14:59.230Z",
+      "feature": "sheets",
       "phase": "do",
       "action": "updated"
     }

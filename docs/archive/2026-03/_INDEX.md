@@ -6,3 +6,4 @@
 | mention | 90% | 2026-03-04 | [docs/archive/2026-03/mention/](./mention/) |
 | card-merge | 96% | 2026-03-04 | [docs/archive/2026-03/card-merge/](./card-merge/) |
 | contact-persons-show | 97% | 2026-03-05 | [docs/archive/2026-03/contact-persons-show/](./contact-persons-show/) |
+| kanban-rename | 100% | 2026-03-16 | [docs/archive/2026-03/kanban-rename/](./kanban-rename/) |
