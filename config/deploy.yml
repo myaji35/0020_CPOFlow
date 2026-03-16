@@ -53,7 +53,7 @@ builder:
 proxy:
   host: cpoflow.158.247.235.31.sslip.io
   app_port: 3000
-  ssl: false
+  ssl: true
   forward_headers: true
   response_timeout: 60
   healthcheck:
