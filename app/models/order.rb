@@ -70,6 +70,40 @@ class Order < ApplicationRecord
     "give_up"        => "Give Up(포기)"
   }.freeze
 
+  # RE/FW 접두사 제거 + reference_no 분리한 간소화 제목 (표시용)
+  def display_subject
+    subject = original_email_subject.to_s.strip
+    # 1. RE:/FW:/Fwd: 접두사 반복 제거
+    subject = subject.sub(/\A\s*(RE|FW|Fwd)\s*:\s*/i, "").strip while subject.match?(/\A\s*(RE|FW|Fwd)\s*:/i)
+    # 2. reference_no가 있으면 제목에서 해당 번호 제거 (배지로 별도 표시)
+    if reference_no.present?
+      subject = subject.gsub(/\b#{Regexp.escape(reference_no)}\b\s*[-–—]?\s*/, "").strip
+    end
+    # 3. RFQ/견적요청 접두사 제거 (별도 배지로 표시)
+    subject = subject.sub(/\A(RFQ|견적요청)\s*[:：\-–—]?\s*/i, "").strip
+    # 4. 앞뒤 구분자(-) 정리
+    subject = subject.gsub(/\A[-–—\s]+|[-–—\s]+\z/, "").strip
+    subject.presence || title
+  end
+
+  SUBJECT_TAGS = {
+    /reminder/i  => "Reminder",
+    /revised/i   => "Revised",
+    /cancel/i    => "Cancelled",
+    /urgent/i    => "Urgent",
+    /update/i    => "Updated",
+    /extend/i    => "Extended",
+    /final/i     => "Final"
+  }.freeze
+
+  # 제목에서 상태 키워드 태그 추출
+  def subject_tags
+    tags = []
+    subject = original_email_subject.to_s
+    SUBJECT_TAGS.each { |pattern, label| tags << label if subject.match?(pattern) }
+    tags.uniq.first(3)
+  end
+
   def days_until_due
     return nil unless due_date
     (due_date - Date.today).to_i

@@ -249,7 +249,7 @@
                           </span>
                         </div>
                         <p class="text-xs text-gray-700 dark:text-gray-300 truncate font-medium">
-                          <%= order.original_email_subject.presence || order.title %>
+                          <% if order.reference_no.present? %><span class="text-[10px] px-1 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded font-mono mr-1"><%= order.reference_no %></span><% end %><%= order.display_subject %><% order.subject_tags.each do |tag| %><span class="text-[10px] px-1 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded ml-1"><%= tag %></span><% end %>
                         </p>
                         <p class="text-[11px] text-gray-400 dark:text-gray-500 truncate mt-0.5">
                           <%= order.original_email_from.presence || order.customer_name %>
@@ -291,7 +291,7 @@
                     </span>
                   </div>
                   <p class="text-sm text-gray-900 dark:text-white truncate font-medium">
-                    <%= order.original_email_subject.presence || order.title %>
+                    <% if order.reference_no.present? %><span class="text-[10px] px-1 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded font-mono mr-1"><%= order.reference_no %></span><% end %><%= order.display_subject %><% order.subject_tags.each do |tag| %><span class="text-[10px] px-1 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded ml-1"><%= tag %></span><% end %>
                   </p>
                   <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
                     <%= order.original_email_from.presence || order.customer_name %>

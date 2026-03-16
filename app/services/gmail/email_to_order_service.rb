@@ -99,6 +99,8 @@ module Gmail
 
     def build_title
       subject = @email[:subject].to_s.strip
+      # RE/FW/Fwd 접두사 반복 제거
+      subject = subject.sub(/\A\s*(RE|FW|Fwd)\s*:\s*/i, "").strip while subject.match?(/\A\s*(RE|FW|Fwd)\s*:/i)
       if @detection[:is_ariba]
         event_id = @detection[:ariba_event_id]
         return "[ARIBA] #{event_id} - #{subject}" if event_id.present?

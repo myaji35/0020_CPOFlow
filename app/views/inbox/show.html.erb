@@ -1,5 +1,5 @@
 <%# Inbox Email Detail — Full Page View %>
-<% content_for :page_title, @order.original_email_subject.presence || @order.title %>
+<% content_for :page_title, @order.display_subject %>
 
 <div class="max-w-4xl mx-auto">
 
@@ -11,7 +11,7 @@
     <div>
       <p class="text-xs text-gray-400 dark:text-gray-500">받은편지함 / 이메일 상세</p>
       <h2 class="text-lg font-semibold text-gray-900 dark:text-white leading-tight truncate max-w-xl">
-        <%= @order.original_email_subject.presence || @order.title %>
+        <% if @order.reference_no.present? %><span class="text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded font-mono mr-1"><%= @order.reference_no %></span><% end %><%= @order.display_subject %><% @order.subject_tags.each do |tag| %><span class="text-xs px-1 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded ml-1"><%= tag %></span><% end %>
       </h2>
     </div>
   </div>
@@ -24,7 +24,7 @@
       <div class="flex items-start justify-between gap-4">
         <div class="flex-1 min-w-0">
           <h1 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
-            <%= @order.original_email_subject.presence || @order.title %>
+            <% if @order.reference_no.present? %><span class="text-sm px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded font-mono mr-1.5"><%= @order.reference_no %></span><% end %><%= @order.display_subject %><% @order.subject_tags.each do |tag| %><span class="text-xs px-1 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded ml-1"><%= tag %></span><% end %>
           </h1>
           <div class="flex flex-wrap items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
             <div class="flex items-center gap-1.5">
@@ -440,7 +440,7 @@
             <li>
               <%= link_to inbox_email_path(o), class: "flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group" do %>
                 <span class="text-sm text-gray-900 dark:text-white group-hover:text-accent truncate flex-1">
-                  <%= o.original_email_subject.presence || o.title %>
+                  <% if o.reference_no.present? %><span class="text-[10px] px-1 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded font-mono mr-1"><%= o.reference_no %></span><% end %><%= o.display_subject %>
                 </span>
                 <%= status_badge(o) %>
                 <span class="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0"><%= o.created_at.strftime("%m/%d") %></span>

@@ -267,7 +267,7 @@
         </div>
         <div class="p-5">
           <% if order.original_email_subject.present? %>
-            <p class="text-sm font-medium text-gray-900 dark:text-white mb-3"><%= order.original_email_subject %></p>
+            <p class="text-sm font-medium text-gray-900 dark:text-white mb-3"><% if order.reference_no.present? %><span class="text-[10px] px-1 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded font-mono mr-1"><%= order.reference_no %></span><% end %><%= order.display_subject %><% order.subject_tags.each do |tag| %><span class="text-[10px] px-1 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded ml-1"><%= tag %></span><% end %></p>
           <% end %>
           <div class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-wrap font-mono bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 max-h-48 overflow-y-auto border border-gray-100 dark:border-gray-700">
             <%= order.original_email_body %>
@@ -360,7 +360,7 @@
               <%= order.created_at.strftime("%m/%d") %>
             </span>
             <span class="text-xs text-gray-600 dark:text-gray-400 truncate flex-1 font-medium">
-              <%= order.original_email_subject.presence || order.title %>
+              <%= order.display_subject %>
             </span>
             <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 font-medium flex-shrink-0">현재</span>
           </div>
@@ -383,7 +383,7 @@
                 <%= t_order.created_at.strftime("%m/%d") %>
               </span>
               <span class="text-xs text-gray-600 dark:text-gray-400 truncate flex-1">
-                <%= t_order.original_email_subject.presence || t_order.title %>
+                <%= t_order.display_subject %>
               </span>
               <span class="text-[10px] px-1.5 py-0.5 rounded <%= t_status_colors[t_order.status] || 'bg-gray-100 text-gray-500' %> font-medium flex-shrink-0">
                 <%= Order::STATUS_LABELS[t_order.status] || t_order.status.humanize %>
