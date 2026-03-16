@@ -213,23 +213,16 @@
               <!-- 상태 뱃지 -->
               <span class="flex-shrink-0 text-xs px-2 py-0.5 rounded-full font-medium
                 <%= case order.status
-                    when 'inbox'      then 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
-                    when 'reviewing'  then 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                    when 'quoted'     then 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400'
-                    when 'confirmed'  then 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                    when 'procuring'  then 'bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
-                    when 'qa'         then 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-                    when 'delivered'  then 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                    when 'new_rfq'        then 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                    when 'make_quo'       then 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                    when 'pending_po'     then 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400'
+                    when 'new_po'         then 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                    when 'delivery_items' then 'bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
+                    when 'problem'        then 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                    when 'get_grn'        then 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                    when 'give_up'        then 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-500'
                     end %>">
-                <%= case order.status
-                    when 'inbox'      then '수신'
-                    when 'reviewing'  then '검토중'
-                    when 'quoted'     then '견적완료'
-                    when 'confirmed'  then '확정'
-                    when 'procuring'  then '발주중'
-                    when 'qa'         then 'QA'
-                    when 'delivered'  then '납품완료'
-                    end %>
+                <%= Order::STATUS_LABELS[order.status] || order.status %>
               </span>
               <div class="min-w-0">
                 <p class="text-sm text-gray-800 dark:text-gray-200 truncate group-hover:text-primary transition-colors">

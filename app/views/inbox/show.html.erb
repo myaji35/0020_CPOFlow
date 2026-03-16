@@ -45,7 +45,7 @@
         <%# Action Buttons %>
         <div class="flex items-center gap-2 flex-shrink-0">
           <%= status_badge(@order) %>
-          <% if @order.status.to_s == "inbox" %>
+          <% if @order.status.to_s == "new_rfq" %>
             <%= button_to convert_email_to_order_path(@order),
                 data: { turbo_confirm: "칸반 보드로 이동하시겠습니까?" },
                 class: "flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors" do %>
@@ -456,7 +456,7 @@
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
     <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">빠른 액션</h3>
     <div class="flex flex-wrap gap-3">
-      <% if @order.status.to_s == "inbox" %>
+      <% if @order.status.to_s == "new_rfq" %>
         <%= button_to convert_email_to_order_path(@order),
             data: { turbo_confirm: "칸반 보드로 이동하시겠습니까?" },
             class: "flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors" do %>

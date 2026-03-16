@@ -166,8 +166,8 @@
       <!-- FR-03: 상태별 분포 + 납기준수율 -->
       <div class="flex flex-wrap items-center gap-3 mb-4">
         <!-- 상태별 뱃지 바 -->
-        <% status_colors = { "inbox"=>"bg-gray-400","reviewing"=>"bg-blue-400","quoted"=>"bg-yellow-400","confirmed"=>"bg-indigo-400","procuring"=>"bg-orange-400","qa"=>"bg-purple-400","delivered"=>"bg-green-500" } %>
-        <% status_labels = { "inbox"=>"접수","reviewing"=>"검토중","quoted"=>"견적","confirmed"=>"확정","procuring"=>"조달","qa"=>"QA","delivered"=>"납품" } %>
+        <% status_colors = { "new_rfq"=>"bg-gray-400","make_quo"=>"bg-blue-400","pending_po"=>"bg-yellow-400","new_po"=>"bg-indigo-400","delivery_items"=>"bg-orange-400","problem"=>"bg-purple-400","get_grn"=>"bg-green-500","give_up"=>"bg-gray-200" } %>
+        <% status_labels = Order::STATUS_LABELS %>
         <div class="flex flex-wrap gap-1.5">
           <% @order_status_counts.each do |status, cnt| %>
             <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full text-white <%= status_colors[status] || 'bg-gray-400' %>">
@@ -221,7 +221,7 @@
         <% @orders.each do |order| %>
           <%
             days = order.due_date ? (order.due_date - Date.today).to_i : nil
-            row_cls = if order.status == "delivered"
+            row_cls = if order.status == "get_grn"
                         "border-green-100 dark:border-green-900/30"
                       elsif days && days < 0
                         "border-red-200 dark:border-red-800/50 bg-red-50/40 dark:bg-red-900/10"

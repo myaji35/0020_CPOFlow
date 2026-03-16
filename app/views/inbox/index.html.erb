@@ -180,13 +180,14 @@
 
       <%# Email list items — reference_no 기준 그룹 뷰 %>
       <% status_colors = {
-        "inbox"     => "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400",
-        "reviewing" => "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400",
-        "quoted"    => "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400",
-        "confirmed" => "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400",
-        "procuring" => "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400",
-        "qa"        => "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-400",
-        "delivered" => "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400"
+        "new_rfq"        => "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400",
+        "make_quo"       => "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400",
+        "pending_po"     => "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400",
+        "new_po"         => "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400",
+        "delivery_items" => "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400",
+        "problem"        => "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-400",
+        "get_grn"        => "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400",
+        "give_up"        => "bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-500"
       } %>
       <% confidence_colors = { "high" => "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400", "medium" => "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-500", "low" => "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400" } %>
       <% confidence_labels = { "high" => "확실", "medium" => "가능성", "low" => "낮음" } %>
@@ -475,9 +476,9 @@
               <%# Action buttons %>
               <div class="flex items-center gap-2 flex-shrink-0">
                 <%= status_badge(order) %>
-                <% if order.status.to_s == "inbox" %>
+                <% if order.status.to_s == "new_rfq" %>
                   <%= button_to convert_email_to_order_path(order),
-                      data: { turbo_confirm: "칸반 보드의 'Under Review' 단계로 이동하시겠습니까?" },
+                      data: { turbo_confirm: "칸반 보드의 'Make QUO' 단계로 이동하시겠습니까?" },
                       class: "flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors" do %>
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                     칸반으로 이동
@@ -577,7 +578,7 @@
           <% end %>
 
           <%# RFQ 판정 배너 — inbox 상태인 이메일 전체에 표시 %>
-          <% if order.status.to_s == "inbox" && order.respond_to?(:rfq_status) %>
+          <% if order.status.to_s == "new_rfq" && order.respond_to?(:rfq_status) %>
             <% rfq_s = order.rfq_status.to_s %>
             <%# RFQ 대기 필터: 이미 RFQ 판정된 목록 → "RFQ 아님" 버튼만 표시 %>
             <% show_confirmed_btn = @current_filter != 'rfq' && rfq_s != 'rfq_confirmed' %>

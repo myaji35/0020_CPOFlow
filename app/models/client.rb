@@ -17,7 +17,7 @@ class Client < ApplicationRecord
 
   def primary_contact      = contact_persons.find_by(primary: true) || contact_persons.first
   def total_order_value    = orders.sum(:estimated_value).to_f
-  def active_orders_count  = orders.where.not(status: :delivered).count
+  def active_orders_count  = orders.where.not(status: [ :get_grn, :give_up ]).count
   def active_projects      = projects.where(status: 1)
   def industry_label
     { "nuclear" => "원전", "hydro" => "수력", "tunnel" => "터널",

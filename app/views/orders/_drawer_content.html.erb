@@ -367,13 +367,14 @@
           <%# 관련 오더들 (시간 순) %>
           <% (thread_orders.sort_by(&:created_at)).each do |t_order| %>
             <% t_status_colors = {
-              "inbox"     => "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400",
-              "reviewing" => "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400",
-              "quoted"    => "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400",
-              "confirmed" => "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400",
-              "procuring" => "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400",
-              "qa"        => "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-400",
-              "delivered" => "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400"
+              "new_rfq"        => "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400",
+              "make_quo"       => "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400",
+              "pending_po"     => "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400",
+              "new_po"         => "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400",
+              "delivery_items" => "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400",
+              "problem"        => "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-400",
+              "get_grn"        => "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400",
+              "give_up"        => "bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-500"
             } %>
             <a href="<%= order_path(t_order) %>"
                class="flex items-center gap-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/30 -mx-1 px-1 rounded transition-colors">

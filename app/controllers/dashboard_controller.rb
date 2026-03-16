@@ -4,7 +4,7 @@ class DashboardController < ApplicationController
     @total_active   = Order.active.count
     @overdue_count  = Order.overdue.count
     @urgent_count   = Order.urgent.count
-    @delivered_this_month = Order.delivered
+    @delivered_this_month = Order.get_grn
                                  .where(updated_at: Time.current.beginning_of_month..)
                                  .count
 
@@ -42,7 +42,7 @@ class DashboardController < ApplicationController
     # 담당자별 워크로드 (활성 발주 기준 Top10)
     @assignee_workload = User
       .joins(assignments: :order)
-      .where(orders: { status: Order.statuses.except("delivered").values })
+      .where(orders: { status: Order.statuses.except("get_grn", "give_up").values })
       .select(
         "users.id, users.name, users.role, users.branch," \
         " COUNT(orders.id) AS total_count," \
@@ -89,7 +89,7 @@ class DashboardController < ApplicationController
   private
 
   def calculate_on_time_rate(start_time, end_time)
-    delivered = Order.delivered.where(updated_at: start_time..end_time)
+    delivered = Order.get_grn.where(updated_at: start_time..end_time)
     return 0 if delivered.count == 0
     on_time = delivered.where("due_date >= date(updated_at)")
     (on_time.count.to_f / delivered.count * 100).round(1)
@@ -103,7 +103,7 @@ class DashboardController < ApplicationController
         category: cat,
         label: { "nuclear" => "원전", "hydro" => "수력", "tunnel" => "터널", "gtx" => "GTX" }[cat],
         orders: order_ids.count,
-        delivered: order_ids.where(status: "delivered").count,
+        delivered: order_ids.where(status: "get_grn").count,
         value: order_ids.sum(:estimated_value).to_f
       }
     end
@@ -118,7 +118,7 @@ class DashboardController < ApplicationController
       {
         label:     "W#{week_start.cweek}",
         orders:    orders.count,
-        delivered: orders.where(status: "delivered").count
+        delivered: orders.where(status: "get_grn").count
       }
     end.reverse
   end
@@ -132,7 +132,7 @@ class DashboardController < ApplicationController
       {
         label:     month_date.strftime("%m월"),
         orders:    orders.count,
-        delivered: orders.where(status: "delivered").count
+        delivered: orders.where(status: "get_grn").count
       }
     end.reverse
   end
@@ -145,7 +145,7 @@ class DashboardController < ApplicationController
       q_start    = base.beginning_of_quarter
       q_end      = base.end_of_quarter
       orders     = Order.where(created_at: q_start..q_end)
-      delivered  = orders.where(status: "delivered")
+      delivered  = orders.where(status: "get_grn")
       on_time    = delivered.where("due_date >= date(updated_at)")
       rate       = delivered.count > 0 ? (on_time.count.to_f / delivered.count * 100).round(1) : 0
       {
@@ -163,7 +163,7 @@ class DashboardController < ApplicationController
       year      = Date.today.year - i
       period    = Date.new(year, 1, 1)..Date.new(year, 12, 31)
       orders    = Order.where(created_at: period)
-      delivered = orders.where(status: "delivered")
+      delivered = orders.where(status: "get_grn")
       on_time   = delivered.where("due_date >= date(updated_at)")
       rate      = delivered.count > 0 ? (on_time.count.to_f / delivered.count * 100).round(1) : 0
       {

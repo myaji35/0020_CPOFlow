@@ -160,10 +160,10 @@
       </div>
 
       <script>
-        var KANBAN_COLUMNS = ['inbox','reviewing','quoted','confirmed','procuring','qa','delivered'];
+        var KANBAN_COLUMNS = ['new_rfq','make_quo','pending_po','new_po','delivery_items','problem','get_grn','give_up'];
         var STATUS_LABELS  = {
-          inbox:'Inbox', reviewing:'Under Review', quoted:'Quoted',
-          confirmed:'Order Confirmed', procuring:'Procuring', qa:'QA Inspection', delivered:'Delivered'
+          new_rfq:'New(신규)', make_quo:'Make QUO(견적작성)', pending_po:'Pending PO(발주대기)',
+          new_po:'New PO(발주확정)', delivery_items:'Delivery Items(납품진행)', problem:'Problem(문제)', get_grn:'Get GRN(수령확인)', give_up:'Give Up(포기)'
         };
 
         function openOrderDrawer(orderId, orderTitle, orderPath, orderStatus) {

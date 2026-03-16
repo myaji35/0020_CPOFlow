@@ -5,13 +5,13 @@ module Ecount
     class OrderImportStrategy
       # eCount 상태 → CPOFlow Kanban 매핑
       STATUS_MAP = {
-        "견적요청" => "inbox",
-        "검토중"   => "reviewing",
-        "견적발송" => "quoted",
-        "발주확정" => "confirmed",
-        "조달중"   => "procuring",
-        "품질검사" => "qa",
-        "납품완료" => "delivered",
+        "견적요청" => "new_rfq",
+        "검토중"   => "make_quo",
+        "견적발송" => "pending_po",
+        "발주확정" => "new_po",
+        "조달중"   => "delivery_items",
+        "품질검사" => "problem",
+        "납품완료" => "get_grn",
       }.freeze
 
       def initialize(user)
@@ -35,7 +35,7 @@ module Ecount
 
       def map_row(row)
         ref      = row[:source_ref].presence || "ecount_#{SecureRandom.hex(6)}"
-        status   = STATUS_MAP[row[:ecount_status].to_s.strip] || "inbox"
+        status   = STATUS_MAP[row[:ecount_status].to_s.strip] || "new_rfq"
         due      = parse_date(row[:due_date])
 
         {

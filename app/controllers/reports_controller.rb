@@ -67,15 +67,15 @@ class ReportsController < ApplicationController
       prev_value:     prev[:value],
       on_time_rate:   curr[:on_time_rate],
       prev_on_time:   prev[:on_time_rate],
-      overdue:        Order.where("due_date < ?", Date.today).where.not(status: :delivered).count,
-      urgent:         Order.where(priority: :urgent).where.not(status: :delivered).count,
+      overdue:        Order.where("due_date < ?", Date.today).where.not(status: [ :get_grn, :give_up ]).count,
+      urgent:         Order.where(priority: :urgent).where.not(status: [ :get_grn, :give_up ]).count,
       avg_lead_days:  calc_avg_lead_days(range)
     }
   end
 
   def order_stats(range)
     base      = Order.where(created_at: range)
-    delivered = Order.delivered.where(updated_at: range)
+    delivered = Order.get_grn.where(updated_at: range)
     on_time   = delivered.where("orders.due_date >= DATE(orders.updated_at)").count
     {
       count:        base.count,
@@ -91,7 +91,7 @@ class ReportsController < ApplicationController
   end
 
   def calc_avg_lead_days(range)
-    delivered = Order.delivered.where(updated_at: range)
+    delivered = Order.get_grn.where(updated_at: range)
     return 0.0 if delivered.empty?
     total = delivered.sum { |o| (o.updated_at.to_date - o.created_at.to_date).to_i }
     (total.to_f / delivered.count).round(1)
@@ -105,7 +105,7 @@ class ReportsController < ApplicationController
       {
         label:     m.strftime("%y.%m"),
         orders:    Order.where(created_at: r).count,
-        delivered: Order.delivered.where(updated_at: r).count,
+        delivered: Order.get_grn.where(updated_at: r).count,
         value:     (Order.where(created_at: r).sum(:estimated_value).to_f / 1000).round
       }
     end

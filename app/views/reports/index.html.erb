@@ -152,13 +152,14 @@ end %>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
       <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">파이프라인 현황</h2>
       <% funnel_stages = [
-           ["inbox",     "Inbox",         "bg-gray-400"],
-           ["reviewing", "Under Review",  "bg-blue-400"],
-           ["quoted",    "Quoted",        "bg-indigo-400"],
-           ["confirmed", "Confirmed",     "bg-purple-400"],
-           ["procuring", "Procuring",     "bg-yellow-400"],
-           ["qa",        "QA",            "bg-orange-400"],
-           ["delivered", "Delivered",     "bg-green-500"]
+           ["new_rfq",        "New",             "bg-gray-400"],
+           ["make_quo",       "Make QUO",        "bg-blue-400"],
+           ["pending_po",     "Pending PO",      "bg-indigo-400"],
+           ["new_po",         "New PO",          "bg-purple-400"],
+           ["delivery_items", "Delivery Items",  "bg-yellow-400"],
+           ["problem",        "Problem",         "bg-orange-400"],
+           ["get_grn",        "Get GRN",         "bg-green-500"],
+           ["give_up",        "Give Up",         "bg-gray-200"]
          ]
          funnel_total = [@funnel.values.sum, 1].max %>
       <div class="flex flex-col gap-2.5">

@@ -83,8 +83,8 @@
             <td class="px-4 py-3">
               <%
                 c_total     = client.orders.count
-                c_delivered = client.orders.where(status: :delivered).count
-                c_overdue   = client.orders.where("due_date < ? AND status != ?", Date.today, Order.statuses[:delivered]).count
+                c_delivered = client.orders.where(status: :get_grn).count
+                c_overdue   = client.orders.where("due_date < ? AND status != ?", Date.today, Order.statuses[:get_grn]).count
                 c_rate      = c_total > 0 ? (c_delivered.to_f / c_total * 100).round(1) : nil
                 risk_grade  = if c_rate.nil? then nil
                               elsif c_rate >= 90 && c_overdue == 0 then "A"

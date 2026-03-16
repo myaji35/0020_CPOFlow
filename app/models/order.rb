@@ -17,14 +17,15 @@ class Order < ApplicationRecord
   has_many :rfq_feedbacks, dependent: :destroy
 
   enum :status, {
-    inbox: 0,
-    reviewing: 1,
-    quoted: 2,
-    confirmed: 3,
-    procuring: 4,
-    qa: 5,
-    delivered: 6
-  }, default: :inbox
+    new_rfq: 0,
+    make_quo: 1,
+    pending_po: 2,
+    new_po: 3,
+    delivery_items: 4,
+    problem: 5,
+    get_grn: 6,
+    give_up: 7
+  }, default: :new_rfq
 
   enum :rfq_status, {
     rfq_confirmed: 0,
@@ -48,24 +49,25 @@ class Order < ApplicationRecord
   validates :customer_name, presence: true
   validates :status, presence: true
 
-  scope :active, -> { where.not(status: :delivered) }
-  scope :overdue, -> { where("due_date < ?", Date.today).where.not(status: :delivered) }
-  scope :urgent, -> { where("due_date <= ?", 7.days.from_now).where.not(status: :delivered) }
-  scope :due_soon, -> { where(due_date: Date.today..14.days.from_now).where.not(status: :delivered) }
+  scope :active, -> { where.not(status: [ :get_grn, :give_up ]) }
+  scope :overdue, -> { where("due_date < ?", Date.today).where.not(status: [ :get_grn, :give_up ]) }
+  scope :urgent, -> { where("due_date <= ?", 7.days.from_now).where.not(status: [ :get_grn, :give_up ]) }
+  scope :due_soon, -> { where(due_date: Date.today..14.days.from_now).where.not(status: [ :get_grn, :give_up ]) }
   scope :by_due_date, -> { order(due_date: :asc) }
   scope :by_reference_no, ->(ref) { where(reference_no: ref).order(created_at: :asc) }
   scope :root_orders, -> { where(parent_order_id: nil) }
 
-  KANBAN_COLUMNS = %w[inbox reviewing quoted confirmed procuring qa delivered].freeze
+  KANBAN_COLUMNS = %w[new_rfq make_quo pending_po new_po delivery_items problem get_grn give_up].freeze
 
   STATUS_LABELS = {
-    "inbox"     => "Inbox",
-    "reviewing" => "Under Review",
-    "quoted"    => "Quoted",
-    "confirmed" => "Order Confirmed",
-    "procuring" => "Procuring",
-    "qa"        => "QA Inspection",
-    "delivered" => "Delivered"
+    "new_rfq"        => "New(신규)",
+    "make_quo"       => "Make QUO(견적작성)",
+    "pending_po"     => "Pending PO(발주대기)",
+    "new_po"         => "New PO(발주확정)",
+    "delivery_items" => "Delivery Items(납품진행)",
+    "problem"        => "Problem(문제)",
+    "get_grn"        => "Get GRN(수령확인)",
+    "give_up"        => "Give Up(포기)"
   }.freeze
 
   def days_until_due
@@ -138,7 +140,7 @@ class Order < ApplicationRecord
   private
 
   def enqueue_ecount_slip
-    return unless status == "confirmed"
+    return unless status == "new_po"
     return if ecount_slip_no.present?
 
     EcountSlipCreateJob.perform_later(id)

@@ -5,16 +5,17 @@
 class RiskAssessmentService
   # 각 스테이지에서 다음으로 넘어가는 데 걸리는 평균 영업일
   STAGE_DAYS = {
-    "inbox"      => 1,
-    "reviewing"  => 3,
-    "quoted"     => 7,
-    "confirmed"  => 2,
-    "procuring"  => 14,
-    "qa"         => 3,
-    "delivered"  => 0
+    "new_rfq"        => 1,
+    "make_quo"       => 3,
+    "pending_po"     => 7,
+    "new_po"         => 2,
+    "delivery_items" => 14,
+    "problem"        => 3,
+    "get_grn"        => 0,
+    "give_up"        => 0
   }.freeze
 
-  STAGE_ORDER = %w[inbox reviewing quoted confirmed procuring qa delivered].freeze
+  STAGE_ORDER = %w[new_rfq make_quo pending_po new_po delivery_items problem get_grn give_up].freeze
 
   def self.calculate(order)
     new(order).calculate
@@ -22,7 +23,7 @@ class RiskAssessmentService
 
   def self.batch_update!
     updated = 0
-    Order.where.not(status: :delivered).find_each do |order|
+    Order.where.not(status: [ :get_grn, :give_up ]).find_each do |order|
       result = calculate(order)
       order.update_columns(
         risk_score:      result[:score],
@@ -32,7 +33,7 @@ class RiskAssessmentService
       updated += 1
     end
     # 납품 완료된 주문은 위험도 초기화
-    Order.delivered.where.not(risk_level: "none")
+    Order.get_grn.where.not(risk_level: "none")
          .update_all(risk_score: 0, risk_level: "none", risk_updated_at: Time.current)
     updated
   end
@@ -42,7 +43,7 @@ class RiskAssessmentService
   end
 
   def calculate
-    return { score: 0, level: "none" } if @order.due_date.nil? || @order.delivered?
+    return { score: 0, level: "none" } if @order.due_date.nil? || @order.get_grn? || @order.give_up?
 
     days_left       = (@order.due_date - Date.today).to_i
     min_days_needed = minimum_days_needed

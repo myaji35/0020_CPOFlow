@@ -16,11 +16,11 @@ class InboxController < ApplicationController
     @current_filter = params[:filter].presence || "all"
     case @current_filter
     when "rfq"
-      base_scope = base_scope.where(status: :inbox)
+      base_scope = base_scope.where(status: :new_rfq)
     when "uncertain"
-      base_scope = base_scope.where(status: :inbox, rfq_status: Order.rfq_statuses[:rfq_uncertain])
+      base_scope = base_scope.where(status: :new_rfq, rfq_status: Order.rfq_statuses[:rfq_uncertain])
     when "converted"
-      base_scope = base_scope.where.not(status: :inbox)
+      base_scope = base_scope.where.not(status: :new_rfq)
     end
 
     # Search support
@@ -50,7 +50,7 @@ class InboxController < ApplicationController
       .to_h
 
     # Counts for sidebar badges — 단일 쿼리로 통합 (4회 → 1회)
-    inbox_val     = Order.statuses[:inbox]
+    inbox_val     = Order.statuses[:new_rfq]
     uncertain_val = Order.rfq_statuses[:rfq_uncertain]
     email_scope = Order.where.not(original_email_from: [ nil, "" ])
     counts = email_scope.pick(
@@ -73,7 +73,7 @@ class InboxController < ApplicationController
 
   def convert_to_order
     @order = Order.find(params[:id])
-    if @order.update(status: :reviewing)
+    if @order.update(status: :make_quo)
       Activity.create!(order: @order, user: current_user, action: "moved_to_kanban")
       redirect_to kanban_path, notice: t("inbox.convert_success")
     else

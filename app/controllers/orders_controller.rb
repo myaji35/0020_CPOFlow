@@ -74,7 +74,7 @@ class OrdersController < ApplicationController
   def create
     @order = Order.new(order_params)
     @order.user = current_user
-    @order.status = :inbox
+    @order.status = :new_rfq
 
     if @order.save
       Activity.create!(order: @order, user: current_user, action: "created")
@@ -161,7 +161,7 @@ class OrdersController < ApplicationController
 
   # gmail_thread_id 또는 제목의 이벤트 번호로 연관 inbox 건 탐색
   def find_thread_siblings
-    base = Order.where(status: :inbox).where.not(id: @order.id)
+    base = Order.where(status: :new_rfq).where.not(id: @order.id)
 
     # 1순위: 동일 gmail_thread_id
     by_thread = base.where(gmail_thread_id: @order.gmail_thread_id) if @order.gmail_thread_id.present?

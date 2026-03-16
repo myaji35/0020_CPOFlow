@@ -81,8 +81,8 @@
           <% end %>
         </div>
         <!-- FR-04: 상태별 뱃지 -->
-        <% status_colors = { "inbox"=>"bg-gray-400","reviewing"=>"bg-blue-400","quoted"=>"bg-yellow-400","confirmed"=>"bg-indigo-400","procuring"=>"bg-orange-400","qa"=>"bg-purple-400","delivered"=>"bg-green-500" } %>
-        <% status_labels = { "inbox"=>"접수","reviewing"=>"검토중","quoted"=>"견적","confirmed"=>"확정","procuring"=>"조달","qa"=>"QA","delivered"=>"납품" } %>
+        <% status_colors = { "new_rfq"=>"bg-gray-400","make_quo"=>"bg-blue-400","pending_po"=>"bg-yellow-400","new_po"=>"bg-indigo-400","delivery_items"=>"bg-orange-400","problem"=>"bg-purple-400","get_grn"=>"bg-green-500","give_up"=>"bg-gray-200" } %>
+        <% status_labels = Order::STATUS_LABELS %>
         <% if @order_status_counts.any? %>
           <div class="flex flex-wrap gap-1.5 mb-3">
             <% @order_status_counts.each do |status, cnt| %>

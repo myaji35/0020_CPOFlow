@@ -27,7 +27,7 @@ class DueNotificationJob < ApplicationJob
 
   def due_orders_on(date)
     Order.where(due_date: date)
-         .where.not(status: :delivered)
+         .where.not(status: [ :get_grn, :give_up ])
          .includes(:assignees, :client)
   end
 

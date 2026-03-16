@@ -138,11 +138,11 @@ created = 0
 
     # 상태 결정 (오래된 것일수록 delivered 비율 높음)
     status = if months_ago > 6
-      rand < 0.85 ? :delivered : :quoted
+      rand < 0.85 ? :get_grn : :pending_po
     elsif months_ago > 3
-      [:delivered, :delivered, :delivered, :qa, :procuring].sample
+      [:get_grn, :get_grn, :get_grn, :problem, :delivery_items].sample
     else
-      [:confirmed, :procuring, :qa, :reviewing, :inbox].sample
+      [:new_po, :delivery_items, :problem, :make_quo, :new_rfq].sample
     end
 
     # 납기일 (생성일 + 14~60일)
@@ -150,7 +150,7 @@ created = 0
     due = created_date + lead_days.days
 
     # 납기 준수 여부 (80% 준수)
-    updated_at = if status == :delivered
+    updated_at = if status == :get_grn
       (rand < 0.80) ? (due - rand(0..5).days) : (due + rand(1..14).days)
     else
       created_date + rand(1..lead_days).days

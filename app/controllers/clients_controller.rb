@@ -61,9 +61,9 @@ class ClientsController < ApplicationController
     end
 
     @order_status_counts = @client.orders.group(:status).count
-    @delivered_count  = @client.orders.where(status: :delivered).count
+    @delivered_count  = @client.orders.where(status: :get_grn).count
     total             = @client.orders.where.not(due_date: nil).count
-    overdue           = @client.orders.where("due_date < ? AND status != ?", Date.today, Order.statuses[:delivered]).count
+    overdue           = @client.orders.where("due_date < ? AND status NOT IN (?, ?)", Date.today, Order.statuses[:get_grn], Order.statuses[:give_up]).count
     @on_time_rate     = total > 0 ? ((total - overdue).to_f / total * 100).round(1) : nil
     @risk_grade       = calculate_client_risk(@client, @on_time_rate, overdue)
 

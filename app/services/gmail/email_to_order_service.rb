@@ -35,7 +35,7 @@ module Gmail
         title:                  build_title,
         customer_name:          @detection[:customer_name].presence || "Unknown",
         description:            build_description,
-        status:                 :inbox,
+        status:                 :new_rfq,
         rfq_status:             rfq_status_val,
         priority:               infer_priority,
         due_date:               @detection[:due_date],
@@ -145,7 +145,7 @@ module Gmail
 
       base = Order.where(reference_no: ref_no).where(parent_order_id: nil)
 
-      base.where.not(status: :inbox).order(created_at: :asc).first ||
+      base.where.not(status: :new_rfq).order(created_at: :asc).first ||
         base.order(created_at: :asc).first
     end
 

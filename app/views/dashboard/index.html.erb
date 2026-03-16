@@ -268,20 +268,20 @@
       <%= link_to "칸반 보기", kanban_path, class: "text-xs text-accent hover:underline" %>
     </div>
     <%
-      total_active_pipeline = @kanban_counts.except("delivered").values.sum.to_f
+      total_active_pipeline = @kanban_counts.except("get_grn").values.sum.to_f
     %>
     <div class="space-y-2">
       <% Order::KANBAN_COLUMNS.each do |status| %>
         <% count = @kanban_counts[status] || 0 %>
-        <% pct = total_active_pipeline > 0 && status != "delivered" ? (count / total_active_pipeline * 100).round : 0 %>
-        <% bar_color = { "inbox" => "bg-gray-400", "reviewing" => "bg-blue-400", "quoted" => "bg-yellow-400",
-                         "confirmed" => "bg-indigo-400", "procuring" => "bg-orange-400",
-                         "qa" => "bg-purple-400", "delivered" => "bg-green-500" }[status] %>
+        <% pct = total_active_pipeline > 0 && status != "get_grn" ? (count / total_active_pipeline * 100).round : 0 %>
+        <% bar_color = { "new_rfq" => "bg-gray-400", "make_quo" => "bg-blue-400", "pending_po" => "bg-yellow-400",
+                         "new_po" => "bg-indigo-400", "delivery_items" => "bg-orange-400",
+                         "problem" => "bg-purple-400", "get_grn" => "bg-green-500", "give_up" => "bg-gray-200" }[status] %>
         <div class="flex items-center gap-3">
           <span class="text-xs text-gray-500 dark:text-gray-400 w-16 shrink-0"><%= Order::STATUS_LABELS[status] %></span>
           <div class="flex-1 bg-gray-100 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
             <div class="<%= bar_color %> h-2 rounded-full transition-all duration-500"
-                 style="width: <%= status == 'delivered' ? (@delivered_this_month.to_f / [@total_active + @delivered_this_month, 1].max * 100).round : pct %>%"></div>
+                 style="width: <%= status == 'get_grn' ? (@delivered_this_month.to_f / [@total_active + @delivered_this_month, 1].max * 100).round : pct %>%"></div>
           </div>
           <span class="text-sm font-bold text-gray-900 dark:text-white w-8 text-right"><%= count %></span>
         </div>

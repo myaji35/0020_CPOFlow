@@ -46,13 +46,14 @@ module ApplicationHelper
   # Status badge
   def status_badge(order)
     colors = {
-      "inbox"     => "bg-gray-100 text-gray-700",
-      "reviewing" => "bg-blue-100 text-blue-700",
-      "quoted"    => "bg-purple-100 text-purple-700",
-      "confirmed" => "bg-indigo-100 text-indigo-700",
-      "procuring" => "bg-yellow-100 text-yellow-700",
-      "qa"        => "bg-orange-100 text-orange-700",
-      "delivered" => "bg-green-100 text-green-700"
+      "new_rfq"        => "bg-gray-100 text-gray-700",
+      "make_quo"       => "bg-blue-100 text-blue-700",
+      "pending_po"     => "bg-purple-100 text-purple-700",
+      "new_po"         => "bg-indigo-100 text-indigo-700",
+      "delivery_items" => "bg-yellow-100 text-yellow-700",
+      "problem"        => "bg-red-100 text-red-700",
+      "get_grn"        => "bg-green-100 text-green-700",
+      "give_up"        => "bg-gray-200 text-gray-500"
     }
     label = Order::STATUS_LABELS[order.status] || order.status.humanize
     klass = colors[order.status] || "bg-gray-100 text-gray-700"
