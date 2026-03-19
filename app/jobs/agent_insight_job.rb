@@ -4,16 +4,24 @@
 class AgentInsightJob < ApplicationJob
   queue_as :default
 
-  def perform(order_id)
+  def perform(order_id, user_id = nil)
     order = Order.includes(:supplier, :client, :order_quotes).find_by(id: order_id)
     return unless order
 
-    # 최근 5분 내 분석했으면 건너뛰기 (드로어 열 때마다 실행 방지)
     last = order.agent_insights.order(created_at: :desc).first
     return if last && last.created_at > 5.minutes.ago
 
-    CpoAgent::Service.analyze(order)
-    Rails.logger.info "[AgentInsightJob] Analyzed order ##{order_id}"
+    insights = CpoAgent::Service.analyze(order)
+
+    # 자동 모드 실행
+    user = User.find_by(id: user_id)
+    if user
+      insights.each do |insight|
+        CpoAgent::AutoActionService.execute(order, insight, user)
+      end
+    end
+
+    Rails.logger.info "[AgentInsightJob] Analyzed order ##{order_id} (auto actions for user ##{user_id})"
   rescue => e
     Rails.logger.error "[AgentInsightJob] Error for order ##{order_id}: #{e.message}"
   end

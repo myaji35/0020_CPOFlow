@@ -51,7 +51,7 @@ class OrdersController < ApplicationController
     @team_members = Employee.active.by_name
 
     # CPO Agent: 비동기 분석 트리거 + 기존 Insight 로드
-    AgentInsightJob.perform_later(@order.id)
+    AgentInsightJob.perform_later(@order.id, current_user.id)
     @agent_insights = @order.agent_insights.active.order(severity: :desc).limit(3)
     # 관련 메일 스레드: sub_orders 우선, 없으면 reference_no 기반 fallback
     @thread_orders = if @order.sub_orders.exists?
