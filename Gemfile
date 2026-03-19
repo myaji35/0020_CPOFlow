@@ -56,6 +56,12 @@ gem "rubyzip"
 gem "wicked_pdf"
 gem "wkhtmltopdf-binary"
 
+# Rate limiting (login brute-force protection)
+gem "rack-attack"
+
+# Error monitoring (production)
+gem "stackprof"
+
 # Monthly/weekly grouping for reports
 gem "groupdate"
 
