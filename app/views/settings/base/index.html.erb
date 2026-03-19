@@ -382,6 +382,52 @@
   </div>
   <% end %>
 
+  <%# --- CPO Agent Settings Section --- %>
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 mb-6">
+    <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
+      <svg class="w-5 h-5 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      <div>
+        <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100">CPO Agent 설정</h2>
+        <p class="text-xs text-gray-500 dark:text-gray-400">자동 처리 모드 관리 (유용함 5회 이상 시 자동 활성화)</p>
+      </div>
+    </div>
+    <div class="divide-y divide-gray-100 dark:divide-gray-700">
+      <%
+        insight_types = {
+          "price_comparison" => { label: "단가 비교", desc: "과거 견적 비교 테이블 자동 첨부" },
+          "supplier_risk"    => { label: "거래처 리스크", desc: "대체 거래처 자동 추천" },
+          "due_date_risk"    => { label: "납기 위험", desc: "담당자에게 알림 자동 발송" },
+          "cost_saving"      => { label: "비용 절감", desc: "저렴한 견적 자동 추가" }
+        }
+      %>
+      <% insight_types.each do |type, info| %>
+        <% level = AgentTrustLevel.find_by(user: current_user, insight_type: type) %>
+        <div class="flex items-center justify-between px-6 py-4">
+          <div>
+            <p class="text-sm font-medium text-gray-900 dark:text-gray-100"><%= info[:label] %></p>
+            <p class="text-xs text-gray-500 dark:text-gray-400"><%= info[:desc] %></p>
+            <% if level %>
+              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                유용함 <%= level.useful_count %>회
+                <% if level.auto_activated_at %>
+                  · 자동 전환: <%= level.auto_activated_at.strftime('%Y-%m-%d') %>
+                <% end %>
+              </p>
+            <% end %>
+          </div>
+          <%= button_to settings_agent_trust_toggle_path(insight_type: type),
+                method: :patch,
+                class: "relative inline-flex h-6 w-11 items-center rounded-full transition-colors #{level&.auto_mode ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-600'}",
+                title: level&.auto_mode ? "자동 → 수동" : "수동 → 자동" do %>
+            <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform #{level&.auto_mode ? 'translate-x-6' : 'translate-x-1'}"></span>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
   <%# --- Danger Zone --- %>
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-red-100 dark:border-red-900">
     <div class="px-6 py-4 border-b border-red-100 dark:border-red-900">

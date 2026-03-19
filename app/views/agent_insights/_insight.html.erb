@@ -1,19 +1,32 @@
 <%
-  bg_class = case insight.severity
-             when "alert"   then "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800"
-             when "warning" then "bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800"
-             else                "bg-gray-50 border-gray-200 dark:bg-gray-800 dark:border-gray-700"
-             end
-  icon_class = case insight.severity
-               when "alert"   then "text-red-600 dark:text-red-400"
-               when "warning" then "text-amber-600 dark:text-amber-400"
-               else                "text-gray-500 dark:text-gray-400"
+  is_auto = insight.metadata.is_a?(Hash) && insight.metadata["auto_action"] == true
+  bg_class = if is_auto
+               "bg-indigo-50 border-indigo-200 dark:bg-indigo-900/20 dark:border-indigo-800"
+             else
+               case insight.severity
+               when "alert"   then "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800"
+               when "warning" then "bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800"
+               else                "bg-gray-50 border-gray-200 dark:bg-gray-800 dark:border-gray-700"
                end
-  type_icon = case insight.insight_type
-              when "price_comparison" then '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>'
-              when "supplier_risk"   then '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>'
-              when "due_date_risk"   then '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'
-              when "cost_saving"     then '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>'
+             end
+  icon_class = if is_auto
+                 "text-indigo-600 dark:text-indigo-400"
+               else
+                 case insight.severity
+                 when "alert"   then "text-red-600 dark:text-red-400"
+                 when "warning" then "text-amber-600 dark:text-amber-400"
+                 else                "text-gray-500 dark:text-gray-400"
+                 end
+               end
+  type_icon = if is_auto
+                '<path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 6a1 1 0 0 0-1 1v5a1 1 0 0 0 .29.71l3 3a1 1 0 0 0 1.42-1.42L13 11.59V7a1 1 0 0 0-1-1z"/>'
+              else
+                case insight.insight_type
+                when "price_comparison" then '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>'
+                when "supplier_risk"   then '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>'
+                when "due_date_risk"   then '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'
+                when "cost_saving"     then '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>'
+                end
               end
 %>
 <div id="agent-insight-<%= insight.id %>"
@@ -33,31 +46,40 @@
 
   <!-- 액션 버튼 -->
   <div class="flex items-center gap-1 flex-shrink-0">
-    <% unless insight.useful == true %>
+    <% if is_auto %>
       <%= button_to dismiss_agent_insight_path(insight),
             method: :patch, data: { turbo: true },
-            class: "p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors",
-            title: "무시" do %>
-        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
+            class: "px-2 py-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors",
+            title: "확인" do %>
+        확인
       <% end %>
-    <% end %>
+    <% else %>
+      <% unless insight.useful == true %>
+        <%= button_to dismiss_agent_insight_path(insight),
+              method: :patch, data: { turbo: true },
+              class: "p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors",
+              title: "무시" do %>
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        <% end %>
+      <% end %>
 
-    <% if insight.useful.nil? %>
-      <%= button_to feedback_agent_insight_path(insight, useful: true),
-            method: :patch, data: { turbo: true },
-            class: "p-1 text-gray-400 hover:text-green-600 transition-colors",
-            title: "유용함" do %>
-        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/>
-          <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
-        </svg>
+      <% if insight.useful.nil? %>
+        <%= button_to feedback_agent_insight_path(insight, useful: true),
+              method: :patch, data: { turbo: true },
+              class: "p-1 text-gray-400 hover:text-green-600 transition-colors",
+              title: "유용함" do %>
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/>
+            <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+          </svg>
+        <% end %>
+      <% elsif insight.useful == true %>
+        <span class="text-xs text-green-600 dark:text-green-400 font-medium">감사합니다</span>
       <% end %>
-    <% elsif insight.useful == true %>
-      <span class="text-xs text-green-600 dark:text-green-400 font-medium">감사합니다</span>
     <% end %>
   </div>
 </div>

@@ -181,5 +181,6 @@ Rails.application.routes.draw do
     patch "menu_permissions",   to: "menu_permissions#update_all", as: :update_menu_permissions
     patch "notifications",      to: "notifications#update",        as: :notifications
     post  "notifications/test", to: "notifications#test",          as: :test_notifications
+    patch "agent_trust/:insight_type", to: "agent_trust#toggle", as: :agent_trust_toggle
   end
 end
