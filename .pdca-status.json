@@ -173,9 +173,10 @@
     "completedAt": "2026-03-16T23:59:59Z"
   },
   "cpo-agent": {
-    "phase": "check",
+    "phase": "completed",
     "matchRate": 100,
     "iterationCount": 0,
-    "startedAt": "2026-03-19T00:00:00Z"
+    "startedAt": "2026-03-19T00:00:00Z",
+    "completedAt": "2026-03-19T23:59:59Z"
   }
 }

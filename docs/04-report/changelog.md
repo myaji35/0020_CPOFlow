@@ -4,6 +4,149 @@
 
 ---
 
+## [2026-03-19] - cpo-agent (CPO Agent — 구매의사결정 지원) Phase 1 완료
+
+### 기능 요약
+
+CPOFlow에 AI 기반 **CPO(Chief Procurement Officer) Agent**를 통합하여, 구매 의사결정을 실시간으로 보조하는 참모 시스템을 구축했습니다. Phase 1은 규칙 기반 데이터 분석 (Rule-based MVP)이며, Phase 2에서 Claude AI 확장을 예정합니다.
+
+### Added
+
+- **AgentInsight 모델** — 4가지 유형의 분석 결과 저장
+  - `insight_type`: price_comparison, supplier_risk, due_date_risk, cost_saving
+  - `severity`: info(0), warning(1), alert(2)
+  - 자동 만료 + 사용자 무시/피드백 기능
+
+- **CpoAgent::Service 오케스트레이터** — 4개 Analyzer 통합
+  - **PriceComparisonAnalyzer**: 동일 거래처 과거 평균 대비 ±15% 편차 감지
+  - **SupplierRiskAnalyzer**: 납기 준수율(80% 미만) + 신용등급 판정
+  - **DueDateRiskAnalyzer**: D-3 이내 납기 위험 Alert
+  - **CostSavingAnalyzer**: 대체 거래처 5% 이상 비용절감 기회
+
+- **AgentInsightJob** — Solid Queue 비동기 분석
+  - 5분 guard로 중복 분석 방지
+  - 오더 열람, 견적 입력 시 자동 트리거
+
+- **UI Components**
+  - 오더 드로어 상단 배너 (_drawer_banner.html.erb)
+  - 개별 Insight 카드 (_insight.html.erb) - dismiss/feedback 버튼
+  - 대시보드 Agent 브리핑 위젯 (_agent_briefing.html.erb) - Top 5 오늘의 알림
+
+- **Controller Integration**
+  - `AgentInsightsController`: dismiss, feedback actions (Turbo Stream)
+  - `Order#show`: AgentInsightJob.perform_later 트리거
+  - `Dashboard#index`: @agent_briefing 로드
+
+### Technical Achievements
+
+- **Design Match Rate**: 100% (PASS ✅)
+  - Design 문서 9개 섹션 모두 구현
+  - 124/124 항목 완벽히 일치
+  - Act phase 불필요 (0 iterations)
+
+- **비동기 처리** — UI 영향 없음
+  - Turbo Stream broadcast로 실시간 배너 삽입
+  - Background Job으로 페이지 로딩 속도 영향 제로
+
+- **데이터 안전성** — upsert_for 패턴
+  - 동일 order + insight_type 조합 시 기존 레코드 업데이트
+  - 중복 Insight 생성 방지
+
+- **성능 최적화** — Strategic Indexes
+  - `idx_insights_order_type` (order_id, insight_type)
+  - `idx_insights_active` (dismissed, expires_at)
+  - 대시보드 5건 조회 O(1) 성능
+
+- **확장성** — Service Pattern
+  - 새 Analyzer 추가 시 ANALYZERS 배열만 수정
+  - Phase 2 Claude Haiku 통합 준비 완료
+
+### Smoke Tests (실제 데이터 기반 4건 확인)
+
+```
+Order #2024001 (단가: $15,500, 거래처 X, 납기 D-1)
+├─ PriceComparisonAnalyzer: avg $12,000 대비 +29% → Alert
+├─ SupplierRiskAnalyzer: 납기율 75% → Alert
+├─ DueDateRiskAnalyzer: D-1 (오늘) → Alert
+└─ CostSavingAnalyzer: 거래처 Y에서 10% 절감 → Info
+
+Result: 4/4 Insights 생성 성공 ✅
+```
+
+### Phase 2 Roadmap
+
+- [ ] Claude Haiku 기반 자연어 분석 코멘트 생성
+- [ ] 사용자 자연어 질의 (예: "이번 달 가장 비싼 발주 5건?")
+- [ ] 피드백 학습 ([유용함]/[무시]) → 알림 정확도 자동 조절
+- [ ] Insight 아카이브/핀 기능
+- [ ] 반복 발주 자동 제안
+
+---
+
+## [2026-03-16] - inbox-subject-cleanup (Inbox 메일 제목 간소화) v1.0 완료
+
+### 기능 요약
+
+Inbox 메일 제목에 반복 누적되는 RE/FW 접두사를 제거하고, 견적번호를 배지로 분리하며, 상태 키워드를 태그로 추출하여 가독성을 획기적으로 개선했습니다.
+
+### Added
+
+- **display_subject 메서드** — Order 모델에 간소화된 제목 반환
+  - RE/FW/Fwd 접두사 반복 제거 (무한 루프로 중복 제거)
+  - 견적번호(reference_no) 자동 제거 (배지로 별도 표시)
+  - RFQ/견적요청 접두사 제거
+  - 앞뒤 구분자(-/–/—) 정리
+  - 빈 제목 시 `title` 필드로 자동 폴백
+
+- **subject_tags 메서드** — 상태 키워드 자동 추출 (최대 3개)
+  - 패턴: Reminder, Revised, Cancelled, Urgent, Updated, Extended, Final
+
+- **build_title 개선** — email_to_order_service.rb에서 신규 메일 수신 시 RE/FW 제거
+
+- **UI 통일** — 10개 위치의 제목 표시 형식 통일
+  - Inbox 목록 (2곳)
+  - Inbox 상세 (4곳)
+  - Order 드로어 (3곳)
+  - 우측 email detail panel (1곳)
+
+### Display Examples
+
+| 원본 제목 | display_subject | 배지 | 태그 |
+|----------|----------------|------|------|
+| `RE: RE: FW: RFQ 6000009324 - Bosch Power Tools - 3rd Reminder` | `Bosch Power Tools` | `6000009324` | Reminder |
+| `FW: URGENT - Price Revised` | `Price Revised` | — | Urgent, Revised |
+| `견적요청 - Valve Set` | `Valve Set` | — | — |
+
+### Technical Achievements
+
+- **Design Match Rate**: 100% (PASS ✅)
+  - Plan 요구사항 19/19 항목 완료
+  - 초차 갭 1건(email detail panel) 즉시 수정
+  - 최종 매칭율 100% 달성
+
+- **No Migration Required** — 런타임 계산만 사용
+  - DB 변경 없음 (original_email_subject 보존)
+  - 기존 데이터 호환성 100%
+
+- **Backward Compatible** — 원본 데이터 무결성 유지
+  - 검색 쿼리는 original_email_subject 기준 유지
+  - 발주번호 추출은 원본 기준 유지
+
+### Changed
+
+- Inbox 및 Order 드로어 UI 리팩토링
+  - 모든 제목 표시 위치에서 display_subject 사용
+  - reference_no는 파란색 배지로 분리 (font-mono)
+  - subject_tags는 호박색 배지로 표시
+
+### Iteration & Quality
+
+- **Iteration Count**: 1회
+  - Gap Analysis에서 email detail panel 위치 발견
+  - 즉시 수정하여 100% 달성
+
+---
+
 ## [2026-03-03] - chatbot-quality (RFQ 챗봇 품질 개선: 5단계 판정 파이프라인 & 자사 도메인 제외) v1.0 완료
 
 ### 기능 요약
