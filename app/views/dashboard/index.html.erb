@@ -34,11 +34,6 @@
 </div>
 
 <!-- ════════════════════════════════════════════════════════════
-     CPO Agent 브리핑
-     ════════════════════════════════════════════════════════════ -->
-<%= render "dashboard/agent_briefing" %>
-
-<!-- ════════════════════════════════════════════════════════════
      ROW 1: 핵심 KPI 카드 (6개)
      ════════════════════════════════════════════════════════════ -->
 <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 mb-6">
@@ -260,6 +255,11 @@
     <% end %>
   </div>
 </div>
+
+<!-- ════════════════════════════════════════════════════════════
+     CPO Agent 브리핑 (KPI 아래)
+     ════════════════════════════════════════════════════════════ -->
+<%= render "dashboard/agent_briefing" %>
 
 <!-- ════════════════════════════════════════════════════════════
      ROW 2: Pipeline + 현장 카테고리
@@ -614,7 +614,10 @@
     <% max_client_val = [@top_clients.map { |c| c.total_value.to_f }.max.to_f, 1].max %>
     <div class="divide-y divide-gray-50 dark:divide-gray-700/50">
       <% if @top_clients.empty? %>
-        <div class="px-5 py-6 text-center text-xs text-gray-400 dark:text-gray-500">데이터 없음</div>
+        <div class="px-5 py-8 text-center">
+          <svg class="w-10 h-10 mx-auto text-gray-300 dark:text-gray-600 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+          <p class="text-xs text-gray-400 dark:text-gray-500">거래 데이터가 쌓이면 여기에 표시됩니다</p>
+        </div>
       <% else %>
         <% @top_clients.each_with_index do |client, idx| %>
           <div class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
@@ -649,7 +652,10 @@
     <% max_supplier_val = [@top_suppliers.map { |s| s.total_value.to_f }.max.to_f, 1].max %>
     <div class="divide-y divide-gray-50 dark:divide-gray-700/50">
       <% if @top_suppliers.empty? %>
-        <div class="px-5 py-6 text-center text-xs text-gray-400 dark:text-gray-500">데이터 없음</div>
+        <div class="px-5 py-8 text-center">
+          <svg class="w-10 h-10 mx-auto text-gray-300 dark:text-gray-600 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+          <p class="text-xs text-gray-400 dark:text-gray-500">거래 데이터가 쌓이면 여기에 표시됩니다</p>
+        </div>
       <% else %>
         <% @top_suppliers.each_with_index do |supplier, idx| %>
           <div class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">

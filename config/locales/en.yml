@@ -32,6 +32,11 @@ en:
     employees: "Employees"
     org_chart: "Org Chart"
     settings: "Settings"
+
+  # ── Kanban ───────────────────────────────────────────────────────
+  kanban:
+    title: "Procurement Board"
+    new_order: "New Order"
     import: "eCount Import"
     menu_permissions: "Menu Permissions"
 

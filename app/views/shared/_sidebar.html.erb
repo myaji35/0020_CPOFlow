@@ -10,17 +10,17 @@
 
   <!-- Nav Items -->
   <div class="flex flex-col flex-1 py-4 gap-1 overflow-hidden">
-    <%= nav_link_to dashboard_path, icon: "lni lni-grid-alt", label: "Dashboard" %>
-    <%= nav_link_to inbox_path, icon: "lni lni-envelope", label: "Inbox" do %>
+    <%= nav_link_to dashboard_path, icon: "lni lni-grid-alt", label: t("nav.dashboard") %>
+    <%= nav_link_to inbox_path, icon: "lni lni-envelope", label: t("nav.inbox") do %>
       <% rfq_count = Order.new_rfq.count %>
       <% if rfq_count > 0 %>
         <span class="ml-auto bg-accent text-white text-xs rounded-full px-1.5 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity"><%= rfq_count %></span>
       <% end %>
     <% end %>
-    <%= nav_link_to kanban_path, icon: "lni lni-layout", label: "Kanban" %>
-    <%= nav_link_to orders_path, icon: "lni lni-clipboard", label: "Orders" %>
-    <%= nav_link_to calendar_path, icon: "lni lni-calendar", label: "Calendar" %>
-    <%= nav_link_to team_index_path, icon: "lni lni-users", label: "Team" %>
+    <%= nav_link_to kanban_path, icon: "lni lni-layout", label: t("nav.kanban") %>
+    <%= nav_link_to orders_path, icon: "lni lni-clipboard", label: t("nav.orders") %>
+    <%= nav_link_to calendar_path, icon: "lni lni-calendar", label: t("nav.calendar") %>
+    <%= nav_link_to team_index_path, icon: "lni lni-users", label: t("nav.team") %>
 
     <!-- 거래처 섹션 구분선 -->
     <div class="my-2 mx-3 border-t border-white/20"></div>
@@ -44,7 +44,7 @@
 
   <!-- Bottom: Settings + User -->
   <div class="py-4 border-t border-primary-light overflow-hidden">
-    <%= nav_link_to settings_root_path, icon: "lni lni-cog", label: "Settings" %>
+    <%= nav_link_to settings_root_path, icon: "lni lni-cog", label: t("nav.settings") %>
 
     <!-- User avatar -->
     <div class="flex items-center px-3 py-2 mt-2 gap-3 overflow-hidden">
