@@ -53,7 +53,7 @@ builder:
 proxy:
   host: cpoflow.ddtl.co.kr
   app_port: 3000
-  ssl: true
+  ssl: false
   forward_headers: true
   response_timeout: 60
   healthcheck:
