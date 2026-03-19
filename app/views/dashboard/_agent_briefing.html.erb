@@ -1,0 +1,28 @@
+<% if @agent_briefing.any? %>
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 mb-6">
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center">
+          <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-white">CPO Agent 브리핑</h3>
+          <p class="text-xs text-gray-500 dark:text-gray-400">오늘의 주요 알림</p>
+        </div>
+      </div>
+      <span class="text-xs font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded-full">
+        <%= @agent_briefing.count %>건
+      </span>
+    </div>
+
+    <div class="space-y-2">
+      <% @agent_briefing.each do |insight| %>
+        <%= render "agent_insights/insight", insight: insight %>
+      <% end %>
+    </div>
+  </div>
+<% end %>

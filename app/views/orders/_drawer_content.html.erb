@@ -28,6 +28,10 @@
     <% end %>
   </div>
 
+  <%# ── CPO Agent Insights 배너 ──────────────────────────── %>
+  <% insights = defined?(agent_insights) ? agent_insights : (order.agent_insights.active.order(severity: :desc).limit(3) rescue []) %>
+  <%= render "agent_insights/drawer_banner", insights: insights, order: order %>
+
   <%# ══════════════════════════════════════════════════════════
       탭 패널 1: 상세 (기본 표시)
   ══════════════════════════════════════════════════════════ %>

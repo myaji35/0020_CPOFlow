@@ -1,0 +1,7 @@
+<% if insights.any? %>
+  <div id="agent-insights-<%= order.id %>" class="px-6 pt-4 space-y-2">
+    <% insights.each do |insight| %>
+      <%= render "agent_insights/insight", insight: insight %>
+    <% end %>
+  </div>
+<% end %>

@@ -70,6 +70,9 @@ class DashboardController < ApplicationController
     @last_sync   = SheetsSyncLog.recent.first
     @sheets_mock = Sheets::SheetsService.new.mock_mode?
 
+    # CPO Agent 브리핑
+    @agent_briefing = AgentInsight.for_dashboard
+
     # FR-02: KPI 드릴다운 데이터
     @overdue_orders_brief = Order.overdue.by_due_date.limit(8).includes(:client, :assignees)
     @urgent_orders_brief  = Order.urgent.by_due_date.limit(8).includes(:client, :assignees)

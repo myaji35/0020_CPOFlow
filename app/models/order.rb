@@ -15,6 +15,7 @@ class Order < ApplicationRecord
   has_many :notifications, as: :notifiable, dependent: :destroy
   has_many_attached :attachments
   has_many :rfq_feedbacks, dependent: :destroy
+  has_many :agent_insights, dependent: :destroy
 
   enum :status, {
     new_rfq: 0,

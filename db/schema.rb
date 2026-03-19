@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_05_081652) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_19_010556) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -49,6 +49,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_05_081652) do
     t.integer "user_id", null: false
     t.index ["order_id"], name: "index_activities_on_order_id"
     t.index ["user_id"], name: "index_activities_on_user_id"
+  end
+
+  create_table "agent_insights", force: :cascade do |t|
+    t.text "body"
+    t.datetime "created_at", null: false
+    t.boolean "dismissed", default: false
+    t.datetime "expires_at"
+    t.string "insight_type", null: false
+    t.json "metadata", default: {}
+    t.integer "order_id", null: false
+    t.integer "severity", default: 0
+    t.integer "supplier_id"
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.boolean "useful"
+    t.index ["dismissed", "expires_at"], name: "idx_insights_active"
+    t.index ["expires_at"], name: "index_agent_insights_on_expires_at"
+    t.index ["order_id", "insight_type"], name: "idx_insights_order_type"
+    t.index ["order_id"], name: "index_agent_insights_on_order_id"
+    t.index ["supplier_id"], name: "index_agent_insights_on_supplier_id"
   end
 
   create_table "app_configs", force: :cascade do |t|
@@ -586,6 +606,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_05_081652) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "activities", "orders"
   add_foreign_key "activities", "users"
+  add_foreign_key "agent_insights", "orders"
+  add_foreign_key "agent_insights", "suppliers"
   add_foreign_key "assignments", "orders"
   add_foreign_key "assignments", "users"
   add_foreign_key "certifications", "employees"

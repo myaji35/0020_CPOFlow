@@ -139,6 +139,14 @@ Rails.application.routes.draw do
   get "/reports",            to: "reports#index",      as: :reports
   get "/reports/export_csv", to: "reports#export_csv", as: :reports_export_csv
 
+  # CPO Agent Insights (dismiss/feedback)
+  resources :agent_insights, only: [] do
+    member do
+      patch :dismiss
+      patch :feedback
+    end
+  end
+
   # 알림 센터
   resources :notifications, only: %i[index] do
     collection { patch :read_all }
