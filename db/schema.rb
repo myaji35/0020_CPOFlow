@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_19_010556) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_19_025008) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -69,6 +69,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_19_010556) do
     t.index ["order_id", "insight_type"], name: "idx_insights_order_type"
     t.index ["order_id"], name: "index_agent_insights_on_order_id"
     t.index ["supplier_id"], name: "index_agent_insights_on_supplier_id"
+  end
+
+  create_table "agent_trust_levels", force: :cascade do |t|
+    t.datetime "auto_activated_at"
+    t.boolean "auto_mode", default: false
+    t.datetime "created_at", null: false
+    t.integer "dismiss_count", default: 0
+    t.string "insight_type", null: false
+    t.datetime "updated_at", null: false
+    t.integer "useful_count", default: 0
+    t.integer "user_id", null: false
+    t.index ["user_id", "insight_type"], name: "idx_trust_user_type", unique: true
+    t.index ["user_id"], name: "index_agent_trust_levels_on_user_id"
   end
 
   create_table "app_configs", force: :cascade do |t|
@@ -608,6 +621,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_19_010556) do
   add_foreign_key "activities", "users"
   add_foreign_key "agent_insights", "orders"
   add_foreign_key "agent_insights", "suppliers"
+  add_foreign_key "agent_trust_levels", "users"
   add_foreign_key "assignments", "orders"
   add_foreign_key "assignments", "users"
   add_foreign_key "certifications", "employees"
