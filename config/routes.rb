@@ -34,6 +34,7 @@ Rails.application.routes.draw do
       patch :quick_update
       get  "pdf/quote",          to: "orders/pdf#quote",           as: :pdf_quote
       get  "pdf/purchase_order", to: "orders/pdf#purchase_order",  as: :pdf_purchase_order
+      get  "attachment_preview/:blob_id", action: :preview_attachment, as: :attachment_preview
     end
   end
 
@@ -182,5 +183,7 @@ Rails.application.routes.draw do
     patch "notifications",      to: "notifications#update",        as: :notifications
     post  "notifications/test", to: "notifications#test",          as: :test_notifications
     patch "agent_trust/:insight_type", to: "agent_trust#toggle", as: :agent_trust_toggle
+    patch "api_keys", to: "api_keys#update", as: :api_keys
+    post  "api_keys/verify", to: "api_keys#verify", as: :verify_api_key
   end
 end

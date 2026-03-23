@@ -29,12 +29,18 @@ module Gmail
     private
 
     def api_key_configured?
-      Rails.application.credentials.dig(:anthropic, :api_key).present?
+      resolved_api_key.present?
+    end
+
+    # DB(AppSetting) 우선 → credentials fallback
+    def resolved_api_key
+      @resolved_api_key ||= AppSetting.get("anthropic_api_key").presence ||
+                            Rails.application.credentials.dig(:anthropic, :api_key)
     end
 
     def call_claude_api
       client = Anthropic::Client.new(
-        api_key: Rails.application.credentials.dig(:anthropic, :api_key)
+        api_key: resolved_api_key
       )
 
       client.messages.create(
@@ -147,10 +153,12 @@ module Gmail
       fallback_result
     end
 
+    # LLM 실패 시 nil 반환 → RfqDetectorService에서 키워드만으로 판정
     def fallback_result
       {
-        is_rfq: false, confidence: "none", score: 0,
-        reason: "LLM 분석 불가 (API 키 미설정 또는 오류)",
+        is_rfq: nil, confidence: "none", score: nil,
+        reason: "LLM 분석 불가 (API 키 미설정 또는 크레딧 부족)",
+        llm_unavailable: true,
         customer_name: nil, due_date: nil, items: [], quantities: [],
         project_name: nil, delivery_location: nil,
         currency: nil, estimated_value: nil,

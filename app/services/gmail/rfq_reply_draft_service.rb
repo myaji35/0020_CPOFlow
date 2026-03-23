@@ -35,7 +35,8 @@ module Gmail
     end
 
     def call_claude_api
-      api_key = Rails.application.credentials.dig(:anthropic, :api_key)
+      api_key = AppSetting.get("anthropic_api_key").presence ||
+                Rails.application.credentials.dig(:anthropic, :api_key)
       return nil if api_key.blank?
 
       uri = URI("https://api.anthropic.com/v1/messages")

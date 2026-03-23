@@ -192,30 +192,44 @@ module Gmail
 
       keyword_result = keyword_detect
       llm_result     = LlmRfqAnalyzerService.new(@email).analyze
+      llm_available  = !llm_result[:llm_unavailable]
 
-      # 2단계: LLM이 명확히 RFQ 아님으로 판정 + 키워드도 없으면 제외
-      if !llm_result[:is_rfq] && keyword_result[:score] < 20
-        return not_rfq_result(llm_result[:reason] || "RFQ 아님", :excluded)
-      end
+      if llm_available
+        # LLM 정상: Hybrid 판정 (키워드 40% + LLM 60%)
+        if !llm_result[:is_rfq] && keyword_result[:score] < 20
+          return not_rfq_result(llm_result[:reason] || "RFQ 아님", :excluded)
+        end
 
-      # Hybrid 점수: 키워드 40% + LLM 60%
-      hybrid_score = (keyword_result[:score] * 0.4 + llm_result[:score] * 0.6).round
+        hybrid_score = (keyword_result[:score] * 0.4 + llm_result[:score] * 0.6).round
 
-      # 3단계 판정: confirmed / uncertain / excluded
-      rfq_verdict = if hybrid_score >= 70
-        :confirmed
-      elsif hybrid_score >= 30 || llm_result[:is_rfq]
-        :uncertain
+        rfq_verdict = if hybrid_score >= 70
+          :confirmed
+        elsif hybrid_score >= 30 || llm_result[:is_rfq]
+          :uncertain
+        else
+          :excluded
+        end
       else
-        :excluded
+        # LLM 불가: 키워드만으로 판정 (더 관대하게 — 놓치는 것보다 보이는 게 나음)
+        hybrid_score = keyword_result[:score]
+
+        rfq_verdict = if hybrid_score >= 50
+          :confirmed
+        elsif hybrid_score >= 10
+          :uncertain    # 키워드가 조금이라도 매칭되면 uncertain으로 Inbox에 표시
+        else
+          :excluded
+        end
+
+        Rails.logger.warn "[RfqDetector] LLM unavailable — keyword-only verdict: #{rfq_verdict} (score=#{hybrid_score}) for: #{@email[:subject]}"
       end
 
       {
         is_rfq:           rfq_verdict != :excluded,
         rfq_verdict:      rfq_verdict,          # :confirmed | :uncertain | :excluded
         score:            hybrid_score,
-        confidence:       llm_result[:confidence],
-        reason:           llm_result[:reason],
+        confidence:       llm_available ? llm_result[:confidence] : keyword_result[:confidence],
+        reason:           llm_available ? llm_result[:reason] : "키워드 기반 판정 (LLM 불가)",
         subject_matches:  keyword_result[:subject_matches],
         body_matches:     keyword_result[:body_matches],
         due_date:         llm_result[:due_date] || keyword_result[:due_date],

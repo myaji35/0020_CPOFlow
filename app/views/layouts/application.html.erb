@@ -232,7 +232,7 @@
 
         // 드로어 탭 전환 — innerHTML 삽입 시 <script> 미실행 문제로 전역 정의
         function switchDrawerTab(orderId, tabId) {
-          var panels = ['detail', 'tasks', 'comments', 'history'];
+          var panels = ['detail', 'tasks', 'comments', 'attachments', 'history'];
           panels.forEach(function(p) {
             var panel = document.getElementById('drawer-panel-' + orderId + '-' + p);
             var tab   = document.getElementById('drawer-tab-'   + orderId + '-' + p);
@@ -247,6 +247,27 @@
               tab.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
             }
           });
+        }
+
+        // 히스토리 메일 스레드 아코디언 토글
+        function toggleThreadEmail(orderId, threadOrderId) {
+          var container = document.getElementById('thread-accordion-' + orderId);
+          if (!container) return;
+          // 모든 본문 패널 찾기
+          var allBodies = container.querySelectorAll('[id$="-body"]');
+          var allChevrons = container.querySelectorAll('[id$="-chevron"]');
+          var targetBody = document.getElementById('thread-item-' + orderId + '-' + threadOrderId + '-body');
+          var targetChevron = document.getElementById('thread-item-' + orderId + '-' + threadOrderId + '-chevron');
+          if (!targetBody) return;
+          var isOpen = !targetBody.classList.contains('hidden');
+          // 모두 접기
+          allBodies.forEach(function(el) { el.classList.add('hidden'); });
+          allChevrons.forEach(function(el) { el.style.transform = ''; });
+          // 이미 열려있었으면 그냥 접기만, 아니면 클릭한 것 열기
+          if (!isOpen) {
+            targetBody.classList.remove('hidden');
+            if (targetChevron) targetChevron.style.transform = 'rotate(180deg)';
+          }
         }
 
         // 우선순위 드롭다운 토글 — 동일 이유로 전역 정의
@@ -264,8 +285,51 @@
           }
         });
 
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeOrderDrawer(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') { closePreviewModal(); closeOrderDrawer(); } });
+
+        // 전역 첨부파일 미리보기 모달
+        function openPreviewModal(filename, url) {
+          var modal = document.getElementById('global-preview-modal');
+          if (!modal) return;
+          var iframe = document.getElementById('global-preview-iframe');
+          var title = document.getElementById('global-preview-title');
+          var newtab = document.getElementById('global-preview-newtab');
+          title.textContent = filename || '미리보기';
+          if (newtab) newtab.href = url;
+          iframe.src = url;
+          modal.classList.remove('hidden');
+          document.body.style.overflow = 'hidden';
+        }
+        function closePreviewModal(event) {
+          if (event && event.target !== event.currentTarget) return;
+          var modal = document.getElementById('global-preview-modal');
+          if (!modal) return;
+          var iframe = document.getElementById('global-preview-iframe');
+          modal.classList.add('hidden');
+          if (iframe) iframe.src = 'about:blank';
+          document.body.style.overflow = '';
+        }
       </script>
+
+      <%# 전역 첨부파일 미리보기 모달 (Orders 첨부파일 탭용) %>
+      <div id="global-preview-modal" class="hidden fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center" onclick="closePreviewModal(event)">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-[90vw] max-w-5xl h-[85vh] flex flex-col overflow-hidden" onclick="event.stopPropagation()">
+          <div class="flex items-center justify-between px-5 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+            <h3 id="global-preview-title" class="text-sm font-semibold text-gray-900 dark:text-white truncate">미리보기</h3>
+            <div class="flex items-center gap-2">
+              <a id="global-preview-newtab" href="#" target="_blank" rel="noopener" class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" title="새 탭에서 열기">
+                <svg class="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              </a>
+              <button onclick="closePreviewModal()" class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" title="닫기">
+                <svg class="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="flex-1 relative">
+            <iframe id="global-preview-iframe" src="about:blank" class="w-full h-full border-0"></iframe>
+          </div>
+        </div>
+      </div>
 
     <% else %>
       <!-- Auth pages: no sidebar -->

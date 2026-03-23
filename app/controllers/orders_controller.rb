@@ -1,5 +1,7 @@
 class OrdersController < ApplicationController
-  before_action :set_order, only: %i[show edit update destroy move_status quick_update]
+  include AttachmentPreviewable
+
+  before_action :set_order, only: %i[show edit update destroy move_status quick_update preview_attachment]
 
   def index
     @orders = Order.all.includes(:assignees, :tasks, :user, :client, :project, :supplier).by_due_date
@@ -48,6 +50,7 @@ class OrdersController < ApplicationController
     @tasks    = @order.tasks.by_due.includes(:assignee)
     @comments = @order.comments.chronological.includes(:user)
     @activities = @order.activities.recent.includes(:user).limit(20)
+    @order.attachments.includes(:blob).load  # 첨부파일 eager load
     @team_members = Employee.active.by_name
 
     # CPO Agent: 비동기 분석 트리거 + 기존 Insight 로드
@@ -136,6 +139,15 @@ class OrdersController < ApplicationController
     else
       render json: { success: false, errors: @order.errors.full_messages }, status: :unprocessable_entity
     end
+  end
+
+  def preview_attachment
+    blob = ActiveStorage::Blob.find(params[:blob_id])
+    preview_blob(blob)
+  rescue ActiveRecord::RecordNotFound
+    render html: "<p style='padding:2rem;color:#666;'>첨부파일을 찾을 수 없습니다.</p>".html_safe, layout: false, status: :not_found
+  rescue => e
+    render html: "<p style='padding:2rem;color:#c00;'>미리보기 오류: #{ERB::Util.html_escape(e.message)}</p>".html_safe, layout: false, status: :internal_server_error
   end
 
   private
