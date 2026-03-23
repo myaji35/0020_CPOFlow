@@ -59,6 +59,9 @@
         </svg>
       </span>
       <%= priority_badge(order) %>
+      <% if order.reference_no.present? %>
+        <span class="text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded-full"><%= order.reference_no %></span>
+      <% end %>
     </div>
     <div class="flex items-center gap-1">
       <% if order.due_date %>
@@ -70,15 +73,10 @@
   <!-- 클릭 영역 (핸들 제외) -->
   <div onclick="openOrderDrawer(<%= order.id %>, <%= order.display_subject.to_json %>, '<%= order_path(order) %>', '<%= order.reference_no %>')" class="cursor-pointer">
 
-  <!-- Title: reference_no 배지 + 줄바꿈 + display_subject -->
-  <div class="mb-1">
-    <% if order.reference_no.present? %>
-      <span class="text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded-full"><%= order.reference_no %></span>
-    <% end %>
-    <h4 class="text-sm font-semibold text-gray-900 dark:text-white leading-snug group-hover:text-accent transition-colors mt-1">
-      <%= order.display_subject %>
-    </h4>
-  </div>
+  <!-- Title -->
+  <h4 class="text-sm font-semibold text-gray-900 dark:text-white leading-snug group-hover:text-accent transition-colors mb-1">
+    <%= order.display_subject %>
+  </h4>
 
   <%# 스레드 뱃지 — 서브 이벤트 수 (parent_order_id 기반) %>
   <% sub_count = order.sub_orders.size %>
