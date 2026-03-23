@@ -77,8 +77,10 @@ class Order < ApplicationRecord
     # 1. RE:/FW:/Fwd: 접두사 반복 제거
     subject = subject.sub(/\A\s*(RE|FW|Fwd)\s*:\s*/i, "").strip while subject.match?(/\A\s*(RE|FW|Fwd)\s*:/i)
     # 2. reference_no가 있으면 제목에서 해당 번호 제거 (배지로 별도 표시)
+    #    RFQ_6000009486, RFQ-6000009486, RFQ 6000009486 패턴도 함께 제거
     if reference_no.present?
-      subject = subject.gsub(/\b#{Regexp.escape(reference_no)}\b\s*[-–—]?\s*/, "").strip
+      escaped = Regexp.escape(reference_no)
+      subject = subject.gsub(/(?:RFQ[_\-\s]?)?#{escaped}[.:;,]?\s*[-–—]?\s*/i, "").strip
     end
     # 3. "Event" 접두사 제거 (Ariba 이메일에서 반복되는 패턴)
     subject = subject.sub(/\AEvent\s+/i, "").strip
@@ -86,8 +88,8 @@ class Order < ApplicationRecord
     subject = subject.sub(/\A(RFQ|견적요청)\s*[:：\-–—]?\s*/i, "").strip
     # 5. PR 번호 패턴 정리 (PR 1200010340 → 제거)
     subject = subject.gsub(/\bPR\s+\d{10}\b\s*/, "").strip
-    # 6. 앞뒤 구분자(-) 정리
-    subject = subject.gsub(/\A[-–—\s]+|[-–—\s]+\z/, "").strip
+    # 6. 앞뒤 구분자(- : .) 정리
+    subject = subject.gsub(/\A[-–—:.\s]+|[-–—:.\s]+\z/, "").strip
     subject.presence || title
   end
 
