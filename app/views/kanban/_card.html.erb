@@ -46,11 +46,11 @@
     <% end %>
   </div>
 
-  <!-- Card Header: drag handle + Priority + Due badge -->
+  <!-- Card Header: drag handle + Priority + Reference No + Due badge -->
   <div class="flex items-center justify-between mb-2">
-    <div class="flex items-center gap-1.5">
+    <div class="flex items-center gap-1.5 min-w-0">
       <!-- 드래그 핸들 -->
-      <span class="drag-handle text-gray-300 dark:text-gray-600 hover:text-gray-400 dark:hover:text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity -ml-1 pr-0.5"
+      <span class="drag-handle text-gray-300 dark:text-gray-600 hover:text-gray-400 dark:hover:text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity -ml-1 pr-0.5 shrink-0"
             title="드래그하여 이동">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
           <circle cx="9"  cy="5"  r="1.5"/><circle cx="15" cy="5"  r="1.5"/>
@@ -58,9 +58,12 @@
           <circle cx="9"  cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/>
         </svg>
       </span>
-      <%= priority_badge(order) %>
+      <span class="shrink-0"><%= priority_badge(order) %></span>
+      <% if order.reference_no.present? %>
+        <span class="text-base font-bold text-[#1E3A5F] dark:text-blue-400 truncate"><%= order.reference_no %></span>
+      <% end %>
     </div>
-    <div class="flex items-center gap-1">
+    <div class="flex items-center gap-1 shrink-0">
       <% if order.due_date %>
         <%= due_badge(order) %>
       <% end %>
@@ -70,9 +73,6 @@
   <!-- 클릭 영역 (핸들 제외) -->
   <div onclick="openOrderDrawer(<%= order.id %>, <%= order.display_subject.to_json %>, '<%= order_path(order) %>', '<%= order.reference_no %>')" class="cursor-pointer">
 
-  <% if order.reference_no.present? %>
-    <p class="text-base font-bold text-[#1E3A5F] dark:text-blue-400 truncate mb-0.5"><%= order.reference_no %></p>
-  <% end %>
   <!-- Title -->
   <h4 class="text-sm font-semibold text-gray-900 dark:text-white leading-snug group-hover:text-accent transition-colors mb-1">
     <%= order.display_subject %>
