@@ -68,11 +68,11 @@
   </div>
 
   <!-- 클릭 영역 (핸들 제외) -->
-  <div onclick="openOrderDrawer(<%= order.id %>, <%= order.title.to_json %>, '<%= order_path(order) %>')" class="cursor-pointer">
+  <div onclick="openOrderDrawer(<%= order.id %>, <%= order.display_subject.to_json %>, '<%= order_path(order) %>', '<%= order.reference_no %>')" class="cursor-pointer">
 
-  <!-- Title -->
+  <!-- Title: reference_no 굵게 + display_subject -->
   <h4 class="text-sm font-semibold text-gray-900 dark:text-white leading-snug group-hover:text-accent transition-colors mb-1">
-    <%= order.title %>
+    <% if order.reference_no.present? %><span class="font-bold text-[#1E3A5F] dark:text-blue-400 font-mono text-xs mr-1"><%= order.reference_no %></span><% end %><%= order.display_subject %>
   </h4>
 
   <%# 스레드 뱃지 — 서브 이벤트 수 (parent_order_id 기반) %>

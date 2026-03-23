@@ -80,9 +80,13 @@ class Order < ApplicationRecord
     if reference_no.present?
       subject = subject.gsub(/\b#{Regexp.escape(reference_no)}\b\s*[-–—]?\s*/, "").strip
     end
-    # 3. RFQ/견적요청 접두사 제거 (별도 배지로 표시)
+    # 3. "Event" 접두사 제거 (Ariba 이메일에서 반복되는 패턴)
+    subject = subject.sub(/\AEvent\s+/i, "").strip
+    # 4. RFQ/견적요청 접두사 제거 (별도 배지로 표시)
     subject = subject.sub(/\A(RFQ|견적요청)\s*[:：\-–—]?\s*/i, "").strip
-    # 4. 앞뒤 구분자(-) 정리
+    # 5. PR 번호 패턴 정리 (PR 1200010340 → 제거)
+    subject = subject.gsub(/\bPR\s+\d{10}\b\s*/, "").strip
+    # 6. 앞뒤 구분자(-) 정리
     subject = subject.gsub(/\A[-–—\s]+|[-–—\s]+\z/, "").strip
     subject.presence || title
   end

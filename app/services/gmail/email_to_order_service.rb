@@ -103,9 +103,14 @@ module Gmail
       subject = subject.sub(/\A\s*(RE|FW|Fwd)\s*:\s*/i, "").strip while subject.match?(/\A\s*(RE|FW|Fwd)\s*:/i)
       if @detection[:is_ariba]
         event_id = @detection[:ariba_event_id]
-        return "[ARIBA] #{event_id} - #{subject}" if event_id.present?
-        return "[ARIBA] #{subject}" if subject.present?
-        return "[ARIBA] RFQ from #{@detection[:customer_name]}"
+        if event_id.present?
+          # 제목에서 일련번호 제거 (중복 방지) + "Event" 접두사 정리
+          clean = subject.gsub(/\bEvent\s*/i, "").gsub(/\b#{Regexp.escape(event_id)}\b\s*[-–—]?\s*/, "").strip
+          clean = clean.gsub(/\A[-–—\s]+|[-–—\s]+\z/, "").strip
+          return clean.present? ? clean : "Ariba Event from #{@detection[:customer_name]}"
+        end
+        return subject if subject.present?
+        return "Ariba RFQ from #{@detection[:customer_name]}"
       end
       # RFQ: "RFQ — 제목" 형식, non-RFQ: 제목 그대로 표시
       return subject if subject.present? && !@detection[:is_rfq]
