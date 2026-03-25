@@ -67,7 +67,7 @@
       </span>
       <span class="shrink-0"><%= priority_badge(order) %></span>
       <% if order.reference_no.present? %>
-        <span class="text-base font-bold text-[#1E3A5F] dark:text-blue-400 truncate"><%= order.reference_no %></span>
+        <span class="text-base font-bold truncate"><% ref = order.reference_no; if ref.length > 4 %><span class="text-gray-400 dark:text-gray-500 font-medium"><%= ref[0...-4] %></span><span class="text-[#1E3A5F] dark:text-blue-400"><%= ref[-4..] %></span><% else %><span class="text-[#1E3A5F] dark:text-blue-400"><%= ref %></span><% end %></span>
       <% end %>
     </div>
     <div class="flex items-center gap-1 shrink-0">
