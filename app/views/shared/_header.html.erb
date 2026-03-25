@@ -14,25 +14,18 @@
       <kbd class="text-xs border border-gray-200 dark:border-gray-600 rounded px-1">⌘K</kbd>
     </button>
 
-    <!-- Urgent count badge -->
+    <!-- 알림 드롭다운 (긴급 카운트 통합) -->
     <% urgent = Order.urgent.count %>
-    <% if urgent > 0 %>
-      <%= link_to kanban_path, class: "relative flex items-center" do %>
-        <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold"><%= urgent %></span>
-      <% end %>
-    <% end %>
-
-    <!-- 알림 드롭다운 -->
     <% unread_count = current_user.notifications.unread.count rescue 0 %>
+    <% badge_count = urgent + unread_count %>
     <% recent_notifications = current_user.notifications.recent.includes(:notifiable).limit(10) rescue [] %>
     <div id="notification-bell" class="relative">
       <button onclick="toggleNotificationPanel(event)"
               class="relative flex items-center text-gray-500 dark:text-gray-400 hover:text-primary transition-colors"
               title="알림">
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        <% if unread_count > 0 %>
-          <span class="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold leading-none"><%= [unread_count, 9].min %><%= unread_count > 9 ? "+" : "" %></span>
+        <% if badge_count > 0 %>
+          <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold leading-none"><%= [badge_count, 9].min %><%= badge_count > 9 ? "+" : "" %></span>
         <% end %>
       </button>
 
@@ -56,6 +49,15 @@
                 class: "text-xs text-gray-400 dark:text-gray-500 hover:text-primary transition-colors" %>
           </div>
         </div>
+
+        <%# 긴급 오더 배너 %>
+        <% if urgent > 0 %>
+          <%= link_to kanban_path, class: "flex items-center gap-2 px-4 py-2.5 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors" do %>
+            <svg class="w-4 h-4 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span class="text-xs font-semibold text-red-600 dark:text-red-400">긴급 오더 <%= urgent %>건</span>
+            <span class="text-xs text-red-400 dark:text-red-500 ml-auto">보기 →</span>
+          <% end %>
+        <% end %>
 
         <!-- 알림 목록 (최근 10개) -->
         <div class="max-h-96 overflow-y-auto divide-y divide-gray-50 dark:divide-gray-700/50">
