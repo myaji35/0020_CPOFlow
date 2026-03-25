@@ -145,15 +145,25 @@ module Gmail
       tags.join(",")
     end
 
-    # 동일 reference_no의 메인 카드(parent_order_id: nil) 탐색
-    # 1순위: inbox 이외 진행 중인 카드, 2순위: inbox 중 가장 오래된 카드
+    # 동일 건 메인 카드(parent_order_id: nil) 탐색
+    # 1순위: reference_no 기반, 2순위: gmail_thread_id 기반 fallback
     def find_parent_order(ref_no)
-      return nil if ref_no.blank?
+      # 1순위: reference_no 기반
+      if ref_no.present?
+        base = Order.where(reference_no: ref_no).where(parent_order_id: nil)
+        found = base.where.not(status: :new_rfq).order(created_at: :asc).first ||
+                base.order(created_at: :asc).first
+        return found if found
+      end
 
-      base = Order.where(reference_no: ref_no).where(parent_order_id: nil)
+      # 2순위: gmail_thread_id 기반 fallback
+      thread_id = @email[:thread_id]
+      return nil if thread_id.blank?
 
-      base.where.not(status: :new_rfq).order(created_at: :asc).first ||
-        base.order(created_at: :asc).first
+      Order.where(gmail_thread_id: thread_id)
+           .where(parent_order_id: nil)
+           .order(created_at: :asc)
+           .first
     end
 
     def extract_sender_domain
