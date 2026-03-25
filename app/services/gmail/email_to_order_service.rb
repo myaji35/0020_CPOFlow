@@ -47,6 +47,7 @@ module Gmail
         original_email_from:    @email[:from],
         item_name:              @detection[:item_hints],
         reference_no:           ref_no,
+        rfq_no:                 ref_no,
         parent_order_id:        parent&.id,
         # LLM 추출 필드 전체 저장
         extracted_quantities:   @detection[:quantities]&.join(", "),
