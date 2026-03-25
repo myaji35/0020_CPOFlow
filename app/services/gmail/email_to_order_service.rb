@@ -224,8 +224,8 @@ module Gmail
     # sender_domain으로 Client 또는 Supplier 검색
     def find_contactable_by_domain(domain)
       return nil if domain.blank?
-      Client.find_by("website LIKE ? OR email LIKE ?", "%#{domain}%", "%#{domain}%") ||
-        Supplier.find_by("website LIKE ? OR email LIKE ?", "%#{domain}%", "%#{domain}%")
+      Client.find_by("website LIKE ?", "%#{domain}%") ||
+        Supplier.find_by("website LIKE ? OR contact_email LIKE ?", "%#{domain}%", "%#{domain}%")
     end
 
     # 이메일 서명 파싱 → JSON 문자열로 저장
