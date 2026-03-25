@@ -169,15 +169,63 @@ module Gmail
     end
 
     # 이메일 발신자와 매칭되는 ContactPerson의 last_contacted_at 자동 업데이트
+    # 매칭되는 담당자가 없으면 서명 기반으로 자동 생성
     def update_contact_person_last_contacted(order)
       from_raw = @email[:from].to_s
       sender_email = from_raw.match(/<(.+?)>/)&.[](1) || from_raw.strip.downcase
       return if sender_email.blank?
 
       cp = ContactPerson.find_by("LOWER(email) = ?", sender_email.downcase)
-      cp&.update_column(:last_contacted_at, Time.current)
+
+      if cp
+        cp.update_column(:last_contacted_at, Time.current)
+      else
+        auto_create_contact_person(order, sender_email)
+      end
     rescue => e
       Rails.logger.warn "[EmailToOrder] ContactPerson update failed: #{e.message}"
+    end
+
+    # 이메일 서명에서 담당자 자동 생성
+    def auto_create_contact_person(order, sender_email)
+      domain = extract_sender_domain
+      return if domain.blank?
+
+      contactable = find_contactable_by_domain(domain)
+      return unless contactable
+
+      sig = order.email_signature_json.present? ? JSON.parse(order.email_signature_json) : {}
+      return if sig.blank? && sender_email.blank?
+
+      # 동일 이메일 중복 방지
+      existing = contactable.contact_persons.find_by("LOWER(email) = ?", (sig["email"].presence || sender_email).downcase)
+      if existing
+        existing.update_column(:last_contacted_at, Time.current)
+        return
+      end
+
+      cp = contactable.contact_persons.create(
+        name:              sig["name"].presence || sender_email.split("@").first.humanize,
+        email:             sig["email"].presence || sender_email,
+        title:             sig["title"],
+        phone:             sig["phone"],
+        mobile:            sig["mobile"],
+        source:            "email_signature",
+        last_contacted_at: Time.current
+      )
+
+      if cp.persisted?
+        Rails.logger.info "[EmailToOrder] Auto-created ContactPerson '#{cp.name}' for #{contactable.class.name}##{contactable.id} (#{contactable.name})"
+      else
+        Rails.logger.warn "[EmailToOrder] Failed to create ContactPerson: #{cp.errors.full_messages.join(', ')}"
+      end
+    end
+
+    # sender_domain으로 Client 또는 Supplier 검색
+    def find_contactable_by_domain(domain)
+      return nil if domain.blank?
+      Client.find_by("website LIKE ? OR email LIKE ?", "%#{domain}%", "%#{domain}%") ||
+        Supplier.find_by("website LIKE ? OR email LIKE ?", "%#{domain}%", "%#{domain}%")
     end
 
     # 이메일 서명 파싱 → JSON 문자열로 저장
