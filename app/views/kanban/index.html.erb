@@ -99,6 +99,39 @@
   <% end %>
 </div>
 
+<!-- 삭제 확인 모달 -->
+<div id="delete-confirm-modal" class="fixed inset-0 z-[60] hidden">
+  <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" onclick="closeDeleteModal()"></div>
+  <div class="fixed inset-0 flex items-center justify-center p-4">
+    <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm p-6">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+          <svg class="w-5 h-5 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </div>
+        <div>
+          <h3 class="text-base font-semibold text-gray-900 dark:text-white">발주 삭제</h3>
+          <p class="text-xs text-gray-500 dark:text-gray-400">이 작업은 되돌릴 수 없습니다</p>
+        </div>
+      </div>
+      <p class="text-sm text-gray-600 dark:text-gray-300 mb-5">
+        <span id="delete-order-title" class="font-medium text-gray-900 dark:text-white"></span>
+        <span class="block mt-1 text-gray-500 dark:text-gray-400">관련 댓글, 작업, 활동 기록도 함께 삭제됩니다.</span>
+      </p>
+      <div class="flex gap-2 justify-end">
+        <button onclick="closeDeleteModal()"
+                class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors">
+          취소
+        </button>
+        <button id="delete-confirm-btn"
+                class="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          삭제
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const CSRF = document.querySelector('meta[name="csrf-token"]').content;
@@ -262,6 +295,64 @@ document.addEventListener('DOMContentLoaded', function() {
       showToast('네트워크 오류가 발생했습니다.', false);
       btn.disabled = false;
       btn.classList.remove('opacity-50');
+    });
+  });
+
+  // ── 삭제 기능 ──────────────────────────────────────────────
+  var deleteOrderId = null;
+
+  window.closeDeleteModal = function() {
+    document.getElementById('delete-confirm-modal').classList.add('hidden');
+    deleteOrderId = null;
+  };
+
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest('.quick-delete-btn');
+    if (!btn) return;
+    e.stopPropagation();
+
+    deleteOrderId = btn.dataset.orderId;
+    document.getElementById('delete-order-title').textContent = btn.dataset.orderTitle || '이 발주';
+    document.getElementById('delete-confirm-modal').classList.remove('hidden');
+  });
+
+  document.getElementById('delete-confirm-btn').addEventListener('click', function() {
+    if (!deleteOrderId) return;
+
+    var confirmBtn = this;
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = '삭제 중...';
+
+    fetch('/orders/' + deleteOrderId, {
+      method:  'DELETE',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF, 'Accept': 'application/json' }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.success) {
+        var cardEl = document.querySelector('[data-order-id="' + deleteOrderId + '"]');
+        if (cardEl) {
+          cardEl.style.transition = 'all 0.3s ease';
+          cardEl.style.opacity = '0';
+          cardEl.style.transform = 'scale(0.9)';
+          setTimeout(function() {
+            cardEl.remove();
+            updateCounts();
+          }, 300);
+        }
+        showToast('발주가 삭제되었습니다.', true);
+      } else {
+        showToast('삭제 실패', false);
+      }
+      closeDeleteModal();
+      confirmBtn.disabled = false;
+      confirmBtn.innerHTML = '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> 삭제';
+    })
+    .catch(function() {
+      showToast('네트워크 오류가 발생했습니다.', false);
+      closeDeleteModal();
+      confirmBtn.disabled = false;
+      confirmBtn.innerHTML = '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> 삭제';
     });
   });
 

@@ -104,7 +104,11 @@ class OrdersController < ApplicationController
 
   def destroy
     @order.destroy
-    redirect_to kanban_path, notice: t("orders.delete_success")
+
+    respond_to do |format|
+      format.html { redirect_to kanban_path, notice: t("orders.delete_success") }
+      format.json { render json: { success: true } }
+    end
   end
 
   def move_status
