@@ -66,9 +66,6 @@
         </svg>
       </span>
       <span class="shrink-0"><%= priority_badge(order) %></span>
-      <% if order.reference_no.present? %>
-        <span class="text-base font-bold truncate"><% ref = order.reference_no; if ref.length > 4 %><span class="text-gray-400 dark:text-gray-500 font-medium"><%= ref[0...-4] %></span><span class="text-[#1E3A5F] dark:text-blue-400"><%= ref[-4..] %></span><% else %><span class="text-[#1E3A5F] dark:text-blue-400"><%= ref %></span><% end %></span>
-      <% end %>
     </div>
     <div class="flex items-center gap-1 shrink-0">
       <% if order.due_date %>
@@ -76,6 +73,44 @@
       <% end %>
     </div>
   </div>
+
+  <%# 관리번호 배지 (RFQ / QUO / PO) — 외부 시스템 부여 번호 %>
+  <% has_any_no = order.rfq_no.present? || order.quo_no.present? || order.po_no.present? %>
+  <% if has_any_no %>
+    <div class="flex flex-wrap items-center gap-1 mb-2">
+      <%# RFQ 번호 %>
+      <% if order.rfq_no.present? %>
+        <span class="inline-flex items-center text-xs rounded-md overflow-hidden border border-indigo-200 dark:border-indigo-700">
+          <span class="bg-indigo-500 text-white px-1.5 py-0.5 font-semibold text-[10px] leading-tight">RFQ</span>
+          <span class="px-1.5 py-0.5 font-mono"><% ref = order.rfq_no; if ref.length > 4 %><span class="text-gray-400"><%= ref[0...-4] %></span><span class="text-indigo-700 dark:text-indigo-400 font-semibold"><%= ref[-4..] %></span><% else %><span class="text-indigo-700 dark:text-indigo-400 font-semibold"><%= ref %></span><% end %></span>
+        </span>
+      <% end %>
+      <%# QUO 번호 %>
+      <% if order.quo_no.present? %>
+        <span class="inline-flex items-center text-xs rounded-md overflow-hidden border border-amber-200 dark:border-amber-700">
+          <span class="bg-amber-500 text-white px-1.5 py-0.5 font-semibold text-[10px] leading-tight">QUO</span>
+          <span class="px-1.5 py-0.5 font-mono"><% ref = order.quo_no; if ref.length > 4 %><span class="text-gray-400"><%= ref[0...-4] %></span><span class="text-amber-700 dark:text-amber-400 font-semibold"><%= ref[-4..] %></span><% else %><span class="text-amber-700 dark:text-amber-400 font-semibold"><%= ref %></span><% end %></span>
+        </span>
+      <% else %>
+        <span class="inline-flex items-center text-xs rounded-md overflow-hidden border border-gray-200 dark:border-gray-600 border-dashed">
+          <span class="bg-gray-300 dark:bg-gray-600 text-white px-1.5 py-0.5 font-semibold text-[10px] leading-tight">QUO</span>
+          <span class="px-1.5 py-0.5 text-gray-400 dark:text-gray-500 italic">대기</span>
+        </span>
+      <% end %>
+      <%# PO 번호 %>
+      <% if order.po_no.present? %>
+        <span class="inline-flex items-center text-xs rounded-md overflow-hidden border border-emerald-200 dark:border-emerald-700">
+          <span class="bg-emerald-500 text-white px-1.5 py-0.5 font-semibold text-[10px] leading-tight">PO</span>
+          <span class="px-1.5 py-0.5 font-mono"><% ref = order.po_no; if ref.length > 4 %><span class="text-gray-400"><%= ref[0...-4] %></span><span class="text-emerald-700 dark:text-emerald-400 font-semibold"><%= ref[-4..] %></span><% else %><span class="text-emerald-700 dark:text-emerald-400 font-semibold"><%= ref %></span><% end %></span>
+        </span>
+      <% else %>
+        <span class="inline-flex items-center text-xs rounded-md overflow-hidden border border-gray-200 dark:border-gray-600 border-dashed">
+          <span class="bg-gray-300 dark:bg-gray-600 text-white px-1.5 py-0.5 font-semibold text-[10px] leading-tight">PO</span>
+          <span class="px-1.5 py-0.5 text-gray-400 dark:text-gray-500 italic">대기</span>
+        </span>
+      <% end %>
+    </div>
+  <% end %>
 
   <!-- 클릭 영역 (핸들 제외) -->
   <div onclick="openOrderDrawer(<%= order.id %>, <%= order.display_subject.to_json %>, '<%= order_path(order) %>', '<%= order.reference_no %>')" class="cursor-pointer">

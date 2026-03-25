@@ -200,7 +200,8 @@ class OrdersController < ApplicationController
       :due_date, :item_name, :quantity, :currency, :estimated_value,
       :tags, :source_email_id, :original_email_subject,
       :original_email_body, :original_email_from,
-      :client_id, :supplier_id, :project_id
+      :client_id, :supplier_id, :project_id,
+      :rfq_no, :quo_no, :po_no
     )
   end
 end
