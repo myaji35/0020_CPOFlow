@@ -136,7 +136,7 @@ class OrdersController < ApplicationController
   end
 
   def quick_update
-    permitted = params.require(:order).permit(:due_date, :status)
+    permitted = params.require(:order).permit(:due_date, :status, :rfq_no, :quo_no, :po_no)
     if @order.update(permitted)
       Activity.create!(order: @order, user: current_user, action: "updated")
       render json: { success: true }
