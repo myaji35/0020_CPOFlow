@@ -65,8 +65,7 @@ class KanbanController < ApplicationController
       order.update_columns(parent_order_id: main_order.id)
 
       Activity.create!(
-        order: main_order, user: current_user, action: "order_merged",
-        metadata: { merged_order_id: order.id, merged_title: order.title }.to_json
+        order: main_order, user: current_user, action: "order_merged"
       )
       merged << order.id
     end

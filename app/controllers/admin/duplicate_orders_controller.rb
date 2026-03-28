@@ -47,8 +47,7 @@ module Admin
         Activity.create!(
           order: main_order,
           user: current_user,
-          action: "order_merged",
-          metadata: { merged_order_id: order.id, merged_title: order.title }.to_json
+          action: "order_merged"
         )
         merged_count += 1
       end
