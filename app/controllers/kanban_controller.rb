@@ -9,12 +9,20 @@ class KanbanController < ApplicationController
     end.to_h
     @filter_employees = Employee.active.by_name
 
-    # 중복 스레드 ID ���록 (병합대상 버튼용)
+    # 중복 스레드 ID 목록 (병합대상 버튼용)
     @duplicate_thread_ids = Order.where(parent_order_id: nil)
                                  .where.not(gmail_thread_id: [ nil, "" ])
                                  .group(:gmail_thread_id)
                                  .having("COUNT(*) > 1")
                                  .pluck(:gmail_thread_id)
+
+    # 병합 모드용: 스레드별 그룹화된 주문 목록
+    @merge_groups = @duplicate_thread_ids.map do |tid|
+      orders = Order.where(gmail_thread_id: tid, parent_order_id: nil)
+                    .includes(:assignees, :client, :sub_orders)
+                    .order(created_at: :asc)
+      { thread_id: tid, orders: orders }
+    end
   end
 
   def move
