@@ -49,11 +49,47 @@
            class="text-xs bg-transparent text-gray-700 dark:text-gray-200 focus:outline-none w-full placeholder-gray-400 dark:placeholder-gray-500">
   </div>
 
+  <%# 병합대상 버튼 — 중복 스레드가 있을 때만 카운트 표시 %>
+  <button id="merge-mode-btn"
+          onclick="toggleMergeMode()"
+          class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors
+                 <%= @duplicate_thread_ids.any? ? 'border-orange-300 dark:border-orange-700 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/40' : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-default' %>"
+          <%= 'disabled' if @duplicate_thread_ids.empty? %>>
+    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><path d="M11 18H8a2 2 0 0 1-2-2V9"/></svg>
+    병합대상
+    <% if @duplicate_thread_ids.any? %>
+      <span class="inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-[10px] font-bold text-white" style="background:#D93025;"><%= @duplicate_thread_ids.size %></span>
+    <% end %>
+  </button>
+
   <%# 초기화 버튼 — 활성 필터 있을 때만 노출 %>
   <button id="filter-reset"
           class="hidden text-xs text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 px-2 py-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
   </button>
+</div>
+
+<%# 병합 모드 패널 — 토글 시 노출 %>
+<div id="merge-panel" class="hidden mb-4 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl">
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <svg class="w-4 h-4 text-orange-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><path d="M11 18H8a2 2 0 0 1-2-2V9"/></svg>
+      <span class="text-sm font-semibold text-orange-700 dark:text-orange-300">병합 모드</span>
+      <span class="text-xs text-orange-500 dark:text-orange-400">— 같은 색 테두리 = 같은 스레드. 메인 1개 선택 후 나머지를 병합합니다.</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <span id="merge-selection-info" class="text-xs text-orange-600 dark:text-orange-400"></span>
+      <button id="merge-execute-btn" onclick="executeMerge()" disabled
+              class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+        병합 실행
+      </button>
+      <button onclick="toggleMergeMode()"
+              class="text-xs text-orange-400 hover:text-orange-600 dark:hover:text-orange-300 px-2 py-1.5 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/40 transition-colors">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
 </div>
 
 <!-- Kanban Board -->
@@ -131,6 +167,180 @@
     </div>
   </div>
 </div>
+
+<%# ── 병합 모드 JS ─────────────────────────────────────────── %>
+<script>
+var DUPLICATE_THREADS = <%= @duplicate_thread_ids.to_json.html_safe %>;
+var mergeMode = false;
+var mergeMainId = null;
+var mergeCandidateIds = [];
+
+// 스레드별 고유 색상
+var THREAD_COLORS = ['#E53E3E','#DD6B20','#D69E2E','#38A169','#3182CE','#805AD5','#D53F8C','#2B6CB0','#C05621','#2F855A'];
+
+function toggleMergeMode() {
+  mergeMode = !mergeMode;
+  var panel = document.getElementById('merge-panel');
+  var btn = document.getElementById('merge-mode-btn');
+
+  panel.classList.toggle('hidden', !mergeMode);
+  btn.classList.toggle('ring-2', mergeMode);
+  btn.classList.toggle('ring-orange-400', mergeMode);
+
+  if (mergeMode) {
+    enterMergeMode();
+  } else {
+    exitMergeMode();
+  }
+}
+
+function enterMergeMode() {
+  mergeMainId = null;
+  mergeCandidateIds = [];
+
+  // 중복 카드만 하이라이트, 나머지 흐리게
+  document.querySelectorAll('[data-order-id]').forEach(function(card) {
+    var tid = card.dataset.threadId;
+    var idx = DUPLICATE_THREADS.indexOf(tid);
+
+    if (idx >= 0) {
+      // 중복 카드: 색상 테두리 + 체크박스 표시
+      var color = THREAD_COLORS[idx % THREAD_COLORS.length];
+      card.style.boxShadow = 'inset 0 0 0 2.5px ' + color;
+      card.style.opacity = '1';
+      card.dataset.mergeGroup = idx;
+
+      // 체크박스 삽입
+      if (!card.querySelector('.merge-cb-wrap')) {
+        var wrap = document.createElement('div');
+        wrap.className = 'merge-cb-wrap absolute top-2 left-2 z-20';
+        wrap.innerHTML = '<label class="flex items-center gap-1 cursor-pointer bg-white dark:bg-gray-800 rounded-md px-1.5 py-0.5 shadow border border-gray-200 dark:border-gray-600">'
+          + '<input type="checkbox" class="merge-cb rounded border-gray-300 text-orange-500 focus:ring-orange-500" data-order-id="' + card.dataset.orderId + '" data-thread-id="' + tid + '" onchange="onMergeCheckChange(this)">'
+          + '<span class="text-[10px] font-medium text-gray-600 dark:text-gray-300">#' + card.dataset.orderId + '</span>'
+          + '</label>';
+        card.style.position = 'relative';
+        card.appendChild(wrap);
+      }
+    } else {
+      // 비중복 카드: 흐리게
+      card.style.opacity = '0.35';
+      card.style.pointerEvents = 'none';
+    }
+  });
+
+  updateMergeInfo();
+}
+
+function exitMergeMode() {
+  document.querySelectorAll('[data-order-id]').forEach(function(card) {
+    card.style.boxShadow = '';
+    card.style.opacity = '';
+    card.style.pointerEvents = '';
+    delete card.dataset.mergeGroup;
+    var wrap = card.querySelector('.merge-cb-wrap');
+    if (wrap) wrap.remove();
+  });
+  mergeMainId = null;
+  mergeCandidateIds = [];
+  updateMergeInfo();
+}
+
+function onMergeCheckChange(cb) {
+  var checked = document.querySelectorAll('.merge-cb:checked');
+  var ids = [];
+  checked.forEach(function(c) { ids.push(parseInt(c.dataset.orderId)); });
+
+  if (ids.length === 0) {
+    mergeMainId = null;
+    mergeCandidateIds = [];
+  } else {
+    // 첫 번째 체크된 것이 메인, 나머지가 병합 대상
+    mergeMainId = ids[0];
+    mergeCandidateIds = ids.slice(1);
+  }
+
+  // 체크박스 라벨 업데이트: 메인/병합 구분
+  document.querySelectorAll('.merge-cb').forEach(function(c) {
+    var label = c.parentElement.querySelector('span');
+    var oid = parseInt(c.dataset.orderId);
+    if (c.checked && oid === mergeMainId) {
+      label.textContent = '#' + oid + ' (메인)';
+      label.className = 'text-[10px] font-bold text-blue-600 dark:text-blue-400';
+    } else if (c.checked) {
+      label.textContent = '#' + oid + ' (병합)';
+      label.className = 'text-[10px] font-bold text-orange-600 dark:text-orange-400';
+    } else {
+      label.textContent = '#' + oid;
+      label.className = 'text-[10px] font-medium text-gray-600 dark:text-gray-300';
+    }
+  });
+
+  updateMergeInfo();
+}
+
+function updateMergeInfo() {
+  var info = document.getElementById('merge-selection-info');
+  var btn = document.getElementById('merge-execute-btn');
+
+  if (!mergeMainId) {
+    info.textContent = '카드를 선택하세요 (첫 번째 = 메인)';
+    btn.disabled = true;
+  } else if (mergeCandidateIds.length === 0) {
+    info.textContent = '메인: #' + mergeMainId + ' — 병합할 카드를 추가 선택하세요';
+    btn.disabled = true;
+  } else {
+    info.textContent = '메인: #' + mergeMainId + ' ← 병합: ' + mergeCandidateIds.map(function(id){ return '#'+id; }).join(', ');
+    btn.disabled = false;
+  }
+}
+
+function executeMerge() {
+  if (!mergeMainId || mergeCandidateIds.length === 0) return;
+  if (!confirm('선택한 ' + mergeCandidateIds.length + '개 카드를 #' + mergeMainId + '에 병합합니다.\n병합된 카드는 서브 주문으로 변환되어 칸반에서 사라집니다.\n\n계속하시겠습니까?')) return;
+
+  var csrf = document.querySelector('meta[name="csrf-token"]').content;
+
+  fetch('/kanban/merge', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+    body: JSON.stringify({ main_order_id: mergeMainId, merge_order_ids: mergeCandidateIds })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.success) {
+      // 병합된 카드를 DOM에서 제거
+      data.merged_ids.forEach(function(id) {
+        var card = document.querySelector('[data-order-id="' + id + '"]');
+        if (card) {
+          card.style.transition = 'all 0.3s ease';
+          card.style.opacity = '0';
+          card.style.transform = 'scale(0.9)';
+          setTimeout(function() { card.remove(); }, 300);
+        }
+      });
+
+      // 메인 카드의 서브 카운트 업데이트
+      var mainCard = document.querySelector('[data-order-id="' + data.main_id + '"]');
+      if (mainCard) {
+        mainCard.style.boxShadow = '0 0 0 2px #38A169';
+        setTimeout(function() { mainCard.style.boxShadow = ''; }, 2000);
+      }
+
+      // 토스트
+      setTimeout(function() {
+        toggleMergeMode();
+        // 페이지 새로고침으로 카운트 정확히 반영
+        window.location.reload();
+      }, 500);
+    } else {
+      alert('병합 실패: ' + (data.error || '알 수 없는 오류'));
+    }
+  })
+  .catch(function() {
+    alert('네트워크 오류가 발생했습니다.');
+  });
+}
+</script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

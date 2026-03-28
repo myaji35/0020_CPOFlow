@@ -20,6 +20,7 @@ Rails.application.routes.draw do
   # Kanban board
   get "kanban", to: "kanban#index"
   patch "orders/:id/move", to: "kanban#move", as: :move_order
+  post "kanban/merge", to: "kanban#merge", as: :kanban_merge
 
   # Orders (full CRUD + nested resources)
   resources :orders do
