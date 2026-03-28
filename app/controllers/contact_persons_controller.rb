@@ -91,16 +91,55 @@ class ContactPersonsController < ApplicationController
     end
   end
 
-  def edit; end
+  def edit
+    respond_to do |format|
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.replace(
+          "new-contact-form-#{@contactable.id}",
+          partial: "contact_persons/inline_form",
+          locals: { contactable: @contactable, contact_person: @contact_person }
+        )
+      end
+      format.html # 기존 edit.html.erb 페이지 (폴백)
+    end
+  end
 
   def update
     if @contact_person.update(contact_person_params)
       if @contact_person.primary?
         @contactable.contact_persons.where.not(id: @contact_person.id).update_all(primary: false)
       end
-      redirect_to @contactable, notice: t("contact_persons.update_success")
+
+      respond_to do |format|
+        format.turbo_stream do
+          render turbo_stream: [
+            # 폼을 새 담당자 추가로 리셋
+            turbo_stream.replace(
+              "new-contact-form-#{@contactable.id}",
+              partial: "contact_persons/inline_form",
+              locals: { contactable: @contactable, contact_person: ContactPerson.new }
+            ),
+            # 수정된 행 업데이트
+            turbo_stream.replace(
+              "contact-person-#{@contact_person.id}",
+              partial: "contact_persons/row",
+              locals: { contact_person: @contact_person, contactable: @contactable }
+            )
+          ]
+        end
+        format.html { redirect_to @contactable, notice: t("contact_persons.update_success") }
+      end
     else
-      render :edit, status: :unprocessable_entity
+      respond_to do |format|
+        format.turbo_stream do
+          render turbo_stream: turbo_stream.replace(
+            "new-contact-form-#{@contactable.id}",
+            partial: "contact_persons/inline_form",
+            locals: { contactable: @contactable, contact_person: @contact_person }
+          )
+        end
+        format.html { render :edit, status: :unprocessable_entity }
+      end
     end
   end
 

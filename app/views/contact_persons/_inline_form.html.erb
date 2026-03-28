@@ -1,7 +1,9 @@
-<%# Client/Supplier 상세 페이지 인라인 담당자 추가 폼 %>
+<%# Client/Supplier 상세 페이지 인라인 담당자 추가/수정 폼 %>
 <div id="new-contact-form-<%= contactable.id %>"
      class="mb-4 p-4 border border-primary/20 rounded-lg bg-blue-50/30 dark:bg-blue-900/10">
-  <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">새 담당자 추가</h4>
+  <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+    <%= contact_person.persisted? ? "담당자 수정 — #{contact_person.name}" : "새 담당자 추가" %>
+  </h4>
 
   <% contactable_type = contactable.is_a?(Client) ? :client : :supplier %>
   <%= form_with model: [contactable, contact_person],
@@ -74,13 +76,42 @@
     </div>
 
     <div class="flex gap-2 justify-end">
-      <button type="button"
-              onclick="document.getElementById('new-contact-form-<%= contactable.id %>').classList.add('hidden')"
-              class="text-sm text-gray-500 dark:text-gray-400 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-        취소
-      </button>
-      <%= f.submit "저장",
+      <% if contact_person.persisted? %>
+        <%# 수정 모드: 취소하면 새 담당자 추가 폼으로 리셋 %>
+        <button type="button"
+                onclick="resetContactForm('<%= contactable.class.name.downcase %>', <%= contactable.id %>)"
+                class="text-sm text-gray-500 dark:text-gray-400 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+          취소
+        </button>
+      <% else %>
+        <button type="button"
+                onclick="document.getElementById('new-contact-form-<%= contactable.id %>').classList.add('hidden')"
+                class="text-sm text-gray-500 dark:text-gray-400 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+          취소
+        </button>
+      <% end %>
+      <%= f.submit contact_person.persisted? ? "수정 저장" : "저장",
           class: "text-sm text-white bg-primary px-4 py-1.5 rounded-lg hover:bg-primary/90 cursor-pointer transition-colors" %>
     </div>
   <% end %>
 </div>
+
+<% if contact_person.persisted? %>
+  <script>
+    // 수정 모드: 폼을 표시하고 스크롤
+    (function() {
+      var form = document.getElementById('new-contact-form-<%= contactable.id %>');
+      if (form) {
+        form.classList.remove('hidden');
+        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    })();
+  </script>
+<% end %>
+
+<script>
+  // 수정 취소 → 페이지 새로고침으로 폼 리셋 (Turbo Stream 제한 우회)
+  function resetContactForm(type, id) {
+    window.location.reload();
+  }
+</script>
