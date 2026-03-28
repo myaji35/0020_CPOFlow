@@ -43,6 +43,23 @@ class KanbanController < ApplicationController
     end
   end
 
+  # PATCH /kanban/split/:id — 서브 주문을 다시 독립 카드로 분리
+  def split
+    order = Order.find(params[:id])
+    parent = order.parent_order
+
+    if order.parent_order_id.nil?
+      render json: { success: false, error: "이미 독립 카드입니다." }, status: :unprocessable_entity
+      return
+    end
+
+    order.update_columns(parent_order_id: nil)
+    Activity.create!(order: order, user: current_user, action: "order_split")
+    Activity.create!(order: parent, user: current_user, action: "order_split") if parent
+
+    render json: { success: true, order_id: order.id }
+  end
+
   # POST /kanban/merge — 선택한 카드를 메인에 병합
   def merge
     main_id   = params[:main_order_id].to_i

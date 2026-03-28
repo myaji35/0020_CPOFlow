@@ -21,6 +21,7 @@ Rails.application.routes.draw do
   get "kanban", to: "kanban#index"
   patch "orders/:id/move", to: "kanban#move", as: :move_order
   post "kanban/merge", to: "kanban#merge", as: :kanban_merge
+  patch "kanban/split/:id", to: "kanban#split", as: :kanban_split
 
   # Orders (full CRUD + nested resources)
   resources :orders do

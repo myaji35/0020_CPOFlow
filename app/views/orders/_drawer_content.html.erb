@@ -596,6 +596,11 @@
                   <span class="text-[10px] px-1.5 py-0.5 rounded <%= t_status_colors[t_order.status] || 'bg-gray-100 text-gray-500' %> font-medium flex-shrink-0">
                     <%= Order::STATUS_LABELS[t_order.status] || t_order.status.humanize %>
                   </span>
+                  <% if t_order.parent_order_id == order.id %>
+                    <button type="button" onclick="event.stopPropagation(); splitOrder(<%= t_order.id %>, this)"
+                            class="text-[10px] px-1.5 py-0.5 rounded border border-orange-300 dark:border-orange-700 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 font-medium flex-shrink-0 transition-colors"
+                            title="병합 해제 — 독립 카드로 분리">분리</button>
+                  <% end %>
                 <% end %>
                 <svg id="<%= thread_item_id %>-chevron" class="w-3.5 h-3.5 text-gray-400 transition-transform flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
               </button>
@@ -696,6 +701,37 @@
 </div>
 
 <script>
+function splitOrder(orderId, btn) {
+  if (!confirm('#' + orderId + '을 병합 해제하여 독립 카드로 분리합니다.\n\n계속하시겠습니까?')) return;
+
+  var csrf = document.querySelector('meta[name="csrf-token"]').content;
+  btn.disabled = true;
+  btn.textContent = '처리 중...';
+
+  fetch('/kanban/split/' + orderId, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.success) {
+      btn.textContent = '분리 완료';
+      btn.classList.remove('border-orange-300', 'text-orange-600');
+      btn.classList.add('border-green-300', 'text-green-600');
+      setTimeout(function() { window.location.reload(); }, 1000);
+    } else {
+      alert('분리 실패: ' + (data.error || ''));
+      btn.disabled = false;
+      btn.textContent = '분리';
+    }
+  })
+  .catch(function() {
+    alert('네트워크 오류가 발생했습니다.');
+    btn.disabled = false;
+    btn.textContent = '분리';
+  });
+}
+
 function updateUploadLabel(input, orderId) {
   var label = document.getElementById('upload-label-' + orderId);
   if (input.files.length > 0) {
