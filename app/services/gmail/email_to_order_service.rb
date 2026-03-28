@@ -31,13 +31,6 @@ module Gmail
       )
       parent = find_parent_order(ref_no)
 
-      # 동일 스레드 루트 주문 중복 방지: parent 없지만 같은 thread_id의 루트가 이미 있으면 서브로 연결
-      if parent.nil? && @email[:thread_id].present?
-        existing_root = Order.where(gmail_thread_id: @email[:thread_id], parent_order_id: nil)
-                             .order(created_at: :asc).first
-        parent = existing_root if existing_root
-      end
-
       order = Order.new(
         title:                  build_title,
         customer_name:          @detection[:customer_name].presence || "Unknown",
