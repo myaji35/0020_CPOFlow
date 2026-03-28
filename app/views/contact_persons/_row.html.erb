@@ -1,83 +1,120 @@
-<%# Client/Supplier 상세 페이지 담당자 탭 행 — Turbo Frame 래핑 %>
+<%# Client/Supplier 상세 페이지 담당자 탭 행 — 클릭 시 상세 전개 %>
 <turbo-frame id="contact-person-<%= contact_person.id %>">
-  <div class="flex items-center justify-between p-3 border border-gray-100 dark:border-gray-700 rounded-lg hover:border-primary/30 transition-colors">
-    <div class="flex items-center gap-3 min-w-0">
-      <!-- 이니셜 아바타 -->
-      <div class="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-700 dark:text-blue-400 font-bold text-sm flex-shrink-0">
-        <%= contact_person.name.first(2).upcase %>
+  <div x-data="{ open: false }" class="border border-gray-100 dark:border-gray-700 rounded-lg hover:border-primary/30 transition-colors overflow-hidden">
+
+    <%# ── 요약 행 (클릭 영역) ── %>
+    <div @click="open = !open" class="flex items-center justify-between p-3 cursor-pointer select-none">
+      <div class="flex items-center gap-3 min-w-0">
+        <!-- 이니셜 아바타 -->
+        <div class="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-700 dark:text-blue-400 font-bold text-sm flex-shrink-0">
+          <%= contact_person.name.first(2).upcase %>
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span class="font-medium text-sm text-gray-900 dark:text-white"><%= contact_person.name %></span>
+            <% if contact_person.primary? %>
+              <span class="text-xs px-1 py-0.5 rounded bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400">주</span>
+            <% end %>
+            <% if contact_person.title.present? %>
+              <span class="text-xs text-gray-500 dark:text-gray-400"><%= contact_person.title %></span>
+            <% end %>
+            <% if contact_person.department.present? %>
+              <span class="text-xs px-1.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400"><%= contact_person.department %></span>
+            <% end %>
+          </div>
+          <div class="flex items-center gap-2 mt-0.5 text-xs text-gray-400 dark:text-gray-500">
+            <% if contact_person.email.present? %>
+              <span><%= contact_person.email %></span>
+            <% end %>
+            <% if contact_person.mobile.present? || contact_person.phone.present? %>
+              <span><%= contact_person.mobile.presence || contact_person.phone %></span>
+            <% end %>
+          </div>
+        </div>
       </div>
-      <div class="min-w-0">
-        <!-- 이름 + 주 담당자 뱃지 -->
-        <div class="flex items-center gap-1.5 flex-wrap">
-          <span class="font-medium text-sm text-gray-900 dark:text-white"><%= contact_person.name %></span>
-          <% if contact_person.primary? %>
-            <span class="text-xs px-1 py-0.5 rounded bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400">주</span>
-          <% end %>
-          <span class="text-xs text-gray-400 dark:text-gray-500"><%= contact_person.language_label %></span>
-        </div>
-        <!-- 직책 + 부서 -->
-        <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
-          <% if contact_person.title.present? %>
-            <p class="text-xs text-gray-500 dark:text-gray-400"><%= contact_person.title %></p>
-          <% end %>
-          <% if contact_person.department.present? %>
-            <span class="text-xs px-1.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400">
-              <%= contact_person.department %>
-            </span>
-          <% end %>
-        </div>
-        <!-- 연락 버튼 -->
-        <div class="flex items-center gap-1.5 mt-1.5">
-          <% if contact_person.email.present? %>
-            <a href="mailto:<%= contact_person.email %>" title="<%= contact_person.email %>"
-               class="inline-flex items-center justify-center w-7 h-7 rounded-full border border-gray-200 dark:border-gray-600 text-gray-400 hover:text-primary hover:border-primary transition-colors">
-              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
-              </svg>
-            </a>
-          <% end %>
-          <% if contact_person.phone.present? %>
-            <a href="tel:<%= contact_person.phone %>" title="사무실: <%= contact_person.phone %>"
-               class="inline-flex items-center justify-center w-7 h-7 rounded-full border border-gray-200 dark:border-gray-600 text-gray-400 hover:text-green-600 hover:border-green-400 transition-colors">
-              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.61 4.37 2 2 0 0 1 3.58 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.18 6.18l1.97-1.97a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
-              </svg>
-            </a>
-          <% end %>
-          <% if contact_person.mobile.present? %>
-            <a href="tel:<%= contact_person.mobile %>" title="모바일: <%= contact_person.mobile %>"
-               class="inline-flex items-center justify-center w-7 h-7 rounded-full border border-gray-200 dark:border-gray-600 text-gray-400 hover:text-blue-600 hover:border-blue-400 transition-colors">
-              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>
-              </svg>
-            </a>
-          <% end %>
-          <% if contact_person.whatsapp.present? %>
-            <a href="https://wa.me/<%= contact_person.whatsapp.gsub(/\D/, '') %>" target="_blank" rel="noopener"
-               title="WhatsApp: <%= contact_person.whatsapp %>"
-               class="inline-flex items-center justify-center w-7 h-7 rounded-full border border-gray-200 dark:border-gray-600 text-gray-400 hover:text-green-500 hover:border-green-400 transition-colors">
-              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
-              </svg>
-            </a>
-          <% end %>
-        </div>
+
+      <div class="flex items-center gap-2 flex-shrink-0 ml-2">
+        <% if contact_person.last_contacted_at.present? %>
+          <span class="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap"><%= contact_person.last_contacted_label %></span>
+        <% end %>
+        <svg class="w-4 h-4 text-gray-400 transition-transform" :class="open && 'rotate-180'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
     </div>
 
-    <!-- 우측: 마지막 연락일 + 수정/삭제 -->
-    <div class="flex flex-col items-end gap-1.5 flex-shrink-0 ml-2">
-      <% if contact_person.last_contacted_at.present? %>
-        <span class="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
-          <%= contact_person.last_contacted_label %>
-        </span>
+    <%# ── 상세 패널 (펼침) ── %>
+    <div x-show="open" x-cloak x-transition class="border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-4 py-4">
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3 mb-4">
+        <%# 연락처 정보 %>
+        <% if contact_person.email.present? %>
+          <div>
+            <dt class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">이메일</dt>
+            <dd><a href="mailto:<%= contact_person.email %>" class="text-sm text-primary hover:underline"><%= contact_person.email %></a></dd>
+          </div>
+        <% end %>
+        <% if contact_person.phone.present? %>
+          <div>
+            <dt class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">사무실</dt>
+            <dd><a href="tel:<%= contact_person.phone %>" class="text-sm text-gray-800 dark:text-gray-200 hover:text-primary"><%= contact_person.phone %></a></dd>
+          </div>
+        <% end %>
+        <% if contact_person.mobile.present? %>
+          <div>
+            <dt class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">모바일</dt>
+            <dd><a href="tel:<%= contact_person.mobile %>" class="text-sm text-gray-800 dark:text-gray-200 hover:text-primary"><%= contact_person.mobile %></a></dd>
+          </div>
+        <% end %>
+        <% if contact_person.whatsapp.present? %>
+          <div>
+            <dt class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">WhatsApp</dt>
+            <dd><a href="https://wa.me/<%= contact_person.whatsapp.gsub(/\D/, '') %>" target="_blank" rel="noopener" class="text-sm text-green-600 hover:underline"><%= contact_person.whatsapp %></a></dd>
+          </div>
+        <% end %>
+        <% if contact_person.wechat.present? %>
+          <div>
+            <dt class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">WeChat</dt>
+            <dd class="text-sm text-gray-800 dark:text-gray-200"><%= contact_person.wechat %></dd>
+          </div>
+        <% end %>
+        <% if contact_person.linkedin.present? %>
+          <div>
+            <dt class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">LinkedIn</dt>
+            <dd><a href="<%= contact_person.linkedin %>" target="_blank" rel="noopener" class="text-sm text-blue-600 hover:underline truncate block"><%= contact_person.linkedin.gsub(%r{https?://}, '') %></a></dd>
+          </div>
+        <% end %>
+        <% if contact_person.language.present? %>
+          <div>
+            <dt class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">언어</dt>
+            <dd class="text-sm text-gray-800 dark:text-gray-200"><%= contact_person.language_label %></dd>
+          </div>
+        <% end %>
+        <% if contact_person.nationality.present? %>
+          <div>
+            <dt class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">국적</dt>
+            <dd class="text-sm text-gray-800 dark:text-gray-200"><%= contact_person.nationality %></dd>
+          </div>
+        <% end %>
+      </div>
+
+      <% if contact_person.notes.present? %>
+        <div class="mb-4 p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+          <dt class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">메모</dt>
+          <dd class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap"><%= contact_person.notes %></dd>
+        </div>
       <% end %>
-      <div class="flex gap-2">
+
+      <%# 수정 / 삭제 버튼 — 컬러링 강화 %>
+      <div class="flex items-center gap-2">
         <%= link_to edit_contactable_contact_person_path(contactable, contact_person),
-            class: "text-xs text-gray-400 dark:text-gray-500 hover:text-primary transition-colors" do %>수정<% end %>
+            class: "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors" do %>
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          수정
+        <% end %>
         <%= link_to contactable_contact_person_path(contactable, contact_person),
-            data: { turbo_method: :delete, turbo_confirm: "#{contact_person.name}을(를) 삭제할까요?" },
-            class: "text-xs text-gray-400 dark:text-gray-500 hover:text-red-500 transition-colors" do %>삭제<% end %>
+            data: { turbo_method: :delete, turbo_confirm: "#{contact_person.name}을(를) 삭제할까요?\n관련 데이터는 복구할 수 없습니다." },
+            class: "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors" do %>
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          삭제
+        <% end %>
       </div>
     </div>
   </div>
