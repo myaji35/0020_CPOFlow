@@ -595,12 +595,7 @@
                 <% else %>
                   <span class="text-[10px] px-1.5 py-0.5 rounded <%= t_status_colors[t_order.status] || 'bg-gray-100 text-gray-500' %> font-medium flex-shrink-0">
                     <%= Order::STATUS_LABELS[t_order.status] || t_order.status.humanize %>
-                  </span>
-                  <% if t_order.parent_order_id == order.id %>
-                    <button type="button" onclick="event.stopPropagation(); splitOrder(<%= t_order.id %>, this)"
-                            class="text-[10px] px-1.5 py-0.5 rounded border border-orange-300 dark:border-orange-700 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 font-medium flex-shrink-0 transition-colors"
-                            title="병합 해제 — 독립 카드로 분리">분리</button>
-                  <% end %>
+                  </span><% if t_order.parent_order_id == order.id %><button type="button" onclick="event.stopPropagation(); splitOrder(<%= t_order.id %>, this)" class="text-[10px] ml-1 px-1.5 py-0.5 rounded border border-orange-300 dark:border-orange-700 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 font-medium flex-shrink-0 transition-colors" title="병합 해제 — 독립 카드로 분리">분리</button><% end %>
                 <% end %>
                 <svg id="<%= thread_item_id %>-chevron" class="w-3.5 h-3.5 text-gray-400 transition-transform flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
               </button>
