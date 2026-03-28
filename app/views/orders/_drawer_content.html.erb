@@ -416,6 +416,21 @@
     <% active_storage_attachments = order.respond_to?(:attachments) ? (order.attachments rescue []) : [] %>
     <% links = order.respond_to?(:extracted_links) && order.extracted_links.present? ? (JSON.parse(order.extracted_links) rescue []) : [] %>
 
+    <%# 파일 업로드 영역 %>
+    <div class="mb-4">
+      <%= form_with url: attach_order_path(order), method: :post, multipart: true,
+          class: "flex items-center gap-2" do |f| %>
+        <label class="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl cursor-pointer hover:border-primary hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors group">
+          <svg class="w-5 h-5 text-gray-400 group-hover:text-primary transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span class="text-sm text-gray-500 dark:text-gray-400 group-hover:text-primary transition-colors" id="upload-label-<%= order.id %>">파일 선택 또는 드래그</span>
+          <%= f.file_field :files, multiple: true, class: "hidden",
+              onchange: "updateUploadLabel(this, #{order.id})" %>
+        </label>
+        <%= f.submit "업로드",
+            class: "px-4 py-2.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 cursor-pointer transition-colors shrink-0" %>
+      <% end %>
+    </div>
+
     <% if att_meta.any? || active_storage_attachments.any? || links.any? %>
       <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div class="px-5 py-3 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
@@ -467,6 +482,12 @@
               <a href="<%= rails_blob_path(blob, disposition: "attachment") %>" class="relative z-10 p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" title="다운로드" onclick="event.stopPropagation()">
                 <svg class="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               </a>
+              <%= link_to detach_order_path(order, blob_id: blob.id), method: :delete,
+                  data: { turbo_method: :delete, turbo_confirm: "#{blob.filename}을(를) 삭제할까요?" },
+                  class: "relative z-10 p-1.5 rounded hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors",
+                  title: "삭제", onclick: "event.stopPropagation()" do %>
+                <svg class="w-3.5 h-3.5 text-gray-400 hover:text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              <% end %>
             </div>
           <% end %>
 
@@ -517,9 +538,10 @@
         </div>
       </div>
     <% else %>
-      <div class="p-12 text-center">
+      <div class="p-8 text-center">
         <svg class="w-10 h-10 mx-auto text-gray-200 dark:text-gray-600 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
         <p class="text-sm text-gray-400 dark:text-gray-500">첨부파일이 없습니다</p>
+        <p class="text-xs text-gray-300 dark:text-gray-600 mt-1">위 영역에서 파일을 추가하세요</p>
       </div>
     <% end %>
     <div class="h-4"></div>
@@ -673,4 +695,17 @@
 
 </div>
 
+<script>
+function updateUploadLabel(input, orderId) {
+  var label = document.getElementById('upload-label-' + orderId);
+  if (input.files.length > 0) {
+    var names = Array.from(input.files).map(function(f) { return f.name; });
+    label.textContent = names.length + '개 파일: ' + names.join(', ').substring(0, 40);
+    label.classList.add('text-primary', 'font-medium');
+  } else {
+    label.textContent = '파일 선택 또는 드래그';
+    label.classList.remove('text-primary', 'font-medium');
+  }
+}
+</script>
 <%# switchDrawerTab / togglePriorityDropdown 은 layouts/application.html.erb 전역 정의 %>

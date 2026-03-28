@@ -33,6 +33,8 @@ Rails.application.routes.draw do
     member do
       patch :move_status
       patch :quick_update
+      post  :attach
+      delete "detach/:blob_id", action: :detach, as: :detach
       get  "pdf/quote",          to: "orders/pdf#quote",           as: :pdf_quote
       get  "pdf/purchase_order", to: "orders/pdf#purchase_order",  as: :pdf_purchase_order
       get  "attachment_preview/:blob_id", action: :preview_attachment, as: :attachment_preview

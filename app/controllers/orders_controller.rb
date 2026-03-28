@@ -145,6 +145,38 @@ class OrdersController < ApplicationController
     end
   end
 
+  # POST /orders/:id/attach — 첨부파일 수동 추가
+  def attach
+    files = params[:files]
+    if files.blank?
+      render json: { success: false, error: "파일을 선택해 주세요." }, status: :unprocessable_entity
+      return
+    end
+
+    @order.attachments.attach(files)
+    Activity.create!(order: @order, user: current_user, action: "attachment_added")
+
+    redirect_to @order, notice: "#{Array(files).size}개 파일이 첨부되었습니다."
+  end
+
+  # DELETE /orders/:id/detach/:blob_id — 첨부파일 삭제
+  def detach
+    attachment = @order.attachments.find { |a| a.blob_id == params[:blob_id].to_i }
+    if attachment
+      attachment.purge
+      Activity.create!(order: @order, user: current_user, action: "attachment_removed")
+      respond_to do |format|
+        format.html { redirect_to @order, notice: "첨부파일이 삭제되었습니다." }
+        format.json { render json: { success: true } }
+      end
+    else
+      respond_to do |format|
+        format.html { redirect_to @order, alert: "첨부파일을 찾을 수 없습니다." }
+        format.json { render json: { success: false }, status: :not_found }
+      end
+    end
+  end
+
   def preview_attachment
     blob = ActiveStorage::Blob.find(params[:blob_id])
     preview_blob(blob)
