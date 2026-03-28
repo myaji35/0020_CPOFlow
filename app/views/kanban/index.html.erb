@@ -46,7 +46,8 @@
   <div class="flex items-center gap-1.5 flex-1 min-w-[140px] max-w-[220px] border border-gray-200 dark:border-gray-600 rounded-lg px-2.5 py-1.5 bg-white dark:bg-gray-700">
     <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     <input id="filter-keyword" type="text" placeholder="검색..."
-           class="text-xs bg-transparent text-gray-700 dark:text-gray-200 focus:outline-none w-full placeholder-gray-400 dark:placeholder-gray-500">
+           class="text-xs bg-transparent text-gray-700 dark:text-gray-200 focus:outline-none w-full placeholder-gray-400 dark:placeholder-gray-500"
+           onkeydown="if(event.key==='Enter'){event.preventDefault()}">
   </div>
 
   <%# 병합대상 버튼 — 중복 스레드가 있을 때만 카운트 표시 %>
@@ -408,8 +409,9 @@ function toggleSelectMode() {
 
   if (selectMode) {
     selectedIds = [];
-    // 모든 카드에 체크박스 추가
+    // 보이는 카드에만 체크박스 추가 (필터로 숨겨진 카드 제외)
     document.querySelectorAll('[data-order-id]').forEach(function(card) {
+      if (card.classList.contains('hidden')) return;
       if (!card.querySelector('.select-cb-wrap')) {
         var wrap = document.createElement('div');
         wrap.className = 'select-cb-wrap absolute top-2 left-2 z-20';
@@ -674,6 +676,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
   filterAssignee.addEventListener('change', applyFilters);
   filterKeyword.addEventListener('input', applyFilters);
+  filterKeyword.addEventListener('keyup', applyFilters);
+  filterKeyword.addEventListener('compositionend', applyFilters);
 
   filterReset.addEventListener('click', function() {
     filterAssignee.value = '';
