@@ -95,45 +95,34 @@
            data-merge-group="<%= gi %>">
 
         <%# 그룹 헤더 %>
+        <% main_order = group[:orders].first %>
+        <% merge_order_ids = group[:orders].drop(1).map(&:id) %>
         <div class="px-5 py-3 bg-gray-50 dark:bg-gray-750 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
           <div class="flex items-center gap-3">
             <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-white text-xs font-bold" style="background:<%= color %>"><%= group[:orders].size %></span>
             <div>
-              <span class="text-sm font-semibold text-gray-900 dark:text-white"><%= group[:orders].first.display_subject.truncate(60) %></span>
-              <span class="text-xs text-gray-500 dark:text-gray-400 ml-2"><%= group[:orders].first.customer_name %></span>
+              <span class="text-sm font-semibold text-gray-900 dark:text-white"><%= main_order.display_subject.truncate(60) %></span>
+              <span class="text-xs text-gray-500 dark:text-gray-400 ml-2"><%= main_order.customer_name %></span>
             </div>
           </div>
-          <button onclick="executeMergeGroup(<%= gi %>)"
-                  class="merge-group-btn flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                  data-group="<%= gi %>" disabled>
+          <button onclick="executeMergeGroup(<%= main_order.id %>, [<%= merge_order_ids.join(',') %>], this)"
+                  class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors">
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
-            병합
+            #<%= main_order.id %>에 병합
           </button>
         </div>
 
         <%# 주문 목록 %>
         <div class="divide-y divide-gray-100 dark:divide-gray-700">
           <% group[:orders].each_with_index do |order, oi| %>
-            <div class="px-5 py-3 flex items-center gap-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors"
-                 data-group-order="<%= gi %>">
+            <div class="px-5 py-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
 
-              <%# 라디오: 메인 선택 %>
-              <label class="flex items-center gap-1.5 cursor-pointer shrink-0">
-                <input type="radio" name="main_<%= gi %>" value="<%= order.id %>"
-                       class="merge-main-radio text-blue-600 focus:ring-blue-500"
-                       data-group="<%= gi %>"
-                       <%= "checked" if oi == 0 %>
-                       onchange="updateGroupSelection(<%= gi %>)">
-                <span class="text-[10px] font-semibold <%= oi == 0 ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400' %>">메인</span>
-              </label>
-
-              <%# 체크박스: 병합 대상 %>
-              <input type="checkbox" name="merge_<%= gi %>[]" value="<%= order.id %>"
-                     class="merge-target-cb rounded border-gray-300 text-orange-500 focus:ring-orange-500 shrink-0"
-                     data-group="<%= gi %>"
-                     <%= "checked" if oi > 0 %>
-                     <%= "disabled" if oi == 0 %>
-                     onchange="updateGroupSelection(<%= gi %>)">
+              <%# 메인/병합대상 라벨 %>
+              <% if oi == 0 %>
+                <span class="shrink-0 inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">메인</span>
+              <% else %>
+                <span class="shrink-0 inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400">병합</span>
+              <% end %>
 
               <%# 주문 정보 %>
               <div class="flex-1 min-w-0">
@@ -266,56 +255,12 @@ function toggleMergeMode() {
   btn.classList.toggle('ring-orange-400', isShowing);
 }
 
-// 그룹별 라디오/체크박스 상태 업데이트
-function updateGroupSelection(groupIdx) {
-  var radios = document.querySelectorAll('.merge-main-radio[data-group="' + groupIdx + '"]');
-  var cbs = document.querySelectorAll('.merge-target-cb[data-group="' + groupIdx + '"]');
-  var mergeBtn = document.querySelector('.merge-group-btn[data-group="' + groupIdx + '"]');
-  var mainId = null;
-
-  // 메인 ID 찾기
-  radios.forEach(function(r) { if (r.checked) mainId = r.value; });
-
-  // 체크박스 상태: 메인은 disabled+unchecked, 나머지는 enabled
-  var checkedCount = 0;
-  cbs.forEach(function(cb) {
-    if (cb.value === mainId) {
-      cb.checked = false;
-      cb.disabled = true;
-    } else {
-      cb.disabled = false;
-      if (cb.checked) checkedCount++;
-    }
-  });
-
-  // 라디오 라벨 ��타일
-  radios.forEach(function(r) {
-    var label = r.parentElement.querySelector('span');
-    if (r.checked) {
-      label.className = 'text-[10px] font-semibold text-blue-600 dark:text-blue-400';
-    } else {
-      label.className = 'text-[10px] font-semibold text-gray-500 dark:text-gray-400';
-    }
-  });
-
-  // 병합 버튼 활성화 여부
-  mergeBtn.disabled = (checkedCount === 0);
-}
-
-// 그룹별 병합 실행
-function executeMergeGroup(groupIdx) {
-  var radios = document.querySelectorAll('.merge-main-radio[data-group="' + groupIdx + '"]');
-  var cbs = document.querySelectorAll('.merge-target-cb[data-group="' + groupIdx + '"]:checked');
-  var mainId = null;
-  radios.forEach(function(r) { if (r.checked) mainId = parseInt(r.value); });
-  var mergeIds = [];
-  cbs.forEach(function(cb) { mergeIds.push(parseInt(cb.value)); });
-
+// 그룹별 병합 실행 (메인 ID + 병합 대상 IDs 직접 전달)
+function executeMergeGroup(mainId, mergeIds, btn) {
   if (!mainId || mergeIds.length === 0) return;
   if (!confirm(mergeIds.length + '개 카드를 #' + mainId + '에 병합합니다.\n병합된 카드는 서브 주문으로 변환되어 칸반에서 사라집니다.\n\n계속하시겠습니까?')) return;
 
   var csrf = document.querySelector('meta[name="csrf-token"]').content;
-  var btn = document.querySelector('.merge-group-btn[data-group="' + groupIdx + '"]');
   btn.disabled = true;
   btn.textContent = '처리 중...';
 
@@ -327,8 +272,7 @@ function executeMergeGroup(groupIdx) {
   .then(function(r) { return r.json(); })
   .then(function(data) {
     if (data.success) {
-      // 병합된 그룹 카드 페이드아웃
-      var groupEl = document.querySelector('[data-merge-group="' + groupIdx + '"]');
+      var groupEl = btn.closest('[data-merge-group]');
       if (groupEl) {
         groupEl.style.transition = 'all 0.4s ease';
         groupEl.style.opacity = '0';
@@ -341,7 +285,6 @@ function executeMergeGroup(groupIdx) {
           groupEl.style.transform = '';
         }, 400);
       }
-      // 병합대상 카운트 배지 업데이트
       setTimeout(function() { window.location.reload(); }, 1500);
     } else {
       alert('병합 실패: ' + (data.error || '알 수 없는 오류'));
