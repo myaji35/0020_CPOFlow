@@ -72,6 +72,11 @@ Rails.application.routes.draw do
     resources :ecount_sync, only: [:index] do
       collection { post :trigger }
     end
+
+    # 중복 주문 병합
+    resources :duplicate_orders, only: [:index] do
+      collection { post :merge }
+    end
   end
 
   # Gmail OAuth2

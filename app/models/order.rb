@@ -25,7 +25,8 @@ class Order < ApplicationRecord
     delivery_items: 4,
     problem: 5,
     get_grn: 6,
-    give_up: 7
+    give_up: 7,
+    done: 8
   }, default: :new_rfq
 
   enum :rfq_status, {
@@ -50,15 +51,15 @@ class Order < ApplicationRecord
   validates :customer_name, presence: true
   validates :status, presence: true
 
-  scope :active, -> { where.not(status: [ :get_grn, :give_up ]) }
-  scope :overdue, -> { where("due_date < ?", Date.today).where.not(status: [ :get_grn, :give_up ]) }
-  scope :urgent, -> { where("due_date <= ?", 7.days.from_now).where.not(status: [ :get_grn, :give_up ]) }
-  scope :due_soon, -> { where(due_date: Date.today..14.days.from_now).where.not(status: [ :get_grn, :give_up ]) }
+  scope :active, -> { where.not(status: [ :get_grn, :give_up, :done ]) }
+  scope :overdue, -> { where("due_date < ?", Date.today).where.not(status: [ :get_grn, :give_up, :done ]) }
+  scope :urgent, -> { where("due_date <= ?", 7.days.from_now).where.not(status: [ :get_grn, :give_up, :done ]) }
+  scope :due_soon, -> { where(due_date: Date.today..14.days.from_now).where.not(status: [ :get_grn, :give_up, :done ]) }
   scope :by_due_date, -> { order(due_date: :asc) }
   scope :by_reference_no, ->(ref) { where(reference_no: ref).order(created_at: :asc) }
   scope :root_orders, -> { where(parent_order_id: nil) }
 
-  KANBAN_COLUMNS = %w[new_rfq make_quo pending_po new_po delivery_items problem get_grn give_up].freeze
+  KANBAN_COLUMNS = %w[new_rfq make_quo pending_po new_po delivery_items problem get_grn give_up done].freeze
 
   STATUS_LABELS = {
     "new_rfq"        => "New(신규)",
@@ -68,7 +69,8 @@ class Order < ApplicationRecord
     "delivery_items" => "Delivery Items(납품진행)",
     "problem"        => "Problem(문제)",
     "get_grn"        => "Get GRN(수령확인)",
-    "give_up"        => "Give Up(포기)"
+    "give_up"        => "Give Up(포기)",
+    "done"           => "Done(완료)"
   }.freeze
 
   # RE/FW 접두사 제거 + reference_no 분리한 간소화 제목 (표시용)
