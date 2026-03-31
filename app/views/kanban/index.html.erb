@@ -47,7 +47,7 @@
     <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     <input id="filter-keyword" type="text" placeholder="검색..."
            class="text-xs bg-transparent text-gray-700 dark:text-gray-200 focus:outline-none w-full placeholder-gray-400 dark:placeholder-gray-500"
-           onkeydown="if(event.key==='Enter'){event.preventDefault()}">
+           onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();this.focus();if(typeof applyFilters==='function')applyFilters()}">
   </div>
 
   <%# 병합대상 버튼 — 중복 스레드가 있을 때만 카운트 표시 %>
