@@ -573,7 +573,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // 컬럼 카운트 배지 업데이트
   function updateCounts() {
     document.querySelectorAll('.kanban-column').forEach(function(col) {
-      const count = col.querySelectorAll('[data-order-id]').length;
+      const count = col.querySelectorAll('[data-order-id]:not(.hidden)').length;
       const badge = col.querySelector('.column-count');
       if (badge) badge.textContent = count;
 
@@ -581,7 +581,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const cards  = col.querySelector('.kanban-cards');
       const empty  = col.querySelector('.empty-state');
       if (!cards || !empty) return;
-      const hasCards = cards.querySelectorAll('[data-order-id]').length > 0;
+      const hasCards = cards.querySelectorAll('[data-order-id]:not(.hidden)').length > 0;
       empty.style.display = hasCards ? 'none' : '';
     });
   }
