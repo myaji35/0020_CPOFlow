@@ -29,19 +29,12 @@ module Gmail
     private
 
     def api_key_configured?
-      resolved_api_key.present?
-    end
-
-    # DB(AppSetting) 우선 → credentials fallback
-    def resolved_api_key
-      @resolved_api_key ||= AppSetting.get("anthropic_api_key").presence ||
-                            Rails.application.credentials.dig(:anthropic, :api_key)
+      ClaudeTokenResolver.configured?
     end
 
     def call_claude_api
-      client = Anthropic::Client.new(
-        api_key: resolved_api_key
-      )
+      client = ClaudeTokenResolver.create_client
+      return nil unless client
 
       client.messages.create(
         model: "claude-haiku-4-5-20251001",

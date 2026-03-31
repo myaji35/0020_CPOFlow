@@ -427,20 +427,26 @@
           <div id="api-key-status-content" class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs"></div>
         </div>
 
-        <% if current_key.present? || has_credential_key %>
-          <p class="text-xs text-green-600 dark:text-green-400 mt-2 flex items-center gap-1">
+        <% token_status = ClaudeTokenResolver.status %>
+        <% if token_status[:configured] %>
+          <% source_labels = { db: "DB (수동 입력)", claude_cli: "Claude CLI 자동 감지", env: "환경변수", credentials: "credentials 파일" } %>
+          <p class="text-xs mt-2 flex items-center gap-1 <%= token_status[:source] == :claude_cli ? 'text-purple-600 dark:text-purple-400' : 'text-green-600 dark:text-green-400' %>">
             <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            API Key 설정됨
-            <% if current_key.present? %>
-              (DB)
-            <% else %>
-              (credentials)
-            <% end %>
+            토큰 활성 — <%= source_labels[token_status[:source]] %>
+            <span class="text-gray-400 dark:text-gray-500 ml-1"><%= token_status[:masked] %></span>
           </p>
+          <% if token_status[:source] == :claude_cli %>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1 ml-4">
+              ~/.claude/credentials.json에서 OAuth 토큰 자동 사용 중 — API 키 입력 불필요
+            </p>
+          <% end %>
         <% else %>
           <p class="text-xs text-red-500 mt-2 flex items-center gap-1">
             <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             API Key 미설정 — RFQ 이메일 AI 분석이 작동하지 않습니다
+          </p>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mt-1 ml-4">
+            해결: ① 위에 API Key 입력 또는 ② 서버에 Claude CLI 설치 후 <code class="bg-gray-100 dark:bg-gray-700 px-1 rounded">claude login</code> 실행
           </p>
         <% end %>
       </div>

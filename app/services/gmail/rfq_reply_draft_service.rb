@@ -35,16 +35,10 @@ module Gmail
     end
 
     def call_claude_api
-      api_key = AppSetting.get("anthropic_api_key").presence ||
-                Rails.application.credentials.dig(:anthropic, :api_key)
-      return nil if api_key.blank?
+      return nil unless ClaudeTokenResolver.configured?
 
       uri = URI("https://api.anthropic.com/v1/messages")
-      headers = {
-        "Content-Type"      => "application/json",
-        "x-api-key"         => api_key,
-        "anthropic-version" => "2023-06-01"
-      }
+      headers = ClaudeTokenResolver.auth_headers
       body = {
         model:      CLAUDE_MODEL,
         max_tokens: 800,
