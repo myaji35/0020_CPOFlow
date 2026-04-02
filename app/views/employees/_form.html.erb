@@ -7,7 +7,7 @@
     </div>
   <% end %>
 
-  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-6">
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
     <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">기본 정보</h3>
     <div class="grid grid-cols-2 gap-4">
       <div>
@@ -43,7 +43,7 @@
     </div>
   </div>
 
-  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-6">
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
     <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">연락처 정보</h3>
     <div class="grid grid-cols-2 gap-4">
       <div>
@@ -62,7 +62,7 @@
     </div>
   </div>
 
-  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-6">
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
     <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">직무 정보</h3>
     <div class="grid grid-cols-2 gap-4">
       <%# 부서 선택 + 인라인 추가/삭제 %>
@@ -92,7 +92,7 @@
           <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
 
             <%# 헤더 %>
-            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
               <h3 class="text-sm font-semibold text-gray-800 dark:text-white">부서 관리</h3>
               <button type="button" class="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400"
                       data-action="click->department-manager#close">
@@ -109,7 +109,7 @@
             </div>
 
             <%# 부서 추가 폼 %>
-            <div class="px-4 pb-4 border-t border-gray-100 dark:border-gray-700 pt-3">
+            <div class="px-4 pb-4 border-t border-gray-200 dark:border-gray-700 pt-3">
               <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">새 부서 추가</p>
               <div class="flex gap-2 mb-2">
                 <select data-department-manager-target="addCompany"
@@ -162,7 +162,7 @@
           <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm mx-4 overflow-hidden">
 
             <%# 헤더 %>
-            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
               <h3 class="text-sm font-semibold text-gray-800 dark:text-white">직책 관리</h3>
               <button type="button" class="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400"
                       data-action="click->job-title-manager#close">
@@ -179,7 +179,7 @@
             </div>
 
             <%# 직책 추가 폼 %>
-            <div class="px-4 pb-4 border-t border-gray-100 dark:border-gray-700 pt-3">
+            <div class="px-4 pb-4 border-t border-gray-200 dark:border-gray-700 pt-3">
               <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">새 직책 추가</p>
               <div class="flex gap-2 mb-2">
                 <input type="text"

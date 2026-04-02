@@ -1,16 +1,19 @@
 class DashboardController < ApplicationController
   def index
+    # Branch 스코프 적용 (admin은 전체, 일반 사용자는 본인 branch만)
+    orders = scoped_orders
+
     # ── 현재 상황 (KPI Cards) ─────────────────────────────────
-    @total_active   = Order.active.count
-    @overdue_count  = Order.overdue.count
-    @urgent_count   = Order.urgent.count
-    @delivered_this_month = Order.get_grn
+    @total_active   = orders.active.count
+    @overdue_count  = orders.overdue.count
+    @urgent_count   = orders.urgent.count
+    @delivered_this_month = orders.get_grn
                                  .where(updated_at: Time.current.beginning_of_month..)
                                  .count
 
-    @urgent_orders  = Order.urgent.by_due_date.limit(5).includes(:assignees)
-    @recent_orders  = Order.order(created_at: :desc).limit(8).includes(:assignees, :tasks)
-    @kanban_counts  = Order.group(:status).count
+    @urgent_orders  = orders.urgent.by_due_date.limit(5).includes(:assignees)
+    @recent_orders  = orders.order(created_at: :desc).limit(8).includes(:assignees, :tasks)
+    @kanban_counts  = orders.group(:status).count
 
     # ── 기간별 분석 데이터 ────────────────────────────────────
     @weekly_data    = build_weekly_data(8)
@@ -19,8 +22,8 @@ class DashboardController < ApplicationController
     @yearly_data    = build_yearly_data(3)
 
     # ── 스마트 KPI 추가 ───────────────────────────────────────
-    @total_value_this_month = Order.where(created_at: Time.current.beginning_of_month..).sum(:estimated_value).to_f
-    @total_value_last_month = Order.where(created_at: 1.month.ago.beginning_of_month..1.month.ago.end_of_month).sum(:estimated_value).to_f
+    @total_value_this_month = orders.where(created_at: Time.current.beginning_of_month..).sum(:estimated_value).to_f
+    @total_value_last_month = orders.where(created_at: 1.month.ago.beginning_of_month..1.month.ago.end_of_month).sum(:estimated_value).to_f
     @on_time_rate_this_month = calculate_on_time_rate(Time.current.beginning_of_month, Time.current.end_of_month)
     @on_time_rate_last_month = calculate_on_time_rate(1.month.ago.beginning_of_month, 1.month.ago.end_of_month)
 
@@ -74,13 +77,13 @@ class DashboardController < ApplicationController
     @agent_briefing = AgentInsight.for_dashboard
 
     # FR-02: KPI 드릴다운 데이터
-    @overdue_orders_brief = Order.overdue.by_due_date.limit(8).includes(:client, :assignees)
-    @urgent_orders_brief  = Order.urgent.by_due_date.limit(8).includes(:client, :assignees)
+    @overdue_orders_brief = orders.overdue.by_due_date.limit(8).includes(:client, :assignees)
+    @urgent_orders_brief  = orders.urgent.by_due_date.limit(8).includes(:client, :assignees)
 
     # FR-03: 7일 스파크라인
     @daily_sparkline = (6.downto(0)).map do |i|
       day = Date.today - i.days
-      Order.where(created_at: day.beginning_of_day..day.end_of_day).count
+      orders.where(created_at: day.beginning_of_day..day.end_of_day).count
     end
   end
 

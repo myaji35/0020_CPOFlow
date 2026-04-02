@@ -35,19 +35,19 @@
                     "C" => "bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400",
                     "D" => "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400" } %>
   <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
       <p class="text-xs text-gray-500 dark:text-gray-400">총 공급 오더</p>
       <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><%= @orders.count %></p>
     </div>
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
       <p class="text-xs text-gray-500 dark:text-gray-400">총 공급 금액</p>
       <p class="text-xl font-bold text-primary mt-1">$<%= number_with_delimiter(@supplier.total_supply_value.round.to_i) %></p>
     </div>
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
       <p class="text-xs text-gray-500 dark:text-gray-400">납품 품목</p>
       <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><%= @supplier_products.count %></p>
     </div>
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
       <p class="text-xs text-gray-500 dark:text-gray-400">납기준수율</p>
       <% if @on_time_rate %>
         <% rate_color = @on_time_rate >= 90 ? 'text-green-600 dark:text-green-400' : (@on_time_rate >= 75 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400') %>
@@ -56,7 +56,7 @@
         <p class="text-2xl font-bold text-gray-300 dark:text-gray-600 mt-1">-</p>
       <% end %>
     </div>
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
       <p class="text-xs text-gray-500 dark:text-gray-400">성과 등급</p>
       <% if @performance_grade && @performance_grade != "N/A" %>
         <p class="mt-1"><span class="inline-flex px-3 py-1 text-xl font-bold rounded-lg <%= perf_color[@performance_grade] %>"><%= @performance_grade %></span></p>
@@ -67,8 +67,8 @@
   </div>
 
   <!-- 탭 -->
-  <div x-data="{ tab: '<%= params[:tab].presence&.then { |t| %w[contacts products orders].include?(t) ? t : 'contacts' } || 'contacts' %>' }" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
-    <div class="border-b border-gray-100 dark:border-gray-700 px-4">
+  <div x-data="{ tab: '<%= params[:tab].presence&.then { |t| %w[contacts products orders].include?(t) ? t : 'contacts' } || 'contacts' %>' }" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+    <div class="border-b border-gray-200 dark:border-gray-700 px-4">
       <nav class="flex gap-6">
         <button @click="tab='contacts'" :class="tab==='contacts' ? 'border-primary text-primary' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
             class="py-3 border-b-2 text-sm font-medium transition-colors">담당자</button>
@@ -112,7 +112,7 @@
       <h3 class="font-medium text-gray-900 dark:text-white mb-4">납품 가능 품목</h3>
       <div class="space-y-2">
         <% @supplier_products.each do |sp| %>
-          <div class="flex items-center justify-between p-3 border border-gray-100 dark:border-gray-700 rounded-lg hover:border-primary/30 transition-colors">
+          <div class="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary/30 transition-colors">
             <span class="text-sm font-medium text-gray-900 dark:text-white"><%= sp.product.name %></span>
             <div class="flex items-center gap-4">
               <span class="text-sm text-gray-600 dark:text-gray-400"><%= sp.display_price %></span>
@@ -228,7 +228,7 @@
                       elsif days && days <= 7
                         "border-orange-200 dark:border-orange-800/50 bg-orange-50/40 dark:bg-orange-900/10"
                       else
-                        "border-gray-100 dark:border-gray-700"
+                        "border-gray-200 dark:border-gray-700"
                       end
             due_cls = if days.nil? then "text-gray-400 dark:text-gray-500"
                       elsif days < 0 then "text-red-600 dark:text-red-400 font-bold"

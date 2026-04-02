@@ -59,7 +59,7 @@
 
   <%# 직원 목록 %>
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-    <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+    <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
       <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">소속 직원</h2>
     </div>
 
@@ -101,7 +101,7 @@
   <% sub_depts = @department.sub_departments.active.by_sort %>
   <% if sub_depts.any? %>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-      <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+      <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
         <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">하위 부서</h2>
       </div>
       <div class="divide-y divide-gray-50 dark:divide-gray-700">

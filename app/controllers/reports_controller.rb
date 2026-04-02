@@ -21,7 +21,7 @@ class ReportsController < ApplicationController
   def export_csv
     @period     = params[:period] || "this_month"
     @date_range = parse_period(@period, params[:from], params[:to])
-    orders      = Order.includes(:client, :supplier, :project, :user)
+    orders      = scoped_orders.includes(:client, :supplier, :project, :user)
                        .where(created_at: @date_range)
                        .order(created_at: :desc)
 
@@ -67,15 +67,15 @@ class ReportsController < ApplicationController
       prev_value:     prev[:value],
       on_time_rate:   curr[:on_time_rate],
       prev_on_time:   prev[:on_time_rate],
-      overdue:        Order.where("due_date < ?", Date.today).where.not(status: [ :get_grn, :give_up ]).count,
-      urgent:         Order.where(priority: :urgent).where.not(status: [ :get_grn, :give_up ]).count,
+      overdue:        scoped_orders.where("due_date < ?", Date.today).where.not(status: [ :get_grn, :give_up ]).count,
+      urgent:         scoped_orders.where(priority: :urgent).where.not(status: [ :get_grn, :give_up ]).count,
       avg_lead_days:  calc_avg_lead_days(range)
     }
   end
 
   def order_stats(range)
-    base      = Order.where(created_at: range)
-    delivered = Order.get_grn.where(updated_at: range)
+    base      = scoped_orders.where(created_at: range)
+    delivered = scoped_orders.get_grn.where(updated_at: range)
     on_time   = delivered.where("orders.due_date >= DATE(orders.updated_at)").count
     {
       count:        base.count,
@@ -91,7 +91,7 @@ class ReportsController < ApplicationController
   end
 
   def calc_avg_lead_days(range)
-    delivered = Order.get_grn.where(updated_at: range)
+    delivered = scoped_orders.get_grn.where(updated_at: range)
     return 0.0 if delivered.empty?
     total = delivered.sum { |o| (o.updated_at.to_date - o.created_at.to_date).to_i }
     (total.to_f / delivered.count).round(1)
@@ -104,16 +104,16 @@ class ReportsController < ApplicationController
       r = m..(m.end_of_month)
       {
         label:     m.strftime("%y.%m"),
-        orders:    Order.where(created_at: r).count,
-        delivered: Order.get_grn.where(updated_at: r).count,
-        value:     (Order.where(created_at: r).sum(:estimated_value).to_f / 1000).round
+        orders:    scoped_orders.where(created_at: r).count,
+        delivered: scoped_orders.get_grn.where(updated_at: r).count,
+        value:     (scoped_orders.where(created_at: r).sum(:estimated_value).to_f / 1000).round
       }
     end
   end
 
   # ── 파이프라인 퍼널 ────────────────────────────────────────
   def build_funnel
-    Order.group(:status).count
+    scoped_orders.group(:status).count
   end
 
   # ── Top 10 ─────────────────────────────────────────────────

@@ -65,7 +65,7 @@
           <% unassigned = companies.flat_map { |c| c.employees.active.select { |e| e.department_id.nil? } }.sort_by(&:name) %>
           <% if unassigned.any? %>
             <div class="bg-white dark:bg-gray-800 rounded-xl border border-dashed border-gray-300 dark:border-gray-600 overflow-hidden">
-              <div class="flex items-center gap-2 px-5 py-3 border-b border-gray-100 dark:border-gray-700">
+              <div class="flex items-center gap-2 px-5 py-3 border-b border-gray-200 dark:border-gray-700">
                 <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                 <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">부서 미배정 (<%= unassigned.count %>명)</h3>
               </div>
@@ -123,7 +123,7 @@
               </div>
 
               <%# 부서 트리 %>
-              <div x-show="open" class="border-t border-gray-100 dark:border-gray-700">
+              <div x-show="open" class="border-t border-gray-200 dark:border-gray-700">
                 <% root_depts = company.departments.select { |d| d.active? && d.parent_id.nil? }.sort_by { |d| [d.sort_order, d.name] } %>
                 <% if root_depts.empty? %>
                   <div class="px-5 py-4 text-sm text-gray-400 dark:text-gray-500 text-center">
@@ -191,7 +191,7 @@
                           <%# 하위 부서 %>
                           <% sub_depts = dept.sub_departments.select(&:active?).sort_by { |d| [d.sort_order, d.name] } %>
                           <% sub_depts.each do |sub| %>
-                            <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                            <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                               <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">└ <%= sub.name %> (<%= sub.employee_count %>명)</p>
                               <div class="flex flex-wrap gap-2">
                                 <% sub.employees.active.by_name.each do |emp| %>
@@ -205,7 +205,7 @@
                           <% end %>
 
                           <% if current_user.manager? || current_user.admin? %>
-                            <div class="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700 flex gap-2">
+                            <div class="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700 flex gap-2">
                               <%= link_to new_org_chart_company_department_path(company, parent_id: dept.id),
                                   class: "text-xs text-gray-400 dark:text-gray-500 hover:text-primary" do %>+ 하위 부서<% end %>
                             </div>

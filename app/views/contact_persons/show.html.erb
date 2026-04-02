@@ -12,7 +12,7 @@
   </div>
 
   <!-- 담당자 프로필 카드 -->
-  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-6">
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
     <div class="flex flex-col sm:flex-row gap-5">
       <!-- 아바타 -->
       <div class="flex-shrink-0">
@@ -152,14 +152,14 @@
 
     <!-- 메모 -->
     <% if @contact_person.notes.present? %>
-      <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+      <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
         <p class="text-xs text-gray-400 dark:text-gray-500 mb-1">메모</p>
         <p class="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line"><%= @contact_person.notes %></p>
       </div>
     <% end %>
 
     <!-- 추가 정보 -->
-    <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 grid grid-cols-2 sm:grid-cols-3 gap-3">
+    <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 grid grid-cols-2 sm:grid-cols-3 gap-3">
       <div>
         <p class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">마지막 연락</p>
         <p class="text-sm text-gray-700 dark:text-gray-300"><%= @contact_person.last_contacted_label %></p>
@@ -184,8 +184,8 @@
   </div>
 
   <!-- 관련 오더 목록 -->
-  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
-    <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
       <h2 class="text-sm font-semibold text-gray-900 dark:text-white">
         관련 오더
         <span class="ml-1.5 text-xs font-normal text-gray-400 dark:text-gray-500">(<%= @contactable.name %>)</span>
@@ -213,12 +213,12 @@
               <!-- 상태 뱃지 -->
               <span class="flex-shrink-0 text-xs px-2 py-0.5 rounded-full font-medium
                 <%= case order.status
-                    when 'new_rfq'        then 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                    when 'new_rfq'        then 'bg-gray-500 text-white dark:bg-gray-700 dark:text-gray-400'
                     when 'make_quo'       then 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
                     when 'pending_po'     then 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400'
-                    when 'new_po'         then 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                    when 'new_po'         then 'bg-green-600 text-white dark:bg-green-900/30 dark:text-green-400'
                     when 'delivery_items' then 'bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
-                    when 'problem'        then 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                    when 'problem'        then 'bg-yellow-500 text-white dark:bg-yellow-900/30 dark:text-yellow-400'
                     when 'get_grn'        then 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
                     when 'give_up'        then 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-500'
                     end %>">
@@ -259,8 +259,8 @@
   <!-- 같은 회사 담당자들 -->
   <% other_contacts = @contactable.contact_persons.where.not(id: @contact_person.id).order(primary: :desc, name: :asc).limit(10) %>
   <% if other_contacts.any? %>
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
-      <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+      <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
         <h2 class="text-sm font-semibold text-gray-900 dark:text-white">
           같은 회사 담당자
           <span class="ml-1.5 text-xs font-normal text-gray-400 dark:text-gray-500">(<%= @contactable.name %>)</span>

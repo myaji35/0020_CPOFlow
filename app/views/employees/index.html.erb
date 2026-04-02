@@ -29,19 +29,19 @@
 
   <!-- 통계 카드 -->
   <div class="grid grid-cols-4 gap-4">
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4">
       <p class="text-xs text-gray-500 dark:text-gray-400">총 직원</p>
       <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><%= @stats[:total] %></p>
     </div>
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4">
       <p class="text-xs text-gray-500 dark:text-gray-400">현재 파견중</p>
       <p class="text-2xl font-bold text-primary mt-1"><%= @stats[:dispatched] %></p>
     </div>
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-4 <%= @stats[:visa_expiring] > 0 ? 'border-yellow-200 dark:border-yellow-800' : '' %>">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 <%= @stats[:visa_expiring] > 0 ? 'border-yellow-200 dark:border-yellow-800' : '' %>">
       <p class="text-xs text-gray-500 dark:text-gray-400">비자 만료 임박 (60일)</p>
       <p class="text-2xl font-bold <%= @stats[:visa_expiring] > 0 ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-900 dark:text-white' %> mt-1"><%= @stats[:visa_expiring] %></p>
     </div>
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-4 <%= @stats[:contract_expiring] > 0 ? 'border-orange-200 dark:border-orange-800' : '' %>">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 <%= @stats[:contract_expiring] > 0 ? 'border-orange-200 dark:border-orange-800' : '' %>">
       <p class="text-xs text-gray-500 dark:text-gray-400">계약 만료 임박 (30일)</p>
       <p class="text-2xl font-bold <%= @stats[:contract_expiring] > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-gray-900 dark:text-white' %> mt-1"><%= @stats[:contract_expiring] %></p>
     </div>
@@ -77,9 +77,9 @@
   <% end %>
 
   <!-- 테이블 -->
-  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
     <table class="w-full">
-      <thead class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
+      <thead class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
         <tr>
           <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">이름</th>
           <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">국적 / 부서 · 직책</th>
@@ -162,10 +162,10 @@
               <% if contract&.end_date %>
                 <%
                   days_left = (contract.end_date - Date.today).to_i
-                  badge_class = if days_left < 0 then "bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                                elsif days_left <= 14 then "bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                  badge_class = if days_left < 0 then "bg-red-600 text-white dark:bg-red-900/30 dark:text-red-400"
+                                elsif days_left <= 14 then "bg-red-600 text-white dark:bg-red-900/30 dark:text-red-400"
                                 elsif days_left <= 30 then "bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
-                                else "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400" end
+                                else "bg-green-600 text-white dark:bg-green-900/30 dark:text-green-400" end
                 %>
                 <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full <%= badge_class %>">
                   <%= contract.end_date.strftime("%Y-%m-%d") %>

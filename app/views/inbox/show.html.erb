@@ -20,7 +20,7 @@
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
 
     <%# Email Header %>
-    <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700">
+    <div class="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
       <div class="flex items-start justify-between gap-4">
         <div class="flex-1 min-w-0">
           <h1 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
@@ -85,7 +85,7 @@
 
     <%# Key Info Grid %>
     <% if @order.item_name.present? || @order.estimated_value.present? || @order.client || @order.project %>
-      <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700/30 border-b border-gray-100 dark:border-gray-700">
+      <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700/30 border-b border-gray-200 dark:border-gray-700">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <% if @order.client %>
             <div>
@@ -134,7 +134,7 @@
       <% if html_body.present? %>
         <%# HTML 이메일: style 블록 제거 후 sanitize로 안전 렌더링 %>
         <% cleaned_html = html_body.gsub(/<style[^>]*>.*?<\/style>/mi, "") %>
-        <div class="email-html-body bg-white dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700 p-5 max-h-96 overflow-y-auto">
+        <div class="email-html-body bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 p-5 max-h-96 overflow-y-auto">
           <%= sanitize(cleaned_html,
               tags: %w[p br div span a b i u strong em h1 h2 h3 h4 h5 h6 ul ol li
                        table thead tbody tr th td blockquote pre code img hr],
@@ -143,7 +143,7 @@
       <% elsif plain_body.present? %>
         <%# Plain text 이메일: 본문과 서명 분리 %>
         <% split = Gmail::EmailSignatureParserService.split(plain_body) %>
-        <div class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap font-mono bg-gray-50 dark:bg-gray-800/50 rounded-lg p-5 border border-gray-100 dark:border-gray-700 max-h-96 overflow-y-auto">
+        <div class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap font-mono bg-gray-50 dark:bg-gray-800/50 rounded-lg p-5 border border-gray-200 dark:border-gray-700 max-h-96 overflow-y-auto">
 <%= split[:body] %>
         </div>
         <% if split[:signature].present? %>
@@ -153,7 +153,7 @@
               <svg class="w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><path d="M8.12 8.12L12 12"/><path d="M20 4L8.12 15.88"/><circle cx="6" cy="18" r="3"/><path d="M14.8 14.8L20 20"/></svg>
               <span class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider font-semibold">발신자 서명</span>
             </div>
-            <div class="bg-gray-50/80 dark:bg-gray-700/20 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap border border-gray-100 dark:border-gray-700">
+            <div class="bg-gray-50/80 dark:bg-gray-700/20 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap border border-gray-200 dark:border-gray-700">
 <%= split[:signature] %>
             </div>
           </div>
@@ -167,8 +167,8 @@
 
       <%# LLM 분석 결과 카드 %>
       <% if @order.respond_to?(:rfq_confidence) && @order.rfq_confidence.present? && @order.rfq_confidence != "none" %>
-        <div class="mt-4 border border-gray-100 dark:border-gray-700 rounded-lg overflow-hidden">
-          <div class="px-4 py-2.5 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+        <div class="mt-4 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+          <div class="px-4 py-2.5 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
             <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
               AI 분석 결과
@@ -218,8 +218,8 @@
       <% active_storage_attachments = @order.respond_to?(:attachments) ? (@order.attachments rescue []) : [] %>
       <% links = @order.respond_to?(:extracted_links) && @order.extracted_links.present? ? (JSON.parse(@order.extracted_links) rescue []) : [] %>
       <% if att_meta.any? || active_storage_attachments.any? || links.any? %>
-        <div class="mt-3 border border-gray-100 dark:border-gray-700 rounded-lg overflow-hidden">
-          <div class="px-4 py-2.5 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+        <div class="mt-3 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+          <div class="px-4 py-2.5 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
             <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
               첨부파일 및 링크
@@ -280,7 +280,7 @@
               <% att_meta.each do |att| %>
                 <% att = att.is_a?(Hash) ? att.with_indifferent_access : {} %>
                 <% icon_color = att[:mime_type].to_s.include?("pdf") ? "text-red-500" : att[:mime_type].to_s.include?("sheet") || att[:mime_type].to_s.include?("excel") ? "text-green-600" : "text-blue-500" %>
-                <div class="flex items-center gap-2.5 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700 opacity-60">
+                <div class="flex items-center gap-2.5 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700 opacity-60">
                   <svg class="w-8 h-8 p-1.5 rounded bg-gray-100 dark:bg-gray-700 <%= icon_color %> flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                   <div class="flex-1 min-w-0">
                     <p class="text-xs font-medium text-gray-800 dark:text-gray-200 truncate"><%= att[:filename] %></p>
@@ -332,7 +332,7 @@
     </div>
 
     <%# Footer %>
-    <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/20 flex items-center justify-between">
+    <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/20 flex items-center justify-between">
       <p class="text-xs text-gray-400 dark:text-gray-500">
         발주 #<%= @order.id %> · <%= time_ago_in_words(@order.created_at) %> 전 생성
       </p>

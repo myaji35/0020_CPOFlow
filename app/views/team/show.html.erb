@@ -55,7 +55,7 @@
   %>
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
     <%# 탭 헤더 %>
-    <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-1" id="order-tabs">
+    <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-1" id="order-tabs">
       <% [['전체', 'all', total_count], ['지연', 'overdue', overdue_count], ['진행', 'active', active_count]].each do |label, tab, cnt| %>
         <button class="tab-btn px-3 py-1.5 text-sm rounded-lg font-medium transition-colors
                        <%= tab == 'all' ? 'bg-primary text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700' %>"

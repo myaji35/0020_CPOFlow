@@ -7,6 +7,15 @@ class ApplicationController < ActionController::Base
 
   private
 
+  # Branch 데이터 격리: current_user의 branch에 속한 Order만 반환
+  # admin은 전체 접근 가능
+  def scoped_orders
+    base = Order.all
+    return base if current_user.admin?
+    base.joins(:user).where(users: { branch: current_user.branch })
+  end
+  helper_method :scoped_orders
+
   def set_locale
     if user_signed_in?
       I18n.locale = current_user.preferred_locale.to_sym

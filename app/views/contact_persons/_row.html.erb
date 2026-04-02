@@ -1,6 +1,6 @@
 <%# Client/Supplier 상세 페이지 담당자 탭 행 — 클릭 시 상세 전개 %>
 <turbo-frame id="contact-person-<%= contact_person.id %>">
-  <div x-data="{ open: false }" class="border border-gray-100 dark:border-gray-700 rounded-lg hover:border-primary/30 transition-colors overflow-hidden">
+  <div x-data="{ open: false }" class="border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary/30 transition-colors overflow-hidden">
 
     <%# ── 요약 행 (클릭 영역) ── %>
     <div @click="open = !open" class="flex items-center justify-between p-3 cursor-pointer select-none">
@@ -42,7 +42,7 @@
     </div>
 
     <%# ── 상세 패널 (펼침) ── %>
-    <div x-show="open" x-cloak x-transition class="border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-4 py-4">
+    <div x-show="open" x-cloak x-transition class="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-4 py-4">
       <div class="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3 mb-4">
         <%# 연락처 정보 %>
         <% if contact_person.email.present? %>

@@ -8,7 +8,7 @@ class InboxController < ApplicationController
   PER_PAGE = 30
 
   def index
-    base_scope = Order.where.not(original_email_from: [ nil, "" ])
+    base_scope = scoped_orders.where.not(original_email_from: [ nil, "" ])
                       .includes(:user, :assignees, :client, :supplier, :project,
                                 attachments_attachments: :blob)
 
@@ -50,14 +50,14 @@ class InboxController < ApplicationController
       .to_h
 
     # Counts for sidebar badges — 단일 쿼리로 통합 (4회 → 1회)
-    inbox_val     = Order.statuses[:new_rfq]
-    uncertain_val = Order.rfq_statuses[:rfq_uncertain]
-    email_scope = Order.where.not(original_email_from: [ nil, "" ])
+    inbox_val     = Order.statuses[:new_rfq].to_i
+    uncertain_val = Order.rfq_statuses[:rfq_uncertain].to_i
+    email_scope = scoped_orders.where.not(original_email_from: [ nil, "" ])
     counts = email_scope.pick(
       Arel.sql("COUNT(*)"),
-      Arel.sql("SUM(CASE WHEN status = #{inbox_val} THEN 1 ELSE 0 END)"),
-      Arel.sql("SUM(CASE WHEN status = #{inbox_val} AND rfq_status = #{uncertain_val} THEN 1 ELSE 0 END)"),
-      Arel.sql("SUM(CASE WHEN status != #{inbox_val} THEN 1 ELSE 0 END)")
+      Arel.sql(ActiveRecord::Base.sanitize_sql([ "SUM(CASE WHEN status = ? THEN 1 ELSE 0 END)", inbox_val ])),
+      Arel.sql(ActiveRecord::Base.sanitize_sql([ "SUM(CASE WHEN status = ? AND rfq_status = ? THEN 1 ELSE 0 END)", inbox_val, uncertain_val ])),
+      Arel.sql(ActiveRecord::Base.sanitize_sql([ "SUM(CASE WHEN status != ? THEN 1 ELSE 0 END)", inbox_val ]))
     )
     @count_all, @count_rfq, @count_uncertain, @count_converted = counts.map(&:to_i)
   end

@@ -1,7 +1,7 @@
 class KanbanController < ApplicationController
   def index
     @columns = Order::KANBAN_COLUMNS.map do |status|
-      orders = Order.root_orders
+      orders = scoped_orders.root_orders
                     .where(status: status)
                     .by_due_date
                     .includes(:assignees, :tasks, :user, :sub_orders)
@@ -10,7 +10,7 @@ class KanbanController < ApplicationController
     @filter_employees = Employee.active.by_name
 
     # 중복 스레드 ID 목록 (병합대상 버튼용)
-    @duplicate_thread_ids = Order.where(parent_order_id: nil)
+    @duplicate_thread_ids = scoped_orders.where(parent_order_id: nil)
                                  .where.not(gmail_thread_id: [ nil, "" ])
                                  .group(:gmail_thread_id)
                                  .having("COUNT(*) > 1")

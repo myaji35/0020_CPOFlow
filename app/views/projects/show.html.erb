@@ -13,7 +13,7 @@
       <div class="flex items-center gap-3 mt-2 text-sm text-gray-500 dark:text-gray-400">
         <%= link_to @project.client.name, @project.client, class: "text-primary hover:underline" %>
         <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"><%= @project.site_category_label %></span>
-        <% status_class = { "active"=>"bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400","planning"=>"bg-yellow-50 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400","completed"=>"bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400","suspended"=>"bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400" }[@project.status] %>
+        <% status_class = { "active"=>"bg-green-600 text-white dark:bg-green-900/30 dark:text-green-400","planning"=>"bg-yellow-500 text-white dark:bg-yellow-900/30 dark:text-yellow-400","completed"=>"bg-gray-500 text-white dark:bg-gray-700 dark:text-gray-400","suspended"=>"bg-red-600 text-white dark:bg-red-900/30 dark:text-red-400" }[@project.status] %>
         <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full <%= status_class %>"><%= @project.status_label %></span>
         <% if @project.location.present? %><span><%= @project.location %></span><% end %>
       </div>
@@ -28,7 +28,7 @@
 
   <!-- 예산 집행률 카드 -->
   <% if @project.budget.present? && @project.budget > 0 %>
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-5">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-5">
       <div class="flex justify-between mb-3">
         <div>
           <p class="text-xs text-gray-500 dark:text-gray-400">총 예산</p>
@@ -55,8 +55,8 @@
 
   <!-- 탭: 오더 + 투입 인력 -->
   <% @employee_assignments = @project.employee_assignments.active.includes(:employee) %>
-  <div x-data="{ tab: 'orders' }" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
-    <div class="border-b border-gray-100 dark:border-gray-700 px-4">
+  <div x-data="{ tab: 'orders' }" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+    <div class="border-b border-gray-200 dark:border-gray-700 px-4">
       <nav class="flex gap-6">
         <button @click="tab='orders'" :class="tab==='orders' ? 'border-primary text-primary' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
             class="py-3 border-b-2 text-sm font-medium transition-colors">
@@ -71,7 +71,7 @@
 
     <!-- 오더 탭 -->
     <div x-show="tab==='orders'">
-      <div class="p-4 border-b border-gray-100 dark:border-gray-700">
+      <div class="p-4 border-b border-gray-200 dark:border-gray-700">
         <!-- 헤더: 추가 버튼 -->
         <div class="flex justify-between items-center mb-3">
           <h3 class="font-medium text-gray-900 dark:text-white">관련 오더</h3>
@@ -156,7 +156,7 @@
       </div>
       <div class="space-y-3">
         <% @employee_assignments.each do |asgn| %>
-          <div class="flex items-center justify-between p-3 border border-gray-100 dark:border-gray-700 rounded-lg hover:border-primary/30 transition-colors">
+          <div class="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary/30 transition-colors">
             <div class="flex items-center gap-3">
               <div class="w-9 h-9 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary font-bold text-sm shrink-0">
                 <%= asgn.employee.name.first.upcase %>

@@ -45,7 +45,7 @@
 
   <!-- KPI 카드 -->
   <div class="grid grid-cols-4 gap-4">
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
       <p class="text-xs text-gray-500 dark:text-gray-400">재직 기간</p>
       <% if @employee.hire_date %>
         <!-- FR-05: tenure_label -->
@@ -55,7 +55,7 @@
         <p class="text-xl font-bold text-gray-400 dark:text-gray-500 mt-1">-</p>
       <% end %>
     </div>
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
       <p class="text-xs text-gray-500 dark:text-gray-400">현재 현장</p>
       <% assignment = @employee.current_assignment %>
       <% if assignment %>
@@ -65,7 +65,7 @@
         <p class="text-xl font-bold text-gray-400 dark:text-gray-500 mt-1">-</p>
       <% end %>
     </div>
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
       <p class="text-xs text-gray-500 dark:text-gray-400">비자 만료까지</p>
       <% visa = @employee.active_visa %>
       <% if visa %>
@@ -78,7 +78,7 @@
         <p class="text-xl font-bold text-gray-400 dark:text-gray-500 mt-1">-</p>
       <% end %>
     </div>
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
       <p class="text-xs text-gray-500 dark:text-gray-400">계약 만료까지</p>
       <% contract = @employee.current_contract %>
       <% if contract&.end_date %>
@@ -102,8 +102,8 @@
       url.searchParams.set('tab', t);
       window.history.pushState({}, '', url);
     }
-  }" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
-    <div class="border-b border-gray-100 dark:border-gray-700 px-4">
+  }" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+    <div class="border-b border-gray-200 dark:border-gray-700 px-4">
       <nav class="flex gap-6">
         <button @click="switchTab('info')" :class="tab==='info' ? 'border-primary text-primary' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
             class="py-3 border-b-2 text-sm font-medium transition-colors">기본정보</button>
@@ -184,7 +184,7 @@
       </div>
       <div class="space-y-3">
         <% @visas.each do |visa| %>
-          <div class="flex items-center justify-between p-3 border border-gray-100 dark:border-gray-700 rounded-lg hover:border-primary/30 transition-colors">
+          <div class="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary/30 transition-colors">
             <div class="flex items-center gap-4">
               <div>
                 <div class="flex items-center gap-2">
@@ -231,7 +231,7 @@
       </div>
       <div class="space-y-3">
         <% @contracts.each do |contract| %>
-          <div class="flex items-center justify-between p-3 border border-gray-100 dark:border-gray-700 rounded-lg hover:border-primary/30 transition-colors">
+          <div class="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary/30 transition-colors">
             <div>
               <div class="flex items-center gap-2">
                 <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full <%= contract.status_badge_class %>"><%= contract.status_label %></span>
@@ -283,7 +283,7 @@
       </div>
       <div class="space-y-3">
         <% @assignments.each do |asgn| %>
-          <div class="flex items-center justify-between p-3 border border-gray-100 dark:border-gray-700 rounded-lg hover:border-primary/30 transition-colors">
+          <div class="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary/30 transition-colors">
             <div>
               <div class="flex items-center gap-2">
                 <span class="font-medium text-sm text-gray-900 dark:text-white"><%= asgn.project.name %></span>
@@ -329,7 +329,7 @@
       </div>
       <div class="space-y-3">
         <% @certifications.each do |cert| %>
-          <div class="flex items-center justify-between p-3 border border-gray-100 dark:border-gray-700 rounded-lg hover:border-primary/30 transition-colors">
+          <div class="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary/30 transition-colors">
             <div>
               <div class="flex items-center gap-2">
                 <span class="font-medium text-sm text-gray-900 dark:text-white"><%= cert.name %></span>

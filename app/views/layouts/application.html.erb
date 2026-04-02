@@ -92,7 +92,7 @@
           <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
           <div class="relative w-full max-w-xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
             <%# 검색 입력 %>
-            <div class="flex items-center gap-3 px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+            <div class="flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
               <svg class="w-4 h-4 text-gray-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
               <input data-command-palette-target="input"
                      data-action="input->command-palette#search keydown->command-palette#handleKeydown"
@@ -110,7 +110,7 @@
               </div>
             </div>
             <%# 푸터 %>
-            <div class="px-4 py-2 border-t border-gray-100 dark:border-gray-700 flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
+            <div class="px-4 py-2 border-t border-gray-200 dark:border-gray-700 flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
               <span><kbd class="px-1 py-0.5 border border-gray-200 dark:border-gray-600 rounded text-xs">↑↓</kbd> 탐색</span>
               <span><kbd class="px-1 py-0.5 border border-gray-200 dark:border-gray-600 rounded text-xs">↵</kbd> 이동</span>
               <span><kbd class="px-1 py-0.5 border border-gray-200 dark:border-gray-600 rounded text-xs">⌘K</kbd> 열기</span>
@@ -127,7 +127,7 @@
       <div id="order-drawer"
            class="fixed top-0 right-0 h-full w-full max-w-2xl bg-white dark:bg-gray-800 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
         <%# Drawer Header %>
-        <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex-shrink-0 bg-white dark:bg-gray-800">
+        <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 bg-white dark:bg-gray-800">
           <div class="flex-1 min-w-0 flex items-center gap-1.5 truncate">
             <span id="drawer-ref-badge" class="hidden font-bold text-[#1E3A5F] dark:text-blue-400 font-mono text-xs flex-shrink-0"></span>
             <span id="drawer-title" class="text-sm font-semibold text-gray-900 dark:text-white truncate"></span>
