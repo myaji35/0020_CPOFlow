@@ -66,8 +66,15 @@ class ClaudeTokenResolver
 
       case result[:auth]
       when :bearer
-        # Claude CLI OAuth 토큰 → api.claude.ai 엔드포인트 (Claude Max/Pro)
-        Anthropic::Client.new(auth_token: result[:key], base_url: CLAUDE_AI_BASE_URL)
+        # Claude CLI OAuth 토큰 — 외부 API 미지원, api_key 소스로 폴백
+        fallback = ENV["ANTHROPIC_API_KEY"].presence ||
+                   Rails.application.credentials.dig(:anthropic, :api_key).presence
+        if fallback
+          Anthropic::Client.new(api_key: fallback)
+        else
+          Rails.logger.warn "[ClaudeTokenResolver] Claude CLI OAuth는 외부 API 미지원. API 키 폴백도 없음."
+          nil
+        end
       else
         Anthropic::Client.new(api_key: result[:key])
       end
