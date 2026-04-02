@@ -37,7 +37,7 @@ module Gmail
     def call_claude_api
       return nil unless ClaudeTokenResolver.configured?
 
-      uri = URI("https://api.anthropic.com/v1/messages")
+      uri = URI("#{ClaudeTokenResolver.api_base_url}/v1/messages")
       headers = ClaudeTokenResolver.auth_headers
       body = {
         model:      CLAUDE_MODEL,

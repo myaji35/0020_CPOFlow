@@ -58,20 +58,27 @@ class ClaudeTokenResolver
     end
 
     # Anthropic SDK 클라이언트 생성 헬퍼
+    CLAUDE_AI_BASE_URL = "https://api.claude.ai".freeze
+
     def create_client
       result = resolve
       return nil unless result
 
       case result[:auth]
       when :bearer
-        # Claude CLI OAuth 토큰 → SDK의 auth_token (Bearer 인증)
-        Anthropic::Client.new(auth_token: result[:key])
+        # Claude CLI OAuth 토큰 → api.claude.ai 엔드포인트 (Claude Max/Pro)
+        Anthropic::Client.new(auth_token: result[:key], base_url: CLAUDE_AI_BASE_URL)
       else
         Anthropic::Client.new(api_key: result[:key])
       end
     end
 
-    # Net::HTTP용 헤더 생성 (rfq_reply_draft_service 등에서 사용)
+    # Net::HTTP용 헤더 + 엔드포인트 생성 (rfq_reply_draft_service 등에서 사용)
+    def api_base_url
+      result = resolve
+      result&.dig(:auth) == :bearer ? CLAUDE_AI_BASE_URL : "https://api.anthropic.com"
+    end
+
     def auth_headers
       result = resolve
       return {} unless result
