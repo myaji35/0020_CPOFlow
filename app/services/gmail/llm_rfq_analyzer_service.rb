@@ -37,7 +37,7 @@ module Gmail
       return nil unless client
 
       client.messages.create(
-        model: "claude-haiku-4-5-20251001",
+        model: ENV.fetch("RFQ_LLM_MODEL", "claude-haiku-4-5-20251001"),
         max_tokens: 1024,
         messages: [
           {
