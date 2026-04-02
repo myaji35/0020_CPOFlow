@@ -5,12 +5,11 @@ class OrderTest < ActiveSupport::TestCase
     assert_nothing_raised { Order.active.count }
     assert_nothing_raised { Order.overdue.count }
     assert_nothing_raised { Order.urgent.count }
-    assert_nothing_raised { Order.delivered.count }
     assert_nothing_raised { Order.by_due_date.limit(1).to_a }
   end
 
   test "Order status enum 유효" do
-    valid = %w[inbox reviewing quoted confirmed procuring qa delivered]
+    valid = %w[new_rfq make_quo pending_po new_po delivery_items problem get_grn give_up done]
     valid.each do |s|
       assert Order.statuses.key?(s), "status #{s} 누락"
     end
