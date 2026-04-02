@@ -60,7 +60,11 @@ module Admin
 
     # GET /admin/imports/:id/download_errors
     def download_errors
-      path = Rails.root.join("public", @import.result_file_path.to_s.sub(/^\//, ""))
+      path = Rails.root.join("public", @import.result_file_path.to_s.sub(/^\//, "")).cleanpath
+      unless path.to_s.start_with?(Rails.root.join("public").to_s)
+        redirect_to admin_import_path(@import), alert: "잘못된 파일 경로입니다."
+        return
+      end
       if path.exist?
         send_file path,
                   filename: "import_#{@import.id}_errors.csv",

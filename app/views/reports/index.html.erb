@@ -16,13 +16,7 @@
 </style>
 
 <%# 증감률 배지 헬퍼 %>
-<% delta_badge = ->(curr, prev_val) do
-  return "" if prev_val.nil? || prev_val == 0
-  pct = ((curr - prev_val).to_f / prev_val * 100).round(1)
-  arrow = pct >= 0 ? "▲" : "▼"
-  color = pct >= 0 ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"
-  "<span class='text-xs #{color} font-medium ml-1'>#{arrow} #{pct.abs}%</span>"
-end %>
+<%# delta_badge helper는 ReportsHelper에 정의됨 %>
 
 <div class="flex flex-col gap-6">
 
@@ -88,7 +82,7 @@ end %>
       <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
         <%= @kpi[:new_orders] %><span class="text-sm font-normal ml-0.5">건</span>
       </p>
-      <%= delta_badge.call(@kpi[:new_orders], @kpi[:prev_orders]).html_safe %>
+      <%= delta_badge(@kpi[:new_orders], @kpi[:prev_orders]) %>
     </div>
     <%# 납품 건수 %>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
@@ -96,7 +90,7 @@ end %>
       <p class="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">
         <%= @kpi[:delivered] %><span class="text-sm font-normal ml-0.5">건</span>
       </p>
-      <%= delta_badge.call(@kpi[:delivered], @kpi[:prev_delivered]).html_safe %>
+      <%= delta_badge(@kpi[:delivered], @kpi[:prev_delivered]) %>
     </div>
     <%# 수주액 %>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
@@ -104,7 +98,7 @@ end %>
       <p class="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">
         $<%= number_with_delimiter((@kpi[:total_value] / 1000).round) %><span class="text-sm font-normal ml-0.5">K</span>
       </p>
-      <%= delta_badge.call(@kpi[:total_value], @kpi[:prev_value]).html_safe %>
+      <%= delta_badge(@kpi[:total_value], @kpi[:prev_value]) %>
     </div>
     <%# 납기 준수율 %>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
@@ -112,7 +106,7 @@ end %>
       <p class="text-2xl font-bold mt-1 <%= @kpi[:on_time_rate] >= 90 ? 'text-green-600' : @kpi[:on_time_rate] >= 70 ? 'text-yellow-500' : 'text-red-500' %>">
         <%= @kpi[:on_time_rate] %>%
       </p>
-      <%= delta_badge.call(@kpi[:on_time_rate], @kpi[:prev_on_time]).html_safe %>
+      <%= delta_badge(@kpi[:on_time_rate], @kpi[:prev_on_time]) %>
     </div>
     <%# 납기 지연 %>
     <div class="bg-white dark:bg-gray-800 rounded-xl border <%= @kpi[:overdue] > 0 ? 'border-red-200 dark:border-red-800' : 'border-gray-200 dark:border-gray-700' %> p-4">
