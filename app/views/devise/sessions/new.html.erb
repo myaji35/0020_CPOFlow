@@ -20,7 +20,7 @@
     <div class="absolute inset-0 flex items-center">
       <div class="w-full border-t border-gray-200 dark:border-gray-600"></div>
     </div>
-    <div class="relative flex justify-center text-xs text-gray-400 dark:text-gray-500">
+    <div class="relative flex justify-center text-xs text-gray-500 dark:text-gray-500">
       <span class="bg-white dark:bg-gray-800 px-3">또는 이메일로 로그인</span>
     </div>
   </div>
@@ -35,7 +35,7 @@
         <%= f.text_field :company_name,
             placeholder: "예) AtoZ2010 Inc.",
             class: "w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent" %>
-        <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">선택사항 — 입력하지 않아도 로그인됩니다</p>
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-500">선택사항 — 입력하지 않아도 로그인됩니다</p>
       </div>
 
       <%# 이메일 %>
@@ -63,7 +63,7 @@
       <% if devise_mapping.rememberable? %>
         <div class="flex items-center gap-2">
           <%= f.check_box :remember_me, class: "rounded border-gray-300 text-accent" %>
-          <%= f.label :remember_me, "로그인 상태 유지", class: "text-sm text-gray-600 dark:text-gray-400" %>
+          <%= f.label :remember_me, "로그인 상태 유지", class: "text-sm text-gray-600 dark:text-gray-500" %>
         </div>
       <% end %>
 
@@ -73,7 +73,7 @@
   <% end %>
 
   <%# ── 회원가입 링크 ────────────────────────────────── %>
-  <p class="mt-5 text-center text-sm text-gray-500 dark:text-gray-400">
+  <p class="mt-5 text-center text-sm text-gray-500 dark:text-gray-500">
     계정이 없으신가요?
     <%= link_to "회원가입", new_registration_path(resource_name), class: "text-accent font-medium hover:underline" %>
   </p>

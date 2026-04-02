@@ -4,7 +4,7 @@
 <div class="flex items-center justify-between mb-6">
   <div>
     <h1 class="text-2xl font-bold text-gray-900 dark:text-white">대시보드</h1>
-    <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">전체 발주 현황 및 KPI</p>
+    <p class="text-sm text-gray-500 dark:text-gray-500 mt-0.5">전체 발주 현황 및 KPI</p>
   </div>
   <div class="flex items-center gap-2">
     <%= link_to new_order_path,
@@ -42,9 +42,9 @@
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
     <div class="flex items-start justify-between">
       <div>
-        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">진행 중</p>
+        <p class="text-xs font-medium text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-2">진행 중</p>
         <p class="text-3xl font-bold text-gray-900 dark:text-white"><%= @total_active %></p>
-        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">건</p>
+        <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">건</p>
       </div>
       <div class="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
         <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -63,7 +63,7 @@
                title="<%= val %>건"></div>
         <% end %>
       </div>
-      <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">최근 7일 추이</p>
+      <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">최근 7일 추이</p>
     <% end %>
   </div>
 
@@ -71,9 +71,9 @@
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
     <div class="flex items-start justify-between">
       <div>
-        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">이번달 납품</p>
+        <p class="text-xs font-medium text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-2">이번달 납품</p>
         <p class="text-3xl font-bold text-green-600 dark:text-green-400"><%= @delivered_this_month %></p>
-        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">건 완료</p>
+        <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">건 완료</p>
       </div>
       <div class="w-9 h-9 rounded-lg bg-green-50 dark:bg-green-900/30 flex items-center justify-center">
         <svg class="w-5 h-5 text-green-600 dark:text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -90,15 +90,15 @@
        <%= @overdue_count > 0 ? 'onclick="toggleKpiPanel(\'overdue\')"' : '' %>>
     <div class="flex items-start justify-between">
       <div>
-        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">지연 발주</p>
+        <p class="text-xs font-medium text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-2">지연 발주</p>
         <p class="text-3xl font-bold <%= @overdue_count > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white' %>"><%= @overdue_count %></p>
-        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1"><%= @overdue_count > 0 ? '즉시 조치 필요' : '문제 없음' %></p>
+        <p class="text-xs text-gray-500 dark:text-gray-500 mt-1"><%= @overdue_count > 0 ? '즉시 조치 필요' : '문제 없음' %></p>
         <% if @overdue_count > 0 %>
           <p class="text-xs text-red-400 dark:text-red-500 mt-1.5">클릭하여 목록 보기</p>
         <% end %>
       </div>
       <div class="w-9 h-9 rounded-lg <%= @overdue_count > 0 ? 'bg-red-100 dark:bg-red-900/40' : 'bg-gray-50 dark:bg-gray-700' %> flex items-center justify-center">
-        <svg class="w-5 h-5 <%= @overdue_count > 0 ? 'text-red-500' : 'text-gray-400' %>" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg class="w-5 h-5 <%= @overdue_count > 0 ? 'text-red-500' : 'text-gray-500' %>" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"/>
           <line x1="12" y1="8" x2="12" y2="12"/>
           <line x1="12" y1="16" x2="12.01" y2="16"/>
@@ -113,15 +113,15 @@
        <%= @urgent_count > 0 ? 'onclick="toggleKpiPanel(\'urgent\')"' : '' %>>
     <div class="flex items-start justify-between">
       <div>
-        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">긴급 D-7</p>
+        <p class="text-xs font-medium text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-2">긴급 D-7</p>
         <p class="text-3xl font-bold <%= @urgent_count > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-gray-900 dark:text-white' %>"><%= @urgent_count %></p>
-        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">7일 내 납기</p>
+        <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">7일 내 납기</p>
         <% if @urgent_count > 0 %>
           <p class="text-xs text-orange-400 dark:text-orange-500 mt-1.5">클릭하여 목록 보기</p>
         <% end %>
       </div>
       <div class="w-9 h-9 rounded-lg <%= @urgent_count > 0 ? 'bg-orange-100 dark:bg-orange-900/40' : 'bg-gray-50 dark:bg-gray-700' %> flex items-center justify-center">
-        <svg class="w-5 h-5 <%= @urgent_count > 0 ? 'text-orange-500' : 'text-gray-400' %>" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg class="w-5 h-5 <%= @urgent_count > 0 ? 'text-orange-500' : 'text-gray-500' %>" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"/>
           <polyline points="12 6 12 12 16 14"/>
         </svg>
@@ -135,7 +135,7 @@
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
     <div class="flex items-start justify-between">
       <div>
-        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">납기 준수율</p>
+        <p class="text-xs font-medium text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-2">납기 준수율</p>
         <p class="text-3xl font-bold <%= rate_color %>"><%= @on_time_rate_this_month %>%</p>
         <p class="text-xs mt-1 <%= rate_trend >= 0 ? 'text-green-500' : 'text-red-500' %>">
           <span class="inline-flex items-center gap-0.5">
@@ -161,7 +161,7 @@
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
     <div class="flex items-start justify-between">
       <div>
-        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">이번달 수주액</p>
+        <p class="text-xs font-medium text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-2">이번달 수주액</p>
         <p class="text-2xl font-bold text-gray-900 dark:text-white">$<%= number_to_human(@total_value_this_month.to_i, units: { thousand: 'K', million: 'M' }, format: '%n%u', precision: 1) %></p>
         <p class="text-xs mt-1 <%= value_trend >= 0 ? 'text-green-500' : 'text-red-500' %>">
           <span class="inline-flex items-center gap-0.5">
@@ -203,7 +203,7 @@
                onclick="openOrderDrawer(<%= order.id %>, <%= order.title.to_json %>, '<%= order_path(order) %>')">
             <div class="flex-1 min-w-0">
               <p class="text-sm font-medium text-gray-900 dark:text-white truncate"><%= order.title %></p>
-              <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+              <p class="text-xs text-gray-500 dark:text-gray-500 truncate">
                 <%= order.client&.name || order.customer_name %>
               </p>
             </div>
@@ -215,7 +215,7 @@
         <% end %>
       </div>
     <% else %>
-      <div class="px-4 py-6 text-center text-sm text-gray-400 dark:text-gray-500">지연 주문이 없습니다.</div>
+      <div class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-500">지연 주문이 없습니다.</div>
     <% end %>
   </div>
 
@@ -239,7 +239,7 @@
                onclick="openOrderDrawer(<%= order.id %>, <%= order.title.to_json %>, '<%= order_path(order) %>')">
             <div class="flex-1 min-w-0">
               <p class="text-sm font-medium text-gray-900 dark:text-white truncate"><%= order.title %></p>
-              <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+              <p class="text-xs text-gray-500 dark:text-gray-500 truncate">
                 <%= order.client&.name || order.customer_name %>
               </p>
             </div>
@@ -251,7 +251,7 @@
         <% end %>
       </div>
     <% else %>
-      <div class="px-4 py-6 text-center text-sm text-gray-400 dark:text-gray-500">긴급 주문이 없습니다.</div>
+      <div class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-500">긴급 주문이 없습니다.</div>
     <% end %>
   </div>
 </div>
@@ -283,7 +283,7 @@
                          "new_po" => "bg-indigo-400", "delivery_items" => "bg-orange-400",
                          "problem" => "bg-purple-400", "get_grn" => "bg-green-500", "give_up" => "bg-gray-200" }[status] %>
         <div class="flex items-center gap-3">
-          <span class="text-xs text-gray-500 dark:text-gray-400 w-16 shrink-0"><%= Order::STATUS_LABELS[status] %></span>
+          <span class="text-xs text-gray-500 dark:text-gray-500 w-16 shrink-0"><%= Order::STATUS_LABELS[status] %></span>
           <div class="flex-1 bg-gray-100 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
             <div class="<%= bar_color %> h-2 rounded-full transition-all duration-500"
                  style="width: <%= status == 'get_grn' ? (@delivered_this_month.to_f / [@total_active + @delivered_this_month, 1].max * 100).round : pct %>%"></div>
@@ -310,7 +310,7 @@
           <div class="flex-1">
             <div class="flex items-center justify-between text-xs mb-1">
               <span class="text-gray-600 dark:text-gray-300"><%= cat[:orders] %>건</span>
-              <span class="text-gray-400 dark:text-gray-500">$<%= number_to_human(cat[:value].to_i, units: { thousand: 'K', million: 'M' }, format: '%n%u', precision: 1) %></span>
+              <span class="text-gray-500 dark:text-gray-500">$<%= number_to_human(cat[:value].to_i, units: { thousand: 'K', million: 'M' }, format: '%n%u', precision: 1) %></span>
             </div>
             <% total_orders = [@site_category_data.sum { |c| c[:orders] }, 1].max %>
             <div class="bg-gray-100 dark:bg-gray-700 rounded-full h-1.5">
@@ -335,7 +335,7 @@
       <% [['weekly', '주간 8주'], ['monthly', '월간 12개월'], ['quarterly', '분기 6분기'], ['yearly', '연간']].each do |val, label| %>
         <button
           @click="period = '<%= val %>'; showPeriod('<%= val %>')"
-          :class="period === '<%= val %>' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'"
+          :class="period === '<%= val %>' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200'"
           class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors">
           <%= label %>
         </button>
@@ -345,7 +345,7 @@
 
   <!-- 주간 차트 -->
   <div id="chart-weekly" class="hidden">
-    <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">최근 8주 수주/납품 현황</p>
+    <p class="text-xs text-gray-500 dark:text-gray-500 mb-3">최근 8주 수주/납품 현황</p>
     <% max_w = [@weekly_data.map { |w| w[:orders] }.max.to_i, 1].max %>
     <div class="flex items-end gap-2" style="height:120px;">
       <% @weekly_data.each do |w| %>
@@ -358,19 +358,19 @@
                  style="height:<%= (w[:delivered].to_f / max_w * 100).round %>%"
                  title="납품 <%= w[:delivered] %>건"></div>
           </div>
-          <span class="text-xs text-gray-400 dark:text-gray-500 truncate w-full text-center leading-tight"><%= w[:label] %></span>
+          <span class="text-xs text-gray-500 dark:text-gray-500 truncate w-full text-center leading-tight"><%= w[:label] %></span>
         </div>
       <% end %>
     </div>
     <div class="flex items-center gap-4 mt-2">
-      <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded bg-blue-400 opacity-80"></div><span class="text-xs text-gray-500 dark:text-gray-400">수주</span></div>
-      <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded bg-green-400 opacity-80"></div><span class="text-xs text-gray-500 dark:text-gray-400">납품</span></div>
+      <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded bg-blue-400 opacity-80"></div><span class="text-xs text-gray-500 dark:text-gray-500">수주</span></div>
+      <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded bg-green-400 opacity-80"></div><span class="text-xs text-gray-500 dark:text-gray-500">납품</span></div>
     </div>
   </div>
 
   <!-- 월간 차트 (기본) -->
   <div id="chart-monthly">
-    <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">최근 12개월 수주/납품 현황</p>
+    <p class="text-xs text-gray-500 dark:text-gray-500 mb-3">최근 12개월 수주/납품 현황</p>
     <% max_m = [@monthly_data.map { |m| m[:orders] }.max.to_i, 1].max %>
     <div class="flex items-end gap-1.5" style="height:120px;">
       <% @monthly_data.each do |m| %>
@@ -383,29 +383,29 @@
                  style="height:<%= (m[:delivered].to_f / max_m * 100).round %>%"
                  title="납품 <%= m[:delivered] %>건"></div>
           </div>
-          <span class="text-xs text-gray-400 dark:text-gray-500 truncate w-full text-center leading-tight"><%= m[:label] %></span>
+          <span class="text-xs text-gray-500 dark:text-gray-500 truncate w-full text-center leading-tight"><%= m[:label] %></span>
         </div>
       <% end %>
     </div>
     <div class="flex items-center gap-4 mt-2">
-      <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded bg-blue-400 opacity-80"></div><span class="text-xs text-gray-500 dark:text-gray-400">수주</span></div>
-      <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded bg-green-400 opacity-80"></div><span class="text-xs text-gray-500 dark:text-gray-400">납품</span></div>
+      <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded bg-blue-400 opacity-80"></div><span class="text-xs text-gray-500 dark:text-gray-500">수주</span></div>
+      <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded bg-green-400 opacity-80"></div><span class="text-xs text-gray-500 dark:text-gray-500">납품</span></div>
     </div>
   </div>
 
   <!-- 분기 차트 -->
   <div id="chart-quarterly" class="hidden">
-    <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">최근 6분기 납기 준수율 및 수주량</p>
+    <p class="text-xs text-gray-500 dark:text-gray-500 mb-3">최근 6분기 납기 준수율 및 수주량</p>
     <div class="grid gap-3" style="grid-template-columns: repeat(<%= @quarterly_data.length %>, 1fr);">
       <% @quarterly_data.each do |q| %>
         <% rate_cls = q[:on_time_rate].to_f >= 90 ? 'text-green-600 dark:text-green-400' : q[:on_time_rate].to_f >= 75 ? 'text-orange-500 dark:text-orange-400' : 'text-red-500 dark:text-red-400' %>
         <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center">
-          <p class="text-xs font-bold text-gray-500 dark:text-gray-400 mb-2"><%= q[:label] %></p>
+          <p class="text-xs font-bold text-gray-500 dark:text-gray-500 mb-2"><%= q[:label] %></p>
           <p class="text-2xl font-bold text-gray-900 dark:text-white"><%= q[:orders] %></p>
-          <p class="text-xs text-gray-400 dark:text-gray-500 mb-2">수주</p>
+          <p class="text-xs text-gray-500 dark:text-gray-500 mb-2">수주</p>
           <div class="border-t border-gray-200 dark:border-gray-600 pt-2">
             <p class="text-base font-bold <%= rate_cls %>"><%= q[:on_time_rate] %>%</p>
-            <p class="text-xs text-gray-400 dark:text-gray-500">납기준수율</p>
+            <p class="text-xs text-gray-500 dark:text-gray-500">납기준수율</p>
           </div>
         </div>
       <% end %>
@@ -414,7 +414,7 @@
 
   <!-- 연간 차트 -->
   <div id="chart-yearly" class="hidden">
-    <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">연도별 종합 실적</p>
+    <p class="text-xs text-gray-500 dark:text-gray-500 mb-3">연도별 종합 실적</p>
     <div class="grid grid-cols-3 gap-4">
       <% @yearly_data.each do |y| %>
         <% rate_cls = y[:on_time_rate].to_f >= 90 ? 'text-green-600 dark:text-green-400' : y[:on_time_rate].to_f >= 75 ? 'text-orange-500 dark:text-orange-400' : 'text-red-500 dark:text-red-400' %>
@@ -423,18 +423,18 @@
           <div class="grid grid-cols-2 gap-2 mb-3">
             <div>
               <p class="text-2xl font-bold text-gray-900 dark:text-white"><%= y[:orders] %></p>
-              <p class="text-xs text-gray-400 dark:text-gray-500">수주</p>
+              <p class="text-xs text-gray-500 dark:text-gray-500">수주</p>
             </div>
             <div>
               <p class="text-2xl font-bold text-green-600 dark:text-green-400"><%= y[:delivered] %></p>
-              <p class="text-xs text-gray-400 dark:text-gray-500">납품</p>
+              <p class="text-xs text-gray-500 dark:text-gray-500">납품</p>
             </div>
           </div>
           <div class="border-t border-gray-200 dark:border-gray-600 pt-3">
             <p class="text-xl font-bold <%= rate_cls %>"><%= y[:on_time_rate] %>%</p>
-            <p class="text-xs text-gray-400 dark:text-gray-500 mb-1">납기준수율</p>
+            <p class="text-xs text-gray-500 dark:text-gray-500 mb-1">납기준수율</p>
             <p class="text-sm font-semibold text-gray-700 dark:text-gray-300">$<%= number_with_delimiter(y[:total_value].to_i) %></p>
-            <p class="text-xs text-gray-400 dark:text-gray-500">총 수주액</p>
+            <p class="text-xs text-gray-500 dark:text-gray-500">총 수주액</p>
           </div>
         </div>
       <% end %>
@@ -455,7 +455,7 @@
     </div>
     <div class="divide-y divide-gray-50 dark:divide-gray-700/50">
       <% if @urgent_orders.empty? %>
-        <div class="px-5 py-6 text-center text-xs text-gray-400 dark:text-gray-500">긴급 발주 없음</div>
+        <div class="px-5 py-6 text-center text-xs text-gray-500 dark:text-gray-500">긴급 발주 없음</div>
       <% else %>
         <% @urgent_orders.each do |order| %>
           <%= link_to order_path(order), class: "flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors" do %>
@@ -468,7 +468,7 @@
             </div>
             <div class="flex-1 min-w-0">
               <p class="text-xs font-medium text-gray-900 dark:text-white truncate"><%= order.title %></p>
-              <p class="text-xs text-gray-400 dark:text-gray-500 truncate"><%= order.customer_name %></p>
+              <p class="text-xs text-gray-500 dark:text-gray-500 truncate"><%= order.customer_name %></p>
             </div>
             <%= status_badge(order) %>
           <% end %>
@@ -488,7 +488,7 @@
     </div>
     <div class="divide-y divide-gray-50 dark:divide-gray-700/50">
       <% if @expiring_visas.empty? %>
-        <div class="px-5 py-6 text-center text-xs text-gray-400 dark:text-gray-500">만료 임박 비자 없음</div>
+        <div class="px-5 py-6 text-center text-xs text-gray-500 dark:text-gray-500">만료 임박 비자 없음</div>
       <% else %>
         <% @expiring_visas.each do |visa| %>
           <% days = (visa.expiry_date - Date.today).to_i %>
@@ -499,7 +499,7 @@
             </div>
             <div class="flex-1 min-w-0">
               <p class="text-xs font-medium text-gray-900 dark:text-white truncate"><%= visa.employee&.name %></p>
-              <p class="text-xs text-gray-400 dark:text-gray-500"><%= visa.visa_type %> · <%= visa.expiry_date&.strftime("%Y.%m.%d") %></p>
+              <p class="text-xs text-gray-500 dark:text-gray-500"><%= visa.visa_type %> · <%= visa.expiry_date&.strftime("%Y.%m.%d") %></p>
             </div>
           </div>
         <% end %>
@@ -518,7 +518,7 @@
     </div>
     <div class="divide-y divide-gray-50 dark:divide-gray-700/50">
       <% if @expiring_contracts.empty? %>
-        <div class="px-5 py-6 text-center text-xs text-gray-400 dark:text-gray-500">만료 임박 계약 없음</div>
+        <div class="px-5 py-6 text-center text-xs text-gray-500 dark:text-gray-500">만료 임박 계약 없음</div>
       <% else %>
         <% @expiring_contracts.each do |contract| %>
           <% days = (contract.end_date - Date.today).to_i %>
@@ -529,7 +529,7 @@
             </div>
             <div class="flex-1 min-w-0">
               <p class="text-xs font-medium text-gray-900 dark:text-white truncate"><%= contract.employee&.name %></p>
-              <p class="text-xs text-gray-400 dark:text-gray-500"><%= contract.status_label %> · <%= contract.end_date&.strftime("%Y.%m.%d") %></p>
+              <p class="text-xs text-gray-500 dark:text-gray-500"><%= contract.status_label %> · <%= contract.end_date&.strftime("%Y.%m.%d") %></p>
             </div>
             <%= link_to employee_path(contract.employee), class: "text-xs text-primary hover:underline shrink-0" do %>보기<% end %>
           </div>
@@ -563,19 +563,19 @@
         <div class="grid grid-cols-2 gap-2 text-xs">
           <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2 text-center">
             <p class="font-bold text-gray-900 dark:text-white"><%= @last_sync.orders_count %></p>
-            <p class="text-gray-400 dark:text-gray-500">발주</p>
+            <p class="text-gray-500 dark:text-gray-500">발주</p>
           </div>
           <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2 text-center">
             <p class="font-bold text-gray-900 dark:text-white"><%= @last_sync.employees_count %></p>
-            <p class="text-gray-400 dark:text-gray-500">직원</p>
+            <p class="text-gray-500 dark:text-gray-500">직원</p>
           </div>
         </div>
-        <p class="text-xs text-gray-400 dark:text-gray-500 mt-2 text-center">
+        <p class="text-xs text-gray-500 dark:text-gray-500 mt-2 text-center">
           <span class="<%= status_cls %> font-medium"><%= @last_sync.status_label %></span>
           · <%= @last_sync.synced_at&.strftime("%m/%d %H:%M") %>
         </p>
       <% else %>
-        <p class="text-xs text-gray-400 dark:text-gray-500 text-center py-2">아직 동기화 없음</p>
+        <p class="text-xs text-gray-500 dark:text-gray-500 text-center py-2">아직 동기화 없음</p>
       <% end %>
     </div>
 
@@ -590,7 +590,7 @@
           <%= link_to order_path(order), class: "flex items-center gap-2 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors" do %>
             <div class="flex-1 min-w-0">
               <p class="text-xs font-medium text-gray-900 dark:text-white truncate"><%= order.title %></p>
-              <p class="text-xs text-gray-400 dark:text-gray-500"><%= order.created_at.strftime("%m/%d") %></p>
+              <p class="text-xs text-gray-500 dark:text-gray-500"><%= order.created_at.strftime("%m/%d") %></p>
             </div>
             <%= status_badge(order) %>
           <% end %>
@@ -616,7 +616,7 @@
       <% if @top_clients.empty? %>
         <div class="px-5 py-8 text-center">
           <svg class="w-10 h-10 mx-auto text-gray-300 dark:text-gray-600 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-          <p class="text-xs text-gray-400 dark:text-gray-500">거래 데이터가 쌓이면 여기에 표시됩니다</p>
+          <p class="text-xs text-gray-500 dark:text-gray-500">거래 데이터가 쌓이면 여기에 표시됩니다</p>
         </div>
       <% else %>
         <% @top_clients.each_with_index do |client, idx| %>
@@ -634,7 +634,7 @@
                   <div class="bg-primary rounded-full h-1.5 transition-all duration-500"
                        style="width: <%= (client.total_value.to_f / max_client_val * 100).round %>%"></div>
                 </div>
-                <span class="text-xs text-gray-400 dark:text-gray-500 shrink-0"><%= client.order_count %>건</span>
+                <span class="text-xs text-gray-500 dark:text-gray-500 shrink-0"><%= client.order_count %>건</span>
               </div>
             </div>
           </div>
@@ -654,7 +654,7 @@
       <% if @top_suppliers.empty? %>
         <div class="px-5 py-8 text-center">
           <svg class="w-10 h-10 mx-auto text-gray-300 dark:text-gray-600 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-          <p class="text-xs text-gray-400 dark:text-gray-500">거래 데이터가 쌓이면 여기에 표시됩니다</p>
+          <p class="text-xs text-gray-500 dark:text-gray-500">거래 데이터가 쌓이면 여기에 표시됩니다</p>
         </div>
       <% else %>
         <% @top_suppliers.each_with_index do |supplier, idx| %>
@@ -672,7 +672,7 @@
                   <div class="bg-purple-400 dark:bg-purple-500 rounded-full h-1.5 transition-all duration-500"
                        style="width: <%= (supplier.total_value.to_f / max_supplier_val * 100).round %>%"></div>
                 </div>
-                <span class="text-xs text-gray-400 dark:text-gray-500 shrink-0"><%= supplier.order_count %>건</span>
+                <span class="text-xs text-gray-500 dark:text-gray-500 shrink-0"><%= supplier.order_count %>건</span>
               </div>
             </div>
           </div>
@@ -688,13 +688,13 @@
 <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 mb-6">
   <div class="flex items-center justify-between px-5 py-3 border-b border-gray-200 dark:border-gray-700">
     <h3 class="text-sm font-semibold text-gray-900 dark:text-white">담당자별 워크로드</h3>
-    <span class="text-xs text-gray-400 dark:text-gray-500">
+    <span class="text-xs text-gray-500 dark:text-gray-500">
       총 <%= @assignee_workload.sum { |u| u.total_count.to_i } %>건 진행 중
     </span>
   </div>
 
   <% if @assignee_workload.empty? %>
-    <div class="px-5 py-8 text-center text-sm text-gray-400 dark:text-gray-500">담당자가 배정된 발주 없음</div>
+    <div class="px-5 py-8 text-center text-sm text-gray-500 dark:text-gray-500">담당자가 배정된 발주 없음</div>
   <% else %>
     <% max_count = [@assignee_workload.map { |u| u.total_count.to_i }.max, 1].max %>
     <% avatar_pairs = [
@@ -737,7 +737,7 @@
             <p class="text-sm font-medium text-gray-900 dark:text-white truncate"><%= u.name.presence || u.id %></p>
             <div class="flex items-center gap-1 mt-0.5">
               <span class="text-xs px-1.5 py-0.5 rounded-md font-medium <%= role_info[1] %>"><%= role_info[0] %></span>
-              <span class="text-xs text-gray-400 dark:text-gray-500"><%= branch_label %></span>
+              <span class="text-xs text-gray-500 dark:text-gray-500"><%= branch_label %></span>
             </div>
           </div>
 
@@ -752,7 +752,7 @@
           <%# 총 건수 %>
           <div class="w-14 text-right shrink-0">
             <span class="text-sm font-bold text-gray-900 dark:text-white"><%= total %></span>
-            <span class="text-xs text-gray-400 dark:text-gray-500">건</span>
+            <span class="text-xs text-gray-500 dark:text-gray-500">건</span>
           </div>
 
           <%# 긴급/지연 배지 %>

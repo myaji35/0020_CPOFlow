@@ -20,7 +20,7 @@
     <div class="absolute inset-0 flex items-center">
       <div class="w-full border-t border-gray-200 dark:border-gray-600"></div>
     </div>
-    <div class="relative flex justify-center text-xs text-gray-400 dark:text-gray-500">
+    <div class="relative flex justify-center text-xs text-gray-500 dark:text-gray-500">
       <span class="bg-white dark:bg-gray-800 px-3">또는 이메일로 가입</span>
     </div>
   </div>
@@ -73,7 +73,7 @@
             placeholder: "6자 이상",
             class: "w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent" %>
         <% if @minimum_password_length %>
-          <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">최소 <%= @minimum_password_length %>자 이상</p>
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-500">최소 <%= @minimum_password_length %>자 이상</p>
         <% end %>
       </div>
 
@@ -92,7 +92,7 @@
   <% end %>
 
   <%# ── 로그인 링크 ─────────────────────────────────── %>
-  <p class="mt-5 text-center text-sm text-gray-500 dark:text-gray-400">
+  <p class="mt-5 text-center text-sm text-gray-500 dark:text-gray-500">
     이미 계정이 있으신가요?
     <%= link_to "로그인", new_session_path(resource_name), class: "text-accent font-medium hover:underline" %>
   </p>

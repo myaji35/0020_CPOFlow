@@ -4,7 +4,7 @@
   <div class="flex items-center justify-between mb-6">
     <div>
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white">중복 주문 병합</h1>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">같은 Gmail 스레드에서 생성된 중복 칸반 카드를 병합합니다</p>
+      <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">같은 Gmail 스레드에서 생성된 중복 칸반 카드를 병합합니다</p>
     </div>
     <%= link_to kanban_path, class: "flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg transition-colors" do %>
       <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -24,11 +24,11 @@
   <div class="mb-6 flex items-center gap-4">
     <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-5 py-3">
       <span class="text-2xl font-bold text-red-600"><%= @groups.size %></span>
-      <span class="text-sm text-gray-500 dark:text-gray-400 ml-1">중복 스레드</span>
+      <span class="text-sm text-gray-500 dark:text-gray-500 ml-1">중복 스레드</span>
     </div>
     <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-5 py-3">
       <span class="text-2xl font-bold text-orange-500"><%= @groups.sum { |g| g[:orders].size - 1 } %></span>
-      <span class="text-sm text-gray-500 dark:text-gray-400 ml-1">병합 대상 카드</span>
+      <span class="text-sm text-gray-500 dark:text-gray-500 ml-1">병합 대상 카드</span>
     </div>
   </div>
 
@@ -38,7 +38,7 @@
     <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-12 text-center">
       <svg class="w-12 h-12 mx-auto text-green-500 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
       <p class="text-lg font-medium text-gray-900 dark:text-white">중복 주문이 없습니다</p>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">모든 칸반 카드가 정상입니다</p>
+      <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">모든 칸반 카드가 정상입니다</p>
     </div>
   <% else %>
 
@@ -51,7 +51,7 @@
             <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-bold"><%= group[:orders].size %></span>
             <div>
               <span class="text-sm font-semibold text-gray-900 dark:text-white">Thread: <%= group[:thread_id] %></span>
-              <span class="text-xs text-gray-500 dark:text-gray-400 ml-2"><%= group[:orders].first.customer_name %></span>
+              <span class="text-xs text-gray-500 dark:text-gray-500 ml-2"><%= group[:orders].first.customer_name %></span>
             </div>
           </div>
         </div>
@@ -87,7 +87,7 @@
                 <%# 주문 정보 %>
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-2 mb-1">
-                    <span class="text-xs font-mono text-gray-400 dark:text-gray-500">#<%= order.id %></span>
+                    <span class="text-xs font-mono text-gray-500 dark:text-gray-500">#<%= order.id %></span>
                     <span class="inline-block px-2 py-0.5 text-xs font-medium rounded-full text-white <%= status_colors[order.status] || 'bg-gray-400' %>">
                       <%= Order::STATUS_LABELS[order.status] || order.status %>
                     </span>
@@ -96,7 +96,7 @@
                     <% end %>
                   </div>
                   <p class="text-sm font-medium text-gray-900 dark:text-white truncate"><%= order.title %></p>
-                  <div class="flex items-center gap-3 mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  <div class="flex items-center gap-3 mt-1 text-xs text-gray-500 dark:text-gray-500">
                     <span><%= order.created_at.strftime("%Y-%m-%d %H:%M") %></span>
                     <span>From: <%= order.original_email_from.to_s.truncate(40) %></span>
                     <% if order.assignees.any? %>
@@ -107,7 +107,7 @@
 
                 <%# 칸반 링크 %>
                 <a href="<%= kanban_path %>#order-<%= order.id %>" target="_blank"
-                   class="text-gray-400 hover:text-blue-600 transition-colors" title="칸반에서 보기">
+                   class="text-gray-500 hover:text-blue-600 transition-colors" title="칸반에서 보기">
                   <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                 </a>
               </div>

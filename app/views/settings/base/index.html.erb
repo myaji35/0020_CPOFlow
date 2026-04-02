@@ -4,7 +4,7 @@
   <%# Page header %>
   <div class="mb-8">
     <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Settings</h1>
-    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage your account preferences and integrations</p>
+    <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">Manage your account preferences and integrations</p>
   </div>
 
   <%# Flash messages %>
@@ -85,7 +85,7 @@
       <div class="px-6 py-8 text-center">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 mx-auto text-gray-300 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
         <p class="text-sm text-gray-500">No Gmail accounts connected.</p>
-        <p class="text-xs text-gray-400 mt-1">Connect your Gmail to auto-import RFQ emails.</p>
+        <p class="text-xs text-gray-500 mt-1">Connect your Gmail to auto-import RFQ emails.</p>
       </div>
     <% end %>
   </div>
@@ -96,10 +96,10 @@
       <svg class="w-5 h-5 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       <div>
         <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">Google Chat 납기 알림</h2>
-        <p class="text-xs text-gray-500 dark:text-gray-400">D-14 / D-7 / D-3 / D-0 납기일 알림을 Google Chat으로 발송합니다</p>
+        <p class="text-xs text-gray-500 dark:text-gray-500">D-14 / D-7 / D-3 / D-0 납기일 알림을 Google Chat으로 발송합니다</p>
       </div>
       <% webhook_set = AppSetting.google_chat_webhook_url.present? %>
-      <span class="ml-auto text-xs px-2 py-0.5 rounded-full font-medium <%= webhook_set ? 'bg-green-600 text-white dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-500 text-white dark:bg-gray-700 dark:text-gray-400' %>">
+      <span class="ml-auto text-xs px-2 py-0.5 rounded-full font-medium <%= webhook_set ? 'bg-green-600 text-white dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-500 text-white dark:bg-gray-700 dark:text-gray-500' %>">
         <%= webhook_set ? '연결됨' : '미설정' %>
       </span>
     </div>
@@ -107,7 +107,7 @@
     <div class="px-6 py-5">
       <%= form_with url: settings_notifications_path, method: :patch, class: "space-y-4" do |f| %>
         <div>
-          <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+          <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1">
             Google Chat Incoming Webhook URL
           </label>
           <div class="flex gap-2">
@@ -118,7 +118,7 @@
             <%= f.submit "저장",
                 class: "px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer whitespace-nowrap" %>
           </div>
-          <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+          <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
             Google Chat 스페이스 → 메뉴 → "앱 및 통합" → "수신 Webhook" → "추가"에서 URL을 복사하세요.
           </p>
         </div>
@@ -128,7 +128,7 @@
         <div class="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700">
           <div>
             <p class="text-sm font-medium text-gray-700 dark:text-gray-300">테스트 메시지 발송</p>
-            <p class="text-xs text-gray-400 dark:text-gray-500">Google Chat으로 테스트 알림을 즉시 발송합니다</p>
+            <p class="text-xs text-gray-500 dark:text-gray-500">Google Chat으로 테스트 알림을 즉시 발송합니다</p>
           </div>
           <%= button_to settings_test_notifications_path, method: :post,
               class: "flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" do %>
@@ -158,17 +158,17 @@
     <%= form_with url: settings_profile_path, method: :patch, class: "px-6 py-4 space-y-4" do |f| %>
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Name</label>
+          <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1">Name</label>
           <%= f.text_field :name, value: current_user.name, class: "w-full border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" %>
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Email</label>
-          <input type="text" value="<%= current_user.email %>" disabled class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm bg-gray-50 dark:bg-gray-900 text-gray-400 cursor-not-allowed" />
+          <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1">Email</label>
+          <input type="text" value="<%= current_user.email %>" disabled class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm bg-gray-50 dark:bg-gray-900 text-gray-500 cursor-not-allowed" />
         </div>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Branch</label>
-        <input type="text" value="<%= current_user.branch.to_s.humanize %>" disabled class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm bg-gray-50 dark:bg-gray-900 text-gray-400 cursor-not-allowed" />
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1">Branch</label>
+        <input type="text" value="<%= current_user.branch.to_s.humanize %>" disabled class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm bg-gray-50 dark:bg-gray-900 text-gray-500 cursor-not-allowed" />
       </div>
       <div class="flex justify-end">
         <%= f.submit "Save Changes", class: "px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer" %>
@@ -179,10 +179,10 @@
   <%# --- Language & Theme Section --- %>
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 mb-6">
     <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-3">
-      <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      <svg class="w-5 h-5 text-gray-500 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
       <div>
         <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">환경설정</h2>
-        <p class="text-xs text-gray-500 dark:text-gray-400">언어 및 화면 테마를 설정합니다</p>
+        <p class="text-xs text-gray-500 dark:text-gray-500">언어 및 화면 테마를 설정합니다</p>
       </div>
     </div>
 
@@ -191,7 +191,7 @@
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm font-medium text-gray-900 dark:text-gray-100">언어 / Language</p>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">인터페이스 표시 언어를 선택합니다</p>
+          <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">인터페이스 표시 언어를 선택합니다</p>
         </div>
         <div class="flex gap-2">
           <% [["한국어", "ko"], ["English", "en"], ["العربية", "ar"]].each do |label, code| %>
@@ -210,7 +210,7 @@
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm font-medium text-gray-900 dark:text-gray-100">테마 / Theme</p>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">라이트, 다크, 또는 시스템 설정에 따릅니다</p>
+          <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">라이트, 다크, 또는 시스템 설정에 따릅니다</p>
         </div>
         <div class="flex gap-2">
           <% [
@@ -244,8 +244,8 @@
         <path d="M3 9h18M3 15h18M9 3v18"/>
       </svg>
       <div>
-        <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">Google Sheets 연동 <span class="text-xs font-normal text-gray-400 dark:text-gray-500 ml-1">Admin only</span></h2>
-        <p class="text-xs text-gray-500 dark:text-gray-400">경영진용 데이터 대시보드 스프레드시트 연결</p>
+        <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">Google Sheets 연동 <span class="text-xs font-normal text-gray-500 dark:text-gray-500 ml-1">Admin only</span></h2>
+        <p class="text-xs text-gray-500 dark:text-gray-500">경영진용 데이터 대시보드 스프레드시트 연결</p>
       </div>
     </div>
 
@@ -268,28 +268,28 @@
         </div>
       <% else %>
         <div class="flex items-center gap-2 mb-4 px-3 py-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-          <svg class="w-4 h-4 text-gray-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <p class="text-xs text-gray-500 dark:text-gray-400">아직 연동된 Spreadsheet가 없습니다.</p>
+          <svg class="w-4 h-4 text-gray-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <p class="text-xs text-gray-500 dark:text-gray-500">아직 연동된 Spreadsheet가 없습니다.</p>
         </div>
       <% end %>
 
       <%# URL 입력 폼 %>
       <%= form_with url: admin_sheets_config_path, method: :patch, class: "space-y-3" do |f| %>
         <div>
-          <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+          <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1">
             Google Sheets URL
           </label>
           <div class="flex gap-2">
             <input type="url" name="spreadsheet_url"
                    value="<%= sheets_url %>"
                    placeholder="https://docs.google.com/spreadsheets/d/..."
-                   class="flex-1 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-mono placeholder:font-sans placeholder:text-gray-400" />
+                   class="flex-1 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-mono placeholder:font-sans placeholder:text-gray-500" />
             <button type="submit"
                     class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap">
               저장
             </button>
           </div>
-          <p class="mt-1.5 text-xs text-gray-400 dark:text-gray-500">
+          <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-500">
             구글 드라이브에서 스프레드시트를 열고 주소창의 URL 전체를 붙여넣으세요.
             Service Account 이메일을 <strong>편집자</strong>로 추가해야 동기화가 됩니다.
           </p>
@@ -299,7 +299,7 @@
       <%# 초기화 버튼 (연동된 경우만 표시) %>
       <% if sheets_id.present? %>
         <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
-          <p class="text-xs text-gray-400 dark:text-gray-500">연동을 해제하고 초기화합니다.</p>
+          <p class="text-xs text-gray-500 dark:text-gray-500">연동을 해제하고 초기화합니다.</p>
           <%= button_to admin_sheets_config_clear_path, method: :delete,
               data: { turbo_confirm: "Google Sheets 연동을 초기화하시겠습니까?" },
               class: "text-xs px-3 py-1.5 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-colors" do %>
@@ -310,8 +310,8 @@
 
       <%# Service Account 안내 %>
       <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-        <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">Service Account 설정 안내</p>
-        <ol class="text-xs text-gray-500 dark:text-gray-400 space-y-1 list-decimal list-inside">
+        <p class="text-xs font-medium text-gray-600 dark:text-gray-500 mb-2">Service Account 설정 안내</p>
+        <ol class="text-xs text-gray-500 dark:text-gray-500 space-y-1 list-decimal list-inside">
           <li>Google Cloud Console → Service Account 생성</li>
           <li>JSON 키 다운로드</li>
           <li><code class="bg-gray-100 dark:bg-gray-700 px-1 rounded font-mono">bin/rails credentials:edit</code> 에서 <code class="bg-gray-100 dark:bg-gray-700 px-1 rounded font-mono">google.service_account</code> 등록</li>
@@ -327,7 +327,7 @@
     <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
       <div>
         <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">메뉴 권한 관리</h2>
-        <p class="text-xs text-gray-500 dark:text-gray-400">역할별 메뉴 접근 및 CRUD 권한 설정</p>
+        <p class="text-xs text-gray-500 dark:text-gray-500">역할별 메뉴 접근 및 CRUD 권한 설정</p>
       </div>
       <%= link_to settings_menu_permissions_path, class: "text-sm text-primary dark:text-accent hover:underline" do %>
         권한 설정 →
@@ -353,7 +353,7 @@
       <% ecount_configured = Rails.application.credentials.dig(:ecount, :api_cert_key).present? rescue false %>
 
       <div class="flex items-center justify-between text-sm">
-        <span class="text-gray-600 dark:text-gray-400">API 연결 상태</span>
+        <span class="text-gray-600 dark:text-gray-500">API 연결 상태</span>
         <% if ecount_configured %>
           <span class="inline-flex items-center gap-1 text-green-600 dark:text-green-400 font-medium text-xs">
             <span class="w-2 h-2 rounded-full bg-green-500"></span> 설정됨
@@ -366,14 +366,14 @@
       </div>
 
       <div class="flex items-center justify-between text-sm">
-        <span class="text-gray-600 dark:text-gray-400">품목 마지막 동기화</span>
+        <span class="text-gray-600 dark:text-gray-500">품목 마지막 동기화</span>
         <span class="text-gray-900 dark:text-gray-200 text-xs tabular-nums">
           <%= products_last ? products_last.completed_at.strftime("%m/%d %H:%M") : "없음" %>
         </span>
       </div>
 
       <div class="flex items-center justify-between text-sm">
-        <span class="text-gray-600 dark:text-gray-400">거래처 마지막 동기화</span>
+        <span class="text-gray-600 dark:text-gray-500">거래처 마지막 동기화</span>
         <span class="text-gray-900 dark:text-gray-200 text-xs tabular-nums">
           <%= customers_last ? customers_last.completed_at.strftime("%m/%d %H:%M") : "없음" %>
         </span>
@@ -390,7 +390,7 @@
       </svg>
       <div>
         <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100">AI API 설정</h2>
-        <p class="text-xs text-gray-500 dark:text-gray-400">RFQ 자동 분석 및 답변 초안 생성에 사용되는 AI 서비스 키</p>
+        <p class="text-xs text-gray-500 dark:text-gray-500">RFQ 자동 분석 및 답변 초안 생성에 사용되는 AI 서비스 키</p>
       </div>
     </div>
 
@@ -400,7 +400,7 @@
         <div class="flex items-center justify-between mb-3">
           <div>
             <p class="text-sm font-medium text-gray-900 dark:text-gray-100">Anthropic API Key</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400">Claude Haiku — RFQ 이메일 판정, 답변 초안 생성</p>
+            <p class="text-xs text-gray-500 dark:text-gray-500">Claude Haiku — RFQ 이메일 판정, 답변 초안 생성</p>
           </div>
           <button type="button" onclick="verifyApiKey()" id="verify-btn"
                   class="px-3 py-1.5 text-xs font-medium bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
@@ -419,7 +419,7 @@
                 class: "w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 dark:bg-gray-700 placeholder-gray-400 focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]",
                 autocomplete: "off" %>
           </div>
-          <%= f.submit "저장", class: "px-4 py-2.5 bg-[#1E3A5F] hover:bg-[#16325C] text-white text-sm font-medium rounded-lg transition-colors cursor-pointer" %>
+          <%= f.submit "저장", class: "px-4 py-2.5 bg-primary hover:bg-primary-dark text-white text-sm font-medium rounded-lg transition-colors cursor-pointer" %>
         <% end %>
 
         <%# 상태 표시 %>
@@ -433,10 +433,10 @@
           <p class="text-xs mt-2 flex items-center gap-1 <%= token_status[:source] == :claude_cli ? 'text-purple-600 dark:text-purple-400' : 'text-green-600 dark:text-green-400' %>">
             <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
             토큰 활성 — <%= source_labels[token_status[:source]] %>
-            <span class="text-gray-400 dark:text-gray-500 ml-1"><%= token_status[:masked] %></span>
+            <span class="text-gray-500 dark:text-gray-500 ml-1"><%= token_status[:masked] %></span>
           </p>
           <% if token_status[:source] == :claude_cli %>
-            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1 ml-4">
+            <p class="text-xs text-gray-500 dark:text-gray-500 mt-1 ml-4">
               ~/.claude/credentials.json에서 OAuth 토큰 자동 사용 중 — API 키 입력 불필요
             </p>
           <% end %>
@@ -445,7 +445,7 @@
             <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             API Key 미설정 — RFQ 이메일 AI 분석이 작동하지 않습니다
           </p>
-          <p class="text-xs text-gray-400 dark:text-gray-500 mt-1 ml-4">
+          <p class="text-xs text-gray-500 dark:text-gray-500 mt-1 ml-4">
             해결: ① 위에 API Key 입력 또는 ② 서버에 Claude CLI 설치 후 <code class="bg-gray-100 dark:bg-gray-700 px-1 rounded">claude login</code> 실행
           </p>
         <% end %>
@@ -515,7 +515,7 @@
       </svg>
       <div>
         <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100">CPO Agent 설정</h2>
-        <p class="text-xs text-gray-500 dark:text-gray-400">자동 처리 모드 관리 (유용함 5회 이상 시 자동 활성화)</p>
+        <p class="text-xs text-gray-500 dark:text-gray-500">자동 처리 모드 관리 (유용함 5회 이상 시 자동 활성화)</p>
       </div>
     </div>
     <div class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -532,9 +532,9 @@
         <div class="flex items-center justify-between px-6 py-4">
           <div>
             <p class="text-sm font-medium text-gray-900 dark:text-gray-100"><%= info[:label] %></p>
-            <p class="text-xs text-gray-500 dark:text-gray-400"><%= info[:desc] %></p>
+            <p class="text-xs text-gray-500 dark:text-gray-500"><%= info[:desc] %></p>
             <% if level %>
-              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+              <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
                 유용함 <%= level.useful_count %>회
                 <% if level.auto_activated_at %>
                   · 자동 전환: <%= level.auto_activated_at.strftime('%Y-%m-%d') %>
@@ -561,7 +561,7 @@
     <div class="px-6 py-4 flex items-center justify-between">
       <div>
         <p class="text-sm font-medium text-gray-900 dark:text-gray-100">Sign out of all sessions</p>
-        <p class="text-xs text-gray-500 dark:text-gray-400">This will sign you out from all devices</p>
+        <p class="text-xs text-gray-500 dark:text-gray-500">This will sign you out from all devices</p>
       </div>
       <%= link_to "Sign Out", destroy_user_session_path, data: { turbo_method: :delete }, class: "px-4 py-2 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 text-sm font-medium rounded-lg transition-colors" %>
     </div>

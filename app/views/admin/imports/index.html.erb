@@ -4,7 +4,7 @@
   <div class="flex items-center justify-between mb-6">
     <div>
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white">eCountERP 데이터 이관</h1>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">품목, 거래처, 거래이력을 CSV/XLSX 파일로 가져옵니다</p>
+      <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">품목, 거래처, 거래이력을 CSV/XLSX 파일로 가져옵니다</p>
     </div>
     <%= link_to new_admin_import_path, class: "flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors" do %>
       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -30,7 +30,7 @@
     ] %>
     <% stats.each do |s| %>
       <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-        <p class="text-xs text-gray-500 dark:text-gray-400"><%= s[:label] %></p>
+        <p class="text-xs text-gray-500 dark:text-gray-500"><%= s[:label] %></p>
         <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><%= s[:value] %></p>
       </div>
     <% end %>
@@ -41,15 +41,15 @@
     <table class="w-full text-sm">
       <thead class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
         <tr>
-          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">#</th>
-          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">유형</th>
-          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">파일명</th>
-          <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400">전체</th>
-          <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400">성공</th>
-          <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400">오류</th>
-          <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400">상태</th>
-          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">실행자</th>
-          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">일시</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500">#</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500">유형</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500">파일명</th>
+          <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-500">전체</th>
+          <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-500">성공</th>
+          <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-500">오류</th>
+          <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-500">상태</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500">실행자</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500">일시</th>
           <th class="px-4 py-3"></th>
         </tr>
       </thead>
@@ -57,7 +57,7 @@
         <% if @imports.any? %>
           <% @imports.each do |log| %>
             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-              <td class="px-4 py-3 text-gray-400 dark:text-gray-500 font-mono text-xs">#<%= log.id %></td>
+              <td class="px-4 py-3 text-gray-500 dark:text-gray-500 font-mono text-xs">#<%= log.id %></td>
               <td class="px-4 py-3">
                 <span class="px-2 py-0.5 rounded text-xs font-medium
                   <%= log.import_type == 'products' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' :
@@ -69,7 +69,7 @@
               <td class="px-4 py-3 text-gray-700 dark:text-gray-300 max-w-xs truncate"><%= log.filename %></td>
               <td class="px-4 py-3 text-right text-gray-700 dark:text-gray-300"><%= number_with_delimiter(log.total_rows) %></td>
               <td class="px-4 py-3 text-right text-green-600 dark:text-green-400 font-medium"><%= number_with_delimiter(log.success_rows) %></td>
-              <td class="px-4 py-3 text-right <%= log.error_rows.to_i > 0 ? 'text-red-600 dark:text-red-400 font-medium' : 'text-gray-400 dark:text-gray-500' %>">
+              <td class="px-4 py-3 text-right <%= log.error_rows.to_i > 0 ? 'text-red-600 dark:text-red-400 font-medium' : 'text-gray-500 dark:text-gray-500' %>">
                 <%= number_with_delimiter(log.error_rows) %>
               </td>
               <td class="px-4 py-3 text-center">
@@ -78,7 +78,7 @@
                       when 'completed'  then 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
                       when 'processing' then 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
                       when 'failed'     then 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-                      else                   'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                      else                   'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-500'
                       end %>">
                   <% if log.processing? %>
                     <span class="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></span>
@@ -86,8 +86,8 @@
                   <%= log.status_label %>
                 </span>
               </td>
-              <td class="px-4 py-3 text-gray-600 dark:text-gray-400"><%= log.user&.name %></td>
-              <td class="px-4 py-3 text-gray-400 dark:text-gray-500 text-xs"><%= log.created_at.strftime("%m/%d %H:%M") %></td>
+              <td class="px-4 py-3 text-gray-600 dark:text-gray-500"><%= log.user&.name %></td>
+              <td class="px-4 py-3 text-gray-500 dark:text-gray-500 text-xs"><%= log.created_at.strftime("%m/%d %H:%M") %></td>
               <td class="px-4 py-3">
                 <%= link_to "상세", admin_import_path(log), class: "text-xs text-blue-600 dark:text-blue-400 hover:underline" %>
               </td>
@@ -95,7 +95,7 @@
           <% end %>
         <% else %>
           <tr>
-            <td colspan="10" class="px-4 py-12 text-center text-gray-400 dark:text-gray-500 text-sm">
+            <td colspan="10" class="px-4 py-12 text-center text-gray-500 dark:text-gray-500 text-sm">
               이관 이력이 없습니다. 새 이관을 시작하세요.
             </td>
           </tr>

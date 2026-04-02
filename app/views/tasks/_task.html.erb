@@ -9,18 +9,18 @@
              class="rounded border-gray-300 dark:border-gray-600 text-accent cursor-pointer shrink-0">
     <% end %>
     <div class="flex-1 min-w-0">
-      <p class="text-sm <%= task.completed ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-white' %>">
+      <p class="text-sm <%= task.completed ? 'line-through text-gray-500 dark:text-gray-500' : 'text-gray-900 dark:text-white' %>">
         <%= task.title %>
       </p>
       <% if task.assignee || task.due_date %>
-        <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+        <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">
           <%= task.assignee&.display_name %>
           <% if task.due_date %>· <%= task.due_date.strftime("%m/%d") %><% end %>
         </p>
       <% end %>
     </div>
     <% if task.due_date %>
-      <span class="text-xs <%= Date.today > task.due_date && !task.completed ? 'text-red-400' : 'text-gray-400 dark:text-gray-500' %>">
+      <span class="text-xs <%= Date.today > task.due_date && !task.completed ? 'text-red-400' : 'text-gray-500 dark:text-gray-500' %>">
         <%= task.due_date.strftime("%m/%d") %>
       </span>
     <% end %>

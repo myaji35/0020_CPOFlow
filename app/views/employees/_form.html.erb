@@ -11,30 +11,30 @@
     <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">기본 정보</h3>
     <div class="grid grid-cols-2 gap-4">
       <div>
-        <%= f.label :name, "이름 (한글)", class: "block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1" %>
+        <%= f.label :name, "이름 (한글)", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
         <%= f.text_field :name, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary", placeholder: "홍길동" %>
       </div>
       <div>
-        <%= f.label :name_en, "이름 (영문)", class: "block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1" %>
+        <%= f.label :name_en, "이름 (영문)", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
         <%= f.text_field :name_en, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary", placeholder: "Hong Gildong" %>
       </div>
       <div>
-        <%= f.label :nationality, "국적", class: "block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1" %>
+        <%= f.label :nationality, "국적", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
         <%= f.select :nationality,
             Employee::NATIONALITIES.map { |code, label| ["#{label} (#{code})", code] },
             { include_blank: "선택" },
             class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
       </div>
       <div>
-        <%= f.label :date_of_birth, "생년월일", class: "block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1" %>
+        <%= f.label :date_of_birth, "생년월일", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
         <%= f.date_field :date_of_birth, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
       </div>
       <div>
-        <%= f.label :passport_number, "여권번호", class: "block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1" %>
+        <%= f.label :passport_number, "여권번호", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
         <%= f.text_field :passport_number, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
       </div>
       <div>
-        <%= f.label :employment_type, "고용형태", class: "block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1" %>
+        <%= f.label :employment_type, "고용형태", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
         <%= f.select :employment_type,
             [["정규직", "regular"], ["계약직", "contract"], ["파견", "dispatch"]],
             {},
@@ -47,16 +47,16 @@
     <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">연락처 정보</h3>
     <div class="grid grid-cols-2 gap-4">
       <div>
-        <%= f.label :phone, "전화번호", class: "block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1" %>
+        <%= f.label :phone, "전화번호", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
         <%= f.text_field :phone, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary", placeholder: "+971-50-0000000" %>
       </div>
       <div></div>
       <div>
-        <%= f.label :emergency_contact, "비상 연락처 (이름)", class: "block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1" %>
+        <%= f.label :emergency_contact, "비상 연락처 (이름)", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
         <%= f.text_field :emergency_contact, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
       </div>
       <div>
-        <%= f.label :emergency_phone, "비상 연락전화", class: "block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1" %>
+        <%= f.label :emergency_phone, "비상 연락전화", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
         <%= f.text_field :emergency_phone, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
       </div>
     </div>
@@ -70,9 +70,9 @@
            data-department-manager-url-value="<%= employees_departments_path %>">
 
         <div class="flex items-center justify-between mb-1">
-          <%= f.label :department_id, "부서", class: "text-xs font-medium text-gray-600 dark:text-gray-400" %>
+          <%= f.label :department_id, "부서", class: "text-xs font-medium text-gray-600 dark:text-gray-500" %>
           <button type="button"
-                  class="flex items-center gap-1 text-[11px] text-primary hover:text-primary-dark font-medium"
+                  class="flex items-center gap-1 text-xs text-primary hover:text-primary-dark font-medium"
                   data-action="click->department-manager#open">
             <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
             부서 관리
@@ -94,7 +94,7 @@
             <%# 헤더 %>
             <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
               <h3 class="text-sm font-semibold text-gray-800 dark:text-white">부서 관리</h3>
-              <button type="button" class="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400"
+              <button type="button" class="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500"
                       data-action="click->department-manager#close">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
@@ -103,14 +103,14 @@
             <%# 부서 목록 %>
             <div class="px-4 py-3 max-h-52 overflow-y-auto">
               <div data-department-manager-target="list">
-                <p class="text-xs text-gray-400 py-2 text-center">불러오는 중...</p>
+                <p class="text-xs text-gray-500 py-2 text-center">불러오는 중...</p>
               </div>
               <p data-department-manager-target="deleteError" class="text-xs text-red-500 mt-1 min-h-[1rem]"></p>
             </div>
 
             <%# 부서 추가 폼 %>
             <div class="px-4 pb-4 border-t border-gray-200 dark:border-gray-700 pt-3">
-              <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">새 부서 추가</p>
+              <p class="text-xs font-medium text-gray-600 dark:text-gray-500 mb-2">새 부서 추가</p>
               <div class="flex gap-2 mb-2">
                 <select data-department-manager-target="addCompany"
                         class="border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-primary flex-shrink-0">
@@ -140,9 +140,9 @@
            data-job-title-manager-url-value="<%= employees_job_titles_path %>">
 
         <div class="flex items-center justify-between mb-1">
-          <%= f.label :job_title, "직급/직책", class: "text-xs font-medium text-gray-600 dark:text-gray-400" %>
+          <%= f.label :job_title, "직급/직책", class: "text-xs font-medium text-gray-600 dark:text-gray-500" %>
           <button type="button"
-                  class="flex items-center gap-1 text-[11px] text-primary hover:text-primary-dark font-medium"
+                  class="flex items-center gap-1 text-xs text-primary hover:text-primary-dark font-medium"
                   data-action="click->job-title-manager#open">
             <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
             직책 관리
@@ -164,7 +164,7 @@
             <%# 헤더 %>
             <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
               <h3 class="text-sm font-semibold text-gray-800 dark:text-white">직책 관리</h3>
-              <button type="button" class="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400"
+              <button type="button" class="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500"
                       data-action="click->job-title-manager#close">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
@@ -173,14 +173,14 @@
             <%# 직책 목록 %>
             <div class="px-4 py-3 max-h-52 overflow-y-auto">
               <div data-job-title-manager-target="list">
-                <p class="text-xs text-gray-400 py-2 text-center">불러오는 중...</p>
+                <p class="text-xs text-gray-500 py-2 text-center">불러오는 중...</p>
               </div>
               <p data-job-title-manager-target="deleteError" class="text-xs text-red-500 mt-1 min-h-[1rem]"></p>
             </div>
 
             <%# 직책 추가 폼 %>
             <div class="px-4 pb-4 border-t border-gray-200 dark:border-gray-700 pt-3">
-              <p class="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">새 직책 추가</p>
+              <p class="text-xs font-medium text-gray-600 dark:text-gray-500 mb-2">새 직책 추가</p>
               <div class="flex gap-2 mb-2">
                 <input type="text"
                        placeholder="예: 선임 구매 담당"
@@ -200,15 +200,15 @@
         </div>
       </div>
       <div>
-        <%= f.label :hire_date, "입사일", class: "block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1" %>
+        <%= f.label :hire_date, "입사일", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
         <%= f.date_field :hire_date, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
       </div>
       <div>
-        <%= f.label :termination_date, "퇴직일", class: "block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1" %>
+        <%= f.label :termination_date, "퇴직일", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
         <%= f.date_field :termination_date, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
       </div>
       <div>
-        <%= f.label :user_id, "시스템 계정 연결 (선택)", class: "block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1" %>
+        <%= f.label :user_id, "시스템 계정 연결 (선택)", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
         <%= f.select :user_id,
             User.order(:name).map { |u| [u.display_name, u.id] },
             { include_blank: "계정 없음" },
@@ -222,13 +222,13 @@
       </div>
     </div>
     <div class="mt-4">
-      <%= f.label :notes, "메모", class: "block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1" %>
+      <%= f.label :notes, "메모", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
       <%= f.text_area :notes, rows: 3, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary resize-none" %>
     </div>
   </div>
 
   <div class="flex justify-end gap-3">
-    <%= link_to "취소", employees_path, class: "px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700" %>
+    <%= link_to "취소", employees_path, class: "px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-500 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700" %>
     <%= f.submit employee.new_record? ? "직원 등록" : "변경 저장",
         class: "px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-dark cursor-pointer" %>
   </div>

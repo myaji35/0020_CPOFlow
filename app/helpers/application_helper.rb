@@ -15,54 +15,57 @@ module ApplicationHelper
     end
   end
 
-  # Due date badge
+  # Due date badge (solid bg + white text — SLDS)
   def due_badge(order)
     days = order.days_until_due
     return "" unless days
 
     if days < 0
-      content_tag(:span, "OVERDUE #{days.abs}d", class: "text-xs font-semibold bg-red-100 text-red-700 px-2 py-0.5 rounded-full")
+      content_tag(:span, "OVERDUE #{days.abs}d", class: "text-xs font-semibold px-2 py-0.5 rounded-full", style: "background:#D93025; color:white")
     elsif days <= 7
-      content_tag(:span, "D-#{days}", class: "text-xs font-semibold bg-red-100 text-red-700 px-2 py-0.5 rounded-full")
+      content_tag(:span, "D-#{days}", class: "text-xs font-semibold px-2 py-0.5 rounded-full", style: "background:#D93025; color:white")
     elsif days <= 14
-      content_tag(:span, "D-#{days}", class: "text-xs font-semibold bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full")
+      content_tag(:span, "D-#{days}", class: "text-xs font-semibold px-2 py-0.5 rounded-full", style: "background:#F4A83A; color:white")
     else
-      content_tag(:span, "D-#{days}", class: "text-xs font-semibold bg-green-100 text-green-700 px-2 py-0.5 rounded-full")
+      content_tag(:span, "D-#{days}", class: "text-xs font-semibold px-2 py-0.5 rounded-full", style: "background:#1E8E3E; color:white")
     end
   end
 
-  # Priority badge
+  # Priority badge (solid bg + white text — SLDS)
+  PRIORITY_COLORS = {
+    "low"    => "#6b7280",
+    "medium" => "#00A1E0",
+    "high"   => "#F4A83A",
+    "urgent" => "#D93025"
+  }.freeze
+
   def priority_badge(order)
-    colors = {
-      "low"    => "bg-gray-100 text-gray-600",
-      "medium" => "bg-blue-100 text-blue-700",
-      "high"   => "bg-orange-100 text-orange-700",
-      "urgent" => "bg-red-100 text-red-700"
-    }
-    klass = colors[order.priority] || "bg-gray-100 text-gray-600"
-    content_tag(:span, order.priority.upcase, class: "text-xs font-semibold #{klass} px-2 py-0.5 rounded-full")
+    bg = PRIORITY_COLORS[order.priority] || "#6b7280"
+    content_tag(:span, order.priority.upcase, class: "text-xs font-semibold px-2 py-0.5 rounded-full", style: "background:#{bg}; color:white")
   end
 
-  # Status badge
+  # Status badge (solid bg + white text — SLDS)
+  STATUS_COLORS = {
+    "new_rfq"        => "#6b7280",
+    "make_quo"       => "#00A1E0",
+    "pending_po"     => "#7c3aed",
+    "new_po"         => "#4f46e5",
+    "delivery_items" => "#d97706",
+    "problem"        => "#D93025",
+    "get_grn"        => "#1E8E3E",
+    "give_up"        => "#9ca3af",
+    "done"           => "#374151"
+  }.freeze
+
   def status_badge(order)
-    colors = {
-      "new_rfq"        => "bg-gray-100 text-gray-700",
-      "make_quo"       => "bg-blue-100 text-blue-700",
-      "pending_po"     => "bg-purple-100 text-purple-700",
-      "new_po"         => "bg-indigo-100 text-indigo-700",
-      "delivery_items" => "bg-yellow-100 text-yellow-700",
-      "problem"        => "bg-red-100 text-red-700",
-      "get_grn"        => "bg-green-100 text-green-700",
-      "give_up"        => "bg-gray-200 text-gray-500"
-    }
     label = Order::STATUS_LABELS[order.status] || order.status.humanize
-    klass = colors[order.status] || "bg-gray-100 text-gray-700"
-    content_tag(:span, label, class: "text-xs font-semibold #{klass} px-2 py-0.5 rounded-full")
+    bg = STATUS_COLORS[order.status] || "#6b7280"
+    content_tag(:span, label, class: "text-xs font-semibold px-2 py-0.5 rounded-full", style: "background:#{bg}; color:white")
   end
 
   # Due date color class (for inline use in views)
   def due_date_color_class(due_date)
-    return "text-gray-400 dark:text-gray-500" if due_date.nil?
+    return "text-gray-500 dark:text-gray-400" if due_date.nil?
     days = (due_date.to_date - Date.today).to_i
     if days < 0         then "text-red-700 dark:text-red-400 font-semibold"
     elsif days <= 7     then "text-red-600 dark:text-red-400"

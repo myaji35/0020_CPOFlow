@@ -5,11 +5,11 @@
 
   <%# ── Breadcrumb ─────────────────────────────────────────── %>
   <div class="flex items-center gap-3 mb-6">
-    <%= link_to inbox_path, class: "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300" do %>
+    <%= link_to inbox_path, class: "text-gray-500 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300" do %>
       <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
     <% end %>
     <div>
-      <p class="text-xs text-gray-400 dark:text-gray-500">받은편지함 / 이메일 상세</p>
+      <p class="text-xs text-gray-500 dark:text-gray-500">받은편지함 / 이메일 상세</p>
       <h2 class="text-lg font-semibold text-gray-900 dark:text-white leading-tight truncate max-w-xl">
         <% if @order.reference_no.present? %><span class="text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded font-mono mr-1"><%= @order.reference_no %></span><% end %><%= @order.display_subject %><% @order.subject_tags.each do |tag| %><span class="text-xs px-1 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded ml-1"><%= tag %></span><% end %>
       </h2>
@@ -26,7 +26,7 @@
           <h1 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
             <% if @order.reference_no.present? %><span class="text-sm px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded font-mono mr-1.5"><%= @order.reference_no %></span><% end %><%= @order.display_subject %><% @order.subject_tags.each do |tag| %><span class="text-xs px-1 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded ml-1"><%= tag %></span><% end %>
           </h1>
-          <div class="flex flex-wrap items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+          <div class="flex flex-wrap items-center gap-3 text-sm text-gray-500 dark:text-gray-500">
             <div class="flex items-center gap-1.5">
               <div class="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                 <%= @order.original_email_from.presence&.first&.upcase || "?" %>
@@ -78,7 +78,7 @@
           </span>
         <% end %>
         <% @order.tags_array.each do |tag| %>
-          <span class="text-xs px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">#<%= tag %></span>
+          <span class="text-xs px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-500">#<%= tag %></span>
         <% end %>
       </div>
     </div>
@@ -89,19 +89,19 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <% if @order.client %>
             <div>
-              <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-0.5">발주처</dt>
+              <dt class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-0.5">발주처</dt>
               <dd class="font-medium text-gray-900 dark:text-white"><%= @order.client.name %></dd>
             </div>
           <% end %>
           <% if @order.item_name.present? %>
             <div>
-              <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-0.5">품목</dt>
+              <dt class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-0.5">품목</dt>
               <dd class="font-medium text-gray-900 dark:text-white"><%= @order.item_name %><%= " × #{@order.quantity}" if @order.quantity %></dd>
             </div>
           <% end %>
           <% if @order.estimated_value.present? %>
             <div>
-              <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-0.5">예상 금액</dt>
+              <dt class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-0.5">예상 금액</dt>
               <dd class="font-medium text-gray-900 dark:text-white">
                 <%= number_to_currency(@order.estimated_value, unit: @order.currency.presence || "$", format: "%u %n") %>
               </dd>
@@ -109,7 +109,7 @@
           <% end %>
           <% if @order.project %>
             <div>
-              <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-0.5">현장</dt>
+              <dt class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-0.5">현장</dt>
               <dd class="font-medium text-gray-900 dark:text-white"><%= @order.project.name %></dd>
             </div>
           <% end %>
@@ -150,10 +150,10 @@
           <%# 서명 분리 카드 %>
           <div class="mt-3 border-t border-dashed border-gray-200 dark:border-gray-600 pt-3">
             <div class="flex items-center gap-2 mb-2">
-              <svg class="w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><path d="M8.12 8.12L12 12"/><path d="M20 4L8.12 15.88"/><circle cx="6" cy="18" r="3"/><path d="M14.8 14.8L20 20"/></svg>
-              <span class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider font-semibold">발신자 서명</span>
+              <svg class="w-3.5 h-3.5 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><path d="M8.12 8.12L12 12"/><path d="M20 4L8.12 15.88"/><circle cx="6" cy="18" r="3"/><path d="M14.8 14.8L20 20"/></svg>
+              <span class="text-xs text-gray-500 dark:text-gray-500 font-semibold">발신자 서명</span>
             </div>
-            <div class="bg-gray-50/80 dark:bg-gray-700/20 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap border border-gray-200 dark:border-gray-700">
+            <div class="bg-gray-50/80 dark:bg-gray-700/20 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-500 whitespace-pre-wrap border border-gray-200 dark:border-gray-700">
 <%= split[:signature] %>
             </div>
           </div>
@@ -161,7 +161,7 @@
       <% else %>
         <div class="flex flex-col items-center justify-center py-12 text-center">
           <svg class="w-10 h-10 text-gray-200 dark:text-gray-600 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          <p class="text-xs text-gray-400 dark:text-gray-500">이메일 본문이 없습니다</p>
+          <p class="text-xs text-gray-500 dark:text-gray-500">이메일 본문이 없습니다</p>
         </div>
       <% end %>
 
@@ -169,7 +169,7 @@
       <% if @order.respond_to?(:rfq_confidence) && @order.rfq_confidence.present? && @order.rfq_confidence != "none" %>
         <div class="mt-4 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
           <div class="px-4 py-2.5 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-            <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+            <span class="text-xs font-semibold text-gray-500 dark:text-gray-500 flex items-center gap-1.5">
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
               AI 분석 결과
             </span>
@@ -179,7 +179,7 @@
                 <div class="h-full rounded-full transition-all duration-500 <%= @order.rfq_confidence == 'high' ? 'bg-green-500' : @order.rfq_confidence == 'medium' ? 'bg-yellow-500' : 'bg-gray-400' %>"
                      style="width: <%= @order.respond_to?(:rfq_score) ? (@order.rfq_score || 0) : 0 %>%"></div>
               </div>
-              <span class="text-xs font-bold <%= @order.rfq_confidence == 'high' ? 'text-green-600 dark:text-green-400' : @order.rfq_confidence == 'medium' ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-500 dark:text-gray-400' %>">
+              <span class="text-xs font-bold <%= @order.rfq_confidence == 'high' ? 'text-green-600 dark:text-green-400' : @order.rfq_confidence == 'medium' ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-500 dark:text-gray-500' %>">
                 <%= @order.respond_to?(:rfq_score) ? (@order.rfq_score || 0) : 0 %>점
               </span>
             </div>
@@ -188,7 +188,7 @@
             <% if @order.respond_to?(:llm_analysis) && @order.llm_analysis.present? %>
               <% begin; analysis = JSON.parse(@order.llm_analysis); rescue; analysis = {}; end %>
               <% if analysis["reason"].present? %>
-                <p class="text-xs text-gray-600 dark:text-gray-400 mb-3 italic">"<%= analysis["reason"] %>"</p>
+                <p class="text-xs text-gray-600 dark:text-gray-500 mb-3 italic">"<%= analysis["reason"] %>"</p>
               <% end %>
               <% extracted = analysis["extracted"] || {} %>
               <% info_items = [] %>
@@ -202,7 +202,7 @@
                 <dl class="grid grid-cols-2 gap-x-4 gap-y-1.5">
                   <% info_items.each do |label, value| %>
                     <div>
-                      <dt class="text-xs text-gray-400 dark:text-gray-500"><%= label %></dt>
+                      <dt class="text-xs text-gray-500 dark:text-gray-500"><%= label %></dt>
                       <dd class="text-xs font-medium text-gray-800 dark:text-gray-200 truncate"><%= value %></dd>
                     </div>
                   <% end %>
@@ -220,13 +220,13 @@
       <% if att_meta.any? || active_storage_attachments.any? || links.any? %>
         <div class="mt-3 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
           <div class="px-4 py-2.5 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-            <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+            <span class="text-xs font-semibold text-gray-500 dark:text-gray-500 flex items-center gap-1.5">
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
               첨부파일 및 링크
             </span>
             <% total_att = [att_meta.size, active_storage_attachments.size].max %>
             <% if total_att > 0 %>
-              <span class="text-xs text-gray-400 dark:text-gray-500"><%= total_att %>개</span>
+              <span class="text-xs text-gray-500 dark:text-gray-500"><%= total_att %>개</span>
             <% end %>
           </div>
           <div class="px-4 py-3 space-y-2">
@@ -248,7 +248,7 @@
                 <svg class="w-8 h-8 p-1.5 rounded bg-gray-100 dark:bg-gray-700 <%= icon_color %> flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                 <div class="flex-1 min-w-0">
                   <p class="text-xs font-medium text-gray-800 dark:text-gray-200 truncate"><%= blob.filename %></p>
-                  <p class="text-xs text-gray-400 dark:text-gray-500">
+                  <p class="text-xs text-gray-500 dark:text-gray-500">
                     <% if is_html %>
                       <span class="text-blue-500">HTML 보고서</span> ·
                     <% elsif is_excel %>
@@ -270,7 +270,7 @@
                 <% end %>
                 <%# 다운로드 버튼 %>
                 <a href="<%= rails_blob_path(blob, disposition: "attachment") %>" class="relative z-10 p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" title="다운로드" onclick="event.stopPropagation()">
-                  <svg class="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  <svg class="w-3.5 h-3.5 text-gray-500 group-hover:text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 </a>
               </div>
             <% end %>
@@ -284,7 +284,7 @@
                   <svg class="w-8 h-8 p-1.5 rounded bg-gray-100 dark:bg-gray-700 <%= icon_color %> flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                   <div class="flex-1 min-w-0">
                     <p class="text-xs font-medium text-gray-800 dark:text-gray-200 truncate"><%= att[:filename] %></p>
-                    <p class="text-xs text-gray-400 dark:text-gray-500">
+                    <p class="text-xs text-gray-500 dark:text-gray-500">
                       <%= att[:mime_type]&.split("/")&.last&.upcase %>
                       <% if att[:size] %> · <%= number_to_human_size(att[:size]) %><% end %>
                       · 재동기화 필요
@@ -333,7 +333,7 @@
 
     <%# Footer %>
     <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/20 flex items-center justify-between">
-      <p class="text-xs text-gray-400 dark:text-gray-500">
+      <p class="text-xs text-gray-500 dark:text-gray-500">
         발주 #<%= @order.id %> · <%= time_ago_in_words(@order.created_at) %> 전 생성
       </p>
       <%= link_to order_path(@order), class: "text-sm text-accent hover:underline flex items-center gap-1" do %>
@@ -349,7 +349,7 @@
     <div class="bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-200 dark:border-gray-700 p-5 mb-6">
       <div class="flex items-center justify-between mb-3">
         <h3 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-          <svg class="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <svg class="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           발신처 정보
         </h3>
         <%# 담당자로 저장 버튼 (contact-person-management 연동) %>
@@ -376,10 +376,10 @@
             <p class="text-sm font-semibold text-gray-900 dark:text-white"><%= display_name %></p>
           <% end %>
           <% if sig[:title].present? %>
-            <p class="text-xs text-gray-500 dark:text-gray-400"><%= sig[:title] %></p>
+            <p class="text-xs text-gray-500 dark:text-gray-500"><%= sig[:title] %></p>
           <% end %>
           <% if sig[:company].present? %>
-            <p class="text-xs text-gray-500 dark:text-gray-400"><%= sig[:company] %></p>
+            <p class="text-xs text-gray-500 dark:text-gray-500"><%= sig[:company] %></p>
           <% end %>
         </div>
       </div>
@@ -395,13 +395,13 @@
           <% contact_items.each do |item| %>
             <a href="<%= item[:href] %>" class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300 hover:text-accent truncate">
               <% if item[:icon] == "mail" %>
-                <svg class="w-3.5 h-3.5 flex-shrink-0 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <svg class="w-3.5 h-3.5 flex-shrink-0 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
               <% elsif item[:icon] == "phone" %>
-                <svg class="w-3.5 h-3.5 flex-shrink-0 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.62 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                <svg class="w-3.5 h-3.5 flex-shrink-0 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.62 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
               <% elsif item[:icon] == "smartphone" %>
-                <svg class="w-3.5 h-3.5 flex-shrink-0 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                <svg class="w-3.5 h-3.5 flex-shrink-0 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
               <% else %>
-                <svg class="w-3.5 h-3.5 flex-shrink-0 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                <svg class="w-3.5 h-3.5 flex-shrink-0 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
               <% end %>
               <span class="truncate"><%= item[:label] %></span>
             </a>
@@ -411,15 +411,15 @@
 
       <%# 주소 %>
       <% if sig[:address].present? %>
-        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400 flex items-start gap-1.5">
-          <svg class="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <p class="mt-2 text-xs text-gray-500 dark:text-gray-500 flex items-start gap-1.5">
+          <svg class="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
           <%= sig[:address] %>
         </p>
       <% end %>
 
       <%# 도메인 정보 %>
       <% if @order.sender_domain.present? %>
-        <p class="mt-2 text-xs text-gray-400 dark:text-gray-500">도메인: <%= @order.sender_domain %></p>
+        <p class="mt-2 text-xs text-gray-500 dark:text-gray-500">도메인: <%= @order.sender_domain %></p>
       <% end %>
     </div>
   <% end %>
@@ -432,7 +432,7 @@
     <% if same_sender.any? %>
       <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 mb-6">
         <h3 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-3">
-          <svg class="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <svg class="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           같은 발신자의 다른 이메일
         </h3>
         <ul class="space-y-1">
@@ -440,10 +440,10 @@
             <li>
               <%= link_to inbox_email_path(o), class: "flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group" do %>
                 <span class="text-sm text-gray-900 dark:text-white group-hover:text-accent truncate flex-1">
-                  <% if o.reference_no.present? %><span class="text-[10px] px-1 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded font-mono mr-1"><%= o.reference_no %></span><% end %><%= o.display_subject %>
+                  <% if o.reference_no.present? %><span class="text-xs px-1 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded font-mono mr-1"><%= o.reference_no %></span><% end %><%= o.display_subject %>
                 </span>
                 <%= status_badge(o) %>
-                <span class="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0"><%= o.created_at.strftime("%m/%d") %></span>
+                <span class="text-xs text-gray-500 dark:text-gray-500 flex-shrink-0"><%= o.created_at.strftime("%m/%d") %></span>
               <% end %>
             </li>
           <% end %>
@@ -488,7 +488,7 @@
     <%# 모달 헤더 %>
     <div class="flex items-center justify-between px-5 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
       <div class="flex items-center gap-2 min-w-0">
-        <svg class="w-4 h-4 text-gray-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <svg class="w-4 h-4 text-gray-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         <span id="preview-modal-title" class="text-sm font-semibold text-gray-700 dark:text-gray-200 truncate"></span>
       </div>
       <div class="flex items-center gap-2 flex-shrink-0">

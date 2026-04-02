@@ -7,7 +7,7 @@
 <div class="flex items-center justify-between mb-5">
   <div class="flex items-center gap-2">
     <h2 class="text-lg font-semibold text-gray-900 dark:text-white"><%= t("kanban.title", default: "Procurement Board") %></h2>
-    <span class="text-sm text-gray-400 dark:text-gray-500">— AtoZ2010 Inc.</span>
+    <span class="text-sm text-gray-500 dark:text-gray-500">— AtoZ2010 Inc.</span>
   </div>
   <%= link_to new_order_path, class: "flex items-center gap-2 bg-accent text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-500 transition-colors" do %>
     <i class="lni lni-plus"></i>
@@ -44,7 +44,7 @@
 
   <%# 키워드 검색 %>
   <div class="flex items-center gap-1.5 flex-1 min-w-[140px] max-w-[220px] border border-gray-200 dark:border-gray-600 rounded-lg px-2.5 py-1.5 bg-white dark:bg-gray-700">
-    <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <svg class="w-3.5 h-3.5 text-gray-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     <input id="filter-keyword" type="text" placeholder="검색..."
            class="text-xs bg-transparent text-gray-700 dark:text-gray-200 focus:outline-none w-full placeholder-gray-400 dark:placeholder-gray-500"
            onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();this.focus();if(typeof applyFilters==='function')applyFilters()}">
@@ -54,12 +54,12 @@
   <button id="merge-mode-btn"
           onclick="toggleMergeMode()"
           class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors
-                 <%= @duplicate_thread_ids.any? ? 'border-orange-300 dark:border-orange-700 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/40' : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-default' %>"
+                 <%= @duplicate_thread_ids.any? ? 'border-orange-300 dark:border-orange-700 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/40' : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-500 dark:text-gray-500 cursor-default' %>"
           <%= 'disabled' if @duplicate_thread_ids.empty? %>>
     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><path d="M11 18H8a2 2 0 0 1-2-2V9"/></svg>
     병합대상
     <% if @duplicate_thread_ids.any? %>
-      <span class="inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-[10px] font-bold text-white" style="background:#D93025;"><%= @duplicate_thread_ids.size %></span>
+      <span class="inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-xs font-bold text-white" style="background:#D93025;"><%= @duplicate_thread_ids.size %></span>
     <% end %>
   </button>
 
@@ -73,7 +73,7 @@
 
   <%# 초기화 버튼 — 활성 필터 있을 때만 노출 %>
   <button id="filter-reset"
-          class="hidden text-xs text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 px-2 py-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+          class="hidden text-xs text-gray-500 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 px-2 py-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
   </button>
 </div>
@@ -111,7 +111,7 @@
             <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-white text-xs font-bold" style="background:<%= color %>"><%= group[:orders].size %></span>
             <div>
               <span class="text-sm font-semibold text-gray-900 dark:text-white"><%= main_order.display_subject.truncate(60) %></span>
-              <span class="text-xs text-gray-500 dark:text-gray-400 ml-2"><%= main_order.customer_name %></span>
+              <span class="text-xs text-gray-500 dark:text-gray-500 ml-2"><%= main_order.customer_name %></span>
             </div>
           </div>
           <button onclick="executeMergeGroup(<%= main_order.id %>, [<%= merge_order_ids.join(',') %>], this)"
@@ -128,27 +128,27 @@
 
               <%# 메인/병합대상 라벨 %>
               <% if oi == 0 %>
-                <span class="shrink-0 inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">메인</span>
+                <span class="shrink-0 inline-flex items-center px-2 py-0.5 text-xs font-bold rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">메인</span>
               <% else %>
-                <span class="shrink-0 inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400">병합</span>
+                <span class="shrink-0 inline-flex items-center px-2 py-0.5 text-xs font-bold rounded bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400">병합</span>
               <% end %>
 
               <%# 주문 정보 %>
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 mb-0.5">
-                  <span class="text-xs font-mono text-gray-400 dark:text-gray-500">#<%= order.id %></span>
-                  <span class="inline-block px-2 py-0.5 text-[10px] font-medium rounded-full text-white <%= status_colors[order.status] || 'bg-gray-400' %>">
+                  <span class="text-xs font-mono text-gray-500 dark:text-gray-500">#<%= order.id %></span>
+                  <span class="inline-block px-2 py-0.5 text-xs font-medium rounded-full text-white <%= status_colors[order.status] || 'bg-gray-400' %>">
                     <%= Order::STATUS_LABELS[order.status] || order.status %>
                   </span>
                   <% if order.sub_orders.any? %>
-                    <span class="text-[10px] text-blue-600 dark:text-blue-400">+<%= order.sub_orders.size %>건 서브</span>
+                    <span class="text-xs text-blue-600 dark:text-blue-400">+<%= order.sub_orders.size %>건 서브</span>
                   <% end %>
                   <% if order.reference_no.present? %>
-                    <span class="text-[10px] font-mono text-gray-400">Ref: <%= order.reference_no %></span>
+                    <span class="text-xs font-mono text-gray-500">Ref: <%= order.reference_no %></span>
                   <% end %>
                 </div>
                 <p class="text-sm text-gray-800 dark:text-gray-200 truncate"><%= order.title %></p>
-                <div class="flex items-center gap-3 mt-0.5 text-[10px] text-gray-400 dark:text-gray-500">
+                <div class="flex items-center gap-3 mt-0.5 text-xs text-gray-500 dark:text-gray-500">
                   <span><%= order.created_at.strftime("%Y-%m-%d %H:%M") %></span>
                   <span>From: <%= order.original_email_from.to_s.truncate(35) %></span>
                   <% if order.assignees.any? %>
@@ -167,7 +167,7 @@
     <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-12 text-center">
       <svg class="w-12 h-12 mx-auto text-green-500 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
       <p class="text-lg font-medium text-gray-900 dark:text-white">중복 주문이 없습니다</p>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">모든 칸반 카드가 정상입니다</p>
+      <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">모든 칸반 카드가 정상입니다</p>
     </div>
   <% end %>
 </div>
@@ -185,7 +185,7 @@
       <div class="flex items-center justify-between mb-3 px-1">
         <div class="flex items-center gap-2">
           <span class="column-name text-sm font-semibold text-gray-700 dark:text-gray-300"><%= label %></span>
-          <span class="column-count text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full px-2 py-0.5"><%= orders.count %></span>
+          <span class="column-count text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-500 rounded-full px-2 py-0.5"><%= orders.count %></span>
         </div>
         <% if status == "new_rfq" %>
           <%= link_to inbox_path, class: "text-xs text-accent hover:underline" do %>
@@ -204,7 +204,7 @@
 
         <!-- Empty state -->
         <% empty_check = orders.empty? %>
-        <div class="empty-state flex-1 flex items-center justify-center text-xs text-gray-400 dark:text-gray-500 py-8<%= empty_check ? '' : ' hidden' %>">
+        <div class="empty-state flex-1 flex items-center justify-center text-xs text-gray-500 dark:text-gray-500 py-8<%= empty_check ? '' : ' hidden' %>">
           <div class="text-center">
             <i class="lni lni-inbox text-2xl block mb-1 opacity-50"></i>
             No orders
@@ -218,7 +218,7 @@
 <!-- 선택모드 하단 액션 바 -->
 <div id="select-action-bar" class="fixed bottom-0 left-0 right-0 z-50 hidden">
   <div class="max-w-4xl mx-auto px-4 pb-4">
-    <div class="flex items-center justify-between bg-[#1E3A5F] text-white rounded-xl shadow-2xl px-5 py-3">
+    <div class="flex items-center justify-between bg-primary text-white rounded-xl shadow-2xl px-5 py-3">
       <div class="flex items-center gap-3">
         <span id="select-count" class="text-sm font-medium">0개 선택</span>
       </div>
@@ -256,7 +256,7 @@
         </div>
         <div>
           <h3 class="text-base font-semibold text-gray-900 dark:text-white">카드 병합</h3>
-          <p class="text-xs text-gray-500 dark:text-gray-400">메인으로 유지할 카드를 선택하세요</p>
+          <p class="text-xs text-gray-500 dark:text-gray-500">메인으로 유지할 카드를 선택하세요</p>
         </div>
       </div>
       <div id="merge-modal-list" class="space-y-2 mb-5 max-h-[300px] overflow-y-auto"></div>
@@ -308,12 +308,12 @@
         </div>
         <div>
           <h3 class="text-base font-semibold text-gray-900 dark:text-white">발주 삭제</h3>
-          <p class="text-xs text-gray-500 dark:text-gray-400">이 작업은 되돌릴 수 없습니다</p>
+          <p class="text-xs text-gray-500 dark:text-gray-500">이 작업은 되돌릴 수 없습니다</p>
         </div>
       </div>
       <p class="text-sm text-gray-600 dark:text-gray-300 mb-5">
         <span id="delete-order-title" class="font-medium text-gray-900 dark:text-white"></span>
-        <span class="block mt-1 text-gray-500 dark:text-gray-400">관련 댓글, 작업, 활동 기록도 함께 삭제됩니다.</span>
+        <span class="block mt-1 text-gray-500 dark:text-gray-500">관련 댓글, 작업, 활동 기록도 함께 삭제됩니다.</span>
       </p>
       <div class="flex gap-2 justify-end">
         <button onclick="closeDeleteModal()"
@@ -399,7 +399,7 @@ function toggleSelectMode() {
   var btn = document.getElementById('select-mode-btn');
   var actionBar = document.getElementById('select-action-bar');
 
-  btn.classList.toggle('bg-[#1E3A5F]', selectMode);
+  btn.classList.toggle('bg-primary', selectMode);
   btn.classList.toggle('text-white', selectMode);
   btn.classList.toggle('border-[#1E3A5F]', selectMode);
   btn.classList.toggle('bg-white', !selectMode);
@@ -476,11 +476,11 @@ function openMergeModal() {
     row.className = 'flex items-center gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors';
     row.innerHTML = '<input type="radio" name="merge_main" value="' + id + '" class="text-blue-600 focus:ring-blue-500"' + (i === 0 ? ' checked' : '') + '>'
       + '<div class="min-w-0 flex-1">'
-      + '<span class="text-xs font-mono text-gray-400">#' + id + '</span>'
+      + '<span class="text-xs font-mono text-gray-500">#' + id + '</span>'
       + '<p class="text-sm font-medium text-gray-900 dark:text-white truncate">' + title + '</p>'
       + '<span class="text-xs text-gray-500">' + customer + '</span>'
       + '</div>'
-      + (i === 0 ? '<span class="text-[10px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded">메인</span>' : '');
+      + (i === 0 ? '<span class="text-xs font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded">메인</span>' : '');
     list.appendChild(row);
   });
 
@@ -490,7 +490,7 @@ function openMergeModal() {
       list.querySelectorAll('span.text-blue-600').forEach(function(s) { s.remove(); });
       if (r.checked) {
         var badge = document.createElement('span');
-        badge.className = 'text-[10px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded';
+        badge.className = 'text-xs font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded';
         badge.textContent = '메인';
         r.closest('label').appendChild(badge);
       }

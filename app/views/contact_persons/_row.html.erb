@@ -16,13 +16,13 @@
               <span class="text-xs px-1 py-0.5 rounded bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400">주</span>
             <% end %>
             <% if contact_person.title.present? %>
-              <span class="text-xs text-gray-500 dark:text-gray-400"><%= contact_person.title %></span>
+              <span class="text-xs text-gray-500 dark:text-gray-500"><%= contact_person.title %></span>
             <% end %>
             <% if contact_person.department.present? %>
               <span class="text-xs px-1.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400"><%= contact_person.department %></span>
             <% end %>
           </div>
-          <div class="flex items-center gap-2 mt-0.5 text-xs text-gray-400 dark:text-gray-500">
+          <div class="flex items-center gap-2 mt-0.5 text-xs text-gray-500 dark:text-gray-500">
             <% if contact_person.email.present? %>
               <span><%= contact_person.email %></span>
             <% end %>
@@ -35,9 +35,9 @@
 
       <div class="flex items-center gap-2 flex-shrink-0 ml-2">
         <% if contact_person.last_contacted_at.present? %>
-          <span class="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap"><%= contact_person.last_contacted_label %></span>
+          <span class="text-xs text-gray-500 dark:text-gray-500 whitespace-nowrap"><%= contact_person.last_contacted_label %></span>
         <% end %>
-        <svg class="w-4 h-4 text-gray-400 transition-transform" :class="open && 'rotate-180'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        <svg class="w-4 h-4 text-gray-500 transition-transform" :class="open && 'rotate-180'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
     </div>
 
@@ -47,49 +47,49 @@
         <%# 연락처 정보 %>
         <% if contact_person.email.present? %>
           <div>
-            <dt class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">이메일</dt>
+            <dt class="text-xs font-semibold text-gray-500 dark:text-gray-500 mb-0.5">이메일</dt>
             <dd><a href="mailto:<%= contact_person.email %>" class="text-sm text-primary hover:underline"><%= contact_person.email %></a></dd>
           </div>
         <% end %>
         <% if contact_person.phone.present? %>
           <div>
-            <dt class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">사무실</dt>
+            <dt class="text-xs font-semibold text-gray-500 dark:text-gray-500 mb-0.5">사무실</dt>
             <dd><a href="tel:<%= contact_person.phone %>" class="text-sm text-gray-800 dark:text-gray-200 hover:text-primary"><%= contact_person.phone %></a></dd>
           </div>
         <% end %>
         <% if contact_person.mobile.present? %>
           <div>
-            <dt class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">모바일</dt>
+            <dt class="text-xs font-semibold text-gray-500 dark:text-gray-500 mb-0.5">모바일</dt>
             <dd><a href="tel:<%= contact_person.mobile %>" class="text-sm text-gray-800 dark:text-gray-200 hover:text-primary"><%= contact_person.mobile %></a></dd>
           </div>
         <% end %>
         <% if contact_person.whatsapp.present? %>
           <div>
-            <dt class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">WhatsApp</dt>
+            <dt class="text-xs font-semibold text-gray-500 dark:text-gray-500 mb-0.5">WhatsApp</dt>
             <dd><a href="https://wa.me/<%= contact_person.whatsapp.gsub(/\D/, '') %>" target="_blank" rel="noopener" class="text-sm text-green-600 hover:underline"><%= contact_person.whatsapp %></a></dd>
           </div>
         <% end %>
         <% if contact_person.wechat.present? %>
           <div>
-            <dt class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">WeChat</dt>
+            <dt class="text-xs font-semibold text-gray-500 dark:text-gray-500 mb-0.5">WeChat</dt>
             <dd class="text-sm text-gray-800 dark:text-gray-200"><%= contact_person.wechat %></dd>
           </div>
         <% end %>
         <% if contact_person.linkedin.present? %>
           <div>
-            <dt class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">LinkedIn</dt>
+            <dt class="text-xs font-semibold text-gray-500 dark:text-gray-500 mb-0.5">LinkedIn</dt>
             <dd><a href="<%= contact_person.linkedin %>" target="_blank" rel="noopener" class="text-sm text-blue-600 hover:underline truncate block"><%= contact_person.linkedin.gsub(%r{https?://}, '') %></a></dd>
           </div>
         <% end %>
         <% if contact_person.language.present? %>
           <div>
-            <dt class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">언어</dt>
+            <dt class="text-xs font-semibold text-gray-500 dark:text-gray-500 mb-0.5">언어</dt>
             <dd class="text-sm text-gray-800 dark:text-gray-200"><%= contact_person.language_label %></dd>
           </div>
         <% end %>
         <% if contact_person.nationality.present? %>
           <div>
-            <dt class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">국적</dt>
+            <dt class="text-xs font-semibold text-gray-500 dark:text-gray-500 mb-0.5">국적</dt>
             <dd class="text-sm text-gray-800 dark:text-gray-200"><%= contact_person.nationality %></dd>
           </div>
         <% end %>
@@ -97,7 +97,7 @@
 
       <% if contact_person.notes.present? %>
         <div class="mb-4 p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
-          <dt class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">메모</dt>
+          <dt class="text-xs font-semibold text-gray-500 dark:text-gray-500 mb-1">메모</dt>
           <dd class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap"><%= contact_person.notes %></dd>
         </div>
       <% end %>

@@ -18,16 +18,16 @@
       <button onclick="switchDrawerTab('<%= order.id %>', '<%= tab_id %>')"
               id="drawer-tab-<%= order.id %>-<%= tab_id %>"
               class="flex items-center gap-1.5 px-4 py-3 text-sm font-medium transition-colors border-b-2
-                     <%= i == 0 ? 'border-primary text-primary' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300' %>">
+                     <%= i == 0 ? 'border-primary text-primary' : 'border-transparent text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300' %>">
         <%= label %>
         <% if tab_id == 'tasks' && tasks.any? %>
-          <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-1.5 py-0.5 rounded-full"><%= tasks.count %></span>
+          <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-500 px-1.5 py-0.5 rounded-full"><%= tasks.count %></span>
         <% end %>
         <% if tab_id == 'comments' && comments.any? %>
-          <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-1.5 py-0.5 rounded-full"><%= comments.count %></span>
+          <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-500 px-1.5 py-0.5 rounded-full"><%= comments.count %></span>
         <% end %>
         <% if tab_id == 'attachments' && att_count > 0 %>
-          <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-1.5 py-0.5 rounded-full"><%= att_count %></span>
+          <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-500 px-1.5 py-0.5 rounded-full"><%= att_count %></span>
         <% end %>
       </button>
     <% end %>
@@ -92,7 +92,7 @@
       <%# 주요 정보 그리드 %>
       <dl class="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
         <div>
-          <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">고객사</dt>
+          <dt class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-1">고객사</dt>
           <dd class="font-medium text-gray-900 dark:text-white">
             <% if order.client %>
               <%= link_to order.client.name, client_path(order.client), class: "text-accent hover:underline" %>
@@ -102,12 +102,12 @@
           </dd>
         </div>
         <div>
-          <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">마감일</dt>
+          <dt class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-1">마감일</dt>
           <dd class="font-medium text-gray-900 dark:text-white"><%= order.due_date&.strftime("%Y년 %m월 %d일") || "—" %></dd>
         </div>
         <% if order.project %>
           <div>
-            <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">프로젝트</dt>
+            <dt class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-1">프로젝트</dt>
             <dd class="font-medium text-gray-900 dark:text-white">
               <%= link_to order.project.name, project_path(order.project), class: "text-accent hover:underline" %>
             </dd>
@@ -115,7 +115,7 @@
         <% end %>
         <% if order.supplier %>
           <div>
-            <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">공급사</dt>
+            <dt class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-1">공급사</dt>
             <dd class="font-medium text-gray-900 dark:text-white">
               <%= link_to order.supplier.name, supplier_path(order.supplier), class: "text-accent hover:underline" %>
             </dd>
@@ -123,7 +123,7 @@
         <% end %>
         <% if order.item_name.present? %>
           <div>
-            <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">품목</dt>
+            <dt class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-1">품목</dt>
             <dd class="font-medium text-gray-900 dark:text-white"><%= order.item_name %> <%= "× #{order.quantity}" if order.quantity %></dd>
             <%# eCountERP 실시간 재고 표시 — 연동된 제품만 표시 %>
             <% product = Product.find_by(name: order.item_name) %>
@@ -131,8 +131,8 @@
               <% stock = EcountApi::InventoryService.stock_for(product.ecount_code) rescue nil %>
               <% if stock.present? %>
                 <dd class="mt-1 flex items-center gap-1.5 text-xs">
-                  <svg class="w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-                  <span class="text-gray-500 dark:text-gray-400">재고</span>
+                  <svg class="w-3.5 h-3.5 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                  <span class="text-gray-500 dark:text-gray-500">재고</span>
                   <% if stock <= 0 %>
                     <span class="font-semibold text-red-600 dark:text-red-400">재고 없음</span>
                   <% elsif stock <= 10 %>
@@ -147,7 +147,7 @@
         <% end %>
         <% if order.estimated_value.present? %>
           <div>
-            <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">예상 금액</dt>
+            <dt class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-1">예상 금액</dt>
             <dd class="font-medium text-gray-900 dark:text-white">
               <%= number_to_currency(order.estimated_value, unit: order.currency.presence || "$", format: "%u %n") %>
             </dd>
@@ -155,7 +155,7 @@
         <% end %>
         <% if order.ariba_event_id.present? %>
           <div>
-            <dt class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Ariba 이벤트 ID</dt>
+            <dt class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-1">Ariba 이벤트 ID</dt>
             <dd class="font-medium text-gray-900 dark:text-white font-mono"><%= order.ariba_event_id %></dd>
           </div>
         <% end %>
@@ -163,7 +163,7 @@
 
       <%# ── 관리번호 (RFQ / QUO / PO) ─────────────────────────── %>
       <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-        <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">관리번호</p>
+        <p class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-3">관리번호</p>
         <div class="grid grid-cols-3 gap-3">
           <% [
             ['rfq_no', 'RFQ', 'bg-indigo-500', 'border-indigo-200 dark:border-indigo-700', 'text-indigo-700 dark:text-indigo-400', true],
@@ -172,8 +172,8 @@
           ].each do |field, label, bg_class, border_class, text_class, readonly| %>
             <div>
               <div class="flex items-center gap-1 mb-1">
-                <span class="text-[10px] font-semibold text-white px-1.5 py-0.5 rounded <%= bg_class %>"><%= label %></span>
-                <% if readonly %><span class="text-[9px] text-gray-400">자동</span><% end %>
+                <span class="text-xs font-semibold text-white px-1.5 py-0.5 rounded <%= bg_class %>"><%= label %></span>
+                <% if readonly %><span class="text-[9px] text-gray-500">자동</span><% end %>
               </div>
               <div class="relative group/edit" id="tracking-<%= field %>-<%= order.id %>">
                 <% val = order.send(field) %>
@@ -182,15 +182,15 @@
                         <% unless readonly %>onclick="editTrackingNo('<%= order.id %>', '<%= field %>')" title="클릭하여 수정"<% end %>>
                     <%= val %>
                     <% unless readonly %>
-                      <svg class="w-3 h-3 inline ml-1 text-gray-400 opacity-0 group-hover/edit:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      <svg class="w-3 h-3 inline ml-1 text-gray-500 opacity-0 group-hover/edit:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     <% end %>
                   </span>
                 <% else %>
-                  <span class="tracking-display block text-xs text-gray-400 italic rounded px-2 py-1.5 border border-dashed border-gray-200 dark:border-gray-600<%= readonly ? '' : ' cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300' %> transition-colors"
+                  <span class="tracking-display block text-xs text-gray-500 italic rounded px-2 py-1.5 border border-dashed border-gray-200 dark:border-gray-600<%= readonly ? '' : ' cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300' %> transition-colors"
                         <% unless readonly %>onclick="editTrackingNo('<%= order.id %>', '<%= field %>')" title="클릭하여 입력"<% end %>>
                     미등록
                     <% unless readonly %>
-                      <svg class="w-3 h-3 inline ml-1 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      <svg class="w-3 h-3 inline ml-1 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                     <% end %>
                   </span>
                 <% end %>
@@ -228,7 +228,7 @@
       <%# 설명 %>
       <% if order.description.present? %>
         <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-          <p class="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">설명</p>
+          <p class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-2">설명</p>
           <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap"><%= order.description %></p>
         </div>
       <% end %>
@@ -248,9 +248,9 @@
       <%# 담당자 %>
       <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4" x-data="{ showAssignMenu: false }">
         <div class="flex items-center justify-between mb-3">
-          <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">담당자</h4>
+          <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wide">담당자</h4>
           <button @click="showAssignMenu = !showAssignMenu"
-                  class="w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-accent hover:text-white text-gray-500 dark:text-gray-400 transition-colors text-sm font-bold"
+                  class="w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-accent hover:text-white text-gray-500 dark:text-gray-500 transition-colors text-sm font-bold"
                   title="담당자 추가">+</button>
         </div>
         <div x-show="showAssignMenu" @click.outside="showAssignMenu = false"
@@ -264,12 +264,12 @@
                         class="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors text-left">
                   <div class="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold shrink-0"><%= emp.initials %></div>
                   <span><%= emp.display_name %></span>
-                  <span class="ml-auto text-gray-400 text-xs"><%= emp.employment_type_label %></span>
+                  <span class="ml-auto text-gray-500 text-xs"><%= emp.employment_type_label %></span>
                 </button>
               <% end %>
             <% end %>
           <% else %>
-            <p class="px-3 py-2 text-xs text-gray-400 dark:text-gray-500">모든 팀원이 배정됨</p>
+            <p class="px-3 py-2 text-xs text-gray-500 dark:text-gray-500">모든 팀원이 배정됨</p>
           <% end %>
         </div>
         <% if order.assignees.any? %>
@@ -280,11 +280,11 @@
                 <div class="w-7 h-7 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold shrink-0"><%= assignment.employee.initials %></div>
                 <div class="min-w-0 flex-1">
                   <p class="text-sm font-medium text-gray-900 dark:text-white truncate"><%= assignment.employee.display_name %></p>
-                  <p class="text-xs text-gray-400 dark:text-gray-500"><%= assignment.employee.employment_type_label %></p>
+                  <p class="text-xs text-gray-500 dark:text-gray-500"><%= assignment.employee.employment_type_label %></p>
                 </div>
                 <%= form_with url: order_assignment_path(order, assignment), method: :delete, local: true do |f| %>
                   <button type="submit"
-                          class="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded-full text-gray-400 hover:bg-red-100 hover:text-red-500 dark:hover:bg-red-900/30 transition-all text-xs"
+                          class="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded-full text-gray-500 hover:bg-red-100 hover:text-red-500 dark:hover:bg-red-900/30 transition-all text-xs"
                           title="담당자 제거"
                           onclick="return confirm('<%= assignment.employee.display_name %>을(를) 담당자에서 제거할까요?')">✕</button>
                 <% end %>
@@ -292,13 +292,13 @@
             <% end %>
           </div>
         <% else %>
-          <p class="text-xs text-gray-400 dark:text-gray-500">배정된 담당자 없음</p>
+          <p class="text-xs text-gray-500 dark:text-gray-500">배정된 담당자 없음</p>
         <% end %>
       </div>
 
       <%# 스테이지 이동 — 이전/현재/다음 + 더보기 %>
       <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-        <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">스테이지 이동</h4>
+        <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-3">스테이지 이동</h4>
         <%
           columns = Order::KANBAN_COLUMNS
           current_idx = columns.index(order.status) || 0
@@ -320,7 +320,7 @@
           <% if columns.size > 3 %>
             <button type="button"
                     onclick="this.parentElement.querySelectorAll('[data-stage-item]').forEach(el => el.classList.remove('hidden')); this.remove();"
-                    class="w-full text-center text-xs py-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                    class="w-full text-center text-xs py-1.5 text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
               전체 단계 보기 (<%= columns.size %>개)
             </button>
           <% end %>
@@ -333,16 +333,16 @@
       <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div class="flex items-center justify-between px-5 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
           <div class="flex items-center gap-2">
-            <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <svg class="w-4 h-4 text-gray-500 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
             <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">원본 이메일</span>
           </div>
-          <span class="text-xs text-gray-400 dark:text-gray-500"><%= order.original_email_from %></span>
+          <span class="text-xs text-gray-500 dark:text-gray-500"><%= order.original_email_from %></span>
         </div>
         <div class="p-5">
           <% if order.original_email_subject.present? %>
-            <p class="text-sm font-medium text-gray-900 dark:text-white mb-3"><% if order.reference_no.present? %><span class="text-[10px] px-1 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded font-mono mr-1"><%= order.reference_no %></span><% end %><%= order.display_subject %><% order.subject_tags.each do |tag| %><span class="text-[10px] px-1 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded ml-1"><%= tag %></span><% end %></p>
+            <p class="text-sm font-medium text-gray-900 dark:text-white mb-3"><% if order.reference_no.present? %><span class="text-xs px-1 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded font-mono mr-1"><%= order.reference_no %></span><% end %><%= order.display_subject %><% order.subject_tags.each do |tag| %><span class="text-xs px-1 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded ml-1"><%= tag %></span><% end %></p>
           <% end %>
-          <div class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-wrap font-mono bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-700">
+          <div class="text-xs text-gray-600 dark:text-gray-500 leading-relaxed whitespace-pre-wrap font-mono bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-700">
             <%= order.original_email_body %>
           </div>
         </div>
@@ -359,7 +359,7 @@
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-          <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          <svg class="w-4 h-4 text-gray-500 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
           태스크
         </h3>
       </div>
@@ -369,7 +369,7 @@
           <%= render "tasks/task", task: task, order: order %>
         <% end %>
         <% if tasks.empty? %>
-          <p class="text-xs text-gray-400 dark:text-gray-500 px-3 py-2">태스크가 없습니다</p>
+          <p class="text-xs text-gray-500 dark:text-gray-500 px-3 py-2">태스크가 없습니다</p>
         <% end %>
       </div>
       <%= render "tasks/add_form", order: order %>
@@ -383,10 +383,10 @@
   <div id="drawer-panel-<%= order.id %>-comments" class="p-6 hidden">
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
       <h3 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
-        <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <svg class="w-4 h-4 text-gray-500 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         코멘트
         <% if comments.any? %>
-          <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-1.5 py-0.5 rounded-full"><%= comments.count %></span>
+          <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-500 px-1.5 py-0.5 rounded-full"><%= comments.count %></span>
         <% end %>
       </h3>
       <div id="comments-<%= order.id %>" class="space-y-4 mb-5">
@@ -398,7 +398,7 @@
           <div class="flex items-center justify-center py-6 text-center">
             <div>
               <svg class="w-8 h-8 text-gray-200 dark:text-gray-600 mx-auto mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              <p class="text-xs text-gray-400 dark:text-gray-500">아직 코멘트가 없습니다</p>
+              <p class="text-xs text-gray-500 dark:text-gray-500">아직 코멘트가 없습니다</p>
             </div>
           </div>
         <% end %>
@@ -421,8 +421,8 @@
       <%= form_with url: attach_order_path(order), method: :post, multipart: true,
           class: "flex items-center gap-2" do |f| %>
         <label class="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl cursor-pointer hover:border-primary hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors group">
-          <svg class="w-5 h-5 text-gray-400 group-hover:text-primary transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          <span class="text-sm text-gray-500 dark:text-gray-400 group-hover:text-primary transition-colors" id="upload-label-<%= order.id %>">파일 선택 또는 드래그</span>
+          <svg class="w-5 h-5 text-gray-500 group-hover:text-primary transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span class="text-sm text-gray-500 dark:text-gray-500 group-hover:text-primary transition-colors" id="upload-label-<%= order.id %>">파일 선택 또는 드래그</span>
           <%= f.file_field :files, multiple: true, class: "hidden",
               onchange: "updateUploadLabel(this, #{order.id})" %>
         </label>
@@ -435,11 +435,11 @@
       <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
           <h3 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            <svg class="w-4 h-4 text-gray-500 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
             첨부파일 및 링크
           </h3>
           <% total_att = [att_meta.size, active_storage_attachments.size].max + links.size %>
-          <span class="text-xs text-gray-400 dark:text-gray-500"><%= total_att %>개</span>
+          <span class="text-xs text-gray-500 dark:text-gray-500"><%= total_att %>개</span>
         </div>
         <div class="px-5 py-4 space-y-2">
           <%# ActiveStorage 첨부파일 %>
@@ -460,7 +460,7 @@
               <svg class="w-8 h-8 p-1.5 rounded bg-gray-100 dark:bg-gray-700 <%= icon_color %> flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
               <div class="flex-1 min-w-0">
                 <p class="text-xs font-medium text-gray-800 dark:text-gray-200 truncate"><%= blob.filename %></p>
-                <p class="text-xs text-gray-400 dark:text-gray-500">
+                <p class="text-xs text-gray-500 dark:text-gray-500">
                   <% if is_html %>
                     <span class="text-blue-500">HTML 보고서</span> ·
                   <% elsif is_excel %>
@@ -480,13 +480,13 @@
                 </span>
               <% end %>
               <a href="<%= rails_blob_path(blob, disposition: "attachment") %>" class="relative z-10 p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" title="다운로드" onclick="event.stopPropagation()">
-                <svg class="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <svg class="w-3.5 h-3.5 text-gray-500 group-hover:text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               </a>
               <%= link_to detach_order_path(order, blob_id: blob.id), method: :delete,
                   data: { turbo_method: :delete, turbo_confirm: "#{blob.filename}을(를) 삭제할까요?" },
                   class: "relative z-10 p-1.5 rounded hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors",
                   title: "삭제", onclick: "event.stopPropagation()" do %>
-                <svg class="w-3.5 h-3.5 text-gray-400 hover:text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                <svg class="w-3.5 h-3.5 text-gray-500 hover:text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
               <% end %>
             </div>
           <% end %>
@@ -500,7 +500,7 @@
                 <svg class="w-8 h-8 p-1.5 rounded bg-gray-100 dark:bg-gray-700 <%= icon_color %> flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                 <div class="flex-1 min-w-0">
                   <p class="text-xs font-medium text-gray-800 dark:text-gray-200 truncate"><%= att[:filename] %></p>
-                  <p class="text-xs text-gray-400 dark:text-gray-500">
+                  <p class="text-xs text-gray-500 dark:text-gray-500">
                     <%= att[:mime_type]&.split("/")&.last&.upcase %>
                     <% if att[:size] %> · <%= number_to_human_size(att[:size]) %><% end %>
                     · 재동기화 필요
@@ -540,7 +540,7 @@
     <% else %>
       <div class="p-8 text-center">
         <svg class="w-10 h-10 mx-auto text-gray-200 dark:text-gray-600 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-        <p class="text-sm text-gray-400 dark:text-gray-500">첨부파일이 없습니다</p>
+        <p class="text-sm text-gray-500 dark:text-gray-500">첨부파일이 없습니다</p>
         <p class="text-xs text-gray-300 dark:text-gray-600 mt-1">위 영역에서 파일을 추가하세요</p>
       </div>
     <% end %>
@@ -557,15 +557,15 @@
         <h3 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
           <svg class="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
           관련 메일 스레드
-          <span class="ml-1 text-[11px] font-mono bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded">
+          <span class="ml-1 text-xs font-mono bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded">
             <%= order.reference_no %>
           </span>
-          <span class="ml-auto text-[11px] text-gray-400 dark:text-gray-500 font-normal">
+          <span class="ml-auto text-xs text-gray-500 dark:text-gray-500 font-normal">
             총 <%= thread_orders.size + 1 %>건
           </span>
         </h3>
         <% t_status_colors = {
-          "new_rfq"        => "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400",
+          "new_rfq"        => "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-500",
           "make_quo"       => "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400",
           "pending_po"     => "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400",
           "new_po"         => "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400",
@@ -584,26 +584,26 @@
                       onclick="toggleThreadEmail('<%= order.id %>', '<%= t_order.id %>')"
                       class="w-full flex items-center gap-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/30 -mx-1 px-1 rounded transition-colors text-left">
                 <span class="w-1.5 h-1.5 rounded-full <%= is_current ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600' %> flex-shrink-0"></span>
-                <span class="text-[11px] text-gray-400 dark:text-gray-500 flex-shrink-0 w-14">
+                <span class="text-xs text-gray-500 dark:text-gray-500 flex-shrink-0 w-14">
                   <%= t_order.created_at.strftime("%m/%d") %>
                 </span>
-                <span class="text-xs text-gray-600 dark:text-gray-400 truncate flex-1 <%= 'font-medium' if is_current %>">
+                <span class="text-xs text-gray-600 dark:text-gray-500 truncate flex-1 <%= 'font-medium' if is_current %>">
                   <%= t_order.display_subject %>
                 </span>
                 <% if is_current %>
-                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 font-medium flex-shrink-0">현재</span>
+                  <span class="text-xs px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 font-medium flex-shrink-0">현재</span>
                 <% else %>
-                  <span class="text-[10px] px-1.5 py-0.5 rounded <%= t_status_colors[t_order.status] || 'bg-gray-500 text-white' %> font-medium flex-shrink-0">
+                  <span class="text-xs px-1.5 py-0.5 rounded <%= t_status_colors[t_order.status] || 'bg-gray-500 text-white' %> font-medium flex-shrink-0">
                     <%= Order::STATUS_LABELS[t_order.status] || t_order.status.humanize %>
-                  </span><% if t_order.parent_order_id == order.id %><button type="button" onclick="event.stopPropagation(); splitOrder(<%= t_order.id %>, this)" class="text-[10px] ml-1 px-1.5 py-0.5 rounded border border-orange-300 dark:border-orange-700 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 font-medium flex-shrink-0 transition-colors" title="병합 해제 — 독립 카드로 분리">분리</button><% end %>
+                  </span><% if t_order.parent_order_id == order.id %><button type="button" onclick="event.stopPropagation(); splitOrder(<%= t_order.id %>, this)" class="text-xs ml-1 px-1.5 py-0.5 rounded border border-orange-300 dark:border-orange-700 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 font-medium flex-shrink-0 transition-colors" title="병합 해제 — 독립 카드로 분리">분리</button><% end %>
                 <% end %>
-                <svg id="<%= thread_item_id %>-chevron" class="w-3.5 h-3.5 text-gray-400 transition-transform flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                <svg id="<%= thread_item_id %>-chevron" class="w-3.5 h-3.5 text-gray-500 transition-transform flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
               </button>
               <%# 이메일 본문 (접혀있음) %>
               <div id="<%= thread_item_id %>-body" class="hidden">
                 <div class="ml-5 mr-1 mb-3 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg border border-gray-200 dark:border-gray-700">
                   <%# 보낸 사람 / 받는 사람 %>
-                  <div class="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-gray-500 dark:text-gray-400 mb-3 pb-2 border-b border-gray-200 dark:border-gray-600">
+                  <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-500 mb-3 pb-2 border-b border-gray-200 dark:border-gray-600">
                     <% if t_order.respond_to?(:sender_email) && t_order.sender_email.present? %>
                       <span><strong>From:</strong> <%= t_order.sender_name.presence || t_order.sender_email %></span>
                     <% end %>
@@ -612,7 +612,7 @@
                   <%# HTML 본문 우선, 없으면 텍스트 본문 %>
                   <% if t_order.original_email_html_body.present? %>
                     <div class="prose prose-xs dark:prose-invert max-w-none text-xs leading-relaxed overflow-auto max-h-96
-                                [&_table]:text-[11px] [&_td]:p-1 [&_th]:p-1 [&_img]:max-w-full">
+                                [&_table]:text-xs [&_td]:p-1 [&_th]:p-1 [&_img]:max-w-full">
                       <%= sanitize(t_order.original_email_html_body, tags: %w[p br div span table tr td th thead tbody a img b strong i em u ul ol li h1 h2 h3 h4 h5 h6 hr blockquote pre code], attributes: %w[href src alt style class width height colspan rowspan]) %>
                     </div>
                   <% elsif t_order.original_email_body.present? %>
@@ -620,7 +620,7 @@
                       <%= t_order.original_email_body %>
                     </div>
                   <% else %>
-                    <p class="text-xs text-gray-400 dark:text-gray-500 italic">이메일 본문이 없습니다</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-500 italic">이메일 본문이 없습니다</p>
                   <% end %>
                 </div>
               </div>
@@ -633,7 +633,7 @@
     <% if activities.any? %>
       <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
         <h3 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-5">
-          <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <svg class="w-4 h-4 text-gray-500 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           활동 기록
         </h3>
         <div class="relative pl-5">
@@ -662,23 +662,23 @@
                   <span class="font-semibold text-gray-800 dark:text-gray-200"><%= act.user.display_name %></span>
                   <% case act.action %>
                   <% when "status_changed" %>
-                    <span class="text-gray-500 dark:text-gray-400">상태 변경</span>
+                    <span class="text-gray-500 dark:text-gray-500">상태 변경</span>
                     <% if act.from_label && act.to_label %>
-                      <span class="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"><%= act.from_label %></span>
-                      <svg class="w-3 h-3 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                      <span class="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-500"><%= act.from_label %></span>
+                      <svg class="w-3 h-3 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
                       <span class="px-1.5 py-0.5 rounded bg-accent/10 text-accent font-medium"><%= act.to_label %></span>
                     <% end %>
                   <% when "comment_added" %>
-                    <span class="text-gray-500 dark:text-gray-400">코멘트 작성</span>
+                    <span class="text-gray-500 dark:text-gray-500">코멘트 작성</span>
                   <% when "task_completed" %>
-                    <span class="text-gray-500 dark:text-gray-400">태스크 완료</span>
+                    <span class="text-gray-500 dark:text-gray-500">태스크 완료</span>
                   <% when "created" %>
-                    <span class="text-gray-500 dark:text-gray-400">오더 생성</span>
+                    <span class="text-gray-500 dark:text-gray-500">오더 생성</span>
                   <% else %>
-                    <span class="text-gray-500 dark:text-gray-400"><%= act.action.humanize.downcase %></span>
+                    <span class="text-gray-500 dark:text-gray-500"><%= act.action.humanize.downcase %></span>
                   <% end %>
                 </div>
-                <span class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 block"><%= act.created_at.strftime("%Y/%m/%d %H:%M") %></span>
+                <span class="text-xs text-gray-500 dark:text-gray-500 mt-0.5 block"><%= act.created_at.strftime("%Y/%m/%d %H:%M") %></span>
               </div>
             </div>
           <% end %>
@@ -687,7 +687,7 @@
     <% else %>
       <div class="p-12 text-center">
         <svg class="w-10 h-10 mx-auto text-gray-200 dark:text-gray-600 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-        <p class="text-sm text-gray-400 dark:text-gray-500">활동 기록이 없습니다</p>
+        <p class="text-sm text-gray-500 dark:text-gray-500">활동 기록이 없습니다</p>
       </div>
     <% end %>
     <div class="h-4"></div>

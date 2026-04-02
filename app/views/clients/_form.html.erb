@@ -88,6 +88,6 @@
 
   <div class="flex gap-3 pt-2">
     <%= f.submit @client.new_record? ? "등록" : "수정", class: "bg-primary text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors cursor-pointer" %>
-    <%= link_to "취소", @client.new_record? ? clients_path : @client, class: "border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 px-6 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700" %>
+    <%= link_to "취소", @client.new_record? ? clients_path : @client, class: "border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-500 px-6 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700" %>
   </div>
 <% end %>

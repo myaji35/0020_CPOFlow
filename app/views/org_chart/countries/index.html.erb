@@ -3,7 +3,7 @@
 <div class="max-w-3xl mx-auto py-8 px-4">
   <div class="flex items-center justify-between mb-6">
     <div>
-      <div class="flex items-center gap-2 text-sm text-gray-400 mb-1">
+      <div class="flex items-center gap-2 text-sm text-gray-500 mb-1">
         <%= link_to "조직도", org_chart_path, class: "hover:text-primary" %>
         <span>/</span>
         <span>국가 관리</span>
@@ -18,14 +18,14 @@
 
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
     <% if @countries.empty? %>
-      <p class="text-center text-gray-400 dark:text-gray-500 text-sm py-12">등록된 국가가 없습니다.</p>
+      <p class="text-center text-gray-500 dark:text-gray-500 text-sm py-12">등록된 국가가 없습니다.</p>
     <% else %>
       <table class="w-full text-sm">
         <thead class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
           <tr>
-            <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400">국가</th>
-            <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400">지역</th>
-            <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400">법인 수</th>
+            <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-500">국가</th>
+            <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-500">지역</th>
+            <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-500">법인 수</th>
             <th class="px-4 py-3"></th>
           </tr>
         </thead>
@@ -35,11 +35,11 @@
               <td class="px-4 py-3">
                 <span class="mr-2"><%= country.flag_emoji %></span>
                 <span class="font-medium text-gray-900 dark:text-white"><%= country.name %></span>
-                <span class="text-gray-400 dark:text-gray-500 ml-1"><%= country.name_en %></span>
-                <span class="text-xs text-gray-400 dark:text-gray-500 ml-1">(<%= country.code %>)</span>
+                <span class="text-gray-500 dark:text-gray-500 ml-1"><%= country.name_en %></span>
+                <span class="text-xs text-gray-500 dark:text-gray-500 ml-1">(<%= country.code %>)</span>
               </td>
-              <td class="px-4 py-3 text-gray-500 dark:text-gray-400"><%= country.region %></td>
-              <td class="px-4 py-3 text-gray-500 dark:text-gray-400"><%= country.companies.count %>개</td>
+              <td class="px-4 py-3 text-gray-500 dark:text-gray-500"><%= country.region %></td>
+              <td class="px-4 py-3 text-gray-500 dark:text-gray-500"><%= country.companies.count %>개</td>
               <td class="px-4 py-3 text-right">
                 <%= link_to "수정", edit_org_chart_country_path(country), class: "text-xs text-primary hover:underline mr-3" %>
                 <%= link_to "삭제", org_chart_country_path(country),

@@ -1,7 +1,7 @@
 <%# eCount 이관 결과 상세 페이지 — 진행률 폴링 포함 %>
 <div class="max-w-4xl mx-auto py-8 px-4">
 
-  <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6">
+  <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-500 mb-6">
     <%= link_to "데이터 이관", admin_imports_path, class: "hover:text-gray-700 dark:hover:text-gray-200" %>
     <span>/</span>
     <span class="text-gray-900 dark:text-white">이관 #<%= @import.id %></span>
@@ -18,14 +18,14 @@
                 when 'completed'  then 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
                 when 'processing' then 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
                 when 'failed'     then 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-                else                   'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                else                   'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-500'
                 end %>"
             id="status-badge">
             <%= @import.status_label %>
           </span>
         </div>
-        <p class="text-sm text-gray-500 dark:text-gray-400">파일: <strong class="text-gray-900 dark:text-white"><%= @import.filename %></strong></p>
-        <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+        <p class="text-sm text-gray-500 dark:text-gray-500">파일: <strong class="text-gray-900 dark:text-white"><%= @import.filename %></strong></p>
+        <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">
           시작: <%= @import.created_at.strftime("%Y년 %m월 %d일 %H:%M") %>
           <% if @import.completed_at %>
             &nbsp;·&nbsp; 완료: <%= @import.completed_at.strftime("%H:%M:%S") %>
@@ -43,7 +43,7 @@
 
     <%# 진행률 바 %>
     <div class="mt-5">
-      <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+      <div class="flex justify-between text-xs text-gray-500 dark:text-gray-500 mb-1">
         <span>진행률</span>
         <span id="progress-pct"><%= @import.progress_percent %>%</span>
       </div>
@@ -58,7 +58,7 @@
     <%# 통계 %>
     <div class="grid grid-cols-3 gap-4 mt-5">
       <div class="text-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-        <p class="text-xs text-gray-500 dark:text-gray-400">전체 행</p>
+        <p class="text-xs text-gray-500 dark:text-gray-500">전체 행</p>
         <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1" id="total-rows"><%= number_with_delimiter(@import.total_rows) %></p>
       </div>
       <div class="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
@@ -66,8 +66,8 @@
         <p class="text-2xl font-bold text-green-700 dark:text-green-400 mt-1" id="success-rows"><%= number_with_delimiter(@import.success_rows) %></p>
       </div>
       <div class="text-center p-3 <%= @import.error_rows.to_i > 0 ? 'bg-red-50 dark:bg-red-900/20' : 'bg-gray-50 dark:bg-gray-700/50' %> rounded-lg">
-        <p class="text-xs <%= @import.error_rows.to_i > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400' %>">오류</p>
-        <p class="text-2xl font-bold <%= @import.error_rows.to_i > 0 ? 'text-red-700 dark:text-red-400' : 'text-gray-500 dark:text-gray-400' %> mt-1" id="error-rows">
+        <p class="text-xs <%= @import.error_rows.to_i > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-500' %>">오류</p>
+        <p class="text-2xl font-bold <%= @import.error_rows.to_i > 0 ? 'text-red-700 dark:text-red-400' : 'text-gray-500 dark:text-gray-500' %> mt-1" id="error-rows">
           <%= number_with_delimiter(@import.error_rows) %>
         </p>
       </div>
@@ -85,7 +85,7 @@
           <thead class="bg-gray-50 dark:bg-gray-700/50">
             <tr>
               <% @preview_rows.first.keys.each do |col| %>
-                <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400 font-medium"><%= col %></th>
+                <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-500 font-medium"><%= col %></th>
               <% end %>
             </tr>
           </thead>
@@ -113,7 +113,7 @@
       <ul class="divide-y divide-red-50 dark:divide-red-900/20">
         <% @errors_preview.each do |err| %>
           <li class="px-5 py-3 text-xs">
-            <span class="text-gray-400 dark:text-gray-500">행 <%= err["row"] %>:</span>
+            <span class="text-gray-500 dark:text-gray-500">행 <%= err["row"] %>:</span>
             <span class="text-gray-700 dark:text-gray-300 mx-2"><%= err.dig("data", "name") || err.dig("data", "ecount_code") %></span>
             <span class="text-red-600 dark:text-red-400"><%= err["error"] %></span>
           </li>
@@ -132,7 +132,7 @@
   // 카운트다운 표시
   let countdown = 3;
   const indicator = document.createElement('div');
-  indicator.className = 'fixed bottom-4 right-4 text-xs text-gray-400 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-3 py-2 rounded-lg shadow';
+  indicator.className = 'fixed bottom-4 right-4 text-xs text-gray-500 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-3 py-2 rounded-lg shadow';
   indicator.id = 'refresh-indicator';
   document.body.appendChild(indicator);
   const timer = setInterval(() => {

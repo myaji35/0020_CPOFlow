@@ -15,7 +15,7 @@
                  case insight.severity
                  when "alert"   then "text-red-600 dark:text-red-400"
                  when "warning" then "text-amber-600 dark:text-amber-400"
-                 else                "text-gray-500 dark:text-gray-400"
+                 else                "text-gray-500 dark:text-gray-500"
                  end
                end
   type_icon = if is_auto
@@ -41,7 +41,7 @@
   <!-- 내용 -->
   <div class="flex-1 min-w-0">
     <p class="text-sm font-medium text-gray-900 dark:text-white"><%= insight.title %></p>
-    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5"><%= insight.body %></p>
+    <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5"><%= insight.body %></p>
   </div>
 
   <!-- 액션 버튼 -->
@@ -57,7 +57,7 @@
       <% unless insight.useful == true %>
         <%= button_to dismiss_agent_insight_path(insight),
               method: :patch, data: { turbo: true },
-              class: "p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors",
+              class: "p-1 text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors",
               title: "무시" do %>
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -69,7 +69,7 @@
       <% if insight.useful.nil? %>
         <%= button_to feedback_agent_insight_path(insight, useful: true),
               method: :patch, data: { turbo: true },
-              class: "p-1 text-gray-400 hover:text-green-600 transition-colors",
+              class: "p-1 text-gray-500 hover:text-green-600 transition-colors",
               title: "유용함" do %>
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
