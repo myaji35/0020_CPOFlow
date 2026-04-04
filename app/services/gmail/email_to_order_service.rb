@@ -82,8 +82,7 @@ module Gmail
           auto_assign_from_history(order)
           update_contact_person_last_contacted(order)
           Activity.create!(order: order, user: @account.user, action: "auto_created_from_email")
-          RfqReplyDraftJob.perform_later(order.id) if verdict == :confirmed && @detection[:is_rfq]
-          Rails.logger.info "[EmailToOrder] Created order ##{order.id} verdict=#{verdict} from Gmail #{@email[:id]}"
+          Rails.logger.info "[EmailToOrder] Created order ##{order.id} score=#{@detection[:score]} from Gmail #{@email[:id]}"
         end
 
         order
