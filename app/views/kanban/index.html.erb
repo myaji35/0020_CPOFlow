@@ -648,7 +648,7 @@ document.addEventListener('DOMContentLoaded', function() {
         : activeDue === 'urgent'  ? (dueDays >= 0 && dueDays <= 7)
         : true;
 
-      const text      = (card.dataset.title || '') + ' ' + (card.dataset.customer || '');
+      const text      = (card.dataset.title || '') + ' ' + (card.dataset.customer || '') + ' ' + (card.dataset.refno || '');
       const keywordOk = !keyword || text.toLowerCase().includes(keyword);
 
       card.classList.toggle('hidden', !(assigneeOk && priorityOk && dueOk && keywordOk));
