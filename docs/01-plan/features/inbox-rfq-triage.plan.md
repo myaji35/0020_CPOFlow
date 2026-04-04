@@ -202,23 +202,37 @@ EmailSyncJob
   │ rfq_status: rfq_archived
 ```
 
-### 5.2 AI 학습 데이터 축적
+### 5.2 AI 자동 판정 테스트용 정답 데이터(Ground Truth) 수집
+
+**목적**: 사용자가 수동 분류한 결과를 "정답지"로 축적하여, 향후 AI 자동 판정의 정확도를 측정하고 임계값을 튜닝하기 위한 테스트 자료로 활용.
 
 ```
-사용자 액션                    → 기록되는 학습 데이터
+사용자 액션                    → 기록되는 정답 데이터
 ───────────────────────────────────────────────────────
 전체→견적성 이동              → RfqFeedback(verdict: "confirmed")
                                 + sender_domain, subject_pattern
+                                + ai_score (당시 AI 판정 점수 기록)
 전체→제외 처리                → RfqFeedback(verdict: "rejected")
                                 + sender_domain, subject_pattern
+                                + ai_score
 견적성→되돌리기               → RfqFeedback(verdict: "reverted")
                                 + 기존 feedback 취소
 
-학습 활용:
-- Few-shot 예시 (현행 5건 → 20건 확대)
-- 도메인 히스토리 (confirmed/rejected 카운트)
-- 제목 패턴 학습 (향후 auto-suggest 기반)
-- 학습 통계 대시보드 (AI 일치율, 정확도 추이)
+정답 데이터 활용 로드맵:
+Phase 1 (현재): 수동 분류 → 정답 데이터 축적
+Phase 2 (데이터 충분 시): AI 판정 vs 정답 비교 → 정확도 리포트
+  - Precision: AI가 견적이라 한 것 중 실제 견적 비율
+  - Recall: 실제 견적 중 AI가 맞춘 비율
+  - F1 Score: 종합 정확도
+Phase 3 (정확도 90%+ 달성 시): AI 자동 견적 분류 재활성화 근거
+  - 임계값 튜닝 (현재 hybrid >= 70 → 데이터 기반 최적값)
+  - 도메인별 자동 확정 규칙 생성
+
+학습 통계 대시보드:
+- 총 정답 데이터 N건
+- AI 판정 일치율 (AI가 높은 점수 준 것 중 사용자도 견적 확정한 비율)
+- 도메인별 견적/비견적 분포
+- 정확도 추이 그래프 (주간/월간)
 ```
 
 ---
