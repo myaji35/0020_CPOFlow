@@ -59,6 +59,7 @@ module Gmail
         llm_analysis:           @detection[:llm_raw].to_json,
         llm_analyzed_at:        Time.current,
         tags:                   build_tags(ref_no),
+        email_received_at:      @email[:date],
         user:                   @account.user,
         # Ariba 전용 필드
         source_type:            @detection[:is_ariba] ? :ariba : :email,

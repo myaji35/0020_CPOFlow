@@ -36,7 +36,7 @@ class InboxController < ApplicationController
     # Pagination: 30건씩 로드 (UAE 느린 네트워크 대응)
     @page = [ params[:page].to_i, 1 ].max
     @total_filtered = base_scope.count
-    @all_orders = base_scope.order(created_at: :desc)
+    @all_orders = base_scope.order(Arel.sql("COALESCE(email_received_at, created_at) DESC"))
                             .offset((@page - 1) * PER_PAGE)
                             .limit(PER_PAGE)
     @total_pages = (@total_filtered.to_f / PER_PAGE).ceil
@@ -45,7 +45,7 @@ class InboxController < ApplicationController
     # key: reference_no (있으면) / "single_{id}" (없으면 단건)
     @grouped_orders = @all_orders
       .group_by { |o| o.reference_no.presence || "single_#{o.id}" }
-      .sort_by { |_key, orders| orders.map(&:created_at).max }
+      .sort_by { |_key, orders| orders.map { |o| o.email_received_at || o.created_at }.max }
       .reverse
       .to_h
 
