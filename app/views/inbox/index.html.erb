@@ -8,12 +8,40 @@
     overflow: hidden;
   }
   .inbox-main {
-    display: grid;
-    grid-template-columns: 360px 1fr;
+    display: flex;
     overflow: hidden;
   }
+  .inbox-pane { overflow-y: auto; flex-shrink: 0; }
   .inbox-list { overflow-y: auto; }
   .inbox-body { overflow-y: auto; }
+  /* 스플릿바 */
+  .inbox-splitter {
+    width: 6px;
+    cursor: col-resize;
+    background: #e5e7eb;
+    flex-shrink: 0;
+    position: relative;
+    transition: background 0.15s;
+  }
+  .inbox-splitter:hover, .inbox-splitter.dragging {
+    background: #00A1E0;
+  }
+  .inbox-splitter::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 2px;
+    height: 32px;
+    background: #9ca3af;
+    border-radius: 1px;
+  }
+  .inbox-splitter:hover::after, .inbox-splitter.dragging::after {
+    background: #fff;
+  }
+  .dark .inbox-splitter { background: #374151; }
+  .dark .inbox-splitter:hover, .dark .inbox-splitter.dragging { background: #00A1E0; }
   .email-item.active { background-color: rgba(0, 161, 224, 0.08); }
   .email-item.active.dark-active { background-color: rgba(0, 161, 224, 0.15); }
   @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
@@ -133,8 +161,8 @@
   <%# ===== PANE 2 + 3 ===== %>
   <div class="inbox-main">
 
-    <%# ===== PANE 2: Email list ===== %>
-    <div class="inbox-list border-r border-gray-200 dark:border-gray-700 flex flex-col">
+    <%# ===== PANE 2: 읽어온 메일 (좌측) ===== %>
+    <div id="inbox-left-pane" class="inbox-pane inbox-list flex flex-col" style="width: 50%; min-width: 280px;">
       <%# Toolbar with search %>
       <div class="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <%# Header row %>
@@ -441,14 +469,74 @@
       </div>
     </div>
 
-    <%# ===== PANE 3: Email body (all orders, not just RFQ) ===== %>
-    <div class="inbox-body bg-white dark:bg-gray-900" id="email-body-pane">
-      <%# Default empty state %>
-      <div id="email-empty-state" class="flex flex-col items-center justify-center h-full text-center px-8">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-14 h-14 text-gray-200 dark:text-gray-600 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-        <p class="text-gray-500 dark:text-gray-500 text-sm">이메일을 선택하면 내용이 여기에 표시됩니다</p>
-        <p class="text-gray-300 dark:text-gray-600 text-xs mt-1">좌측 목록에서 이메일을 클릭하세요</p>
+    <%# ===== 스플릿바 ===== %>
+    <div id="inbox-splitter" class="inbox-splitter" title="드래그하여 영역 조정"></div>
+
+    <%# ===== PANE 3: 견적성 메일 (우측) ===== %>
+    <div id="inbox-right-pane" class="inbox-pane flex flex-col bg-white dark:bg-gray-900" style="flex: 1; min-width: 280px;">
+      <%# 견적성 메일 헤더 %>
+      <div class="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div class="px-4 py-3 flex items-center justify-between">
+          <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">
+            <svg class="w-4 h-4 inline mr-1 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+            견적성 메일
+          </span>
+          <span id="triage-count" class="text-xs bg-blue-600 text-white rounded-full px-2 py-0.5 font-semibold"><%= @triage_count %></span>
+        </div>
+        <%# 견적성 액션 바 %>
+        <div id="triage-action-bar" class="hidden px-4 py-2 bg-green-50 dark:bg-green-900/20 border-b border-green-200 dark:border-green-800 flex items-center gap-3">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" id="triage-select-all" onchange="toggleTriageSelectAll(this.checked)"
+                   class="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500">
+            <span class="text-xs font-medium text-green-700 dark:text-green-400">전체선택</span>
+          </label>
+          <span id="triage-selected-count" class="text-xs text-green-600 dark:text-green-400 font-semibold"></span>
+          <button onclick="triageToKanban()" class="ml-auto text-xs px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium flex items-center gap-1 transition-colors">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+            칸반으로 이동
+          </button>
+          <button onclick="triageRevert()" class="text-xs px-3 py-1.5 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            ↩ 되돌리기
+          </button>
+        </div>
       </div>
+      <%# 견적성 메일 리스트 %>
+      <div id="triage-list" class="flex-1 overflow-y-auto">
+        <% if @triage_orders.any? %>
+          <ul class="divide-y divide-gray-200 dark:divide-gray-700">
+            <% @triage_orders.each do |order| %>
+              <li class="email-item px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-colors flex items-start gap-2"
+                  id="triage-item-<%= order.id %>" data-order-id="<%= order.id %>">
+                <input type="checkbox" class="triage-cb mt-1 w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500 flex-shrink-0"
+                       data-order-id="<%= order.id %>" onclick="event.stopPropagation(); updateTriageBar()" />
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 mb-0.5">
+                    <span class="text-xs px-1.5 py-0.5 bg-blue-600 text-white rounded font-medium">견적</span>
+                    <span class="text-xs text-gray-500 dark:text-gray-500"><%= order.created_at.strftime("%m/%d") %></span>
+                  </div>
+                  <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                    <%= order.display_subject %>
+                  </p>
+                  <p class="text-xs text-gray-500 dark:text-gray-500 truncate mt-0.5">
+                    <%= order.customer_name.presence || order.original_email_from %>
+                  </p>
+                </div>
+              </li>
+            <% end %>
+          </ul>
+        <% else %>
+          <div class="flex flex-col items-center justify-center h-full text-center px-8 py-20">
+            <svg class="w-12 h-12 text-gray-200 dark:text-gray-600 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+            <p class="text-sm text-gray-500 dark:text-gray-500 font-medium">견적성 메일이 없습니다</p>
+            <p class="text-xs text-gray-400 dark:text-gray-600 mt-1">좌측에서 메일을 선택 후 "견적으로 이동"을 클릭하세요</p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <%# ===== 기존 PANE 3 — 이메일 본문 모달 (숨김) ===== %>
+    <div class="hidden" id="email-body-pane">
+      <div id="email-empty-state" class="hidden"></div>
 
       <%# Email detail panels for ALL orders (not just rfq_orders) %>
       <% @all_orders.each do |order| %>
@@ -1746,6 +1834,135 @@
   window.addEventListener('message', function(e) {
     if (e.data === 'close-preview-modal') closePreviewModal();
   });
+
+  // --- 스플릿바 드래그 ---
+  (function() {
+    const splitter = document.getElementById('inbox-splitter');
+    const leftPane = document.getElementById('inbox-left-pane');
+    const rightPane = document.getElementById('inbox-right-pane');
+    if (!splitter || !leftPane || !rightPane) return;
+
+    let dragging = false;
+    let startX = 0;
+    let startWidth = 0;
+
+    splitter.addEventListener('mousedown', function(e) {
+      dragging = true;
+      startX = e.clientX;
+      startWidth = leftPane.offsetWidth;
+      splitter.classList.add('dragging');
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', function(e) {
+      if (!dragging) return;
+      const dx = e.clientX - startX;
+      const container = leftPane.parentElement;
+      const totalW = container.offsetWidth - splitter.offsetWidth;
+      const newW = Math.max(280, Math.min(startWidth + dx, totalW - 280));
+      leftPane.style.width = newW + 'px';
+      leftPane.style.flex = 'none';
+    });
+
+    document.addEventListener('mouseup', function() {
+      if (!dragging) return;
+      dragging = false;
+      splitter.classList.remove('dragging');
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    });
+  })();
+
+  // --- 견적성 패널 멀티체크 ---
+  function updateTriageBar() {
+    const checked = document.querySelectorAll('.triage-cb:checked');
+    const bar = document.getElementById('triage-action-bar');
+    const countEl = document.getElementById('triage-selected-count');
+    if (checked.length > 0) {
+      bar.classList.remove('hidden');
+      countEl.textContent = checked.length + '건 선택됨';
+    } else {
+      bar.classList.add('hidden');
+    }
+  }
+
+  function toggleTriageSelectAll(checked) {
+    document.querySelectorAll('.triage-cb').forEach(cb => { cb.checked = checked; });
+    updateTriageBar();
+  }
+
+  function getTriageSelectedIds() {
+    return Array.from(document.querySelectorAll('.triage-cb:checked')).map(cb => cb.dataset.orderId);
+  }
+
+  function triageToKanban() {
+    const ids = getTriageSelectedIds();
+    if (!ids.length) return;
+    fetch('/inbox/bulk_to_kanban', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF },
+      body: JSON.stringify({ order_ids: ids })
+    }).then(r => r.json()).then(data => {
+      if (data.status === 'ok') {
+        ids.forEach(id => {
+          const el = document.getElementById('triage-item-' + id);
+          if (el) { el.style.transition = 'all 0.3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }
+        });
+        setTimeout(() => {
+          updateTriageBar();
+          const cnt = document.getElementById('triage-count');
+          if (cnt) cnt.textContent = document.querySelectorAll('.triage-cb').length;
+        }, 350);
+      }
+    });
+  }
+
+  function triageRevert() {
+    const ids = getTriageSelectedIds();
+    if (!ids.length) return;
+    fetch('/inbox/bulk_restore', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF },
+      body: JSON.stringify({ order_ids: ids })
+    }).then(r => r.json()).then(data => {
+      if (data.status === 'ok') {
+        ids.forEach(id => {
+          const el = document.getElementById('triage-item-' + id);
+          if (el) { el.style.transition = 'all 0.3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }
+        });
+        setTimeout(() => {
+          updateTriageBar();
+          const cnt = document.getElementById('triage-count');
+          if (cnt) cnt.textContent = document.querySelectorAll('.triage-cb').length;
+        }, 350);
+      }
+    });
+  }
+
+  // 좌측에서 "견적으로 이동" 후 우측 패널에 항목 추가 (페이지 새로고침 대체)
+  var _origBulkToKanban = bulkToKanban;
+  bulkToKanban = function() {
+    const ids = getSelectedIds();
+    if (!ids.length) return;
+    fetch('/inbox/bulk_to_kanban', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF },
+      body: JSON.stringify({ order_ids: ids })
+    }).then(r => r.json()).then(data => {
+      if (data.status === 'ok') {
+        // 좌측에서 제거
+        ids.forEach(id => {
+          const el = document.getElementById('email-item-' + id);
+          if (el) { el.style.transition = 'all 0.3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }
+        });
+        setTimeout(updateBulkBar, 350);
+        // 우측 새로고침 (간단히 reload)
+        setTimeout(() => location.reload(), 500);
+      }
+    });
+  };
 </script>
 
 <%# 첨부파일 미리보기 모달 (iframe) %>

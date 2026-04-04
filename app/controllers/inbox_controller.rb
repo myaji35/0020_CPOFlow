@@ -60,6 +60,13 @@ class InboxController < ApplicationController
       Arel.sql(ActiveRecord::Base.sanitize_sql([ "SUM(CASE WHEN status != ? THEN 1 ELSE 0 END)", inbox_val ]))
     )
     @count_all, @count_rfq, @count_uncertain, @count_converted = counts.map(&:to_i)
+
+    # 견적성 메일 (rfq_triage) — 우측 패널용
+    triage_scope = scoped_orders.where.not(original_email_from: [ nil, "" ])
+                                .where(rfq_status: :rfq_triage)
+                                .includes(:user, :assignees, :client, :supplier)
+    @triage_orders = triage_scope.order(created_at: :desc).limit(100)
+    @triage_count = triage_scope.count
   end
 
   def show
