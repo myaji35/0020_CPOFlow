@@ -14,20 +14,40 @@ module Gmail
     end
 
     # Fetch recent message stubs (id + threadId only)
+    # max: 0 → 제한 없이 전체 수집 (nextPageToken 페이징)
     def fetch_recent_message_ids(max: 50, query: nil)
       refresh_token_if_needed!
-      response = @gmail.list_user_messages(
-        "me",
-        max_results: max,
-        q: query
-      )
-      response.messages || []
+      all_messages = []
+      page_token = nil
+      unlimited = (max == 0)
+      remaining = max
+
+      loop do
+        batch_size = unlimited ? 500 : [ remaining, 500 ].min
+        response = @gmail.list_user_messages(
+          "me",
+          max_results: batch_size,
+          q: query,
+          page_token: page_token
+        )
+        batch = response.messages || []
+        all_messages.concat(batch)
+        remaining -= batch.size unless unlimited
+
+        page_token = response.next_page_token
+        break if page_token.nil?
+        break if !unlimited && remaining <= 0
+
+        Rails.logger.info "[GmailService] Fetched #{all_messages.size} message IDs so far, continuing..."
+      end
+
+      all_messages
     rescue Google::Apis::AuthorizationError
       handle_auth_error
-      []
+      all_messages
     rescue Google::Apis::Error => e
       Rails.logger.error "[GmailService] API error: #{e.message}"
-      []
+      all_messages
     end
 
     # Fetch a full message by Gmail message ID

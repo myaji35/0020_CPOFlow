@@ -49,7 +49,7 @@ class EmailSyncJob < ApplicationJob
       # 백필 모드: 지정 날짜 이후 전체 가져오기
       after_ts = since_date.to_time.to_i
       query = "after:#{after_ts} category:primary"
-      max_fetch = 500
+      max_fetch = 0  # 무제한 — 해당 기간 전체 수집
     elsif account.last_synced_at.nil?
       # 초회 동기화: 최근 90일치 전체 (read/unread 모두)
       after_ts = 90.days.ago.to_i
