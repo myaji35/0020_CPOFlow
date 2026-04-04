@@ -567,7 +567,9 @@ function executeBulkMove(newStatus) {
 </script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+function initKanban() {
+  if (window._kanbanInitialized) return;
+  window._kanbanInitialized = true;
   const CSRF = document.querySelector('meta[name="csrf-token"]').content;
 
   // 컬럼 카운트 배지 업데이트
@@ -860,7 +862,9 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   });
-});
+}
+document.addEventListener('turbo:load', initKanban);
+document.addEventListener('turbo:before-visit', function() { window._kanbanInitialized = false; });
 </script>
 
 <style>
