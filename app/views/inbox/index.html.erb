@@ -178,6 +178,26 @@
         </div>
       </div>
 
+      <%# ── 멀티체크 액션 바 (선택 시 노출) ── %>
+      <div id="bulk-action-bar" class="hidden sticky top-[105px] z-10 bg-blue-50 dark:bg-blue-900/30 border-b border-blue-200 dark:border-blue-800 px-4 py-2 flex items-center gap-3">
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" id="select-all-cb" onchange="toggleSelectAll(this.checked)"
+                 class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+          <span class="text-xs font-medium text-blue-700 dark:text-blue-400">전체선택</span>
+        </label>
+        <span id="selected-count" class="text-xs text-blue-600 dark:text-blue-400 font-semibold"></span>
+        <div class="flex items-center gap-2 ml-auto">
+          <button onclick="bulkDelete()" class="text-xs px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium flex items-center gap-1 transition-colors">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            삭제
+          </button>
+          <button onclick="bulkToKanban()" class="text-xs px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-1 transition-colors">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+            견적으로 이동
+          </button>
+        </div>
+      </div>
+
       <%# Email list items — reference_no 기준 그룹 뷰 %>
       <% status_colors = {
         "new_rfq"        => "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-500",
@@ -290,10 +310,14 @@
                        x-transition:enter-end="opacity-100 translate-y-0"
                        class="bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700">
                     <% group_orders.sort_by(&:created_at).each do |order| %>
-                      <div class="email-item cursor-pointer px-4 py-2.5 pl-10 hover:bg-white dark:hover:bg-gray-700/50 transition-colors border-b border-gray-200 dark:border-gray-700 last:border-0"
-                           onclick="showEmail(<%= order.id %>)"
+                      <div class="email-item cursor-pointer px-4 py-2.5 pl-10 hover:bg-white dark:hover:bg-gray-700/50 transition-colors border-b border-gray-200 dark:border-gray-700 last:border-0 flex items-start gap-2"
                            data-order-id="<%= order.id %>"
                            id="email-item-<%= order.id %>">
+                        <% if order.status.to_s == "new_rfq" %>
+                          <input type="checkbox" class="bulk-cb mt-1 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
+                                 data-order-id="<%= order.id %>" onclick="event.stopPropagation(); updateBulkBar()" />
+                        <% end %>
+                        <div class="flex-1 min-w-0" onclick="showEmail(<%= order.id %>)">
                         <div class="flex items-center gap-2 mb-1">
                           <span class="text-xs px-1.5 py-0.5 rounded font-semibold <%= status_colors[order.status] || 'bg-gray-500 text-white' %>">
                             <%= Order::STATUS_LABELS[order.status] || order.status.humanize %>
@@ -311,6 +335,7 @@
                         <p class="text-xs text-gray-500 dark:text-gray-500 truncate mt-0.5">
                           <%= order.original_email_from.presence || order.customer_name %>
                         </p>
+                        </div>
                       </div>
                     <% end %>
                   </div>
@@ -319,10 +344,14 @@
               <% else %>
                 <%# ===== 단건 메일 (기존 방식) ===== %>
                 <% order = group_orders.first %>
-                <li class="email-item cursor-pointer px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                    onclick="showEmail(<%= order.id %>)"
+                <li class="email-item cursor-pointer px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors flex items-start gap-2"
                     data-order-id="<%= order.id %>"
                     id="email-item-<%= order.id %>">
+                  <% if order.status.to_s == "new_rfq" %>
+                    <input type="checkbox" class="bulk-cb mt-1 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
+                           data-order-id="<%= order.id %>" onclick="event.stopPropagation(); updateBulkBar()" />
+                  <% end %>
+                  <div class="flex-1 min-w-0" onclick="showEmail(<%= order.id %>)">
                   <div class="flex items-center gap-2 mb-1">
                     <span class="text-xs px-1.5 py-0.5 rounded font-semibold <%= status_colors[order.status] || 'bg-gray-500 text-white' %>">
                       <%= Order::STATUS_LABELS[order.status] || order.status.humanize %>
@@ -385,6 +414,7 @@
                         <%= confidence_labels[conf] %>
                       </span>
                     <% end %>
+                  </div>
                   </div>
                 </li>
               <% end %>
@@ -999,6 +1029,85 @@
 </div>
 
 <script>
+  // --- Bulk check / action ---
+  const CSRF = document.querySelector('meta[name="csrf-token"]')?.content;
+  let lastCheckedIdx = null;
+
+  function updateBulkBar() {
+    const checked = document.querySelectorAll('.bulk-cb:checked');
+    const bar = document.getElementById('bulk-action-bar');
+    const countEl = document.getElementById('selected-count');
+    if (checked.length > 0) {
+      bar.classList.remove('hidden');
+      countEl.textContent = checked.length + '건 선택됨';
+    } else {
+      bar.classList.add('hidden');
+    }
+    const allCbs = document.querySelectorAll('.bulk-cb');
+    document.getElementById('select-all-cb').checked = allCbs.length > 0 && checked.length === allCbs.length;
+  }
+
+  function toggleSelectAll(checked) {
+    document.querySelectorAll('.bulk-cb').forEach(cb => { cb.checked = checked; });
+    updateBulkBar();
+  }
+
+  // Shift+클릭 범위 선택
+  document.addEventListener('click', function(e) {
+    const cb = e.target.closest('.bulk-cb');
+    if (!cb) return;
+    const allCbs = Array.from(document.querySelectorAll('.bulk-cb'));
+    const idx = allCbs.indexOf(cb);
+    if (e.shiftKey && lastCheckedIdx !== null && lastCheckedIdx !== idx) {
+      const start = Math.min(lastCheckedIdx, idx);
+      const end = Math.max(lastCheckedIdx, idx);
+      for (let i = start; i <= end; i++) allCbs[i].checked = cb.checked;
+    }
+    lastCheckedIdx = idx;
+    updateBulkBar();
+  });
+
+  function getSelectedIds() {
+    return Array.from(document.querySelectorAll('.bulk-cb:checked')).map(cb => cb.dataset.orderId);
+  }
+
+  function bulkDelete() {
+    const ids = getSelectedIds();
+    if (!ids.length) return;
+    if (!confirm(ids.length + '건을 삭제하시겠습니까?')) return;
+    fetch('/inbox/bulk_delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF },
+      body: JSON.stringify({ order_ids: ids })
+    }).then(r => r.json()).then(data => {
+      if (data.status === 'ok') {
+        ids.forEach(id => {
+          const el = document.getElementById('email-item-' + id);
+          if (el) { el.style.transition = 'all 0.3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }
+        });
+        setTimeout(updateBulkBar, 350);
+      }
+    });
+  }
+
+  function bulkToKanban() {
+    const ids = getSelectedIds();
+    if (!ids.length) return;
+    fetch('/inbox/bulk_to_kanban', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF },
+      body: JSON.stringify({ order_ids: ids })
+    }).then(r => r.json()).then(data => {
+      if (data.status === 'ok') {
+        ids.forEach(id => {
+          const el = document.getElementById('email-item-' + id);
+          if (el) { el.style.transition = 'all 0.3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }
+        });
+        setTimeout(updateBulkBar, 350);
+      }
+    });
+  }
+
   // --- Email selection ---
   let currentEmailId = null;
 

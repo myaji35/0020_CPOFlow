@@ -73,12 +73,43 @@ class InboxController < ApplicationController
 
   def convert_to_order
     @order = Order.find(params[:id])
-    if @order.update(status: :make_quo)
+    if @order.update(status: :make_quo, rfq_status: :rfq_triage)
       Activity.create!(order: @order, user: current_user, action: "moved_to_kanban")
+      record_bulk_feedback([ @order ], "confirmed")
       redirect_to kanban_path, notice: t("inbox.convert_success")
     else
       redirect_back fallback_location: inbox_path, alert: "Failed to convert."
     end
+  end
+
+  # POST /inbox/bulk_delete — 멀티체크 삭제 (rfq_excluded)
+  def bulk_delete
+    orders = scoped_orders.where(id: params[:order_ids], status: :new_rfq)
+    count = orders.count
+    record_bulk_feedback(orders, "rejected")
+    orders.update_all(rfq_status: Order.rfq_statuses[:rfq_excluded])
+    render json: { status: "ok", count: count, message: "#{count}건 삭제 처리" }
+  end
+
+  # POST /inbox/bulk_to_kanban — 멀티체크 견적 이동 (칸반 New)
+  def bulk_to_kanban
+    orders = scoped_orders.where(id: params[:order_ids], status: :new_rfq)
+    count = orders.count
+    record_bulk_feedback(orders, "confirmed")
+    orders.each do |order|
+      order.update!(status: :make_quo, rfq_status: :rfq_triage)
+      Activity.create!(order: order, user: current_user, action: "moved_to_kanban")
+    end
+    render json: { status: "ok", count: count, message: "#{count}건 견적으로 이동" }
+  end
+
+  # POST /inbox/bulk_restore — 휴지통 복원 (rfq_pending)
+  def bulk_restore
+    orders = scoped_orders.where(id: params[:order_ids], rfq_status: :rfq_excluded)
+    count = orders.count
+    record_bulk_feedback(orders, "reverted")
+    orders.update_all(rfq_status: Order.rfq_statuses[:rfq_pending])
+    render json: { status: "ok", count: count, message: "#{count}건 복원" }
   end
 
   # Manual sync trigger (called from Inbox UI "Sync" button)
@@ -182,6 +213,13 @@ class InboxController < ApplicationController
   end
 
   private
+
+  # Bulk 액션 시 RfqFeedback 일괄 기록 (정답 데이터 축적)
+  def record_bulk_feedback(orders, verdict)
+    orders.each do |order|
+      Gmail::RfqFeedbackService.record!(order, current_user, verdict: verdict, note: "bulk_action")
+    end
+  end
 
   # 간단한 메모리 기반 Rate Limiter (Rails.cache 활용)
   def check_rate_limit!

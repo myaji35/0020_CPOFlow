@@ -53,6 +53,9 @@ Rails.application.routes.draw do
   post "inbox/analyze_link", to: "inbox#analyze_link", as: :inbox_analyze_link
   post "inbox/:id/feedback",      to: "inbox#feedback",       as: :inbox_feedback
   post "inbox/:id/generate_reply", to: "inbox#generate_reply", as: :inbox_generate_reply
+  post "inbox/bulk_delete",    to: "inbox#bulk_delete",    as: :inbox_bulk_delete
+  post "inbox/bulk_to_kanban", to: "inbox#bulk_to_kanban", as: :inbox_bulk_to_kanban
+  post "inbox/bulk_restore",   to: "inbox#bulk_restore",   as: :inbox_bulk_restore
 
   # Calendar
   get "calendar", to: "calendar#index"
