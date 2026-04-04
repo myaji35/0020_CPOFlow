@@ -18,7 +18,7 @@ class InboxController < ApplicationController
     when "rfq"
       base_scope = base_scope.where(status: :new_rfq)
     when "uncertain"
-      base_scope = base_scope.where(status: :new_rfq, rfq_status: Order.rfq_statuses[:rfq_uncertain])
+      base_scope = base_scope.where(status: :new_rfq, rfq_status: Order.rfq_statuses[:rfq_pending])
     when "converted"
       base_scope = base_scope.where.not(status: :new_rfq)
     end
@@ -51,7 +51,7 @@ class InboxController < ApplicationController
 
     # Counts for sidebar badges — 단일 쿼리로 통합 (4회 → 1회)
     inbox_val     = Order.statuses[:new_rfq].to_i
-    uncertain_val = Order.rfq_statuses[:rfq_uncertain].to_i
+    uncertain_val = Order.rfq_statuses[:rfq_pending].to_i
     email_scope = scoped_orders.where.not(original_email_from: [ nil, "" ])
     counts = email_scope.pick(
       Arel.sql("COUNT(*)"),

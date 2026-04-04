@@ -30,10 +30,11 @@ class Order < ApplicationRecord
   }, default: :new_rfq
 
   enum :rfq_status, {
-    rfq_confirmed: 0,
-    rfq_uncertain: 1,
-    rfq_excluded:  2
-  }, default: :rfq_confirmed, prefix: :rfq
+    rfq_triage:   0,
+    rfq_pending:  1,
+    rfq_excluded: 2,
+    rfq_archived: 3
+  }, default: :rfq_pending, prefix: :rfq
 
   enum :priority, {
     low: 0,
@@ -58,6 +59,9 @@ class Order < ApplicationRecord
   scope :by_due_date, -> { order(due_date: :asc) }
   scope :by_reference_no, ->(ref) { where(reference_no: ref).order(created_at: :asc) }
   scope :root_orders, -> { where(parent_order_id: nil) }
+  scope :inbox_pending, -> { where(status: :new_rfq, rfq_status: :rfq_pending) }
+  scope :inbox_excluded, -> { where(status: :new_rfq, rfq_status: :rfq_excluded) }
+  scope :inbox_triaged, -> { where(rfq_status: :rfq_triage) }
 
   KANBAN_COLUMNS = %w[new_rfq make_quo pending_po new_po delivery_items problem get_grn give_up done].freeze
 

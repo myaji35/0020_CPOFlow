@@ -329,12 +329,12 @@
                     </span>
                     <% if order.respond_to?(:rfq_status) %>
                       <% case order.rfq_status
-                         when "rfq_confirmed" %>
-                        <span class="text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 rounded font-medium">RFQ</span>
-                      <% when "rfq_uncertain" %>
-                        <span class="text-xs px-1.5 py-0.5 bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400 rounded font-semibold border border-yellow-200 dark:border-yellow-800">AI 불확실</span>
+                         when "rfq_triage" %>
+                        <span class="text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 rounded font-medium">견적</span>
+                      <% when "rfq_pending" %>
+                        <span class="text-xs px-1.5 py-0.5 bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400 rounded font-semibold border border-yellow-200 dark:border-yellow-800">미분류</span>
                       <% when "rfq_excluded" %>
-                        <span class="text-xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-500 rounded font-medium">일반메일</span>
+                        <span class="text-xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-500 rounded font-medium">제외</span>
                       <% end %>
                     <% end %>
                     <% case order.priority
@@ -569,17 +569,17 @@
           <% if order.status.to_s == "new_rfq" && order.respond_to?(:rfq_status) %>
             <% rfq_s = order.rfq_status.to_s %>
             <%# RFQ 대기 필터: 이미 RFQ 판정된 목록 → "RFQ 아님" 버튼만 표시 %>
-            <% show_confirmed_btn = @current_filter != 'rfq' && rfq_s != 'rfq_confirmed' %>
+            <% show_confirmed_btn = @current_filter != 'rfq' && rfq_s != 'rfq_triage' %>
             <% show_rejected_btn  = rfq_s != 'rfq_excluded' %>
             <div id="feedback-banner-<%= order.id %>"
                  class="mx-6 mb-0 mt-3 px-4 py-3 rounded-lg flex items-center justify-between gap-4
-                        <%= rfq_s == 'rfq_confirmed' ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800' :
+                        <%= rfq_s == 'rfq_triage' ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800' :
                             rfq_s == 'rfq_excluded'  ? 'bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700' :
                                                        'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800' %>">
               <div class="flex items-center gap-2 flex-1 min-w-0">
-                <% if rfq_s == 'rfq_confirmed' %>
+                <% if rfq_s == 'rfq_triage' %>
                   <svg class="w-4 h-4 text-blue-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  <span class="text-xs text-blue-800 dark:text-blue-300 font-medium">RFQ로 확정된 이메일입니다.</span>
+                  <span class="text-xs text-blue-800 dark:text-blue-300 font-medium">견적성 메일로 분류되었습니다.</span>
                 <% elsif rfq_s == 'rfq_excluded' %>
                   <svg class="w-4 h-4 text-gray-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
                   <span class="text-xs text-gray-600 dark:text-gray-500 font-medium">일반 메일로 처리됐습니다. 판정을 변경할 수 있습니다.</span>
@@ -1342,7 +1342,7 @@
           const msgArea = banner.querySelector('.flex-1');
           if (msgArea) {
             if (verdict === 'confirmed') {
-              msgArea.innerHTML = '<svg class="w-4 h-4 text-blue-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="text-xs text-blue-800 dark:text-blue-300 font-medium">RFQ로 확정된 이메일입니다. 판정을 변경할 수 있습니다.</span>';
+              msgArea.innerHTML = '<svg class="w-4 h-4 text-blue-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span class="text-xs text-blue-800 dark:text-blue-300 font-medium">견적성 메일로 분류되었습니다. 판정을 변경할 수 있습니다.</span>';
             } else {
               msgArea.innerHTML = '<svg class="w-4 h-4 text-gray-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg><span class="text-xs text-gray-600 dark:text-gray-500 font-medium">일반 메일로 처리됐습니다. 판정을 변경할 수 있습니다.</span>';
             }

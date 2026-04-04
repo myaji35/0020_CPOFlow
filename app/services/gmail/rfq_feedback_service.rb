@@ -21,7 +21,11 @@ module Gmail
       )
 
       # Order rfq_status 업데이트
-      new_rfq_status = verdict == "confirmed" ? :rfq_confirmed : :rfq_excluded
+      new_rfq_status = case verdict
+                       when "confirmed" then :rfq_triage
+                       when "reverted"  then :rfq_pending
+                       else :rfq_excluded
+                       end
       order.update_column(:rfq_status, Order.rfq_statuses[new_rfq_status])
 
       feedback

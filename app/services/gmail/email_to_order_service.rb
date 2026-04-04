@@ -17,12 +17,9 @@ module Gmail
       # Idempotency: skip if already imported
       return nil if Order.exists?(source_email_id: @email[:id])
 
-      verdict = @detection[:rfq_verdict] || :confirmed
-      rfq_status_val = case verdict
-      when :confirmed  then Order.rfq_statuses[:rfq_confirmed]
-      when :uncertain  then Order.rfq_statuses[:rfq_uncertain]
-      else                  Order.rfq_statuses[:rfq_excluded]
-      end
+      # 모든 신규 메일은 rfq_pending(미분류)으로 시작
+      # AI 판정 결과는 rfq_score/rfq_confidence에만 저장
+      rfq_status_val = Order.rfq_statuses[:rfq_pending]
 
       # 발주번호 추출 + 메인 카드 탐색
       ref_no = ReferenceNumberExtractor.extract(
