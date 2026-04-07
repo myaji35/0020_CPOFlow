@@ -84,6 +84,9 @@ Rails.application.routes.draw do
     resources :duplicate_orders, only: [:index] do
       collection { post :merge }
     end
+
+    # Phase E: RFQ AI 학습 통계
+    resources :rfq_stats, only: [:index]
   end
 
   # Gmail OAuth2

@@ -1,10 +1,17 @@
 class KanbanController < ApplicationController
   def index
+    # Phase F (ISS-034): new_rfq 컬럼은 rfq_status 게이트 적용
+    # → rfq_triage(견적성 확정)인 카드만 노출, rfq_pending/excluded/archived는 인박스에만 존재.
+    # 다른 컬럼(make_quo 이후)은 이미 변환된 카드이므로 게이트 무관.
     @columns = Order::KANBAN_COLUMNS.map do |status|
-      orders = scoped_orders.root_orders
-                    .where(status: status)
+      base = scoped_orders.root_orders
                     .by_due_date
                     .includes(:assignees, :tasks, :user, :sub_orders)
+      orders = if status == "new_rfq"
+                 base.where(status: :new_rfq, rfq_status: Order::KANBAN_VISIBLE_RFQ_STATUSES)
+               else
+                 base.where(status: status)
+               end
       [ status, orders ]
     end.to_h
     @filter_employees = Employee.active.by_name

@@ -63,6 +63,26 @@ class Order < ApplicationRecord
   scope :inbox_excluded, -> { where(status: :new_rfq, rfq_status: :rfq_excluded) }
   scope :inbox_triaged, -> { where(rfq_status: :rfq_triage) }
 
+  # Phase F (ISS-034): 칸반 new_rfq 컬럼 게이트
+  # rfq_triage 상태(견적성 확정)인 건만 칸반에 노출.
+  # rfq_pending(미분류) / rfq_excluded(제외) / rfq_archived(보관)는 인박스에만 존재.
+  # 다른 status(make_quo 이후)는 이미 변환된 카드이므로 rfq_status 무관하게 통과.
+  KANBAN_VISIBLE_RFQ_STATUSES = %i[rfq_triage].freeze
+
+  scope :kanban_visible_in_column, ->(column) {
+    if column.to_s == "new_rfq"
+      where(status: :new_rfq, rfq_status: KANBAN_VISIBLE_RFQ_STATUSES)
+    else
+      where(status: column)
+    end
+  }
+
+  # rfq_status 가드: Order로의 변환(워크플로우 진입)이 허용되는지 여부
+  # rfq_excluded(제외) / rfq_archived(보관) 상태는 칸반 진입 차단.
+  def rfq_convertible?
+    %w[rfq_triage rfq_pending].include?(rfq_status.to_s)
+  end
+
   KANBAN_COLUMNS = %w[new_rfq make_quo pending_po new_po delivery_items problem get_grn give_up done].freeze
 
   STATUS_LABELS = {

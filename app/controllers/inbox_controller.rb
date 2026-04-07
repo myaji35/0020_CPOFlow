@@ -67,6 +67,12 @@ class InboxController < ApplicationController
                                 .includes(:user, :assignees, :client, :supplier)
     @triage_orders = triage_scope.order(created_at: :desc).limit(100)
     @triage_count = triage_scope.count
+
+    # Phase E: 견적성 탭 하단에 표시할 AI 학습 통계
+    @rfq_ai_stats = Gmail::RfqFeedbackService.accuracy_stats(window_days: 7)
+  rescue => e
+    Rails.logger.warn "[Inbox] rfq_ai_stats failed: #{e.class} #{e.message}"
+    @rfq_ai_stats = nil
   end
 
   def show
@@ -80,6 +86,14 @@ class InboxController < ApplicationController
 
   def convert_to_order
     @order = Order.find(params[:id])
+
+    # Phase F (ISS-034): rfq_status 게이트 — 제외/보관된 메일은 칸반 진입 차단
+    unless @order.rfq_convertible?
+      redirect_back fallback_location: inbox_path,
+                    alert: "제외/보관 처리된 메일은 주문으로 전환할 수 없습니다."
+      return
+    end
+
     if @order.update(status: :make_quo, rfq_status: :rfq_triage)
       Activity.create!(order: @order, user: current_user, action: "moved_to_kanban")
       record_bulk_feedback([ @order ], "confirmed")
@@ -100,14 +114,19 @@ class InboxController < ApplicationController
 
   # POST /inbox/bulk_to_kanban — 멀티체크 견적 이동 (칸반 New)
   def bulk_to_kanban
-    orders = scoped_orders.where(id: params[:order_ids], status: :new_rfq)
+    # Phase F (ISS-034): rfq_status 게이트 — excluded/archived 제외
+    eligible_statuses = Order.rfq_statuses.values_at("rfq_triage", "rfq_pending")
+    orders = scoped_orders.where(id: params[:order_ids], status: :new_rfq, rfq_status: eligible_statuses)
+    blocked_count = Array(params[:order_ids]).size - orders.count
     count = orders.count
     record_bulk_feedback(orders, "confirmed")
     orders.each do |order|
       order.update!(status: :make_quo, rfq_status: :rfq_triage)
       Activity.create!(order: order, user: current_user, action: "moved_to_kanban")
     end
-    render json: { status: "ok", count: count, message: "#{count}건 견적으로 이동" }
+    message = "#{count}건 견적으로 이동"
+    message += " (#{blocked_count}건은 제외/보관 상태로 차단됨)" if blocked_count.positive?
+    render json: { status: "ok", count: count, blocked: blocked_count, message: message }
   end
 
   # POST /inbox/bulk_restore — 휴지통 복원 (rfq_pending)

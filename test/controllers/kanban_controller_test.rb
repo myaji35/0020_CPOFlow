@@ -37,10 +37,11 @@ class KanbanControllerTest < ActionDispatch::IntegrationTest
     initial_count = Order.where(status: :new_rfq, parent_order_id: nil).count
 
     # reference_no 동일한 주문 2건 생성 → 그룹핑 시 1카드로 표시
+    # Phase F: new_rfq 컬럼은 rfq_triage 게이트 적용
     o1 = Order.create!(title: "Thread Order 1", customer_name: "Cust", user: @user,
-                       status: :new_rfq, reference_no: "REF-TEST-9999")
+                       status: :new_rfq, rfq_status: :rfq_triage, reference_no: "REF-TEST-9999")
     o2 = Order.create!(title: "Thread Order 2", customer_name: "Cust", user: @user,
-                       status: :new_rfq, reference_no: "REF-TEST-9999")
+                       status: :new_rfq, rfq_status: :rfq_triage, reference_no: "REF-TEST-9999")
 
     get kanban_path
     assert_response :success
@@ -55,12 +56,55 @@ class KanbanControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "kanban index — reference_no 없는 단건은 그대로 렌더링" do
+    # Phase F: new_rfq 컬럼은 rfq_triage 게이트 적용
     o = Order.create!(title: "Single Order No Ref", customer_name: "Cust", user: @user,
-                      status: :new_rfq, reference_no: nil)
+                      status: :new_rfq, rfq_status: :rfq_triage, reference_no: nil)
 
     get kanban_path
     assert_response :success
     assert_match "Single Order No Ref", response.body
+
+    o.destroy
+  end
+
+  # ─────────────────────────────────────────
+  # Phase F (ISS-034): rfq_status 게이트
+  # ─────────────────────────────────────────
+
+  test "kanban new_rfq 컬럼 — rfq_pending 카드는 노출되지 않음" do
+    o = Order.create!(title: "Pending Should Hide", customer_name: "Cust", user: @user,
+                      status: :new_rfq, rfq_status: :rfq_pending)
+
+    get kanban_path
+    assert_response :success
+    assert_no_match "Pending Should Hide", response.body
+
+    o.destroy
+  end
+
+  test "kanban new_rfq 컬럼 — rfq_excluded/rfq_archived 카드는 노출되지 않음" do
+    excluded = Order.create!(title: "Excluded Should Hide", customer_name: "Cust", user: @user,
+                             status: :new_rfq, rfq_status: :rfq_excluded)
+    archived = Order.create!(title: "Archived Should Hide", customer_name: "Cust", user: @user,
+                             status: :new_rfq, rfq_status: :rfq_archived)
+
+    get kanban_path
+    assert_response :success
+    assert_no_match "Excluded Should Hide", response.body
+    assert_no_match "Archived Should Hide", response.body
+
+    excluded.destroy
+    archived.destroy
+  end
+
+  test "kanban 다른 컬럼은 rfq_status 게이트 무관 — 이미 변환된 카드 보존" do
+    # make_quo로 변환된 카드는 rfq_status가 어떻든 컬럼에 노출되어야 함
+    o = Order.create!(title: "Already Converted Card", customer_name: "Cust", user: @user,
+                      status: :make_quo, rfq_status: :rfq_excluded)
+
+    get kanban_path
+    assert_response :success
+    assert_match "Already Converted Card", response.body
 
     o.destroy
   end

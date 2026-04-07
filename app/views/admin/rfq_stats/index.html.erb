@@ -1,0 +1,63 @@
+<%# Phase E: RFQ AI 학습 통계 대시보드 (한국어 UI) %>
+<div class="max-w-6xl mx-auto px-6 py-8">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-[#16325C]">RFQ AI 학습 통계</h1>
+    <p class="text-sm text-gray-600 mt-1">사용자 피드백을 기반으로 한 AI 분류 정확도</p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <%# 정확도 %>
+    <div class="bg-white border border-gray-200 rounded p-4">
+      <div class="flex items-center gap-2 mb-2">
+        <svg class="w-4 h-4 text-[#00A1E0]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <span class="text-xs font-semibold text-gray-600">AI 정확도</span>
+      </div>
+      <div class="text-3xl font-bold text-[#16325C]"><%= @stats[:accuracy_pct] %><span class="text-base text-gray-500">%</span></div>
+      <div class="text-xs text-gray-500 mt-1"><%= @stats[:ai_correct] %>/<%= @stats[:with_score] %> 일치</div>
+    </div>
+
+    <%# 최근 7일 일치율 %>
+    <div class="bg-white border border-gray-200 rounded p-4">
+      <div class="flex items-center gap-2 mb-2">
+        <svg class="w-4 h-4 text-[#00A1E0]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span class="text-xs font-semibold text-gray-600">최근 <%= @stats[:window_days] %>일 일치율</span>
+      </div>
+      <div class="text-3xl font-bold text-[#16325C]"><%= @stats[:match_rate_pct] %><span class="text-base text-gray-500">%</span></div>
+      <div class="text-xs text-gray-500 mt-1">롤링 윈도우</div>
+    </div>
+
+    <%# 총 학습 데이터 %>
+    <div class="bg-white border border-gray-200 rounded p-4">
+      <div class="flex items-center gap-2 mb-2">
+        <svg class="w-4 h-4 text-[#00A1E0]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        <span class="text-xs font-semibold text-gray-600">총 학습 데이터</span>
+      </div>
+      <div class="text-3xl font-bold text-[#16325C]"><%= @stats[:total] %><span class="text-base text-gray-500">건</span></div>
+      <div class="text-xs text-gray-500 mt-1">+ Few-shot <%= @stats[:few_shot_total] - @stats[:total] %>건</div>
+    </div>
+
+    <%# 평균 confidence %>
+    <div class="bg-white border border-gray-200 rounded p-4">
+      <div class="flex items-center gap-2 mb-2">
+        <svg class="w-4 h-4 text-[#00A1E0]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        <span class="text-xs font-semibold text-gray-600">평균 AI Score</span>
+      </div>
+      <div class="text-3xl font-bold text-[#16325C]"><%= @stats[:avg_score] %></div>
+      <div class="text-xs text-gray-500 mt-1">0.0 ~ 1.0</div>
+    </div>
+  </div>
+
+  <div class="bg-white border border-gray-200 rounded p-4">
+    <h2 class="text-sm font-semibold text-[#16325C] mb-3">피드백 분포</h2>
+    <div class="grid grid-cols-2 gap-4">
+      <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+        <span class="text-sm text-gray-700">RFQ 확정</span>
+        <span class="text-lg font-bold text-[#1E8E3E]"><%= @stats[:confirmed_count] %></span>
+      </div>
+      <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+        <span class="text-sm text-gray-700">RFQ 아님</span>
+        <span class="text-lg font-bold text-[#D93025]"><%= @stats[:rejected_count] %></span>
+      </div>
+    </div>
+  </div>
+</div>

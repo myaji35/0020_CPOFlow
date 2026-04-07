@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_04_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_07_082126) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -502,7 +502,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_04_130000) do
   end
 
   create_table "rfq_feedbacks", force: :cascade do |t|
-    t.integer "ai_score"
+    t.float "ai_score"
     t.datetime "created_at", null: false
     t.text "note"
     t.integer "order_id", null: false
