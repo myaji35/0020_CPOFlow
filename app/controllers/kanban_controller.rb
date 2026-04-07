@@ -9,6 +9,10 @@ class KanbanController < ApplicationController
     end.to_h
     @filter_employees = Employee.active.by_name
 
+    # Inbox 전용 그룹핑 (reference_no 기준)
+    inbox_orders = @columns["inbox"] || []
+    @inbox_grouped = build_inbox_groups(inbox_orders)
+
     # 중복 스레드 ID 목록 (병합대상 버튼용)
     @duplicate_thread_ids = scoped_orders.where(parent_order_id: nil)
                                  .where.not(gmail_thread_id: [ nil, "" ])
@@ -59,6 +63,22 @@ class KanbanController < ApplicationController
 
     render json: { success: true, order_id: order.id }
   end
+
+  private
+
+  # Inbox 컬럼 전용: reference_no 기준 그룹핑
+  # reference_no 있는 그룹 → 대표 카드 1개 + thread_count
+  # reference_no 없는 단건 → 그대로
+  def build_inbox_groups(orders)
+    groups = orders.group_by { |o| o.reference_no.presence || "single_#{o.id}" }
+    groups.map do |_key, group_orders|
+      representative = group_orders.first
+      thread_count   = group_orders.size
+      { order: representative, thread_count: thread_count, is_thread: thread_count > 1 }
+    end
+  end
+
+  public
 
   # POST /kanban/merge — 선택한 카드를 메인에 병합
   def merge
