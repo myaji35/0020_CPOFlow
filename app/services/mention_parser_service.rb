@@ -25,7 +25,7 @@ class MentionParserService
         user:              mentioned_user,
         notifiable:        @comment.order,
         notification_type: "mentioned",
-        message:           "#{@mentioned_by.display_name}님이 코멘트에서 회원님을 멘션했습니다."
+        body:              "#{@mentioned_by.display_name}님이 코멘트에서 회원님을 멘션했습니다."
       )
     end
   end

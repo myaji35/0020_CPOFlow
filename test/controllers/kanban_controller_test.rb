@@ -131,6 +131,55 @@ class KanbanControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  # ─────────────────────────────────────────
+  # merge 액션
+  # ─────────────────────────────────────────
+
+  test "kanban merge — 서브 주문 병합 성공" do
+    main  = Order.create!(title: "Main Order", customer_name: "Cust", user: @user, status: :new_rfq)
+    child = Order.create!(title: "Child Order", customer_name: "Cust", user: @user, status: :new_rfq)
+
+    post kanban_merge_path, params: { main_order_id: main.id, merge_order_ids: [ child.id ] }, as: :json
+    assert_response :success
+    json = JSON.parse(response.body)
+    assert json["success"]
+    assert_includes json["merged_ids"], child.id
+
+    child.reload
+    assert_equal main.id, child.parent_order_id
+    child.destroy; main.destroy
+  end
+
+  test "kanban merge — main_order_id 없으면 422" do
+    post kanban_merge_path, params: { main_order_id: 0, merge_order_ids: [] }, as: :json
+    assert_response :unprocessable_entity
+  end
+
+  # ─────────────────────────────────────────
+  # split 액션
+  # ─────────────────────────────────────────
+
+  test "kanban split — 서브 주문 분리 성공" do
+    parent = Order.create!(title: "Parent Order", customer_name: "Cust", user: @user, status: :new_rfq)
+    child  = Order.create!(title: "Sub Order", customer_name: "Cust", user: @user, status: :new_rfq, parent_order_id: parent.id)
+
+    patch kanban_split_path(child.id), as: :json
+    assert_response :success
+    json = JSON.parse(response.body)
+    assert json["success"]
+
+    child.reload
+    assert_nil child.parent_order_id
+    child.destroy; parent.destroy
+  end
+
+  test "kanban split — 이미 독립 카드이면 422" do
+    order = Order.create!(title: "Standalone Order", customer_name: "Cust", user: @user, status: :new_rfq)
+    patch kanban_split_path(order.id), as: :json
+    assert_response :unprocessable_entity
+    order.destroy
+  end
+
   private
 
   def login_as(user)

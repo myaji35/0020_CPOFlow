@@ -170,8 +170,8 @@ Rails.application.routes.draw do
   end
 
   # 주문 일괄 처리 (Bulk Actions)
-  namespace :orders do
-    resource :bulk, only: [] do
+  scope "/orders", as: "orders" do
+    resource :bulk, only: [], controller: "orders/bulk" do
       post :update
       get  :export_csv
     end
