@@ -192,8 +192,8 @@
   </div>
 
   <!-- 6. 이번달 수주 금액 -->
-  <%# value_trend: 전월 데이터 없거나 둘 다 0이면 nil (측정 불가) %>
-  <% value_no_data = @total_value_this_month.to_f == 0 && @total_value_last_month.to_f == 0 %>
+  <%# ISS-040 보강: 이번달 데이터 자체가 0이면 측정 불가 (last_month>0이라도 100% 하락 표시 금지) %>
+  <% value_no_data = @total_value_this_month.to_f == 0 %>
   <% value_trend   = if @total_value_last_month.to_f > 0
                        ((@total_value_this_month.to_f - @total_value_last_month.to_f) / @total_value_last_month.to_f * 100).round(1)
                      else
