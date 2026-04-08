@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_07_082126) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_08_120000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -372,6 +372,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_07_082126) do
     t.integer "user_id"
   end
 
+  create_table "order_links", force: :cascade do |t|
+    t.float "confidence", default: 1.0, null: false
+    t.datetime "created_at", null: false
+    t.integer "created_by_id"
+    t.text "metadata"
+    t.string "relation", null: false
+    t.integer "source_id", null: false
+    t.string "source_type", null: false
+    t.string "status", default: "confirmed", null: false
+    t.integer "target_id", null: false
+    t.string "target_type", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_order_links_on_created_by_id"
+    t.index ["relation", "status"], name: "idx_order_links_rel_status"
+    t.index ["source_type", "source_id", "target_type", "target_id", "relation"], name: "idx_order_links_unique", unique: true
+    t.index ["source_type", "source_id"], name: "idx_order_links_source"
+    t.index ["source_type", "source_id"], name: "index_order_links_on_source"
+    t.index ["target_type", "target_id"], name: "idx_order_links_target"
+    t.index ["target_type", "target_id"], name: "index_order_links_on_target"
+  end
+
   create_table "order_quotes", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "currency"
@@ -643,6 +664,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_07_082126) do
   add_foreign_key "employment_contracts", "employees"
   add_foreign_key "employment_contracts", "projects"
   add_foreign_key "import_logs", "users"
+  add_foreign_key "order_links", "users", column: "created_by_id"
   add_foreign_key "orders", "clients"
   add_foreign_key "orders", "projects"
   add_foreign_key "orders", "suppliers"
