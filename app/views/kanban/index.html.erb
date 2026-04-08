@@ -403,10 +403,12 @@ function executeMergeGroup(mainId, mergeIds, btn) {
 
 // ── 선택모드 JS ────────────────────────────────────────────
 var selectMode = false;
+window._selectMode = false;
 var selectedIds = [];
 
 function toggleSelectMode() {
   selectMode = !selectMode;
+  window._selectMode = selectMode;
   var btn = document.getElementById('select-mode-btn');
   var actionBar = document.getElementById('select-action-bar');
 
