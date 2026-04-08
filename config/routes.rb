@@ -44,6 +44,17 @@ Rails.application.routes.draw do
     end
   end
 
+  # Procurement Ontology M3 — OrderLinks
+  resources :order_links, only: %i[new create] do
+    member do
+      patch :confirm
+      patch :reject
+    end
+    collection do
+      get :search
+    end
+  end
+
   # Inbox (email view)
   get  "inbox",             to: "inbox#index"
   get  "inbox/:id",         to: "inbox#show",               as: :inbox_email

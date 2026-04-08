@@ -1,0 +1,28 @@
+<%# 수동 링크 추가 모달 (M3-3) — Drawer 또는 Flow 탭에서 호출 %>
+<div class="p-4 bg-white rounded-lg" style="max-width:480px;">
+  <h3 class="text-base font-semibold mb-3" style="color:#16325C;">수동 링크 추가</h3>
+
+  <%= form_with url: order_links_path, method: :post, data: { turbo: true } do |f| %>
+    <%= f.hidden_field :source_id, value: @order.id %>
+    <%= f.hidden_field :target_type, value: "Order" %>
+    <%= f.hidden_field :target_id, id: "ol-target-id" %>
+
+    <label class="block text-xs font-semibold text-gray-600 mb-1.5">대상 Order 검색</label>
+    <input type="text"
+           id="ol-search-input"
+           class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]"
+           placeholder="title 또는 reference_no"
+           oninput="window._olSearch&&clearTimeout(window._olSearch);window._olSearch=setTimeout(()=>{fetch('/order_links/search?q='+encodeURIComponent(this.value)).then(r=>r.text()).then(h=>{document.getElementById('ol-search-results').innerHTML=h;});},250);" />
+    <div id="ol-search-results" class="mt-2"></div>
+
+    <label class="block text-xs font-semibold text-gray-600 mb-1.5 mt-3">관계</label>
+    <%= f.select :relation, @relations.map { |r| [r, r] }, {},
+          class: "w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]" %>
+
+    <div class="flex justify-end gap-2 mt-4">
+      <%= f.submit "추가",
+            class: "text-sm px-4 py-2 rounded font-semibold",
+            style: "background:#1E3A5F;color:white;border:none;cursor:pointer;" %>
+    </div>
+  <% end %>
+</div>
