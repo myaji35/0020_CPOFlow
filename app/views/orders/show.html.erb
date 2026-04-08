@@ -41,7 +41,8 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div class="lg:col-span-2">
-        <%= render "orders/drawer_content", order: @order, tasks: @tasks, comments: @comments, activities: @activities, team_members: @team_members, thread_orders: @thread_orders %>
+        <%# ISS-041: full page에서는 사이드바에 스테이지 이동 있으므로 drawer_content 내 중복 숨김 %>
+        <%= render "orders/drawer_content", order: @order, tasks: @tasks, comments: @comments, activities: @activities, team_members: @team_members, thread_orders: @thread_orders, hide_stage_move: true %>
       </div>
       <%# 우측 사이드바 %>
       <div class="space-y-4">

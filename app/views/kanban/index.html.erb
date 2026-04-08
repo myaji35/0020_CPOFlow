@@ -36,7 +36,7 @@
 
   <%# 납기 토글 %>
   <div class="flex rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden text-xs">
-    <% [["", "전체"], ["urgent", "D-7"], ["overdue", "지연"]].each do |val, lbl| %>
+    <% [["", "전체"], ["urgent", "납기 7일 내"], ["overdue", "지연"]].each do |val, lbl| %>
       <button class="filter-due-btn px-2.5 py-1.5 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-r border-gray-200 dark:border-gray-600 last:border-0"
               data-value="<%= val %>"><%= lbl %></button>
     <% end %>

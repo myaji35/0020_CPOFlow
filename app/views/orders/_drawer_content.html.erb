@@ -244,7 +244,8 @@
     </div>
 
     <%# ── 2. 담당자 + 스테이지 이동 ─────────────────────────── %>
-    <div class="grid grid-cols-2 gap-4">
+    <%# full page 모드(hide_stage_move)에서는 스테이지 이동 사이드바가 처리 → 담당자만 단일 컬럼 %>
+    <div class="<%= local_assigns[:hide_stage_move] ? 'grid grid-cols-1 gap-4' : 'grid grid-cols-2 gap-4' %>">
       <%# 담당자 %>
       <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4" x-data="{ showAssignMenu: false }">
         <div class="flex items-center justify-between mb-3">
@@ -296,8 +297,8 @@
         <% end %>
       </div>
 
-      <%# 스테이지 이동 — 이전/현재/다음 + 더보기 %>
-      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+      <%# 스테이지 이동 — 이전/현재/다음 + 더보기 (Full Page 모드에서는 사이드바 패널이 담당) %>
+      <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4<%= ' hidden' if local_assigns[:hide_stage_move] %>">
         <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-3">스테이지 이동</h4>
         <%
           columns = Order::KANBAN_COLUMNS
