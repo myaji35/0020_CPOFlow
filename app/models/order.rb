@@ -229,7 +229,38 @@ class Order < ApplicationRecord
   # eCountERP 전표 자동 생성 — confirmed 상태 전환 시 트리거
   after_update_commit :enqueue_ecount_slip, if: :saved_change_to_status?
 
+  # M1-Task4: Order status 전환 → 자동 링크 생성 (ontology)
+  after_update :create_status_transition_link, if: :saved_change_to_status?
+
   private
+
+  def create_status_transition_link
+    return if parent_order_id.blank?
+
+    prev, curr = saved_change_to_status
+    relation = case
+               when prev == "pending_po" && curr == "new_po"
+                 "confirmed_to"
+               when curr == "get_grn"
+                 "delivered_as"
+               end
+    return unless relation
+
+    OrderLink.find_or_create_by!(
+      source_type: "Order",
+      source_id:   parent_order_id,
+      target_type: "Order",
+      target_id:   id,
+      relation:    relation
+    ) do |link|
+      link.status     = OrderLink::STATUSES.first  # "confirmed"
+      link.confidence = 1.0
+      link.metadata   = {
+        "source"  => "system_event",
+        "trigger" => "status_transition:#{prev}->#{curr}"
+      }
+    end
+  end
 
   def enqueue_ecount_slip
     return unless status == "new_po"

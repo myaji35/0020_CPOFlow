@@ -112,4 +112,79 @@ class OrderTest < ActiveSupport::TestCase
   ensure
     order.destroy
   end
+
+  # M1-Task4: Order status 전환 → confirmed_to/delivered_as 자동 링크
+  test "status: pending_po → new_po + parent 있으면 confirmed_to 자동 생성" do
+    user   = User.create!(
+      email: "ct_#{SecureRandom.hex(4)}@example.com",
+      password: "password123", name: "CT", role: :member
+    )
+    parent = Order.create!(
+      user: user, title: "RFQ", reference_no: "CT-#{SecureRandom.hex(4)}",
+      status: :pending_po, customer_name: "Test Customer"
+    )
+    child  = Order.create!(
+      user: user, title: "PO", reference_no: parent.reference_no,
+      status: :pending_po, customer_name: "Test Customer", parent_order: parent
+    )
+
+    assert_difference "OrderLink.where(relation: 'confirmed_to').count", 1 do
+      child.update!(status: :new_po)
+    end
+
+    link = OrderLink.where(relation: "confirmed_to").last
+    assert_equal parent, link.source
+    assert_equal child,  link.target
+    assert_equal "system_event", link.metadata["source"]
+    assert_match(/status_transition/, link.metadata["trigger"])
+  ensure
+    child&.destroy
+    parent&.destroy
+    user&.destroy
+  end
+
+  test "status: → get_grn + parent 있으면 delivered_as 자동 생성" do
+    user   = User.create!(
+      email: "da_#{SecureRandom.hex(4)}@example.com",
+      password: "password123", name: "DA", role: :member
+    )
+    parent = Order.create!(
+      user: user, title: "PO", reference_no: "DA-#{SecureRandom.hex(4)}",
+      status: :delivery_items, customer_name: "Test Customer"
+    )
+    child  = Order.create!(
+      user: user, title: "GRN", reference_no: parent.reference_no,
+      status: :delivery_items, customer_name: "Test Customer", parent_order: parent
+    )
+
+    assert_difference "OrderLink.where(relation: 'delivered_as').count", 1 do
+      child.update!(status: :get_grn)
+    end
+
+    link = OrderLink.where(relation: "delivered_as").last
+    assert_equal parent, link.source
+    assert_equal child,  link.target
+  ensure
+    child&.destroy
+    parent&.destroy
+    user&.destroy
+  end
+
+  test "status 전환이지만 parent_order 없으면 confirmed_to/delivered_as 생성 안 함" do
+    user  = User.create!(
+      email: "lo_#{SecureRandom.hex(4)}@example.com",
+      password: "password123", name: "LO", role: :member
+    )
+    order = Order.create!(
+      user: user, title: "Lone", reference_no: "LO-#{SecureRandom.hex(4)}",
+      status: :pending_po, customer_name: "Test Customer"
+    )
+
+    assert_no_difference "OrderLink.where(relation: ['confirmed_to', 'delivered_as']).count" do
+      order.update!(status: :new_po)
+    end
+  ensure
+    order&.destroy
+    user&.destroy
+  end
 end
