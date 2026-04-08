@@ -96,7 +96,7 @@ class DashboardController < ApplicationController
 
   def calculate_on_time_rate(start_time, end_time)
     delivered = Order.get_grn.where(updated_at: start_time..end_time)
-    return 0 if delivered.count == 0
+    return nil if delivered.count == 0   # nil = 측정 불가 (빈 데이터)
     on_time = delivered.where("due_date >= date(updated_at)")
     (on_time.count.to_f / delivered.count * 100).round(1)
   end

@@ -153,23 +153,35 @@
   </div>
 
   <!-- 5. 납기 준수율 (이번달) -->
-  <% rate_color = @on_time_rate_this_month >= 90 ? 'text-green-600 dark:text-green-400' : @on_time_rate_this_month >= 75 ? 'text-orange-500 dark:text-orange-400' : 'text-red-500 dark:text-red-400' %>
-  <% rate_trend = @on_time_rate_this_month - @on_time_rate_last_month %>
+  <%# nil = 이번달 납기완료 데이터 없음 (측정 불가) %>
+  <% rate_no_data = @on_time_rate_this_month.nil? %>
+  <% rate_val     = @on_time_rate_this_month.to_f %>
+  <% rate_color   = rate_no_data ? 'text-gray-400 dark:text-gray-500' : rate_val >= 90 ? 'text-green-600 dark:text-green-400' : rate_val >= 75 ? 'text-orange-500 dark:text-orange-400' : 'text-red-500 dark:text-red-400' %>
+  <% rate_trend   = (!rate_no_data && @on_time_rate_last_month.present?) ? (rate_val - @on_time_rate_last_month.to_f) : nil %>
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
     <div class="flex items-start justify-between">
       <div>
         <p class="text-xs font-medium text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-2">납기 준수율</p>
-        <p class="text-3xl font-bold <%= rate_color %>"><%= @on_time_rate_this_month %>%</p>
-        <p class="text-xs mt-1 <%= rate_trend >= 0 ? 'text-green-500' : 'text-red-500' %>">
-          <span class="inline-flex items-center gap-0.5">
-            <% if rate_trend >= 0 %>
-              <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-            <% else %>
-              <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-            <% end %>
-            <%= rate_trend.abs.round(1) %>% 전월 대비
-          </span>
-        </p>
+        <% if rate_no_data %>
+          <p class="text-3xl font-bold text-gray-300 dark:text-gray-600">—</p>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">이번달 데이터 없음</p>
+        <% else %>
+          <p class="text-3xl font-bold <%= rate_color %>"><%= rate_val %>%</p>
+          <% if rate_trend && rate_trend.abs >= 0.1 %>
+            <p class="text-xs mt-1 <%= rate_trend > 0 ? 'text-green-500' : 'text-red-500' %>">
+              <span class="inline-flex items-center gap-0.5">
+                <% if rate_trend > 0 %>
+                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                <% else %>
+                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                <% end %>
+                <%= rate_trend.abs.round(1) %>% 전월 대비
+              </span>
+            </p>
+          <% else %>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">전월 대비 변화 없음</p>
+          <% end %>
+        <% end %>
       </div>
       <div class="w-9 h-9 rounded-lg bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center">
         <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -180,22 +192,39 @@
   </div>
 
   <!-- 6. 이번달 수주 금액 -->
-  <% value_trend = @total_value_last_month > 0 ? ((@total_value_this_month - @total_value_last_month) / @total_value_last_month * 100).round(1) : 0 %>
+  <%# value_trend: 전월 데이터 없거나 둘 다 0이면 nil (측정 불가) %>
+  <% value_no_data = @total_value_this_month.to_f == 0 && @total_value_last_month.to_f == 0 %>
+  <% value_trend   = if @total_value_last_month.to_f > 0
+                       ((@total_value_this_month.to_f - @total_value_last_month.to_f) / @total_value_last_month.to_f * 100).round(1)
+                     else
+                       nil
+                     end %>
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
     <div class="flex items-start justify-between">
       <div>
         <p class="text-xs font-medium text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-2">이번달 수주액</p>
-        <p class="text-2xl font-bold text-gray-900 dark:text-white">$<%= number_to_human(@total_value_this_month.to_i, units: { thousand: 'K', million: 'M' }, format: '%n%u', precision: 1) %></p>
-        <p class="text-xs mt-1 <%= value_trend >= 0 ? 'text-green-500' : 'text-red-500' %>">
-          <span class="inline-flex items-center gap-0.5">
-            <% if value_trend >= 0 %>
-              <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-            <% else %>
-              <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-            <% end %>
-            <%= value_trend.abs %>% 전월 대비
-          </span>
-        </p>
+        <% if value_no_data %>
+          <p class="text-2xl font-bold text-gray-300 dark:text-gray-600">—</p>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">이번달 데이터 없음</p>
+        <% else %>
+          <p class="text-2xl font-bold text-gray-900 dark:text-white">$<%= number_to_human(@total_value_this_month.to_i, units: { thousand: "K", million: "M" }, format: "%n%u", precision: 1) %></p>
+          <% if value_trend && value_trend.abs >= 0.1 %>
+            <p class="text-xs mt-1 <%= value_trend > 0 ? 'text-green-500' : 'text-red-500' %>">
+              <span class="inline-flex items-center gap-0.5">
+                <% if value_trend > 0 %>
+                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                <% else %>
+                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                <% end %>
+                <%= value_trend.abs %>% 전월 대비
+              </span>
+            </p>
+          <% elsif value_trend.nil? %>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">전월 데이터 없음</p>
+          <% else %>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">전월 대비 변화 없음</p>
+          <% end %>
+        <% end %>
       </div>
       <div class="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center">
         <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -324,26 +353,36 @@
                       "hydro"   => "bg-blue-600 text-white dark:bg-blue-700",
                       "tunnel"  => "bg-orange-500 text-white dark:bg-orange-600",
                       "gtx"     => "bg-green-600 text-white dark:bg-green-700" } %>
-    <div class="space-y-3">
-      <% @site_category_data.each do |cat| %>
-        <div class="flex items-center gap-3">
-          <span class="text-xs font-semibold px-2 py-1 rounded-md <%= cat_colors[cat[:category]] %> w-14 text-center shrink-0">
-            <%= cat[:label] %>
-          </span>
-          <div class="flex-1">
-            <div class="flex items-center justify-between text-xs mb-1">
-              <span class="text-gray-600 dark:text-gray-300"><%= cat[:orders] %>건</span>
-              <span class="text-gray-500 dark:text-gray-500">$<%= number_to_human(cat[:value].to_i, units: { thousand: 'K', million: 'M' }, format: '%n%u', precision: 1) %></span>
-            </div>
-            <% total_orders = [@site_category_data.sum { |c| c[:orders] }, 1].max %>
-            <div class="bg-gray-100 dark:bg-gray-700 rounded-full h-1.5">
-              <div class="<%= cat_colors[cat[:category]].split.first %> opacity-70 h-1.5 rounded-full"
-                   style="width: <%= (cat[:orders].to_f / total_orders * 100).round %>%"></div>
+    <% cat_total_orders = @site_category_data.sum { |c| c[:orders] } %>
+    <% if cat_total_orders == 0 %>
+      <div class="flex flex-col items-center justify-center py-6 text-center">
+        <svg class="w-8 h-8 text-gray-300 dark:text-gray-600 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="10" rx="1"/>
+        </svg>
+        <p class="text-xs text-gray-400 dark:text-gray-500">현장 프로젝트 데이터 없음</p>
+      </div>
+    <% else %>
+      <div class="space-y-3">
+        <% @site_category_data.each do |cat| %>
+          <% next if cat[:orders] == 0 %>
+          <div class="flex items-center gap-3">
+            <span class="text-xs font-semibold px-2 py-1 rounded-md <%= cat_colors[cat[:category]] %> w-14 text-center shrink-0">
+              <%= cat[:label] %>
+            </span>
+            <div class="flex-1">
+              <div class="flex items-center justify-between text-xs mb-1">
+                <span class="text-gray-600 dark:text-gray-300"><%= cat[:orders] %>건</span>
+                <span class="text-gray-500 dark:text-gray-500">$<%= number_to_human(cat[:value].to_i, units: { thousand: "K", million: "M" }, format: "%n%u", precision: 1) %></span>
+              </div>
+              <div class="bg-gray-100 dark:bg-gray-700 rounded-full h-1.5">
+                <div class="<%= cat_colors[cat[:category]].split.first %> opacity-70 h-1.5 rounded-full"
+                     style="width: <%= (cat[:orders].to_f / [cat_total_orders, 1].max * 100).round %>%"></div>
+              </div>
             </div>
           </div>
-        </div>
-      <% end %>
-    </div>
+        <% end %>
+      </div>
+    <% end %>
   </div>
 </div>
 
