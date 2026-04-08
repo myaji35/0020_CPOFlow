@@ -36,7 +36,7 @@ class OrderQuote < ApplicationRecord
     ) do |link|
       link.status     = OrderLink::STATUSES.first   # "confirmed" — 매직 문자열 회피
       link.confidence = 1.0
-      link.metadata   = { source: "system_event", trigger: "OrderQuote.after_create" }
+      link.metadata   = { "source" => "system_event", "trigger" => "OrderQuote.after_create" }
     end
   end
 end
