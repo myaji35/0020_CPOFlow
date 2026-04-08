@@ -65,6 +65,16 @@ class Order < ApplicationRecord
   scope :inbox_excluded, -> { where(status: :new_rfq, rfq_status: :rfq_excluded) }
   scope :inbox_triaged, -> { where(rfq_status: :rfq_triage) }
 
+  # ISS-039: urgent/high + 마감일 경과 + 담당자 미배정 = 즉시 조치 필요
+  scope :critical, -> {
+    where(priority: [ :urgent, :high ])
+      .where("due_date < ?", Date.today)
+      .where.not(status: [ :get_grn, :give_up, :done ])
+      .left_joins(:assignments)
+      .where(assignments: { id: nil })
+      .distinct
+  }
+
   # Phase F (ISS-034): 칸반 new_rfq 컬럼 게이트
   # rfq_triage 상태(견적성 확정)인 건만 칸반에 노출.
   # rfq_pending(미분류) / rfq_excluded(제외) / rfq_archived(보관)는 인박스에만 존재.
@@ -78,6 +88,19 @@ class Order < ApplicationRecord
       where(status: column)
     end
   }
+
+  # ISS-039: 담당자 미배정 여부
+  def unassigned?
+    assignees.empty?
+  end
+
+  # ISS-039: urgent/high + 마감일 경과 + 담당자 미배정 = 즉시 조치 필요
+  def critical?
+    return false unless %w[urgent high].include?(priority.to_s)
+    return false unless due_date.present? && due_date < Date.today
+    return false if %w[get_grn give_up done].include?(status.to_s)
+    unassigned?
+  end
 
   # rfq_status 가드: Order로의 변환(워크플로우 진입)이 허용되는지 여부
   # rfq_excluded(제외) / rfq_archived(보관) 상태는 칸반 진입 차단.

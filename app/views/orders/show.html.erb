@@ -36,6 +36,9 @@
       </div>
     </div>
 
+    <%# ISS-039: critical Order 즉시 조치 배너 %>
+    <%= render "orders/critical_banner", order: @order %>
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div class="lg:col-span-2">
         <%= render "orders/drawer_content", order: @order, tasks: @tasks, comments: @comments, activities: @activities, team_members: @team_members, thread_orders: @thread_orders %>

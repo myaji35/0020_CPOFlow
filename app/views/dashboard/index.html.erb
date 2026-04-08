@@ -1,5 +1,28 @@
 <% content_for :page_title, "대시보드" %>
 
+<%# ISS-039: Critical Order 즉시 조치 배너 %>
+<% critical_count = Order.critical.count %>
+<% if critical_count > 0 %>
+  <div class="mb-4 rounded-lg border-l-4 border-[#D93025] bg-[#FEE4E2] p-4 flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+           stroke="#D93025" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0">
+        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      <div>
+        <p class="text-sm font-bold text-[#D93025]">즉시 조치 필요 — <%= critical_count %>건</p>
+        <p class="text-xs text-[#16325C] mt-0.5">긴급/높음 우선순위 &middot; 마감일 경과 &middot; 담당자 미배정</p>
+      </div>
+    </div>
+    <%= link_to "확인하기",
+                kanban_path(filter: "overdue"),
+                class: "shrink-0 inline-flex items-center px-4 py-2 rounded-lg text-sm font-semibold text-white hover:opacity-90 transition-opacity",
+                style: "background:#D93025;" %>
+  </div>
+<% end %>
+
 <%# FR-01: Quick Actions 헤더 %>
 <div class="flex items-center justify-between mb-6">
   <div>
