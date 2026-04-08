@@ -187,4 +187,51 @@ class OrderTest < ActiveSupport::TestCase
     order&.destroy
     user&.destroy
   end
+
+  test "parent_order_id 설정 시 derived_from 링크 자동 생성" do
+    user   = User.create!(
+      email: "df_#{SecureRandom.hex(4)}@example.com",
+      password: "password123", name: "DF"
+    )
+    parent = Order.create!(
+      user: user, title: "RFQ", reference_no: "DF-#{SecureRandom.hex(4)}",
+      status: :new_rfq, customer_name: "Test Customer"
+    )
+    child  = Order.create!(
+      user: user, title: "Quote", reference_no: parent.reference_no,
+      status: :make_quo, customer_name: "Test Customer"
+    )
+
+    assert_difference "OrderLink.where(relation: 'derived_from').count", 1 do
+      child.update!(parent_order: parent)
+    end
+
+    link = OrderLink.where(relation: "derived_from").last
+    assert_equal child,  link.source   # 후속 → 원본 방향
+    assert_equal parent, link.target
+    assert_equal "system_event", link.metadata["source"]
+    assert_equal "parent_order_id_changed", link.metadata["trigger"]
+  ensure
+    child&.destroy
+    parent&.destroy
+    user&.destroy
+  end
+
+  test "parent_order_id 변경 없으면 derived_from 생성 안 함" do
+    user  = User.create!(
+      email: "df2_#{SecureRandom.hex(4)}@example.com",
+      password: "password123", name: "DF2"
+    )
+    order = Order.create!(
+      user: user, title: "T", reference_no: "DF2-#{SecureRandom.hex(4)}",
+      status: :new_rfq, customer_name: "Test Customer"
+    )
+
+    assert_no_difference "OrderLink.where(relation: 'derived_from').count" do
+      order.update!(title: "Updated Title")
+    end
+  ensure
+    order&.destroy
+    user&.destroy
+  end
 end

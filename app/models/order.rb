@@ -232,7 +232,29 @@ class Order < ApplicationRecord
   # M1-Task4: Order status 전환 → 자동 링크 생성 (ontology)
   after_update :create_status_transition_link, if: :saved_change_to_status?
 
+  # M1-Task5: parent_order_id 변경 → derived_from 자동 링크 생성 (ontology)
+  after_update :create_derived_from_link, if: :saved_change_to_parent_order_id?
+
   private
+
+  def create_derived_from_link
+    return if parent_order_id.blank?
+
+    OrderLink.find_or_create_by!(
+      source_type: "Order",
+      source_id:   id,                # 후속(child)
+      target_type: "Order",
+      target_id:   parent_order_id,   # 원본(parent)
+      relation:    "derived_from"
+    ) do |link|
+      link.status     = OrderLink::STATUSES.first  # "confirmed"
+      link.confidence = 1.0
+      link.metadata   = {
+        "source"  => "system_event",
+        "trigger" => "parent_order_id_changed"
+      }
+    end
+  end
 
   def create_status_transition_link
     return if parent_order_id.blank?
