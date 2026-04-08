@@ -286,7 +286,7 @@
 
         // 드로어 탭 전환 — innerHTML 삽입 시 <script> 미실행 문제로 전역 정의
         function switchDrawerTab(orderId, tabId) {
-          var panels = ['detail', 'tasks', 'comments', 'attachments', 'history'];
+          var panels = ['detail', 'tasks', 'comments', 'attachments', 'history', 'flow'];
           panels.forEach(function(p) {
             var panel = document.getElementById('drawer-panel-' + orderId + '-' + p);
             var tab   = document.getElementById('drawer-tab-'   + orderId + '-' + p);
