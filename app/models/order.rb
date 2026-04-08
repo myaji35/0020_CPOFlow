@@ -235,6 +235,9 @@ class Order < ApplicationRecord
   # M1-Task5: parent_order_id 변경 → derived_from 자동 링크 생성 (ontology)
   after_update :create_derived_from_link, if: :saved_change_to_parent_order_id?
 
+  # M3-Task1: Order 생성 시 heuristic 제안 Job enqueue (ontology)
+  after_create_commit { SuggestOrderLinksJob.perform_later(id) }
+
   private
 
   def create_derived_from_link
