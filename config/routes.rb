@@ -17,8 +17,9 @@ Rails.application.routes.draw do
   get  "dashboard",      to: "dashboard#index"
   post "dashboard/sync", to: "dashboard#sync_sheets", as: :sync_sheets
 
-  # Kanban board
-  get "kanban", to: "kanban#index"
+  # Kanban board (ISS-044: /orders/kanban 직관적 alias redirect)
+  get "kanban",         to: "kanban#index"
+  get "orders/kanban",  to: redirect("/kanban")
   patch "orders/:id/move", to: "kanban#move", as: :move_order
   post "kanban/merge", to: "kanban#merge", as: :kanban_merge
   patch "kanban/split/:id", to: "kanban#split", as: :kanban_split

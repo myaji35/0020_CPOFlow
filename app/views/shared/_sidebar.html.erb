@@ -1,11 +1,22 @@
-<!-- Sidebar: 60px icon-only, expands on hover -->
-<nav class="flex flex-col w-16 bg-primary text-white h-full shrink-0 z-20 transition-all duration-200 group hover:w-56">
-  <!-- Logo -->
-  <div class="flex items-center h-16 px-4 border-b border-primary-light overflow-hidden">
+<%# ISS-042: 사이드바 기본 expanded (아이콘+라벨) — Alpine.js collapse 토글 %>
+<nav class="flex flex-col bg-primary text-white h-full shrink-0 z-20 transition-all duration-200"
+     x-data="{ collapsed: $persist(false).as('sidebar_collapsed') }"
+     :class="collapsed ? 'w-16 group' : 'w-56'">
+  <!-- Logo + Collapse Toggle -->
+  <div class="flex items-center h-16 px-3 border-b border-primary-light overflow-hidden">
     <div class="w-8 h-8 bg-accent rounded-lg flex items-center justify-center shrink-0">
       <span class="text-white font-bold text-sm">CF</span>
     </div>
-    <span class="ml-3 font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">CPOFlow</span>
+    <span class="ml-3 font-bold text-sm whitespace-nowrap flex-1 truncate transition-opacity duration-200"
+          :class="collapsed ? 'opacity-0 pointer-events-none w-0 ml-0' : 'opacity-100'">CPOFlow</span>
+    <button @click="collapsed = !collapsed"
+            class="ml-auto shrink-0 w-6 h-6 flex items-center justify-center rounded-md hover:bg-white/20 text-blue-200 hover:text-white transition-colors"
+            :title="collapsed ? '메뉴 펼치기' : '메뉴 접기'">
+      <svg class="w-4 h-4 transition-transform duration-200" :class="collapsed ? 'rotate-180' : ''"
+           viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
   </div>
 
   <!-- Nav Items -->
@@ -14,7 +25,8 @@
     <%= nav_link_to inbox_path, icon: "lni lni-envelope", label: t("nav.inbox") do %>
       <% rfq_count = Order.new_rfq.count %>
       <% if rfq_count > 0 %>
-        <span class="ml-auto bg-accent text-white text-xs rounded-full px-1.5 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity"><%= rfq_count %></span>
+        <span class="ml-auto bg-accent text-white text-xs rounded-full px-1.5 py-0.5 transition-opacity"
+              :class="collapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'"><%= rfq_count %></span>
       <% end %>
     <% end %>
     <%= nav_link_to kanban_path, icon: "lni lni-layout", label: t("nav.kanban") %>
@@ -51,7 +63,7 @@
       <div class="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-xs font-bold shrink-0">
         <%= current_user.initials %>
       </div>
-      <div class="opacity-0 group-hover:opacity-100 transition-opacity overflow-hidden">
+      <div class="transition-opacity overflow-hidden" :class="collapsed ? 'opacity-0 w-0' : 'opacity-100'">
         <p class="text-xs font-medium truncate"><%= current_user.display_name %></p>
         <p class="text-xs text-blue-200 truncate"><%= current_user.role.capitalize %></p>
       </div>

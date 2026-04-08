@@ -29,15 +29,6 @@
   <%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
     <div class="space-y-4">
 
-      <%# 회사명 %>
-      <div>
-        <%= f.label :company_name, "회사명", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
-        <%= f.text_field :company_name,
-            placeholder: "예) AtoZ2010 Inc.",
-            class: "w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent" %>
-        <p class="mt-1 text-xs text-gray-500 dark:text-gray-500">선택사항 — 입력하지 않아도 로그인됩니다</p>
-      </div>
-
       <%# 이메일 %>
       <div>
         <%= f.label :email, "이메일", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
