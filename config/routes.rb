@@ -32,6 +32,7 @@ Rails.application.routes.draw do
     resources :order_quotes, only: %i[new create destroy] do
       member { patch :select }
     end
+    resource :flow, only: [:show], controller: "order_flows"
     member do
       patch :move_status
       patch :quick_update

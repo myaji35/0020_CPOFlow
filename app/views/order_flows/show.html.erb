@@ -1,0 +1,9 @@
+<turbo-frame id="drawer-panel-<%= @order.id %>-flow-frame">
+  <div data-controller="order-flow"
+       data-order-flow-graph-value="<%= @graph.to_json %>"
+       data-order-flow-order-id-value="<%= @order.id %>">
+    <div data-order-flow-target="canvas"
+         class="w-full"
+         style="height:420px;background:#F3F2F2;border:1px solid #d1d5db;border-radius:8px;"></div>
+  </div>
+</turbo-frame>
