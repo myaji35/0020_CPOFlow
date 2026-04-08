@@ -20,7 +20,9 @@ class ApplicationController < ActionController::Base
     if user_signed_in?
       I18n.locale = current_user.preferred_locale.to_sym
     else
-      I18n.locale = :en
+      # 비로그인 상태(로그인 페이지, Devise 메시지): Accept-Language 헤더 → :ko 기본값
+      accepted = request.env["HTTP_ACCEPT_LANGUAGE"]&.scan(/^[a-z]{2}/)&.first&.to_sym
+      I18n.locale = (accepted == :en) ? :en : :ko
     end
   end
 

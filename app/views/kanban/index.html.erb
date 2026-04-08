@@ -1,4 +1,4 @@
-<% content_for :page_title, "Kanban Board" %>
+<% content_for :page_title, t("kanban.title", default: "발주 보드") %>
 <% content_for :head do %>
   <!-- SortableJS for drag-and-drop -->
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
@@ -172,7 +172,7 @@
   <% end %>
 </div>
 
-<!-- Kanban Board -->
+<!-- 발주 보드 -->
 <div class="flex gap-4 overflow-x-auto pb-4 min-h-[calc(100vh-200px)]" id="kanban-board">
   <% Order::KANBAN_COLUMNS.each_with_index do |status, col_idx| %>
     <% orders = @columns[status] || [] %>

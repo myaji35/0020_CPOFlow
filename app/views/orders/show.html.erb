@@ -22,7 +22,7 @@
           <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
         <% end %>
         <div>
-          <p class="text-xs text-gray-500 dark:text-gray-500">Kanban / <%= Order::STATUS_LABELS[@order.status] %></p>
+          <p class="text-xs text-gray-500 dark:text-gray-500"><%= t("nav.kanban", default: "칸반") %> / <%= Order::STATUS_LABELS[@order.status] %></p>
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white leading-tight"><%= @order.title %></h2>
         </div>
       </div>
