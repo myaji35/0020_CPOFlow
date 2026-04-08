@@ -1,6 +1,7 @@
 <%# ISS-042: 사이드바 기본 expanded (아이콘+라벨) — Alpine.js collapse 토글 %>
 <nav class="flex flex-col bg-primary text-white h-full shrink-0 z-20 transition-all duration-200"
-     x-data="{ collapsed: $persist(false).as('sidebar_collapsed') }"
+     x-data="{ collapsed: (typeof localStorage !== 'undefined' && localStorage.getItem('sidebar_collapsed') === 'true') }"
+     x-init="$watch('collapsed', v => localStorage.setItem('sidebar_collapsed', v))"
      :class="collapsed ? 'w-16 group' : 'w-56'">
   <!-- Logo + Collapse Toggle -->
   <div class="flex items-center h-16 px-3 border-b border-primary-light overflow-hidden">
