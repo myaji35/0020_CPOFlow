@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_08_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_08_120100) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -388,9 +388,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_08_120000) do
     t.index ["relation", "status"], name: "idx_order_links_rel_status"
     t.index ["source_type", "source_id", "target_type", "target_id", "relation"], name: "idx_order_links_unique", unique: true
     t.index ["source_type", "source_id"], name: "idx_order_links_source"
-    t.index ["source_type", "source_id"], name: "index_order_links_on_source"
     t.index ["target_type", "target_id"], name: "idx_order_links_target"
-    t.index ["target_type", "target_id"], name: "index_order_links_on_target"
   end
 
   create_table "order_quotes", force: :cascade do |t|

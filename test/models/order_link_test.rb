@@ -2,10 +2,10 @@ require "test_helper"
 
 class OrderLinkTest < ActiveSupport::TestCase
   setup do
-    @user    = User.first || User.create!(
-      email: "test_order_link@example.com",
+    @user = User.create!(
+      email: "order_link_test_#{SecureRandom.hex(4)}@example.com",
       password: "password123",
-      name: "Test User"
+      name: "Order Link Test"
     )
     @order_a = Order.create!(
       user: @user,
