@@ -1,0 +1,24 @@
+<%# Local: data (Hash) %>
+<div class="p-3 border border-gray-300 rounded-lg shadow-lg" style="background:white;width:200px;">
+  <div class="text-xs font-mono mb-1" style="color:#16325C;">Ref: <%= data[:ref] %></div>
+  <hr class="border-gray-200 mb-2" />
+  <% if data[:count] > 0 %>
+    <div class="text-xs mb-1" style="color:#16325C;">
+      <%= data[:nodes] %> nodes · <%= data[:edges] %> edges
+    </div>
+    <ul class="text-xs space-y-0.5 mb-2" style="color:#374151;">
+      <% data[:titles].first(3).each do |t| %>
+        <li class="truncate">• <%= t %></li>
+      <% end %>
+    </ul>
+    <% if data[:first_id] %>
+      <a href="/orders/<%= data[:first_id] %>"
+         class="text-xs font-semibold"
+         style="color:#00A1E0;">
+        Open Flow →
+      </a>
+    <% end %>
+  <% else %>
+    <div class="text-xs" style="color:#6B7280;">데이터 없음</div>
+  <% end %>
+</div>

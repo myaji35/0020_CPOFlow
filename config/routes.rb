@@ -26,6 +26,9 @@ Rails.application.routes.draw do
 
   # Orders (full CRUD + nested resources)
   resources :orders do
+    collection do
+      get :preview_by_ref  # M3-4: 칸반 reference_no 호버 미니프리뷰
+    end
     resources :tasks, only: %i[create update destroy]
     resources :comments, only: %i[create destroy]
     resources :assignments, only: %i[create destroy]

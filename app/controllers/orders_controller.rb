@@ -186,6 +186,29 @@ class OrdersController < ApplicationController
     render html: "<p style='padding:2rem;color:#c00;'>미리보기 오류: #{ERB::Util.html_escape(e.message)}</p>".html_safe, layout: false, status: :internal_server_error
   end
 
+  # Procurement Ontology M3 — 칸반 reference_no 호버 미니프리뷰
+  def preview_by_ref
+    ref = params[:ref].to_s.strip
+    return head(:bad_request) if ref.blank?
+    data = Rails.cache.fetch("refno_preview/#{ref}", expires_in: 5.minutes) do
+      orders = Order.where(reference_no: ref).order(:created_at).limit(5).to_a
+      if orders.any?
+        g = OrderGraphBuilder.new(orders.first, depth: 1, include_suggested: false).call
+        {
+          ref: ref,
+          count: orders.size,
+          nodes: g[:nodes].size,
+          edges: g[:edges].size,
+          first_id: orders.first.id,
+          titles: orders.map(&:title)
+        }
+      else
+        { ref: ref, count: 0, nodes: 0, edges: 0, first_id: nil, titles: [] }
+      end
+    end
+    render partial: "orders/refno_preview", locals: { data: data }
+  end
+
   private
 
   def set_order
