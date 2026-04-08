@@ -1,0 +1,53 @@
+<%# app/views/orders/_drawer_links.html.erb %>
+<%# Drawer Detail 탭에 임시 표시. M2에서 Cytoscape 시각화로 교체 예정. %>
+<%# Local: order %>
+<div class="mt-4 p-3 border border-gray-300 rounded-lg bg-white">
+  <div class="flex items-center justify-between mb-2">
+    <h4 class="text-sm font-semibold text-gray-900">
+      📊 연결된 거래
+      <span class="text-xs font-normal text-gray-600">
+        (<%= order.outgoing_links.confirmed.count + order.incoming_links.confirmed.count %>)
+      </span>
+    </h4>
+    <span class="text-xs text-gray-500">M1 · 텍스트 미리보기</span>
+  </div>
+
+  <% confirmed_out = order.outgoing_links.confirmed.to_a %>
+  <% confirmed_in  = order.incoming_links.confirmed.to_a %>
+
+  <% if confirmed_out.empty? && confirmed_in.empty? %>
+    <p class="text-xs text-gray-500">아직 연결된 거래가 없습니다.</p>
+  <% else %>
+    <ul class="space-y-1 text-sm text-gray-900">
+      <% confirmed_out.each do |link| %>
+        <li>
+          <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold"
+                style="background:#1E3A5F;color:white;">
+            <%= link.relation %>
+          </span>
+          →
+          <span class="text-gray-900">
+            <%= link.target_type %> #<%= link.target_id %>
+            <% if link.target.respond_to?(:reference_no) && link.target.reference_no.present? %>
+              <span class="text-gray-600">(<%= link.target.reference_no %>)</span>
+            <% end %>
+          </span>
+        </li>
+      <% end %>
+      <% confirmed_in.each do |link| %>
+        <li>
+          <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold"
+                style="background:#00A1E0;color:white;">
+            ← <%= link.relation %>
+          </span>
+          <span class="text-gray-900">
+            <%= link.source_type %> #<%= link.source_id %>
+            <% if link.source.respond_to?(:reference_no) && link.source.reference_no.present? %>
+              <span class="text-gray-600">(<%= link.source.reference_no %>)</span>
+            <% end %>
+          </span>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</div>
