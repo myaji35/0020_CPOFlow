@@ -44,4 +44,72 @@ class OrderTest < ActiveSupport::TestCase
     total = Order.sum(:estimated_value).to_f
     assert total >= 0
   end
+
+  # ISS-039: critical? / unassigned? / scope :critical
+  setup do
+    @owner = User.create!(
+      email: "order_test_owner_#{SecureRandom.hex(3)}@example.com",
+      password: "password123", name: "Order Test Owner", role: :member
+    )
+  end
+
+  teardown do
+    @owner.destroy if User.exists?(@owner.id)
+  end
+
+  test "critical? — urgent + overdue + unassigned이면 true" do
+    order = Order.create!(user: @owner, title: "Critical Test", customer_name: "X",
+                          status: :new_rfq, priority: :urgent, due_date: 3.days.ago.to_date)
+    assert order.critical?
+  ensure
+    order.destroy
+  end
+
+  test "critical? — 담당자 있으면 false" do
+    order = Order.create!(user: @owner, title: "Has Assignee", customer_name: "X",
+                          status: :new_rfq, priority: :urgent, due_date: 3.days.ago.to_date)
+    emp = Employee.create!(name: "emp_#{SecureRandom.hex(3)}", nationality: "KR", active: true)
+    Assignment.create!(order: order, employee: emp)
+    assert_not order.critical?
+  ensure
+    Assignment.where(order: order).delete_all
+    Employee.where(id: emp.id).delete_all if defined?(emp)
+    order.destroy
+  end
+
+  test "critical? — medium 우선순위면 false" do
+    order = Order.create!(user: @owner, title: "Medium Prio", customer_name: "X",
+                          status: :new_rfq, priority: :medium, due_date: 3.days.ago.to_date)
+    assert_not order.critical?
+  ensure
+    order.destroy
+  end
+
+  test "critical? — due_date 없으면 false" do
+    order = Order.create!(user: @owner, title: "No Due", customer_name: "X",
+                          status: :new_rfq, priority: :urgent)
+    assert_not order.critical?
+  ensure
+    order.destroy
+  end
+
+  test "unassigned? — 담당자 없으면 true" do
+    order = Order.create!(user: @owner, title: "Unassigned", customer_name: "X", status: :new_rfq)
+    assert order.unassigned?
+  ensure
+    order.destroy
+  end
+
+  test "scope :critical — SQL 실행 오류 없음" do
+    assert_nothing_raised { Order.critical.count }
+  end
+
+  test "scope :critical — done/get_grn/give_up 제외" do
+    # done 상태 + urgent + overdue는 critical에 포함되지 않아야 함
+    order = Order.create!(user: @owner, title: "Done Critical", customer_name: "X",
+                          status: :done, priority: :urgent, due_date: 3.days.ago.to_date)
+    assert_not Order.critical.exists?(order.id)
+  ensure
+    order.destroy
+  end
 end
