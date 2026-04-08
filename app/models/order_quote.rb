@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class OrderQuote < ApplicationRecord
+  include GraphNode
+
   belongs_to :order
   belongs_to :supplier
 

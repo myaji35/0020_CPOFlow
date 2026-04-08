@@ -1,4 +1,6 @@
 class Order < ApplicationRecord
+  include GraphNode
+
   belongs_to :user     # creator
   belongs_to :client,   optional: true
   belongs_to :supplier, optional: true
