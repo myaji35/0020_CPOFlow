@@ -1,0 +1,21 @@
+<%# Local: suggestion (OrderLink) %>
+<div class="p-3 border border-gray-300 rounded-lg" style="background:#FEF3C7;">
+  <div class="flex items-center justify-between gap-2">
+    <div class="flex items-center gap-2">
+      <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold"
+            style="background:#F4A83A;color:white;">
+        제안
+      </span>
+      <span class="text-sm" style="color:#16325C;">
+        <%= suggestion.relation %> ·
+        <%= suggestion.target_type %> #<%= suggestion.target_id %>
+        <% if suggestion.confidence %>
+          <span class="text-xs" style="color:#374151;">
+            (신뢰도 <%= (suggestion.confidence * 100).round %>%)
+          </span>
+        <% end %>
+      </span>
+    </div>
+    <span class="text-xs" style="color:#6B7280;">M3에서 확정/거부</span>
+  </div>
+</div>

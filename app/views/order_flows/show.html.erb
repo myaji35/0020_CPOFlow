@@ -1,9 +1,40 @@
 <turbo-frame id="drawer-panel-<%= @order.id %>-flow-frame">
-  <div data-controller="order-flow"
-       data-order-flow-graph-value="<%= @graph.to_json %>"
-       data-order-flow-order-id-value="<%= @order.id %>">
-    <div data-order-flow-target="canvas"
-         class="w-full"
-         style="height:420px;background:#F3F2F2;border:1px solid #d1d5db;border-radius:8px;"></div>
+  <div class="space-y-3">
+    <%# 제안 카드 (M3에서 confirm/reject 인라인 액션 추가 예정) %>
+    <% if @suggestions.any? %>
+      <div class="space-y-2">
+        <% @suggestions.each do |s| %>
+          <%= render "order_flows/suggestion_card", suggestion: s %>
+        <% end %>
+      </div>
+    <% end %>
+
+    <%# Cytoscape 캔버스 %>
+    <div data-controller="order-flow"
+         data-order-flow-graph-value="<%= @graph.to_json %>"
+         data-order-flow-order-id-value="<%= @order.id %>">
+      <div data-order-flow-target="canvas"
+           class="w-full"
+           style="height:420px;background:#F3F2F2;border:1px solid #d1d5db;border-radius:8px;"></div>
+    </div>
+
+    <%# 범례 %>
+    <div class="flex flex-wrap gap-3 text-xs" style="color:#16325C;">
+      <span class="flex items-center gap-1">
+        <span class="inline-block w-3 h-3 rounded-full" style="background:#1E3A5F;"></span>Order
+      </span>
+      <span class="flex items-center gap-1">
+        <span class="inline-block w-3 h-3 rounded-full" style="background:#F4A83A;"></span>Quote
+      </span>
+      <span class="flex items-center gap-1">
+        <span class="inline-block w-3 h-3 rounded-full" style="background:#9CA3AF;border:1px dashed #6B7280;"></span>가상 (Client/Supplier/Project)
+      </span>
+      <span class="flex items-center gap-1">
+        <span class="inline-block w-4 h-0.5" style="background:#1E3A5F;"></span>확정 엣지
+      </span>
+      <span class="flex items-center gap-1">
+        <span class="inline-block w-4 border-t border-dashed" style="border-color:#9CA3AF;"></span>가상 엣지
+      </span>
+    </div>
   </div>
 </turbo-frame>

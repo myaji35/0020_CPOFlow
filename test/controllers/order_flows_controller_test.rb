@@ -37,6 +37,9 @@ class OrderFlowsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     # suggested 링크가 그래프에 포함됨 (include_suggested: true)
     assert_match(/Order:#{other.id}/, response.body)
+    # 제안 카드 partial 렌더링
+    assert_match(/제안/, response.body)
+    assert_match(/신뢰도 70%/, response.body)
   end
 
   private
