@@ -355,4 +355,146 @@ namespace :classify_v2 do
 
     "#{'%.1f' % (num.to_f / total * 100)}%"
   end
+
+  # ISS-059: 과거 v1 Order에 Stage 1 RuleGate backfill
+  #
+  # 대표님 요청 (2026-04-09): 배포 후 신규 메일만 v2 배지가 뜨는데,
+  # 과거 누적 12,651건도 AI 배지로 볼 수 있게 해달라.
+  #
+  # 이 task는 classifier_version='v1' 인 모든 Order를 대상으로 Stage 1 RuleGate 만
+  # 재실행하여 다음 필드를 채운다:
+  #   - classifier_version       → 'v2'
+  #   - stage_reached            → 0 (stage0 hit) 또는 1 (stage1 결과)
+  #   - classification_confidence→ pass_to_llm/whitelist_fast=0.5 (unknown 진짜 verdict), reject_no_signal=0.95
+  #   - cache_hit                → false
+  #
+  # **Freeze 규칙 절대 준수**: rfq_status 는 건드리지 않음.
+  #
+  # ClassificationLog 도 audit 목적으로 insert.
+  #
+  # Stage 2/3 (LLM) 은 호출하지 않으므로 비용 $0.
+  #
+  # Usage:
+  #   bin/rails classify_v2:backfill_past_orders                # 전체
+  #   bin/rails classify_v2:backfill_past_orders[1000]          # 1000건만
+  #   bin/rails classify_v2:backfill_past_orders[0,dry]         # dry-run (쓰기 없음)
+  desc "과거 v1 Order에 Stage 1 RuleGate backfill (Freeze 규칙 준수, rfq_status 건드리지 않음)"
+  task :backfill_past_orders, [ :limit, :mode ] => :environment do |_t, args|
+    limit = args[:limit].to_i
+    dry   = args[:mode].to_s == "dry"
+
+    puts "=" * 72
+    puts "[classify_v2:backfill_past_orders]"
+    puts "  limit: #{limit.zero? ? 'ALL' : limit}"
+    puts "  mode:  #{dry ? 'DRY-RUN (no writes)' : 'WRITE'}"
+    puts "=" * 72
+
+    scope = Order.where(classifier_version: "v1")
+    scope = scope.limit(limit) if limit.positive?
+    total = scope.count
+    puts "  대상: #{total}건"
+    puts
+
+    if total.zero?
+      puts "✓ 대상 Order 없음 — 모든 Order가 이미 v2"
+      exit 0
+    end
+
+    stats = Hash.new(0)
+    t0 = Time.now
+
+    scope.find_each(batch_size: 500) do |order|
+      stats[:total] += 1
+
+      email_hash = {
+        id:       "backfill_order_#{order.id}",
+        message_id: order.source_email_id || "backfill_order_#{order.id}",
+        subject:  order.original_email_subject.to_s,
+        from:     order.original_email_from.to_s,
+        body:     order.original_email_body.to_s
+      }
+
+      # --- Stage 0: Ariba/자사/noise 조기 제외 (RfqDetectorService 재사용) ---
+      detector = Gmail::RfqDetectorService.new(email_hash)
+      stage_reached, confidence, verdict, reason, model =
+        if detector.send(:ariba_sender?)
+          [ 0, 0.95, :confirmed, "stage0_ariba_sender", "rule-only" ]
+        elsif detector.send(:own_sender?)
+          [ 0, 0.95, :excluded, "stage0_own_sender", "rule-only" ]
+        elsif detector.send(:excluded_sender?) || detector.send(:excluded_subject?)
+          [ 0, 0.95, :excluded, "stage0_excluded_pattern", "rule-only" ]
+        else
+          gate = Gmail::Stage1::RuleGate.decide(email_hash)
+          case gate.action
+          when :reject_no_signal
+            [ 1, 0.95, :excluded, "stage1_#{gate.reason}", "rule-only" ]
+          when :whitelist_fast, :pass_to_llm
+            # Stage 2 호출 안 함 — unknown verdict. 중간 confidence 0.60 → "AI: 모호" 배지
+            [ 1, 0.60, :uncertain, "stage1_#{gate.reason}_pending_llm", "rule-only" ]
+          else
+            [ 1, 0.0, :uncertain, "stage1_unknown", "rule-only" ]
+          end
+        end
+
+      stats[verdict] += 1
+      stats[:"stage#{stage_reached}"] += 1
+
+      unless dry
+        # **Freeze 규칙 준수**: rfq_status 는 건드리지 않음. v2 메트릭 필드만 update.
+        order.update_columns(
+          classifier_version: "v2",
+          stage_reached: stage_reached,
+          classification_confidence: confidence,
+          cache_hit: false
+        )
+
+        # Audit log
+        begin
+          ClassificationLog.create!(
+            order_id: order.id,
+            email_message_id: email_hash[:message_id],
+            classifier_version: "v2",
+            stage_reached: stage_reached,
+            verdict: verdict.to_s,
+            is_rfq: verdict == :confirmed,
+            confidence: confidence,
+            would_exclude: verdict == :excluded,
+            reason: "backfill:#{reason}",
+            cost_usd: 0.0,
+            latency_ms: 0,
+            cache_hit: false,
+            model: model
+          )
+        rescue StandardError => e
+          Rails.logger.warn "[backfill] log insert failed for Order##{order.id}: #{e.message}"
+        end
+      end
+
+      if (stats[:total] % 1000).zero?
+        elapsed = (Time.now - t0).round(1)
+        puts "  ... 진행: #{stats[:total]}/#{total} (#{elapsed}s)"
+      end
+    end
+
+    elapsed = (Time.now - t0).round(1)
+
+    puts
+    puts "=" * 72
+    puts "📊 결과 (#{elapsed}s)"
+    puts "=" * 72
+    puts "  총 처리: #{stats[:total]}건"
+    puts
+    puts "  Stage 분포:"
+    puts "    Stage 0 (Ariba/자사/noise): #{stats[:stage0]}건 (#{pct(stats[:stage0], stats[:total])})"
+    puts "    Stage 1 (RuleGate):         #{stats[:stage1]}건 (#{pct(stats[:stage1], stats[:total])})"
+    puts
+    puts "  verdict 분포:"
+    puts "    confirmed:  #{stats[:confirmed]}건 (#{pct(stats[:confirmed], stats[:total])}) → \"AI: 견적성\" 배지 (파란)"
+    puts "    excluded:   #{stats[:excluded]}건 (#{pct(stats[:excluded], stats[:total])}) → \"AI: 제외 권장\" 배지 (회색)"
+    puts "    uncertain:  #{stats[:uncertain]}건 (#{pct(stats[:uncertain], stats[:total])}) → \"AI: 모호\" 배지 (노란, Stage 2 미호출)"
+    puts
+    puts "  Freeze 규칙 준수: rfq_status 는 0건 변경 (Plan §4.5)"
+    puts "  LLM 비용: $0.00 (Stage 2/3 미호출)"
+    puts "=" * 72
+  end
 end
