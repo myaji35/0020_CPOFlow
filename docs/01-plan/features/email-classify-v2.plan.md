@@ -1,7 +1,7 @@
 # FEATURE PLAN: email-classify-v2 (ISS-045 / ISS-049 revision)
 
-> **Version**: 1.1 (ISS-049 Revision)
-> **Status**: READY_FOR_IMPLEMENTATION (CEO APPROVE_WITH_CHANGES + Eng NEEDS_REVISION 반영 완료)
+> **Version**: 1.2 (Option B — 화면 즉시 전환 + 백그라운드 안전망)
+> **Status**: READY_FOR_IMPLEMENTATION
 > **Author**: product-manager (harness)
 > **Created**: 2026-04-09
 > **Parent**: ISS-045
@@ -14,9 +14,18 @@
 | Version | 변경 | Trigger |
 |---|---|---|
 | 1.0 | 초안 (3단 필터 + Shadow Mode 7일 + Golden Dataset 200) | product-manager opus |
-| **1.1** | 본 revision | CEO 87점 APPROVE_WITH_CHANGES + Eng 58점 NEEDS_REVISION + ISS-048 PoC 결과 |
+| **1.1** | CEO 87점 APPROVE_WITH_CHANGES + Eng 58점 NEEDS_REVISION + ISS-048 PoC 결과 | 2026-04-09 오전 |
+| **1.2** | **용어/의미 정정**: 현재 운영 = 방식 2 (전수 저장 + 사용자 판정), v2 = AI 3단 필터로 **전환**. Shadow Mode = 전환 직후 7일간 방식 2를 백그라운드 안전망으로 남겨두고 **화면은 즉시 v2로 전환**하는 옵션 B. | 2026-04-09 오후 대표님 확정 |
 
-### v1.1 주요 변경점
+### v1.2 주요 변경점 (용어/의미 정정, 방향성 유지)
+- **v1 재정의**: "Haiku 단독" → **"방식 2 (전수 저장 + 사용자 판정)"** = 현재 프로덕션
+- **v2 재정의**: "3단 필터 (규칙+Haiku+Sonnet)" = **AI 판단 복귀 + 5중 안전장치**
+- **Shadow Mode 재정의**: "v1/v2 동시 사용자 노출 병행" ❌ → **"옵션 B: 화면 즉시 v2 전환 + 방식 2는 7일간 백그라운드 FN 검출 안전망"** ✅
+- **Cutover 재정의**: "ENV 토글" → **"Inbox 화면을 v2로 전환하는 배포 시점. 7일 후 방식 2 백그라운드 경로 제거"**
+- **Golden Dataset 수집 전략 보강**: 과거 Order 데이터 + **Shadow 7일간 사용자의 방식 2 액션(bulk_to_kanban/bulk_delete)을 실시간 정답지로 누적** → 별도 수집 비용 절감 (대표님 지적)
+- 나머지 v1.1 변경점(Stage 1 RuleGate PORO, ClassificationResult Value Object, Order 신규 컬럼, Stage 3 fallback, 과거 Order freeze, busy_timeout 선결, 일정 18일)은 **전부 유지**.
+
+### v1.1 주요 변경점 (유지)
 1. **Golden Dataset 200 → 250건** (최근 6개월 데이터 70% 가중)
 2. **US-045-5 경량화**: 별도 대시보드 → Admin 기존 페이지 카드 3개
 3. **Shadow Mode Day3 중간 게이트** 추가 (비용/Recall 이상 시 즉시 중단)
@@ -34,8 +43,21 @@
 
 ## 1. Overview
 
-### 1.1 Context
-CPOFlow 견적 메일 분류 파이프라인의 Recall 누락 사고(2026-03 KEPCO 이메일 누락) 재발 방지. 현재 `RfqDetectorService` + `LlmRfqAnalyzerService`(Haiku 단독)로 판정 중.
+### 1.1 Context (v1.2 정정)
+
+**과거 운영 이력**:
+- **방식 1 (과거)**: Haiku 단독 판정으로 `excluded` 자동 분류 → 2026-03 KEPCO 견적 메일 **누락 사고** 발생 (매출 손실)
+- **방식 2 (현재 프로덕션, 커밋 `0d2d71a` 2026-04-04 이후)**: `EmailSyncJob`이 **전수 이메일 저장**, AI 판정은 참고 점수로만 유지, **사용자가 `bulk_to_kanban`/`bulk_delete`로 최종 판단**. 누락 0건이지만 **하루 400통 판단 업무 부담**.
+
+**대표님 결정 (2026-04-09)**:
+> "방식 1의 착오가 재발하지 않는다는 전제 하에, **다시 AI 판단 로직으로 전환**하여 사용자 부담을 없앤다."
+
+**v2 목표**: 3단 필터(규칙 → Haiku → Sonnet)로 **AI 판단을 복귀**시키되, 방식 1의 누락 사고를 재발하지 않도록 **Shadow Mode + Golden Dataset + Confidence Threshold + DLQ + Audit Trail** 5중 안전장치를 동시 도입.
+
+**Shadow Mode 의미 (옵션 B)**:
+- **화면**: Cutover 시점에 **즉시 v2 기반으로 전환** (방식 2 UI 제거, AI 추천 정렬 + rfq_uncertain 탭)
+- **백그라운드**: 방식 2의 `EmailSyncJob 전수 저장` 경로를 7일간 **그림자처럼 계속 실행**하여, v2가 `excluded`로 판정한 메일이 있으면 자동 재검증 + FN 발견 시 즉시 Slack/Google Chat 알림
+- **7일 후**: FN 0건 확인 시 방식 2 백그라운드 경로 deprecation → 3단 필터 단독 운영
 
 ### 1.2 Goal (확정)
 - **Recall ≥ 99.5%** (Golden Dataset 250건 기준, CEO 확정)
