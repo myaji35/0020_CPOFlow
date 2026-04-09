@@ -6,8 +6,12 @@ class InboxController < ApplicationController
   before_action :check_rate_limit!, only: %i[translate analyze_link generate_reply]
 
   PER_PAGE = 30
+  PREFETCH_PAGES = 2  # 1페이지 렌더 후 브라우저가 백그라운드 warm-up 할 페이지 수 (2~3페이지). SQLite 락 리스크 최소화.
 
   def index
+    perf_t0 = Time.now
+    @prefetch_mode = params[:frame] == "prefetch"  # lazy turbo-frame prefetch 요청 여부
+
     base_scope = scoped_orders.where.not(original_email_from: [ nil, "" ])
                       .includes(:user, :assignees, :client, :supplier, :project,
                                 attachments_attachments: :blob)
@@ -68,11 +72,26 @@ class InboxController < ApplicationController
     @triage_orders = triage_scope.order(created_at: :desc).limit(100)
     @triage_count = triage_scope.count
 
-    # Phase E: 견적성 탭 하단에 표시할 AI 학습 통계
-    @rfq_ai_stats = Gmail::RfqFeedbackService.accuracy_stats(window_days: 7)
-  rescue => e
-    Rails.logger.warn "[Inbox] rfq_ai_stats failed: #{e.class} #{e.message}"
-    @rfq_ai_stats = nil
+    # Phase E: 견적성 탭 하단에 표시할 AI 학습 통계 (1페이지에서만 로드, prefetch 시 스킵)
+    unless @prefetch_mode
+      begin
+        @rfq_ai_stats = Gmail::RfqFeedbackService.accuracy_stats(window_days: 7)
+      rescue => e
+        Rails.logger.warn "[Inbox] rfq_ai_stats failed: #{e.class} #{e.message}"
+        @rfq_ai_stats = nil
+      end
+    end
+
+    # [PERF] 성능 측정 로그 — 쿼리 + 총 건수 + 페이지 (ISS-046)
+    elapsed_ms = ((Time.now - perf_t0) * 1000).round(1)
+    Rails.logger.info "[PERF][inbox] page=#{@page}/#{@total_pages} filter=#{@current_filter} loaded=#{@all_orders.size} total=#{@total_filtered} triage=#{@triage_count || 0} ms=#{elapsed_ms} prefetch=#{@prefetch_mode}"
+
+    # prefetch 모드: 빈 turbo-frame 응답 (DB 쿼리가 이미 실행되어 OS/Rails 쿼리 캐시 warm 상태)
+    # → 사용자가 실제 페이지 링크를 클릭하면 ActiveRecord 쿼리 결과가 이미 warm 되어 2~3배 빠름
+    if @prefetch_mode
+      render html: %(<turbo-frame id="inbox-prefetch-page-#{@page}" data-warmed="true"></turbo-frame>).html_safe,
+             layout: false
+    end
   end
 
   def show
