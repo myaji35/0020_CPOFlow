@@ -415,19 +415,26 @@ namespace :classify_v2 do
       }
 
       # --- Stage 0: Ariba/자사/noise 조기 제외 (RfqDetectorService 재사용) ---
+      #
+      # confidence 규칙 — Inbox 뷰 배지 매핑에 맞춘다:
+      #   >= 0.85 → 파란 "AI: 견적성"
+      #   0.60~0.85 → 노란 "AI: 모호"
+      #   < 0.60 → 회색 "AI: 제외 권장"
+      # 따라서 excluded verdict 는 0.40 (회색), confirmed 는 0.95 (파란),
+      # uncertain(Stage 2 미호출) 은 0.60 (노란) 으로 매핑.
       detector = Gmail::RfqDetectorService.new(email_hash)
       stage_reached, confidence, verdict, reason, model =
         if detector.send(:ariba_sender?)
           [ 0, 0.95, :confirmed, "stage0_ariba_sender", "rule-only" ]
         elsif detector.send(:own_sender?)
-          [ 0, 0.95, :excluded, "stage0_own_sender", "rule-only" ]
+          [ 0, 0.40, :excluded, "stage0_own_sender", "rule-only" ]
         elsif detector.send(:excluded_sender?) || detector.send(:excluded_subject?)
-          [ 0, 0.95, :excluded, "stage0_excluded_pattern", "rule-only" ]
+          [ 0, 0.40, :excluded, "stage0_excluded_pattern", "rule-only" ]
         else
           gate = Gmail::Stage1::RuleGate.decide(email_hash)
           case gate.action
           when :reject_no_signal
-            [ 1, 0.95, :excluded, "stage1_#{gate.reason}", "rule-only" ]
+            [ 1, 0.40, :excluded, "stage1_#{gate.reason}", "rule-only" ]
           when :whitelist_fast, :pass_to_llm
             # Stage 2 호출 안 함 — unknown verdict. 중간 confidence 0.60 → "AI: 모호" 배지
             [ 1, 0.60, :uncertain, "stage1_#{gate.reason}_pending_llm", "rule-only" ]
