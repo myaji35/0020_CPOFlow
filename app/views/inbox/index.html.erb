@@ -329,7 +329,7 @@
                     </span>
                     <%# 최신 날짜 %>
                     <span class="text-xs text-gray-500 dark:text-gray-500 flex-shrink-0">
-                      <%= latest.(email_received_at || created_at).strftime("%m/%d") %>
+                      <%= (latest.email_received_at || latest.created_at).strftime("%m/%d") %>
                     </span>
                   </div>
                   <%# 펼침 시 개별 메일 목록 %>
@@ -354,7 +354,7 @@
                             <span class="text-xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-500 rounded">스레드 추가</span>
                           <% end %>
                           <span class="ml-auto text-xs text-gray-500 dark:text-gray-500 flex-shrink-0">
-                            <%= order.(email_received_at || created_at).strftime("%m/%d %H:%M") %>
+                            <%= (order.email_received_at || order.created_at).strftime("%m/%d %H:%M") %>
                           </span>
                         </div>
                         <p class="text-xs text-gray-700 dark:text-gray-300 truncate font-medium">
@@ -401,7 +401,7 @@
                       <span class="w-2 h-2 rounded-full bg-orange-400 flex-shrink-0" title="높음"></span>
                     <% end %>
                     <span class="ml-auto text-xs text-gray-500 dark:text-gray-500 flex-shrink-0">
-                      <%= order.(email_received_at || created_at).strftime("%m/%d") %>
+                      <%= (order.email_received_at || order.created_at).strftime("%m/%d") %>
                     </span>
                   </div>
                   <p class="text-sm text-gray-900 dark:text-white truncate font-medium">
@@ -528,7 +528,7 @@
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-2 mb-0.5">
                     <span class="text-xs px-1.5 py-0.5 bg-blue-600 text-white rounded font-medium">견적</span>
-                    <span class="text-xs text-gray-500 dark:text-gray-500"><%= order.(email_received_at || created_at).strftime("%m/%d") %></span>
+                    <span class="text-xs text-gray-500 dark:text-gray-500"><%= (order.email_received_at || order.created_at).strftime("%m/%d") %></span>
                   </div>
                   <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                     <%= order.display_subject %>
@@ -614,7 +614,7 @@
                       <%= order.original_email_from.presence || order.customer_name %>
                     </p>
                     <p class="text-xs text-gray-500 dark:text-gray-500">
-                      <%= order.(email_received_at || created_at).strftime("%Y년 %m월 %d일 %H:%M") %>
+                      <%= (order.email_received_at || order.created_at).strftime("%Y년 %m월 %d일 %H:%M") %>
                     </p>
                   </div>
                 </div>
