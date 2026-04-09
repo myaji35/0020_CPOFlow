@@ -8,6 +8,14 @@ default: &default
   adapter: sqlite3
   max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
   timeout: 5000
+  # ISS-050: Shadow Mode 시작 전 필수. Rails의 timeout 옵션만으로는
+  # SQLite PRAGMA busy_timeout이 0으로 유지되어 write lock 경합 시
+  # 즉시 SQLite3::BusyException 발생. 명시적 PRAGMA로 5000ms 설정.
+  pragmas:
+    journal_mode: wal
+    synchronous: normal
+    busy_timeout: 5000
+    foreign_keys: true
 
 development:
   <<: *default
