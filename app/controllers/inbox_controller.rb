@@ -113,7 +113,8 @@ class InboxController < ApplicationController
       return
     end
 
-    if @order.update(status: :make_quo, rfq_status: :rfq_triage)
+    # ISS-055: 칸반 진입은 항상 new_rfq 칼럼 (status :new_rfq 유지 + rfq_status :rfq_triage)
+    if @order.update(status: :new_rfq, rfq_status: :rfq_triage)
       Activity.create!(order: @order, user: current_user, action: "moved_to_kanban")
       record_bulk_feedback([ @order ], "confirmed")
       redirect_to kanban_path, notice: t("inbox.convert_success")
@@ -140,7 +141,8 @@ class InboxController < ApplicationController
     count = orders.count
     record_bulk_feedback(orders, "confirmed")
     orders.each do |order|
-      order.update!(status: :make_quo, rfq_status: :rfq_triage)
+      # ISS-055: 칸반 진입은 항상 new_rfq 칼럼
+      order.update!(status: :new_rfq, rfq_status: :rfq_triage)
       Activity.create!(order: order, user: current_user, action: "moved_to_kanban")
     end
     message = "#{count}건 견적으로 이동"

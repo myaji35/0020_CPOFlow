@@ -5,6 +5,52 @@
     <p class="text-sm text-gray-600 mt-1">사용자 피드백을 기반으로 한 AI 분류 정확도</p>
   </div>
 
+  <%# ISS-045 Phase C4: classify_v2 Shadow Mode 모니터링 %>
+  <div class="mb-6">
+    <h2 class="text-lg font-semibold text-[#16325C] mb-3">v2 Shadow Mode (ISS-045)</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <%# 카드 1: 오늘 분류 비용 (CostGuard 포함 — ISS-058) %>
+      <div class="bg-white border border-gray-200 rounded-lg p-4">
+        <div class="flex items-center justify-between mb-1.5">
+          <div class="text-xs font-semibold text-gray-600">Today Classify Cost</div>
+          <% if @cost_guard[:exceeded] %>
+            <span class="text-xs px-1.5 py-0.5 bg-red-600 text-white rounded font-semibold">BLOCKED</span>
+          <% elsif @cost_guard[:utilization_pct] >= 80 %>
+            <span class="text-xs px-1.5 py-0.5 bg-yellow-500 text-white rounded font-semibold">WARN</span>
+          <% else %>
+            <span class="text-xs px-1.5 py-0.5 bg-green-600 text-white rounded font-semibold">OK</span>
+          <% end %>
+        </div>
+        <div class="text-2xl font-bold text-[#00A1E0]">$<%= number_with_precision(@classify_cost_today, precision: 4) %></div>
+        <div class="text-xs text-gray-500 mt-1">Budget: $<%= @cost_guard[:budget] %>/day (<%= @cost_guard[:utilization_pct] %>% used)</div>
+        <div class="w-full bg-gray-200 rounded h-1.5 mt-2">
+          <div class="h-1.5 rounded <%= @cost_guard[:exceeded] ? 'bg-red-600' : (@cost_guard[:utilization_pct] >= 80 ? 'bg-yellow-500' : 'bg-green-600') %>"
+               style="width: <%= [@cost_guard[:utilization_pct], 100].min %>%"></div>
+        </div>
+      </div>
+
+      <%# 카드 2: Stage 분기율 (24h) %>
+      <div class="bg-white border border-gray-200 rounded-lg p-4">
+        <div class="text-xs font-semibold text-gray-600 mb-1.5">Stage Distribution (24h)</div>
+        <div class="text-sm text-gray-900">
+          <div>Stage 1: <span class="font-semibold"><%= @stage_distribution[:stage1] %></span> (<%= @stage_distribution[:stage1_pct] %>%)</div>
+          <div>Stage 2: <span class="font-semibold"><%= @stage_distribution[:stage2] %></span> (<%= @stage_distribution[:stage2_pct] %>%)</div>
+          <div>Stage 3: <span class="font-semibold"><%= @stage_distribution[:stage3] %></span> (<%= @stage_distribution[:stage3_pct] %>%)</div>
+        </div>
+        <div class="text-xs text-gray-500 mt-2">Total: <%= @stage_distribution[:total] %></div>
+      </div>
+
+      <%# 카드 3: 최근 7일 FN %>
+      <div class="bg-white border border-gray-200 rounded-lg p-4">
+        <div class="text-xs font-semibold text-gray-600 mb-1.5">Shadow FN (7일)</div>
+        <div class="text-2xl font-bold <%= @recent_fn_count.zero? ? 'text-[#1E8E3E]' : 'text-[#D93025]' %>">
+          <%= @recent_fn_count %>
+        </div>
+        <div class="text-xs text-gray-500 mt-2">Target: 0 / 7d (Cutover 조건)</div>
+      </div>
+    </div>
+  </div>
+
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
     <%# 정확도 %>
     <div class="bg-white border border-gray-200 rounded p-4">

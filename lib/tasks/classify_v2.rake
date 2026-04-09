@@ -310,6 +310,46 @@ namespace :classify_v2 do
     puts "✅ 완료: #{total}개 YAML 파일 저장 → #{out_dir}"
   end
 
+  # ISS-057 — Plan §8 Day 3 자동 중단 게이트
+  #
+  # Shadow Mode 운영 3일차에 자동 실행. 4가지 임계값 검증:
+  #   1) 일 평균 비용 > $0.35 → FAIL
+  #   2) Sonnet 에스컬레이션 비율 > 50% → FAIL
+  #   3) v1(사용자 액션) ↔ v2 불일치율 > 10% → FAIL
+  #   4) safety_fallback 비율 > 5% → FAIL
+  #
+  # Usage:
+  #   bin/rails classify_v2:day3_check
+  #
+  # 성공 시 tmp/classify_v2_day3_status.json 갱신 (status=passed).
+  # 실패 시 동일 파일에 status=failed + 실패 사유 기록 + exit 1.
+  desc "Day 3 Shadow Mode 자동 중단 게이트 — 비용/Sonnet비율/불일치/에러율 검증"
+  task day3_check: :environment do
+    require "json"
+    require "fileutils"
+
+    result = ClassifyV2Day3Gate.new.run
+
+    status_path = Rails.root.join("tmp/classify_v2_day3_status.json")
+    FileUtils.mkdir_p(status_path.dirname)
+    File.write(status_path, JSON.pretty_generate(result))
+
+    if result[:status] == "passed"
+      puts "✓ Day 3 gate PASSED"
+      result[:checks].each do |c|
+        puts "  ✓ #{c[:name]}: actual=#{c[:actual]} threshold=#{c[:threshold]}"
+      end
+    else
+      Rails.logger.error "[classify_v2:day3_check] FAILED: #{result[:failures].map { |f| f[:name] }.join(', ')}"
+      puts "✗ Day 3 gate FAILED"
+      result[:failures].each do |f|
+        puts "  ✗ #{f[:name]}: actual=#{f[:actual]} threshold=#{f[:threshold]}"
+        puts "      reason: #{f[:reason]}"
+      end
+      exit 1
+    end
+  end
+
   def pct(num, total)
     return "0.0%" if total.zero?
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_08_120100) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_09_111117) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -125,6 +125,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_08_120100) do
     t.datetime "updated_at", null: false
     t.index ["employee_id"], name: "index_certifications_on_employee_id"
     t.index ["expiry_date"], name: "index_certifications_on_expiry_date"
+  end
+
+  create_table "classification_logs", force: :cascade do |t|
+    t.boolean "cache_hit", default: false, null: false
+    t.string "classifier_version", null: false
+    t.decimal "confidence", precision: 5, scale: 4
+    t.decimal "cost_usd", precision: 10, scale: 6, default: "0.0"
+    t.datetime "created_at", null: false
+    t.string "email_message_id"
+    t.boolean "is_rfq"
+    t.integer "latency_ms"
+    t.string "model"
+    t.integer "order_id"
+    t.text "reason"
+    t.integer "stage_reached"
+    t.datetime "updated_at", null: false
+    t.string "verdict"
+    t.boolean "would_exclude", default: false, null: false
+    t.index ["classifier_version", "created_at"], name: "index_classification_logs_on_classifier_version_and_created_at"
+    t.index ["email_message_id"], name: "index_classification_logs_on_email_message_id"
+    t.index ["order_id"], name: "index_classification_logs_on_order_id"
+    t.index ["would_exclude"], name: "index_classification_logs_on_would_exclude"
   end
 
   create_table "clients", force: :cascade do |t|
@@ -409,6 +431,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_08_120100) do
     t.string "ariba_event_id"
     t.string "ariba_event_url"
     t.text "attachment_urls"
+    t.boolean "cache_hit", default: false, null: false
+    t.decimal "classification_confidence", precision: 5, scale: 4
+    t.string "classifier_version", default: "v1", null: false
     t.integer "client_id"
     t.datetime "created_at", null: false
     t.string "currency", default: "USD"
@@ -451,6 +476,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_08_120100) do
     t.string "sender_domain"
     t.string "source_email_id"
     t.integer "source_type", default: 0, null: false
+    t.integer "stage1_latency_ms"
+    t.integer "stage2_latency_ms"
+    t.integer "stage3_latency_ms"
+    t.integer "stage_reached"
     t.integer "status", default: 0, null: false
     t.integer "supplier_id"
     t.string "tags"
@@ -460,6 +489,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_08_120100) do
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
     t.index ["ariba_event_id"], name: "index_orders_on_ariba_event_id"
+    t.index ["classifier_version", "created_at"], name: "index_orders_on_classifier_version_and_created_at"
+    t.index ["classifier_version"], name: "index_orders_on_classifier_version"
     t.index ["client_id"], name: "index_orders_on_client_id"
     t.index ["due_date"], name: "index_orders_on_due_date"
     t.index ["ecount_slip_no"], name: "index_orders_on_ecount_slip_no"
@@ -650,6 +681,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_08_120100) do
   add_foreign_key "assignments", "orders"
   add_foreign_key "assignments", "users"
   add_foreign_key "certifications", "employees"
+  add_foreign_key "classification_logs", "orders"
   add_foreign_key "comments", "orders"
   add_foreign_key "comments", "users"
   add_foreign_key "companies", "countries"

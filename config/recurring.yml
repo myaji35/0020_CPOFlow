@@ -44,6 +44,12 @@ production:
     queue: default
     schedule: every hour at minute 45
 
+  # Shadow Mode FN detection daily at 02:00 (ISS-045 Phase C4)
+  shadow_fn_detection:
+    class: ShadowFnDetectorJob
+    queue: default
+    schedule: every day at 2am
+
 development:
   # Sync Gmail every 5 minutes in development for faster testing
   gmail_sync_all:

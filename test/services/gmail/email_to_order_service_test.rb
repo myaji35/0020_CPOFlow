@@ -1,0 +1,206 @@
+# frozen_string_literal: true
+
+require "test_helper"
+
+# ISS-055 완전한 Shadow Mode 옵션 B (대표님 지시):
+#   - 모든 v2 verdict → rfq_pending (v2는 메트릭/로그에만 남고 상태 전이 없음)
+#   - 사용자가 Inbox UI에서 명시적으로 "칸반 적용" 버튼을 누를 때만 rfq_triage 전이
+#   - v2 nil → 기존 v1 동작 (rfq_pending)
+class Gmail::EmailToOrderServiceTest < ActiveSupport::TestCase
+  setup do
+    @user = User.create!(
+      email:    "iss053_#{SecureRandom.hex(3)}@example.com",
+      password: "password123",
+      name:     "ISS-053 Tester",
+      role:     :member
+    )
+    @account = EmailAccount.create!(
+      user:      @user,
+      email:     "iss053_acc_#{SecureRandom.hex(3)}@example.com",
+      connected: true
+    )
+  end
+
+  teardown do
+    # Order FK: ClassificationLog가 먼저 order_id로 연결되어 있으므로 선 delete
+    order_ids = Order.where(user_id: @user.id).pluck(:id)
+    ClassificationLog.where(order_id: order_ids).delete_all if order_ids.any?
+    ClassificationLog.where(email_message_id: [
+      "iss053-msg-confirmed",
+      "iss053-msg-excluded",
+      "iss053-msg-nil",
+      "iss056-dup-msg"
+    ]).delete_all
+    Order.where(user_id: @user.id).destroy_all
+    @account.destroy if EmailAccount.exists?(@account.id)
+    @user.destroy if User.exists?(@user.id)
+  end
+
+  def build_parsed(id:, subject: "Need quote", body: "Please quote")
+    {
+      id:         id,
+      thread_id:  "thread-#{id}",
+      from:       "buyer@example-client.com",
+      subject:    subject,
+      body:       body,
+      html_body:  nil,
+      snippet:    body,
+      date:       Time.current
+    }
+  end
+
+  def empty_detection
+    {
+      is_rfq:        false,
+      score:         0,
+      confidence:    "none",
+      rfq_verdict:   :pending,
+      customer_name: nil,
+      item_hints:    nil,
+      quantities:    nil,
+      project_name:  nil,
+      delivery_location: nil,
+      currency:      nil,
+      estimated_value: nil,
+      due_date:      nil,
+      is_ariba:      false,
+      ariba_event_id: nil,
+      llm_raw:       {}
+    }
+  end
+
+  def v2_result(verdict:, confidence: "high", stage_reached: 2, cache_hit: false)
+    Gmail::ClassificationResult.new(
+      verdict:            verdict,
+      is_rfq:             verdict == :confirmed,
+      confidence:         confidence,
+      stage_reached:      stage_reached,
+      classifier_version: "v2",
+      reason:             "test_#{verdict}",
+      extracted:          {},
+      cost_usd:           0.0012,
+      latency_ms:         350,
+      cache_hit:          cache_hit,
+      model:              "haiku-4.5"
+    )
+  end
+
+  # ===== 1. v2 confirmed여도 rfq_pending 유지 (ISS-055 완전 Shadow Mode) =====
+  test "v2_confirmed은 rfq_pending 유지 (ISS-055: Shadow Mode 옵션 B)" do
+    parsed = build_parsed(id: "iss053-msg-confirmed")
+    v2 = v2_result(verdict: :confirmed, confidence: "high", stage_reached: 2)
+
+    order = Gmail::EmailToOrderService.new(@account, parsed, empty_detection, v2_result: v2).create_order!
+
+    assert_not_nil order, "Order should be created"
+    # ISS-055: v2 verdict와 무관하게 rfq_pending. 칸반 진입은 사용자 명시 액션만.
+    assert_equal "rfq_pending", order.rfq_status,
+      "ISS-055: v2 confirmed는 rfq_triage로 자동 전이하지 않음 (Shadow Mode 옵션 B)"
+    assert_equal "v2", order.classifier_version
+    assert_equal 2, order.stage_reached
+    assert_in_delta 0.95, order.classification_confidence.to_f, 0.001
+    assert_equal false, order.cache_hit
+  end
+
+  # ===== 2. v2 excluded → rfq_pending (안전 규칙) + would_exclude back-link =====
+  test "v2_would_exclude_but_saved_pending: v2 :excluded여도 rfq_pending + would_exclude=true 로그만" do
+    parsed = build_parsed(id: "iss053-msg-excluded", subject: "Newsletter")
+
+    # Orchestrator가 Order 생성 전에 log insert 했다고 가정 (order_id=nil)
+    pre_log = ClassificationLog.create!(
+      classifier_version: "v2",
+      email_message_id:   parsed[:id],
+      order_id:           nil,
+      stage_reached:      1,
+      verdict:            "excluded",
+      is_rfq:             false,
+      confidence:         0.95,
+      would_exclude:      false, # back-link 시 true로 업데이트되어야 함
+      reason:             "stage1_no_rfq_signal",
+      cost_usd:           0.0,
+      latency_ms:         12,
+      cache_hit:          false,
+      model:              "rule-only"
+    )
+
+    v2 = v2_result(verdict: :excluded, confidence: "high", stage_reached: 1)
+    order = Gmail::EmailToOrderService.new(@account, parsed, empty_detection, v2_result: v2).create_order!
+
+    assert_not_nil order, "Order must still be created for :excluded (Shadow Mode safety)"
+    # 핵심 안전 규칙: excluded여도 사용자 화면에 노출되는 rfq_pending
+    assert_equal "rfq_pending", order.rfq_status,
+      "FATAL: v2 excluded must NOT map to rfq_excluded during Shadow Mode"
+    assert_equal "v2", order.classifier_version
+    assert_equal 1, order.stage_reached
+
+    # back-link 확인: pre_log가 이 order에 연결되고 would_exclude=true로 마킹됨
+    pre_log.reload
+    assert_equal order.id, pre_log.order_id
+    assert_equal true, pre_log.would_exclude
+  end
+
+  # ===== ISS-056: v2_log_id 전달 시 특정 row만 update =====
+  test "iss056_v2_log_id는 해당 row만 update — 과거 시도 log는 order에 연결되지 않음" do
+    parsed = build_parsed(id: "iss056-dup-msg", subject: "Retry")
+
+    # 재시도 시뮬레이션: 동일 email_message_id로 2개의 log row 생성
+    log1 = ClassificationLog.create!(
+      classifier_version: "v2",
+      email_message_id:   parsed[:id],
+      order_id:           nil,
+      stage_reached:      2,
+      verdict:            "confirmed",
+      is_rfq:             true,
+      confidence:         0.95,
+      would_exclude:      false,
+      reason:             "first_call",
+      cost_usd:           0.001,
+      latency_ms:         100,
+      cache_hit:          false,
+      model:              "haiku-4.5"
+    )
+    log2 = ClassificationLog.create!(
+      classifier_version: "v2",
+      email_message_id:   parsed[:id],
+      order_id:           nil,
+      stage_reached:      3,
+      verdict:            "excluded",
+      is_rfq:             false,
+      confidence:         0.40,
+      would_exclude:      false,
+      reason:             "second_call_retry",
+      cost_usd:           0.008,
+      latency_ms:         500,
+      cache_hit:          false,
+      model:              "sonnet-4.5"
+    )
+
+    v2 = v2_result(verdict: :excluded, confidence: "low", stage_reached: 3)
+    order = Gmail::EmailToOrderService.new(
+      @account, parsed, empty_detection, v2_result: v2, v2_log_id: log2.id
+    ).create_order!
+
+    assert_not_nil order
+
+    log1.reload
+    log2.reload
+    assert_nil log1.order_id, "log1(과거 시도)은 order에 연결되지 않아야 함 (ISS-056)"
+    assert_equal false, log1.would_exclude, "log1은 would_exclude 덮어쓰기 금지"
+    assert_equal order.id, log2.order_id, "log2(마지막 시도)만 order에 연결"
+    assert_equal true, log2.would_exclude, "log2만 would_exclude=true"
+  end
+
+  # ===== 3. v2 nil → 기존 v1 동작 유지 =====
+  test "v2_nil_fallback: v2_result nil이면 classifier_version='v1' + rfq_pending" do
+    parsed = build_parsed(id: "iss053-msg-nil")
+
+    order = Gmail::EmailToOrderService.new(@account, parsed, empty_detection, v2_result: nil).create_order!
+
+    assert_not_nil order
+    assert_equal "rfq_pending", order.rfq_status
+    assert_equal "v1", order.classifier_version
+    assert_nil order.stage_reached
+    assert_nil order.classification_confidence
+    assert_equal false, order.cache_hit
+  end
+end

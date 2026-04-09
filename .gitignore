@@ -39,7 +39,16 @@
 ._*
 ._.DS_Store
 
-# Claude / bkit
+# Claude / bkit / harness tools
 .claude/
+.bkit/
 .bkit-memory.json
 .kamal/secrets
+.gstack/
+.playwright-mcp/
+.superpowers/
+
+# QA screenshots & snapshots (생성물)
+/*.png
+/*-snapshot.txt
+/arc-*.txt

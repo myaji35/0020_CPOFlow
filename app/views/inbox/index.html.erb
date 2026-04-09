@@ -163,6 +163,15 @@
 
     <%# ===== PANE 2: 읽어온 메일 (좌측) ===== %>
     <div id="inbox-left-pane" class="inbox-pane inbox-list flex flex-col" style="width: 50%; min-width: 280px;">
+      <%# ISS-045 Shadow Mode 안내 배너 — v2 검증 기간(7일) 동안만 표시 %>
+      <% if ENV["CLASSIFY_V2_SHADOW_MODE"] != "off" %>
+        <div class="px-4 py-2 bg-blue-50 dark:bg-blue-900/30 border-b border-blue-200 dark:border-blue-800 flex items-start gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <div class="text-xs text-blue-800 dark:text-blue-300 leading-relaxed">
+            <span class="font-semibold">AI 분류 검증 기간</span> — "AI: 제외 권장" 배지는 <span class="font-semibold">참고용</span>입니다. 중요한 거래처 메일일 수 있으니 <span class="font-semibold">삭제 전 반드시 제목/발신자 재확인</span>하세요. 검증 완료 후(약 7일) 배너는 자동으로 사라집니다.
+          </div>
+        </div>
+      <% end %>
       <%# Toolbar with search %>
       <div class="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <%# Header row %>
@@ -353,6 +362,17 @@
                           <% if order.rfq_status == "rfq_excluded" %>
                             <span class="text-xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-500 rounded">스레드 추가</span>
                           <% end %>
+                          <%# ISS-055: v2 AI 배지 — 견적성 판정 시각 표시 %>
+                          <% if order.classifier_version == "v2" && order.classification_confidence.present? %>
+                            <% conf = order.classification_confidence.to_f %>
+                            <% if conf >= 0.85 %>
+                              <span class="text-xs px-1.5 py-0.5 bg-blue-600 text-white rounded font-semibold" title="v2 confidence: <%= conf.round(2) %>">AI: 견적성</span>
+                            <% elsif conf >= 0.60 %>
+                              <span class="text-xs px-1.5 py-0.5 bg-yellow-500 text-white rounded font-semibold" title="v2 confidence: <%= conf.round(2) %>">AI: 모호</span>
+                            <% else %>
+                              <span class="text-xs px-1.5 py-0.5 bg-gray-500 text-white rounded font-semibold" title="v2 confidence: <%= conf.round(2) %>">AI: 제외 권장</span>
+                            <% end %>
+                          <% end %>
                           <span class="ml-auto text-xs text-gray-500 dark:text-gray-500 flex-shrink-0">
                             <%= (order.email_received_at || order.created_at).strftime("%m/%d %H:%M") %>
                           </span>
@@ -392,6 +412,17 @@
                         <span class="text-xs px-1.5 py-0.5 bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400 rounded font-semibold border border-yellow-200 dark:border-yellow-800">미분류</span>
                       <% when "rfq_excluded" %>
                         <span class="text-xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-500 rounded font-medium">제외</span>
+                      <% end %>
+                    <% end %>
+                    <%# ISS-055: v2 AI 배지 — 견적성 판정 시각 표시 %>
+                    <% if order.classifier_version == "v2" && order.classification_confidence.present? %>
+                      <% conf = order.classification_confidence.to_f %>
+                      <% if conf >= 0.85 %>
+                        <span class="text-xs px-1.5 py-0.5 bg-blue-600 text-white rounded font-semibold" title="v2 confidence: <%= conf.round(2) %>">AI: 견적성</span>
+                      <% elsif conf >= 0.60 %>
+                        <span class="text-xs px-1.5 py-0.5 bg-yellow-500 text-white rounded font-semibold" title="v2 confidence: <%= conf.round(2) %>">AI: 모호</span>
+                      <% else %>
+                        <span class="text-xs px-1.5 py-0.5 bg-gray-500 text-white rounded font-semibold" title="v2 confidence: <%= conf.round(2) %>">AI: 제외 권장</span>
                       <% end %>
                     <% end %>
                     <% case order.priority
