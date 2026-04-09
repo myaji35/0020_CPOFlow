@@ -150,6 +150,121 @@ namespace :classify_v2 do
     puts "=" * 72
   end
 
+  desc "Stage 1 분류 분포 — labeled 없이 전수 Order에 RuleGate 적용하여 분포만 측정"
+  task :distribution, [ :limit ] => :environment do |_t, args|
+    limit = args[:limit].to_i
+
+    puts "=" * 72
+    puts "[classify_v2:distribution]"
+    puts "  목적: labeled 정답지 없이 Stage 1이 전수 Order를 어떻게 분류하는지 분포 측정"
+    puts "  대상: 모든 Order (rfq_status 무관)"
+    puts "  limit: #{limit.zero? ? 'ALL' : limit}"
+    puts "=" * 72
+
+    scope = Order.where.not(original_email_subject: nil)
+    scope = scope.limit(limit) if limit.positive?
+    total = scope.count
+    puts "  총 대상: #{total}건"
+    puts
+
+    stats = Hash.new(0)
+    by_domain = Hash.new { |h, k| h[k] = Hash.new(0) }
+    sample_rejected = []
+    sample_whitelist = []
+    sample_strong = []
+
+    scope.find_each(batch_size: 500) do |order|
+      stats[:total] += 1
+
+      email_hash = {
+        subject: order.original_email_subject.to_s,
+        from:    order.original_email_from.to_s,
+        body:    order.original_email_body.to_s
+      }
+      result = Gmail::Stage1::RuleGate.decide(email_hash)
+
+      stats[result.reason.to_sym] += 1
+      stats[result.action] += 1
+
+      # 도메인별 누적
+      domain = order.original_email_from.to_s.match(/@([^>\s]+)/)&.[](1)&.downcase.to_s
+      by_domain[domain][:total] += 1
+      by_domain[domain][result.action] += 1
+
+      # 샘플 수집
+      if result.reason == "no_rfq_signal" && sample_rejected.size < 5
+        sample_rejected << { id: order.id, subject: order.original_email_subject.to_s[0, 60],
+                              from: order.original_email_from.to_s[0, 40] }
+      elsif result.reason == "whitelist_domain" && sample_whitelist.size < 5
+        sample_whitelist << { id: order.id, subject: order.original_email_subject.to_s[0, 60],
+                               from: order.original_email_from.to_s[0, 40] }
+      elsif result.reason == "strong_keyword" && sample_strong.size < 5
+        sample_strong << { id: order.id, subject: order.original_email_subject.to_s[0, 60],
+                            from: order.original_email_from.to_s[0, 40] }
+      end
+
+      puts "  ... 진행: #{stats[:total]}/#{total}" if (stats[:total] % 2000).zero?
+    end
+
+    puts
+    puts "=" * 72
+    puts "📊 Stage 1 분류 분포 결과"
+    puts "=" * 72
+    puts "  총 판정: #{stats[:total]}건"
+    puts
+    puts "  [LLM 호출 필요 — Stage 2로 진입]"
+    puts "    whitelist_fast : #{stats[:whitelist_domain].to_s.rjust(6)}건 (#{pct(stats[:whitelist_domain], stats[:total])})"
+    puts "    strong_keyword : #{stats[:strong_keyword].to_s.rjust(6)}건 (#{pct(stats[:strong_keyword], stats[:total])})"
+    puts "    weak_signal    : #{stats[:weak_signal].to_s.rjust(6)}건 (#{pct(stats[:weak_signal], stats[:total])})"
+    llm_needed = stats[:whitelist_domain] + stats[:strong_keyword] + stats[:weak_signal]
+    puts "    ─────────────────────"
+    puts "    소계           : #{llm_needed.to_s.rjust(6)}건 (#{pct(llm_needed, stats[:total])})"
+    puts
+    puts "  [LLM 호출 불필요 — Stage 1에서 rejected]"
+    puts "    no_rfq_signal  : #{stats[:no_rfq_signal].to_s.rjust(6)}건 (#{pct(stats[:no_rfq_signal], stats[:total])})"
+    puts
+
+    # 비용 시뮬레이션
+    haiku_cost = llm_needed * 0.0013  # Haiku 호출 평균 $0.0013
+    sonnet_esc = (llm_needed * 0.30).to_i  # 30% 가정 (Plan v1.2)
+    sonnet_cost = sonnet_esc * 0.0083
+    total_cost = haiku_cost + sonnet_cost
+    puts "  💰 LLM 비용 시뮬레이션 (전수 기준):"
+    puts "    Haiku  : #{llm_needed}건 × $0.0013 = $#{'%.2f' % haiku_cost}"
+    puts "    Sonnet : ~#{sonnet_esc}건 × $0.0083 = $#{'%.2f' % sonnet_cost} (30% 에스컬레이션 가정)"
+    puts "    총합   : $#{'%.2f' % total_cost}"
+    puts "    → 일일 평균 (400통/일 환산): $#{'%.3f' % (total_cost / (stats[:total] / 400.0))}"
+    puts
+
+    puts "  [샘플: whitelist_fast (whitelist 도메인 히트)]"
+    sample_whitelist.each_with_index do |s, i|
+      puts "    #{i + 1}. [##{s[:id]}] #{s[:subject]}"
+      puts "        from: #{s[:from]}"
+    end
+    puts
+    puts "  [샘플: strong_keyword (RFQ/견적요청 등)]"
+    sample_strong.each_with_index do |s, i|
+      puts "    #{i + 1}. [##{s[:id]}] #{s[:subject]}"
+      puts "        from: #{s[:from]}"
+    end
+    puts
+    puts "  [샘플: rejected (LLM 호출 없이 excluded)]"
+    sample_rejected.each_with_index do |s, i|
+      puts "    #{i + 1}. [##{s[:id]}] #{s[:subject]}"
+      puts "        from: #{s[:from]}"
+    end
+    puts
+
+    puts "  [도메인 상위 10 (전체 메일 수 기준)]"
+    by_domain.sort_by { |_, v| -v[:total] }.first(10).each do |domain, counts|
+      wl = counts[:whitelist_fast] || 0
+      pass = (counts[:whitelist_fast] || 0) + (counts[:pass_to_llm] || 0)
+      reject = counts[:reject_no_signal] || 0
+      puts "    #{domain.ljust(35)} : #{counts[:total].to_s.rjust(5)}건  pass=#{pass}  reject=#{reject}  whitelist=#{wl}"
+    end
+    puts "=" * 72
+  end
+
   desc "Golden Dataset 자동 추출 (Order 테이블 → test/fixtures/files/golden_dataset YAML)"
   task golden_collect: :environment do
     require "yaml"
