@@ -32,7 +32,7 @@ class InboxController < ApplicationController
     if @search_query.present?
       search_term = "%#{@search_query}%"
       base_scope = base_scope.where(
-        "original_email_subject LIKE :q OR original_email_from LIKE :q OR customer_name LIKE :q OR title LIKE :q",
+        "original_email_subject LIKE :q OR original_email_from LIKE :q OR customer_name LIKE :q OR title LIKE :q OR original_email_body LIKE :q",
         q: search_term
       )
     end

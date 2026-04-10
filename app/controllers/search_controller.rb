@@ -7,9 +7,10 @@ class SearchController < ApplicationController
 
     results = []
 
-    results += Order.where("title LIKE ? OR customer_name LIKE ?", "%#{q}%", "%#{q}%")
+    results += Order.where("title LIKE ? OR customer_name LIKE ? OR original_email_subject LIKE ? OR original_email_from LIKE ?",
+                       "%#{q}%", "%#{q}%", "%#{q}%", "%#{q}%")
                     .limit(5).map do |o|
-                      { type: "order", id: o.id, icon: "clipboard", label: o.title,
+                      { type: "order", id: o.id, icon: "clipboard", label: o.title.presence || o.original_email_subject,
                         sub: Order::STATUS_LABELS[o.status], url: order_path(o) }
                     end
 

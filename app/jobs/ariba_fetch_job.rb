@@ -8,7 +8,7 @@ class AribaFetchJob < ApplicationJob
   queue_as :default
 
   # Ariba 포털 응답이 느릴 수 있으므로 넉넉한 재시도 간격
-  retry_on StandardError, wait: 10.minutes, attempts: 2
+  retry_on StandardError, wait: 10.minutes, attempts: 3
   discard_on ActiveRecord::RecordNotFound
 
   def perform(order_id:, force: false)
@@ -22,16 +22,27 @@ class AribaFetchJob < ApplicationJob
       end
     end
 
-    Rails.logger.info "[AribaFetchJob] Order##{order.id}: Ariba 문서 자동 수집 시작"
+    Rails.logger.info "[AribaFetchJob] Order##{order.id}: Ariba 문서 자동 수집 시작 (force=#{force})"
 
     result = Sap::AribaScraperService.new.fetch_pdfs_for_order(order)
 
     if result[:saved].any?
       Rails.logger.info "[AribaFetchJob] Order##{order.id}: #{result[:saved].size}개 문서 저장 완료"
+      # Activity에 details 컬럼 없으므로 action 필드에 요약 기록
+      if (admin = User.find_by(admin: true))
+        Activity.create!(order: order, user: admin, action: "ariba_docs_fetched") rescue nil
+      end
     end
 
     if result[:errors].any?
       Rails.logger.warn "[AribaFetchJob] Order##{order.id}: 오류 #{result[:errors].join(', ')}"
+      if (admin = User.find_by(admin: true))
+        Activity.create!(order: order, user: admin, action: "ariba_fetch_failed") rescue nil
+      end
+    end
+
+    if result[:saved].empty? && result[:errors].empty?
+      Rails.logger.info "[AribaFetchJob] Order##{order.id}: Ariba 링크 없거나 수집 대상 없음"
     end
   end
 end

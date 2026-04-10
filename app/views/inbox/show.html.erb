@@ -134,16 +134,22 @@
       <% if html_body.present? %>
         <%# HTML 이메일: style 블록 제거 후 sanitize로 안전 렌더링 %>
         <% cleaned_html = html_body.gsub(/<style[^>]*>.*?<\/style>/mi, "") %>
-        <div class="email-html-body bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 p-5 max-h-96 overflow-y-auto">
+        <div id="email-body-container" class="email-html-body bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 p-5 max-h-[600px] overflow-y-auto transition-all duration-300">
           <%= sanitize(cleaned_html,
               tags: %w[p br div span a b i u strong em h1 h2 h3 h4 h5 h6 ul ol li
                        table thead tbody tr th td blockquote pre code img hr],
               attributes: %w[href src alt style class target rel]) %>
         </div>
+        <button onclick="toggleEmailBody()" id="email-body-toggle"
+                class="mt-2 flex items-center gap-1.5 text-xs text-accent hover:text-blue-700 font-medium transition-colors">
+          <svg id="toggle-icon-expand" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+          <svg id="toggle-icon-collapse" class="w-3.5 h-3.5 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+          <span id="toggle-label">전체보기</span>
+        </button>
       <% elsif plain_body.present? %>
         <%# Plain text 이메일: 본문과 서명 분리 %>
         <% split = Gmail::EmailSignatureParserService.split(plain_body) %>
-        <div class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap font-mono bg-gray-50 dark:bg-gray-800/50 rounded-lg p-5 border border-gray-200 dark:border-gray-700 max-h-96 overflow-y-auto">
+        <div id="email-body-container" class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap font-mono bg-gray-50 dark:bg-gray-800/50 rounded-lg p-5 border border-gray-200 dark:border-gray-700 max-h-[600px] overflow-y-auto transition-all duration-300">
 <%= split[:body] %>
         </div>
         <% if split[:signature].present? %>
@@ -540,4 +546,28 @@
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closePreviewModal();
   });
+
+  // 이메일 본문 전체보기/접기 토글
+  function toggleEmailBody() {
+    const container = document.getElementById('email-body-container');
+    const label = document.getElementById('toggle-label');
+    const iconExpand = document.getElementById('toggle-icon-expand');
+    const iconCollapse = document.getElementById('toggle-icon-collapse');
+    if (!container) return;
+
+    const isExpanded = container.classList.contains('max-h-none');
+    if (isExpanded) {
+      container.classList.remove('max-h-none');
+      container.classList.add('max-h-[600px]');
+      label.textContent = '전체보기';
+      iconExpand.classList.remove('hidden');
+      iconCollapse.classList.add('hidden');
+    } else {
+      container.classList.remove('max-h-[600px]');
+      container.classList.add('max-h-none');
+      label.textContent = '접기';
+      iconExpand.classList.add('hidden');
+      iconCollapse.classList.remove('hidden');
+    }
+  }
 </script>

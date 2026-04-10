@@ -146,17 +146,38 @@ class OrdersController < ApplicationController
   end
 
   # POST /orders/:id/attach — 첨부파일 수동 추가
+  MAX_FILE_SIZE = 25.megabytes
+
   def attach
+    @order = Order.find(params[:id])
     files = params[:files]
     if files.blank?
-      render json: { success: false, error: "파일을 선택해 주세요." }, status: :unprocessable_entity
+      respond_to do |format|
+        format.html { redirect_back fallback_location: @order, alert: "파일을 선택해 주세요." }
+        format.json { render json: { success: false, error: "파일을 선택해 주세요." }, status: :unprocessable_entity }
+      end
       return
     end
 
-    @order.attachments.attach(files)
+    file_list = Array(files)
+    oversized = file_list.select { |f| f.size > MAX_FILE_SIZE }
+    if oversized.any?
+      names = oversized.map { |f| "#{f.original_filename} (#{ActiveSupport::NumberHelper.number_to_human_size(f.size)})" }.join(", ")
+      msg = "파일 크기 초과 (최대 25MB): #{names}"
+      respond_to do |format|
+        format.html { redirect_back fallback_location: @order, alert: msg }
+        format.json { render json: { success: false, error: msg }, status: :unprocessable_entity }
+      end
+      return
+    end
+
+    @order.attachments.attach(file_list)
     Activity.create!(order: @order, user: current_user, action: "attachment_added")
 
-    redirect_to @order, notice: "#{Array(files).size}개 파일이 첨부되었습니다."
+    respond_to do |format|
+      format.html { redirect_to @order, notice: "#{file_list.size}개 파일이 첨부되었습니다." }
+      format.json { render json: { success: true, count: file_list.size, message: "#{file_list.size}개 파일 첨부 완료" } }
+    end
   end
 
   # DELETE /orders/:id/detach/:blob_id — 첨부파일 삭제

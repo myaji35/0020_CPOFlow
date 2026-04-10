@@ -344,9 +344,14 @@
           <% if order.original_email_subject.present? %>
             <p class="text-sm font-medium text-gray-900 dark:text-white mb-3"><% if order.reference_no.present? %><span class="text-xs px-1 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded font-mono mr-1"><%= order.reference_no %></span><% end %><%= order.display_subject %><% order.subject_tags.each do |tag| %><span class="text-xs px-1 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded ml-1"><%= tag %></span><% end %></p>
           <% end %>
-          <div class="text-xs text-gray-600 dark:text-gray-500 leading-relaxed whitespace-pre-wrap font-mono bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-700">
+          <div id="drawer-email-body-<%= order.id %>" class="text-xs text-gray-600 dark:text-gray-500 leading-relaxed whitespace-pre-wrap font-mono bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 max-h-80 overflow-y-auto border border-gray-200 dark:border-gray-700 transition-all duration-300">
             <%= order.original_email_body %>
           </div>
+          <button onclick="toggleDrawerEmailBody('<%= order.id %>')"
+                  id="drawer-email-toggle-<%= order.id %>"
+                  class="mt-1.5 text-xs text-accent hover:text-blue-700 font-medium transition-colors">
+            전체보기
+          </button>
         </div>
       </div>
     <% end %>
@@ -393,6 +398,56 @@
           <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-500 px-1.5 py-0.5 rounded-full"><%= comments.count %></span>
         <% end %>
       </h3>
+
+      <%# ── 담당자 빠른 배정 (코멘트 탭 상단) ──────────────── %>
+      <div class="mb-4 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg border border-gray-200 dark:border-gray-700" x-data="{ showQuickAssign: false }">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <svg class="w-3.5 h-3.5 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">담당자</span>
+            <% if order.assignees.any? %>
+              <div class="flex -space-x-1.5">
+                <% order.assignments.includes(:employee).limit(5).each do |assignment| %>
+                  <% next unless assignment.employee %>
+                  <div class="w-5 h-5 rounded-full bg-primary text-white text-[9px] flex items-center justify-center font-bold border border-white dark:border-gray-800" title="<%= assignment.employee.display_name %>">
+                    <%= assignment.employee.initials %>
+                  </div>
+                <% end %>
+              </div>
+            <% else %>
+              <span class="text-xs text-gray-500">미배정</span>
+            <% end %>
+          </div>
+          <button @click="showQuickAssign = !showQuickAssign"
+                  class="flex items-center gap-1 px-2 py-1 text-xs font-medium text-accent bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+            담당자 배정
+          </button>
+        </div>
+        <div x-show="showQuickAssign" x-transition @click.outside="showQuickAssign = false"
+             class="mt-2 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden max-h-40 overflow-y-auto">
+          <% Employee.active.by_name.each do |emp| %>
+            <% already_assigned = order.assignee_ids.include?(emp.id) %>
+            <% if already_assigned %>
+              <div class="flex items-center gap-2 px-3 py-1.5 text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400">
+                <div class="w-5 h-5 rounded-full bg-primary text-white text-[9px] flex items-center justify-center font-bold shrink-0"><%= emp.initials %></div>
+                <span><%= emp.display_name %></span>
+                <span class="ml-auto text-[10px]">배정됨</span>
+              </div>
+            <% else %>
+              <%= form_with url: order_assignments_path(order), method: :post, local: true do |f| %>
+                <%= f.hidden_field :employee_id, value: emp.id %>
+                <button type="submit"
+                        class="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors text-left">
+                  <div class="w-5 h-5 rounded-full bg-gray-400 text-white text-[9px] flex items-center justify-center font-bold shrink-0"><%= emp.initials %></div>
+                  <span><%= emp.display_name %></span>
+                  <span class="ml-auto text-[10px] text-gray-500"><%= emp.employment_type_label %></span>
+                </button>
+              <% end %>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
       <div id="comments-<%= order.id %>" class="space-y-4 mb-5">
         <% if comments.any? %>
           <% comments.each do |comment| %>
@@ -751,12 +806,42 @@ function splitOrder(orderId, btn) {
 function updateUploadLabel(input, orderId) {
   var label = document.getElementById('upload-label-' + orderId);
   if (input.files.length > 0) {
+    // 파일 크기 검증 (25MB)
+    var maxSize = 25 * 1024 * 1024;
+    var oversized = Array.from(input.files).filter(function(f) { return f.size > maxSize; });
+    if (oversized.length > 0) {
+      var names = oversized.map(function(f) { return f.name + ' (' + (f.size / 1024 / 1024).toFixed(1) + 'MB)'; });
+      label.textContent = '⚠ 크기 초과: ' + names.join(', ');
+      label.classList.add('text-red-500', 'font-medium');
+      label.classList.remove('text-primary');
+      input.value = '';
+      return;
+    }
     var names = Array.from(input.files).map(function(f) { return f.name; });
     label.textContent = names.length + '개 파일: ' + names.join(', ').substring(0, 40);
     label.classList.add('text-primary', 'font-medium');
+    label.classList.remove('text-red-500');
   } else {
     label.textContent = '파일 선택 또는 드래그';
-    label.classList.remove('text-primary', 'font-medium');
+    label.classList.remove('text-primary', 'font-medium', 'text-red-500');
+  }
+}
+
+// Drawer 이메일 본문 전체보기/접기 토글
+function toggleDrawerEmailBody(orderId) {
+  var container = document.getElementById('drawer-email-body-' + orderId);
+  var toggle = document.getElementById('drawer-email-toggle-' + orderId);
+  if (!container || !toggle) return;
+
+  var isExpanded = container.classList.contains('max-h-none');
+  if (isExpanded) {
+    container.classList.remove('max-h-none');
+    container.classList.add('max-h-80');
+    toggle.textContent = '전체보기';
+  } else {
+    container.classList.remove('max-h-80');
+    container.classList.add('max-h-none');
+    toggle.textContent = '접기';
   }
 }
 </script>
