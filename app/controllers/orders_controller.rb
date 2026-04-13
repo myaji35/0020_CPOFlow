@@ -1,7 +1,7 @@
 class OrdersController < ApplicationController
   include AttachmentPreviewable
 
-  before_action :set_order, only: %i[show edit update destroy move_status quick_update preview_attachment detach]
+  before_action :set_order, only: %i[show edit update destroy move_status quick_update preview_attachment attach detach]
 
   def index
     @orders = Order.all.includes(:assignees, :tasks, :user, :client, :project, :supplier).by_due_date
@@ -149,7 +149,6 @@ class OrdersController < ApplicationController
   MAX_FILE_SIZE = 25.megabytes
 
   def attach
-    @order = Order.find(params[:id])
     files = params[:files]
     if files.blank?
       respond_to do |format|

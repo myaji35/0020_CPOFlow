@@ -25,11 +25,21 @@ module AttachmentPreviewable
         render html: html.html_safe, layout: false
       end
     elsif content_type.include?("html")
+      # XSS 방어: HTML 첨부파일은 sandbox iframe 내에서 렌더링
       blob.open do |tempfile|
         html_content = File.read(tempfile.path, encoding: "UTF-8")
+        sanitized = Rails::HTML5::SafeListSanitizer.new.sanitize(
+          html_content,
+          tags: %w[html head body meta title style div span p a b i u em strong br hr h1 h2 h3 h4 h5 h6
+                   table thead tbody tfoot tr th td caption col colgroup
+                   ul ol li dl dt dd pre code blockquote img figure figcaption
+                   header footer nav section article aside main address],
+          attributes: %w[class id style href src alt title width height colspan rowspan
+                         align valign border cellpadding cellspacing target rel]
+        )
         esc_script = '<script>document.addEventListener("keydown",function(e){if(e.key==="Escape")window.parent.postMessage("close-preview-modal","*")});</script>'
-        html_content = html_content.sub("</body>", "#{esc_script}</body>")
-        render html: html_content.html_safe, layout: false
+        sanitized = sanitized + esc_script
+        render html: sanitized.html_safe, layout: false
       end
     elsif content_type.include?("pdf") || content_type.start_with?("image/")
       # PDF, 이미지 → 브라우저 inline 표시
@@ -93,7 +103,7 @@ module AttachmentPreviewable
 
   # 텍스트 파일 → 코드 뷰어 스타일 미리보기
   def build_text_preview_html(filepath, filename)
-    content = File.read(filepath, encoding: "UTF-8").first(100_000)  # 100KB 제한
+    content = IO.read(filepath, 100_000, encoding: "UTF-8") || ""  # 100KB 제한
     lines = content.lines.first(2000)
 
     lines_html = lines.each_with_index.map do |line, idx|
