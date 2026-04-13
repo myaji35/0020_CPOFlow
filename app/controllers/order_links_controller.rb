@@ -51,10 +51,10 @@ class OrderLinksController < ApplicationController
   def search
     q = params[:q].to_s.strip
     @results = if q.present?
-                 Order.where("title LIKE ? OR reference_no LIKE ?", "%#{q}%", "%#{q}%").limit(10)
-               else
-                 Order.none
-               end
+      Order.where("title LIKE ? OR reference_no LIKE ?", "%#{q}%", "%#{q}%").limit(10)
+    else
+      Order.none
+    end
     render partial: "order_links/search_results", locals: { results: @results }
   end
 

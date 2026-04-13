@@ -8,10 +8,10 @@ class KanbanController < ApplicationController
                     .by_due_date
                     .includes(:assignees, :tasks, :user, :sub_orders)
       orders = if status == "new_rfq"
-                 base.where(status: :new_rfq, rfq_status: Order::KANBAN_VISIBLE_RFQ_STATUSES)
-               else
-                 base.where(status: status)
-               end
+        base.where(status: :new_rfq, rfq_status: Order::KANBAN_VISIBLE_RFQ_STATUSES)
+      else
+        base.where(status: status)
+      end
       [ status, orders ]
     end.to_h
     @filter_employees = Employee.active.by_name

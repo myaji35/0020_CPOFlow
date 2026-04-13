@@ -34,7 +34,7 @@ module AttachmentPreviewable
     sheets_html = spreadsheet.sheets.map.with_index do |sheet_name, idx|
       spreadsheet.default_sheet = sheet_name
       first_row = spreadsheet.first_row
-      last_row  = [spreadsheet.last_row || 0, 500].min
+      last_row  = [ spreadsheet.last_row || 0, 500 ].min
       first_col = spreadsheet.first_column
       last_col  = spreadsheet.last_column
 

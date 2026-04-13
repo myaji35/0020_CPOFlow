@@ -23,7 +23,7 @@ class ContactPersonsController < ApplicationController
     end
 
     @per_page     = 24
-    @current_page = [params[:page].to_i, 1].max
+    @current_page = [ params[:page].to_i, 1 ].max
     @total_count  = @contact_persons.count
     @total_pages  = (@total_count / @per_page.to_f).ceil
     @total_pages  = 1 if @total_pages < 1

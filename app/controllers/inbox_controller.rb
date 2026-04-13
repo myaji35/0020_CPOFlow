@@ -289,7 +289,7 @@ class InboxController < ApplicationController
     sheets_html = spreadsheet.sheets.map.with_index do |sheet_name, idx|
       spreadsheet.default_sheet = sheet_name
       first_row = spreadsheet.first_row
-      last_row  = [spreadsheet.last_row || 0, 500].min  # 최대 500행
+      last_row  = [ spreadsheet.last_row || 0, 500 ].min  # 최대 500행
       first_col = spreadsheet.first_column
       last_col  = spreadsheet.last_column
 
