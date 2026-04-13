@@ -7,23 +7,29 @@ module Gmail
   # Usage:
   #   Gmail::EmailToOrderService.new(email_account, parsed_email, detection).create_order!
   class EmailToOrderService
-    def initialize(email_account, parsed_email, detection_result, v2_result: nil, v2_log_id: nil)
-      @account   = email_account
-      @email     = parsed_email
-      @detection = detection_result
-      @v2        = v2_result # Gmail::ClassificationResult or nil (ISS-053 Shadow Mode 옵션 B)
-      @v2_log_id = v2_log_id # ISS-056: Orchestrator가 생성한 특정 log row ID
+    def initialize(email_account, parsed_email, detection_result, v2_result: nil, v2_log_id: nil, has_rfq_number: false)
+      @account        = email_account
+      @email          = parsed_email
+      @detection      = detection_result
+      @v2             = v2_result
+      @v2_log_id      = v2_log_id
+      @has_rfq_number = has_rfq_number
     end
 
     def create_order!
       # Idempotency: skip if already imported
       return nil if Order.exists?(source_email_id: @email[:id])
 
-      # ISS-055 완전한 Shadow Mode 옵션 B (대표님 지시):
-      # v2 verdict와 무관하게 모든 신규 메일은 rfq_pending으로 저장.
-      # v2 결과는 classifier_version/stage_reached/classification_confidence + ClassificationLog에만 기록.
-      # 사용자가 Inbox UI에서 명시적으로 "칸반 적용" 액션 시에만 rfq_triage로 전이.
-      rfq_status_val = Order.rfq_statuses[:rfq_pending]
+      # RFQ 번호가 있는 메일 → 바로 rfq_triage (견적 확정, 칸반 진입)
+      # AI confirmed → rfq_triage
+      # AI uncertain 또는 판정 없음 → rfq_pending (사용자 리뷰 대기)
+      rfq_status_val = if @has_rfq_number
+        Order.rfq_statuses[:rfq_triage]
+      elsif @v2&.verdict == :confirmed || @detection[:rfq_verdict] == :confirmed
+        Order.rfq_statuses[:rfq_triage]
+      else
+        Order.rfq_statuses[:rfq_pending]
+      end
 
       # 발주번호 추출 + 메인 카드 탐색
       ref_no = ReferenceNumberExtractor.extract(

@@ -69,8 +69,7 @@ class EmailSyncJob < ApplicationJob
       parsed = svc.parse_message(msg)
       next unless parsed
 
-      # ISS-056 Idempotency 가드: 이미 동일 Gmail id로 Order가 있으면
-      # Orchestrator/Detector 재호출 자체를 skip (재시도 시 로그 중복 생성 방지)
+      # Idempotency 가드: 이미 동일 Gmail id로 Order가 있으면 스킵
       if Order.exists?(source_email_id: parsed[:id])
         Rails.logger.info "[EmailSyncJob] skip already-imported message #{parsed[:id]}"
         next
@@ -78,8 +77,16 @@ class EmailSyncJob < ApplicationJob
 
       total_processed += 1
 
-      # --- 방식 2 (백그라운드 안전망) — 7일 Shadow 기간 유지 ---
-      # AI 판정은 추천 점수 계산용으로만 실행 (분류/필터링 안 함)
+      # ── 1단계: RFQ 번호(발주번호) 유무 확인 ──
+      # RFQ/PO 번호가 있으면 AI 판단 없이 무조건 견적성 메일로 수신
+      ref_no = Gmail::ReferenceNumberExtractor.extract(
+        parsed[:subject].to_s, parsed[:body].to_s
+      )
+      has_rfq_number = ref_no.present?
+
+      # ── 2단계: AI 분류 ──
+      # RFQ 번호가 있으면 AI 분류 스킵 (비용 절감 + 확실한 건적)
+      # RFQ 번호가 없으면 AI 파이프라인으로 판정
       detection = begin
         Gmail::RfqDetectorService.new(parsed).detect
       rescue => e
@@ -87,36 +94,49 @@ class EmailSyncJob < ApplicationJob
         { rfq_verdict: :pending, score: 0, confidence: "none", is_rfq: false }
       end
 
-      # --- v2 ClassificationOrchestrator (Shadow Mode 옵션 B, ISS-053) ---
-      # v2 결과는 Order 메트릭 필드 + classification_logs에 기록되지만
-      # rfq_status 자동 할당은 Shadow 종료 후(Phase G cutover)에만.
-      # excluded 판정도 rfq_pending으로 저장 → would_exclude=true 로그로만 추적.
-      # ISS-056: orchestrator 인스턴스를 유지하여 last_log_id를 EmailToOrderService로 전달
-      # ISS-058: CostGuard 진입 가드 — 일 비용 임계 초과 시 v2 skip (방식 2는 유지)
+      # v2 ClassificationOrchestrator (Active Mode)
       orchestrator = nil
       v2_result = nil
-      if Gmail::CostGuard.exceeded?
-        Gmail::CostGuard.warn_once!
-        # v2 skip — 방식 2 백그라운드는 이미 위에서 실행되었으므로 안전
-      else
-        orchestrator = Gmail::ClassificationOrchestrator.new(parsed)
-        v2_result = begin
-          orchestrator.classify
-        rescue => e
-          Rails.logger.warn "[EmailSyncJob] v2 classify failed: #{e.class} — #{e.message}"
-          nil
+      unless has_rfq_number
+        if Gmail::CostGuard.exceeded?
+          Gmail::CostGuard.warn_once!
+        else
+          orchestrator = Gmail::ClassificationOrchestrator.new(parsed)
+          v2_result = begin
+            orchestrator.classify
+          rescue => e
+            Rails.logger.warn "[EmailSyncJob] v2 classify failed: #{e.class} — #{e.message}"
+            nil
+          end
         end
       end
       v2_log_id = v2_result ? orchestrator&.last_log_id : nil
 
-      # 모든 이메일을 Inbox에 저장 (v2 excluded 여부 무관)
+      # ── 3단계: 수신 여부 결정 ──
+      # (a) RFQ 번호 있음 → 무조건 수신 (confirmed)
+      # (b) AI 판정 confirmed/uncertain → 수신 (모호한 건도 수신 — recall 우선)
+      # (c) AI 판정 excluded → 수신 안 함 (확실히 비견적 메일만 제외)
+      should_import = if has_rfq_number
+        true
+      else
+        ai_verdict = v2_result&.verdict || detection[:rfq_verdict]
+        ai_verdict != :excluded
+      end
+
+      unless should_import
+        Rails.logger.info "[EmailSyncJob] skip non-RFQ email: #{parsed[:subject]} (verdict=excluded)"
+        next
+      end
+
       order = Gmail::EmailToOrderService.new(
-        account, parsed, detection, v2_result: v2_result, v2_log_id: v2_log_id
+        account, parsed, detection,
+        v2_result: v2_result, v2_log_id: v2_log_id,
+        has_rfq_number: has_rfq_number
       ).create_order!
 
       if order
         Gmail::EmailAttachmentExtractorService.new(svc, msg, order).extract_and_attach!
-        new_rfq_count += 1 if detection[:is_rfq]
+        new_rfq_count += 1 if has_rfq_number || detection[:is_rfq]
 
         # Ariba 링크가 포함된 이메일이면 자동으로 문서 수집 잡 큐잉
         if Sap::AribaScraperService.extract_ariba_links(order).any?

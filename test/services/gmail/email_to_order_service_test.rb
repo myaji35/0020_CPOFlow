@@ -85,17 +85,16 @@ class Gmail::EmailToOrderServiceTest < ActiveSupport::TestCase
     )
   end
 
-  # ===== 1. v2 confirmed여도 rfq_pending 유지 (ISS-055 완전 Shadow Mode) =====
-  test "v2_confirmed은 rfq_pending 유지 (ISS-055: Shadow Mode 옵션 B)" do
+  # ===== 1. v2 confirmed → rfq_triage (Active Mode) =====
+  test "v2_confirmed은 rfq_triage로 자동 진입 (Active Mode)" do
     parsed = build_parsed(id: "iss053-msg-confirmed")
     v2 = v2_result(verdict: :confirmed, confidence: "high", stage_reached: 2)
 
     order = Gmail::EmailToOrderService.new(@account, parsed, empty_detection, v2_result: v2).create_order!
 
     assert_not_nil order, "Order should be created"
-    # ISS-055: v2 verdict와 무관하게 rfq_pending. 칸반 진입은 사용자 명시 액션만.
-    assert_equal "rfq_pending", order.rfq_status,
-      "ISS-055: v2 confirmed는 rfq_triage로 자동 전이하지 않음 (Shadow Mode 옵션 B)"
+    assert_equal "rfq_triage", order.rfq_status,
+      "v2 confirmed → rfq_triage (Active Mode: AI 판정 직접 반영)"
     assert_equal "v2", order.classifier_version
     assert_equal 2, order.stage_reached
     assert_in_delta 0.95, order.classification_confidence.to_f, 0.001
