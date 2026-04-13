@@ -1,7 +1,7 @@
 class OrdersController < ApplicationController
   include AttachmentPreviewable
 
-  before_action :set_order, only: %i[show edit update destroy move_status quick_update preview_attachment]
+  before_action :set_order, only: %i[show edit update destroy move_status quick_update preview_attachment detach]
 
   def index
     @orders = Order.all.includes(:assignees, :tasks, :user, :client, :project, :supplier).by_due_date
@@ -175,7 +175,13 @@ class OrdersController < ApplicationController
     Activity.create!(order: @order, user: current_user, action: "attachment_added")
 
     respond_to do |format|
-      format.html { redirect_to @order, notice: "#{file_list.size}개 파일이 첨부되었습니다." }
+      format.turbo_stream {
+        render turbo_stream: turbo_stream.replace(
+          "drawer-panel-#{@order.id}-attachments",
+          partial: "orders/drawer_attachments", locals: { order: @order.reload }
+        )
+      }
+      format.html { redirect_back fallback_location: @order, notice: "#{file_list.size}개 파일이 첨부되었습니다." }
       format.json { render json: { success: true, count: file_list.size, message: "#{file_list.size}개 파일 첨부 완료" } }
     end
   end
@@ -187,6 +193,12 @@ class OrdersController < ApplicationController
       attachment.purge
       Activity.create!(order: @order, user: current_user, action: "attachment_removed")
       respond_to do |format|
+        format.turbo_stream {
+          render turbo_stream: turbo_stream.replace(
+            "drawer-panel-#{@order.id}-attachments",
+            partial: "orders/drawer_attachments", locals: { order: @order.reload }
+          )
+        }
         format.html { redirect_to @order, notice: "첨부파일이 삭제되었습니다." }
         format.json { render json: { success: true } }
       end
