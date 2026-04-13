@@ -8,40 +8,12 @@
     overflow: hidden;
   }
   .inbox-main {
-    display: flex;
+    display: grid;
+    grid-template-columns: 360px 1fr;
     overflow: hidden;
   }
-  .inbox-pane { overflow-y: auto; flex-shrink: 0; }
   .inbox-list { overflow-y: auto; }
   .inbox-body { overflow-y: auto; }
-  /* 스플릿바 */
-  .inbox-splitter {
-    width: 6px;
-    cursor: col-resize;
-    background: #e5e7eb;
-    flex-shrink: 0;
-    position: relative;
-    transition: background 0.15s;
-  }
-  .inbox-splitter:hover, .inbox-splitter.dragging {
-    background: #00A1E0;
-  }
-  .inbox-splitter::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 2px;
-    height: 32px;
-    background: #9ca3af;
-    border-radius: 1px;
-  }
-  .inbox-splitter:hover::after, .inbox-splitter.dragging::after {
-    background: #fff;
-  }
-  .dark .inbox-splitter { background: #374151; }
-  .dark .inbox-splitter:hover, .dark .inbox-splitter.dragging { background: #00A1E0; }
   .email-item.active { background-color: rgba(0, 161, 224, 0.08); }
   .email-item.active.dark-active { background-color: rgba(0, 161, 224, 0.15); }
   @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
@@ -161,17 +133,8 @@
   <%# ===== PANE 2 + 3 ===== %>
   <div class="inbox-main">
 
-    <%# ===== PANE 2: 읽어온 메일 (좌측) ===== %>
-    <div id="inbox-left-pane" class="inbox-pane inbox-list flex flex-col" style="width: 50%; min-width: 280px;">
-      <%# ISS-045 Shadow Mode 안내 배너 — v2 검증 기간(7일) 동안만 표시 %>
-      <% if ENV["CLASSIFY_V2_SHADOW_MODE"] != "off" %>
-        <div class="px-4 py-2 bg-blue-50 dark:bg-blue-900/30 border-b border-blue-200 dark:border-blue-800 flex items-start gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-          <div class="text-xs text-blue-800 dark:text-blue-300 leading-relaxed">
-            <span class="font-semibold">AI 분류 검증 기간</span> — "AI: 제외 권장" 배지는 <span class="font-semibold">참고용</span>입니다. 중요한 거래처 메일일 수 있으니 <span class="font-semibold">삭제 전 반드시 제목/발신자 재확인</span>하세요. 검증 완료 후(약 7일) 배너는 자동으로 사라집니다.
-          </div>
-        </div>
-      <% end %>
+    <%# ===== PANE 2: Email list ===== %>
+    <div class="inbox-list border-r border-gray-200 dark:border-gray-700 flex flex-col">
       <%# Toolbar with search %>
       <div class="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <%# Header row %>
@@ -311,7 +274,7 @@
           <ul id="email-list" class="divide-y divide-gray-100 dark:divide-gray-700">
             <% @grouped_orders.each do |ref_key, group_orders| %>
               <% is_thread = !ref_key.start_with?("single_") && group_orders.size > 1 %>
-              <% latest = group_orders.max_by(&:created_at) %>
+              <% latest = group_orders.max_by { |o| o.email_received_at || o.created_at } %>
 
               <% if is_thread %>
                 <%# ===== 그룹 헤더 (Alpine.js fold/unfold) ===== %>
@@ -346,7 +309,7 @@
                        x-transition:enter-start="opacity-0 -translate-y-1"
                        x-transition:enter-end="opacity-100 translate-y-0"
                        class="bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700">
-                    <% group_orders.sort_by(&:created_at).each do |order| %>
+                    <% group_orders.sort_by { |o| o.email_received_at || o.created_at }.each do |order| %>
                       <div class="email-item cursor-pointer px-4 py-2.5 pl-10 hover:bg-white dark:hover:bg-gray-700/50 transition-colors border-b border-gray-200 dark:border-gray-700 last:border-0 flex items-start gap-2"
                            data-order-id="<%= order.id %>"
                            id="email-item-<%= order.id %>">
@@ -361,17 +324,6 @@
                           </span>
                           <% if order.rfq_status == "rfq_excluded" %>
                             <span class="text-xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-500 rounded">스레드 추가</span>
-                          <% end %>
-                          <%# ISS-055: v2 AI 배지 — 견적성 판정 시각 표시 %>
-                          <% if order.classifier_version == "v2" && order.classification_confidence.present? %>
-                            <% conf = order.classification_confidence.to_f %>
-                            <% if conf >= 0.85 %>
-                              <span class="text-xs px-1.5 py-0.5 bg-blue-600 text-white rounded font-semibold" title="v2 confidence: <%= conf.round(2) %>">AI: 견적성</span>
-                            <% elsif conf >= 0.60 %>
-                              <span class="text-xs px-1.5 py-0.5 bg-yellow-500 text-white rounded font-semibold" title="v2 confidence: <%= conf.round(2) %>">AI: 모호</span>
-                            <% else %>
-                              <span class="text-xs px-1.5 py-0.5 bg-gray-500 text-white rounded font-semibold" title="v2 confidence: <%= conf.round(2) %>">AI: 제외 권장</span>
-                            <% end %>
                           <% end %>
                           <span class="ml-auto text-xs text-gray-500 dark:text-gray-500 flex-shrink-0">
                             <%= (order.email_received_at || order.created_at).strftime("%m/%d %H:%M") %>
@@ -412,17 +364,6 @@
                         <span class="text-xs px-1.5 py-0.5 bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400 rounded font-semibold border border-yellow-200 dark:border-yellow-800">미분류</span>
                       <% when "rfq_excluded" %>
                         <span class="text-xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-500 rounded font-medium">제외</span>
-                      <% end %>
-                    <% end %>
-                    <%# ISS-055: v2 AI 배지 — 견적성 판정 시각 표시 %>
-                    <% if order.classifier_version == "v2" && order.classification_confidence.present? %>
-                      <% conf = order.classification_confidence.to_f %>
-                      <% if conf >= 0.85 %>
-                        <span class="text-xs px-1.5 py-0.5 bg-blue-600 text-white rounded font-semibold" title="v2 confidence: <%= conf.round(2) %>">AI: 견적성</span>
-                      <% elsif conf >= 0.60 %>
-                        <span class="text-xs px-1.5 py-0.5 bg-yellow-500 text-white rounded font-semibold" title="v2 confidence: <%= conf.round(2) %>">AI: 모호</span>
-                      <% else %>
-                        <span class="text-xs px-1.5 py-0.5 bg-gray-500 text-white rounded font-semibold" title="v2 confidence: <%= conf.round(2) %>">AI: 제외 권장</span>
                       <% end %>
                     <% end %>
                     <% case order.priority
@@ -498,117 +439,16 @@
           </div>
         <% end %>
       </div>
-
-      <%# ===== Turbo Frame Lazy Prefetch ===== %>
-      <%# 1페이지 로드 직후 브라우저가 2~(N)페이지를 백그라운드로 병렬 fetch →
-          서버는 prefetch 응답을 Rails.cache에 저장 → 사용자가 페이지 링크 클릭 시 DB/뷰 렌더 스킵하고 캐시 HIT.
-          loading="lazy" + display:none 스타일로 사용자 눈에 안 보이게 처리 (turbo는 여전히 fetch 수행). %>
-      <% if @page == 1 && @total_pages > 1 && !@prefetch_mode %>
-        <% paging_params_for_prefetch = { filter: @current_filter == 'all' ? nil : @current_filter, q: @search_query.presence, frame: 'prefetch' }.compact %>
-        <div aria-hidden="true" style="display:none;">
-          <% prefetch_upto = [@total_pages, InboxController::PREFETCH_PAGES + 1].min %>
-          <% (2..prefetch_upto).each do |pg| %>
-            <turbo-frame id="inbox-prefetch-page-<%= pg %>"
-                         src="<%= inbox_path(**paging_params_for_prefetch, page: pg) %>"
-                         loading="lazy"></turbo-frame>
-          <% end %>
-        </div>
-      <% end %>
     </div>
 
-    <%# ===== 스플릿바 ===== %>
-    <div id="inbox-splitter" class="inbox-splitter" title="드래그하여 영역 조정"></div>
-
-    <%# ===== PANE 3: 견적성 메일 (우측) ===== %>
-    <div id="inbox-right-pane" class="inbox-pane flex flex-col bg-white dark:bg-gray-900" style="flex: 1; min-width: 280px;">
-      <%# 견적성 메일 헤더 %>
-      <div class="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div class="px-4 py-3 flex items-center justify-between">
-          <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            <svg class="w-4 h-4 inline mr-1 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
-            견적성 메일
-          </span>
-          <span id="triage-count" class="text-xs bg-blue-600 text-white rounded-full px-2 py-0.5 font-semibold"><%= @triage_count %></span>
-        </div>
-        <%# 견적성 액션 바 %>
-        <div id="triage-action-bar" class="hidden px-4 py-2 bg-green-50 dark:bg-green-900/20 border-b border-green-200 dark:border-green-800 flex items-center gap-3">
-          <label class="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" id="triage-select-all" onchange="toggleTriageSelectAll(this.checked)"
-                   class="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500">
-            <span class="text-xs font-medium text-green-700 dark:text-green-400">전체선택</span>
-          </label>
-          <span id="triage-selected-count" class="text-xs text-green-600 dark:text-green-400 font-semibold"></span>
-          <button onclick="triageToKanban()" class="ml-auto text-xs px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium flex items-center gap-1 transition-colors">
-            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
-            칸반으로 이동
-          </button>
-          <button onclick="triageRevert()" class="text-xs px-3 py-1.5 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-            ↩ 되돌리기
-          </button>
-        </div>
+    <%# ===== PANE 3: Email body (all orders, not just RFQ) ===== %>
+    <div class="inbox-body bg-white dark:bg-gray-900" id="email-body-pane">
+      <%# Default empty state %>
+      <div id="email-empty-state" class="flex flex-col items-center justify-center h-full text-center px-8">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-14 h-14 text-gray-200 dark:text-gray-600 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        <p class="text-gray-500 dark:text-gray-500 text-sm">이메일을 선택하면 내용이 여기에 표시됩니다</p>
+        <p class="text-gray-300 dark:text-gray-600 text-xs mt-1">좌측 목록에서 이메일을 클릭하세요</p>
       </div>
-      <%# 견적성 메일 리스트 %>
-      <div id="triage-list" class="flex-1 overflow-y-auto">
-        <% if @triage_orders.any? %>
-          <ul class="divide-y divide-gray-200 dark:divide-gray-700">
-            <% @triage_orders.each do |order| %>
-              <li class="email-item px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-colors flex items-start gap-2"
-                  id="triage-item-<%= order.id %>" data-order-id="<%= order.id %>">
-                <input type="checkbox" class="triage-cb mt-1 w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500 flex-shrink-0"
-                       data-order-id="<%= order.id %>" onclick="event.stopPropagation(); updateTriageBar()" />
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center gap-2 mb-0.5">
-                    <span class="text-xs px-1.5 py-0.5 bg-blue-600 text-white rounded font-medium">견적</span>
-                    <span class="text-xs text-gray-500 dark:text-gray-500"><%= (order.email_received_at || order.created_at).strftime("%m/%d") %></span>
-                  </div>
-                  <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                    <%= order.display_subject %>
-                  </p>
-                  <p class="text-xs text-gray-500 dark:text-gray-500 truncate mt-0.5">
-                    <%= order.customer_name.presence || order.original_email_from %>
-                  </p>
-                </div>
-              </li>
-            <% end %>
-          </ul>
-        <% else %>
-          <div class="flex flex-col items-center justify-center h-full text-center px-8 py-20">
-            <svg class="w-12 h-12 text-gray-200 dark:text-gray-600 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
-            <p class="text-sm text-gray-500 dark:text-gray-500 font-medium">견적성 메일이 없습니다</p>
-            <p class="text-xs text-gray-400 dark:text-gray-600 mt-1">좌측에서 메일을 선택 후 "견적으로 이동"을 클릭하세요</p>
-          </div>
-        <% end %>
-      </div>
-
-      <%# ===== Phase E: AI 학습 통계 카드 (견적성 패널 하단) ===== %>
-      <% if @rfq_ai_stats %>
-        <div class="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-3 py-3">
-          <div class="flex items-center gap-1.5 mb-2">
-            <svg class="w-3.5 h-3.5 text-[#00A1E0]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L2 7 L12 12 L22 7 Z"/><polyline points="2,17 12,22 22,17"/><polyline points="2,12 12,17 22,12"/></svg>
-            <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">AI 학습 통계</span>
-            <%= link_to admin_rfq_stats_path, class: "ml-auto text-[10px] text-[#00A1E0] hover:underline" do %>상세<% end %>
-          </div>
-          <div class="grid grid-cols-3 gap-2">
-            <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded p-2 text-center">
-              <div class="text-[10px] text-gray-500 dark:text-gray-400">정확도</div>
-              <div class="text-sm font-bold text-[#16325C] dark:text-blue-300"><%= @rfq_ai_stats[:accuracy_pct] %>%</div>
-            </div>
-            <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded p-2 text-center">
-              <div class="text-[10px] text-gray-500 dark:text-gray-400">7일 일치율</div>
-              <div class="text-sm font-bold text-[#16325C] dark:text-blue-300"><%= @rfq_ai_stats[:match_rate_pct] %>%</div>
-            </div>
-            <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded p-2 text-center">
-              <div class="text-[10px] text-gray-500 dark:text-gray-400">학습 데이터</div>
-              <div class="text-sm font-bold text-[#16325C] dark:text-blue-300"><%= @rfq_ai_stats[:total] %>건</div>
-            </div>
-          </div>
-        </div>
-      <% end %>
-    </div>
-
-    <%# ===== 기존 PANE 3 — 이메일 본문 모달 (숨김) ===== %>
-    <div class="hidden" id="email-body-pane">
-      <div id="email-empty-state" class="hidden"></div>
 
       <%# Email detail panels for ALL orders (not just rfq_orders) %>
       <% @all_orders.each do |order| %>
@@ -1906,135 +1746,6 @@
   window.addEventListener('message', function(e) {
     if (e.data === 'close-preview-modal') closePreviewModal();
   });
-
-  // --- 스플릿바 드래그 ---
-  (function() {
-    const splitter = document.getElementById('inbox-splitter');
-    const leftPane = document.getElementById('inbox-left-pane');
-    const rightPane = document.getElementById('inbox-right-pane');
-    if (!splitter || !leftPane || !rightPane) return;
-
-    let dragging = false;
-    let startX = 0;
-    let startWidth = 0;
-
-    splitter.addEventListener('mousedown', function(e) {
-      dragging = true;
-      startX = e.clientX;
-      startWidth = leftPane.offsetWidth;
-      splitter.classList.add('dragging');
-      document.body.style.cursor = 'col-resize';
-      document.body.style.userSelect = 'none';
-      e.preventDefault();
-    });
-
-    document.addEventListener('mousemove', function(e) {
-      if (!dragging) return;
-      const dx = e.clientX - startX;
-      const container = leftPane.parentElement;
-      const totalW = container.offsetWidth - splitter.offsetWidth;
-      const newW = Math.max(280, Math.min(startWidth + dx, totalW - 280));
-      leftPane.style.width = newW + 'px';
-      leftPane.style.flex = 'none';
-    });
-
-    document.addEventListener('mouseup', function() {
-      if (!dragging) return;
-      dragging = false;
-      splitter.classList.remove('dragging');
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-    });
-  })();
-
-  // --- 견적성 패널 멀티체크 ---
-  function updateTriageBar() {
-    const checked = document.querySelectorAll('.triage-cb:checked');
-    const bar = document.getElementById('triage-action-bar');
-    const countEl = document.getElementById('triage-selected-count');
-    if (checked.length > 0) {
-      bar.classList.remove('hidden');
-      countEl.textContent = checked.length + '건 선택됨';
-    } else {
-      bar.classList.add('hidden');
-    }
-  }
-
-  function toggleTriageSelectAll(checked) {
-    document.querySelectorAll('.triage-cb').forEach(cb => { cb.checked = checked; });
-    updateTriageBar();
-  }
-
-  function getTriageSelectedIds() {
-    return Array.from(document.querySelectorAll('.triage-cb:checked')).map(cb => cb.dataset.orderId);
-  }
-
-  function triageToKanban() {
-    const ids = getTriageSelectedIds();
-    if (!ids.length) return;
-    fetch('/inbox/bulk_to_kanban', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF },
-      body: JSON.stringify({ order_ids: ids })
-    }).then(r => r.json()).then(data => {
-      if (data.status === 'ok') {
-        ids.forEach(id => {
-          const el = document.getElementById('triage-item-' + id);
-          if (el) { el.style.transition = 'all 0.3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }
-        });
-        setTimeout(() => {
-          updateTriageBar();
-          const cnt = document.getElementById('triage-count');
-          if (cnt) cnt.textContent = document.querySelectorAll('.triage-cb').length;
-        }, 350);
-      }
-    });
-  }
-
-  function triageRevert() {
-    const ids = getTriageSelectedIds();
-    if (!ids.length) return;
-    fetch('/inbox/bulk_restore', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF },
-      body: JSON.stringify({ order_ids: ids })
-    }).then(r => r.json()).then(data => {
-      if (data.status === 'ok') {
-        ids.forEach(id => {
-          const el = document.getElementById('triage-item-' + id);
-          if (el) { el.style.transition = 'all 0.3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }
-        });
-        setTimeout(() => {
-          updateTriageBar();
-          const cnt = document.getElementById('triage-count');
-          if (cnt) cnt.textContent = document.querySelectorAll('.triage-cb').length;
-        }, 350);
-      }
-    });
-  }
-
-  // 좌측에서 "견적으로 이동" 후 우측 패널에 항목 추가 (페이지 새로고침 대체)
-  var _origBulkToKanban = bulkToKanban;
-  bulkToKanban = function() {
-    const ids = getSelectedIds();
-    if (!ids.length) return;
-    fetch('/inbox/bulk_to_kanban', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF },
-      body: JSON.stringify({ order_ids: ids })
-    }).then(r => r.json()).then(data => {
-      if (data.status === 'ok') {
-        // 좌측에서 제거
-        ids.forEach(id => {
-          const el = document.getElementById('email-item-' + id);
-          if (el) { el.style.transition = 'all 0.3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }
-        });
-        setTimeout(updateBulkBar, 350);
-        // 우측 새로고침 (간단히 reload)
-        setTimeout(() => location.reload(), 500);
-      }
-    });
-  };
 </script>
 
 <%# 첨부파일 미리보기 모달 (iframe) %>
