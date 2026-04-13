@@ -32,7 +32,7 @@ module Ecount
           unit_price:   parse_decimal(row[:unit_price]),
           currency:     row[:currency].presence || "USD",
           sika_product: sika_brand?(row[:brand]),
-          active:       parse_active(row[:active]),
+          active:       parse_active(row[:active])
         }
       end
 

@@ -70,7 +70,7 @@ module Gmail
       end
 
       def decide
-        return Result.new(:whitelist_fast, "whitelist_domain", [@domain]) if whitelist?
+        return Result.new(:whitelist_fast, "whitelist_domain", [ @domain ]) if whitelist?
 
         strong = STRONG_RFQ_KEYWORDS.select { |r| @text.match?(r) }
         weak   = WEAK_SIGNALS.select { |r| @text.match?(r) }

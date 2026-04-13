@@ -16,10 +16,10 @@ module CpoAgent
       risk = RiskAssessmentService.calculate(@order)
 
       severity = case days_left
-                 when ..-1 then :alert
-                 when 0..3 then :alert
-                 else :warning
-                 end
+      when ..-1 then :alert
+      when 0..3 then :alert
+      else :warning
+      end
 
       overdue_label = days_left < 0 ? "#{days_left.abs}일 지연" : "D-#{days_left}"
 

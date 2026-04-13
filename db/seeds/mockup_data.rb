@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 # CPOFlow 의사결정용 목업 데이터 (24개월 기간별 분석)
 # Run: bin/rails runner db/seeds/mockup_data.rb
 
@@ -82,10 +83,10 @@ end
 puts "  ✓ Projects: #{Project.count}개"
 
 # ── 24개월치 과거 발주 데이터 생성 ────────────────────────────────
-users = [admin, manager, ahmed, park, sarah].compact
-clients = [enec, kepco, seoul_metro, khnp, kwater, aldar, hdec].compact
-projects = [barakah, gtx_a, shin_hanul, cheongpyeong, ad_metro, yeongwol, gtx_b].compact
-suppliers_list = [sika, gcm, kcs].compact
+users = [ admin, manager, ahmed, park, sarah ].compact
+clients = [ enec, kepco, seoul_metro, khnp, kwater, aldar, hdec ].compact
+projects = [ barakah, gtx_a, shin_hanul, cheongpyeong, ad_metro, yeongwol, gtx_b ].compact
+suppliers_list = [ sika, gcm, kcs ].compact
 
 # 월별 발주 패턴 (계절성 반영)
 monthly_patterns = {
@@ -100,7 +101,7 @@ monthly_patterns = {
   9  => { count: 8,  base_value: 46_000 },  # 9월 — 가을 성수기
   10 => { count: 9,  base_value: 50_000 },
   11 => { count: 7,  base_value: 43_000 },
-  12 => { count: 4,  base_value: 30_000 },  # 12월 — 연말 소강
+  12 => { count: 4,  base_value: 30_000 }  # 12월 — 연말 소강
 }
 
 order_templates = [
@@ -111,7 +112,7 @@ order_templates = [
   { title_prefix: "구조용 에폭시 접착제", item: "Sikadur®-31 CF Normal",      category: "nuclear", value_mul: 1.5 },
   { title_prefix: "콘크리트 혼화제",      item: "Sika® ViscoCrete®-5930",     category: "tunnel",  value_mul: 0.7 },
   { title_prefix: "정밀 그라우트재",      item: "SikaGrout®-314",             category: "hydro",   value_mul: 0.8 },
-  { title_prefix: "방수 멤브레인",        item: "Sika® Igolflex®-N",          category: "gtx",     value_mul: 1.3 },
+  { title_prefix: "방수 멤브레인",        item: "Sika® Igolflex®-N",          category: "gtx",     value_mul: 1.3 }
 ]
 
 created = 0
@@ -140,9 +141,9 @@ created = 0
     status = if months_ago > 6
       rand < 0.85 ? :get_grn : :pending_po
     elsif months_ago > 3
-      [:get_grn, :get_grn, :get_grn, :problem, :delivery_items].sample
+      [ :get_grn, :get_grn, :get_grn, :problem, :delivery_items ].sample
     else
-      [:new_po, :delivery_items, :problem, :make_quo, :new_rfq].sample
+      [ :new_po, :delivery_items, :problem, :make_quo, :new_rfq ].sample
     end
 
     # 납기일 (생성일 + 14~60일)
@@ -169,7 +170,7 @@ created = 0
       currency:        "USD",
       estimated_value: value,
       status:          status,
-      priority:        [:low, :medium, :medium, :high, :urgent].sample,
+      priority:        [ :low, :medium, :medium, :high, :urgent ].sample,
       due_date:        due,
       tags:            "#{template[:category]},sika,mockup",
       user:            user,
@@ -218,7 +219,7 @@ additional_employees = [
   { name: "Diego Morales", name_en: "Diego Morales", nationality: "PH",
     passport: "PH34567890", dob: "1989-09-08", dept_name: "물류팀",
     title: "Warehouse Supervisor", type: "dispatch", hire: "2022-06-01",
-    phone: "+971-55-567-8901", active: false, terminated: "2025-01-31" },
+    phone: "+971-55-567-8901", active: false, terminated: "2025-01-31" }
 ]
 
 new_employees = []
@@ -258,7 +259,7 @@ visa_data = [
   { emp: new_employees[6], type: "Employment", country: "AE",
     num: "UAE-2024-KTY-001", issued: "2024-01-15", expiry: 1.year.from_now,   status: "active" },
   { emp: new_employees[7], type: "Employment", country: "AE",
-    num: "UAE-2022-DIM-001", issued: "2022-06-15", expiry: 5.days.ago,        status: "expired" }, # 만료됨
+    num: "UAE-2022-DIM-001", issued: "2022-06-15", expiry: 5.days.ago,        status: "expired" } # 만료됨
 ]
 
 visa_data.each do |vd|

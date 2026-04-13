@@ -9,6 +9,6 @@ class CreateAgentTrustLevels < ActiveRecord::Migration[8.1]
       t.datetime   :auto_activated_at
       t.timestamps
     end
-    add_index :agent_trust_levels, [:user_id, :insight_type], unique: true, name: "idx_trust_user_type"
+    add_index :agent_trust_levels, [ :user_id, :insight_type ], unique: true, name: "idx_trust_user_type"
   end
 end

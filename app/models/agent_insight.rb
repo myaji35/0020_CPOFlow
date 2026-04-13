@@ -20,7 +20,7 @@ class AgentInsight < ApplicationRecord
   }
   scope :for_order, ->(order_id) { where(order_id: order_id).active.order(severity: :desc) }
   scope :for_dashboard, -> {
-    active.where(severity: [:warning, :alert]).order(severity: :desc, created_at: :desc).limit(5)
+    active.where(severity: [ :warning, :alert ]).order(severity: :desc, created_at: :desc).limit(5)
   }
 
   # 동일 타입의 기존 Insight가 있으면 교체 (중복 방지)

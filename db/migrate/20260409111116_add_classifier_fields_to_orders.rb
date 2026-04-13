@@ -9,6 +9,6 @@ class AddClassifierFieldsToOrders < ActiveRecord::Migration[8.1]
     add_column :orders, :cache_hit, :boolean, default: false, null: false
 
     add_index :orders, :classifier_version
-    add_index :orders, [:classifier_version, :created_at]
+    add_index :orders, [ :classifier_version, :created_at ]
   end
 end

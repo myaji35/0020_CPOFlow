@@ -3,7 +3,7 @@
 class Country < ApplicationRecord
   has_many :companies, dependent: :destroy
 
-  REGIONS = ["Middle East", "Asia", "Pacific", "Europe", "Americas", "Africa"].freeze
+  REGIONS = [ "Middle East", "Asia", "Pacific", "Europe", "Americas", "Africa" ].freeze
 
   validates :code, :name, :name_en, presence: true
   validates :code, uniqueness: true, length: { is: 2 }

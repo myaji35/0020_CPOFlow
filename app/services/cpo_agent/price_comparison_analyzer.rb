@@ -13,7 +13,7 @@ module CpoAgent
 
       past_orders = Order.where(supplier_id: @order.supplier_id)
                          .where.not(id: @order.id)
-                         .where.not(estimated_value: [nil, 0])
+                         .where.not(estimated_value: [ nil, 0 ])
                          .order(created_at: :desc)
                          .limit(10)
 

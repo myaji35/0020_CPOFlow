@@ -153,8 +153,8 @@ class Gmail::ClassificationOrchestratorTest < ActiveSupport::TestCase
       confidence: "high",
       reason: "strong RFQ signal + product match",
       customer_name: "RandomCorp",
-      items: ["Sika MonoTop 107"],
-      quantities: ["100 kg"],
+      items: [ "Sika MonoTop 107" ],
+      quantities: [ "100 kg" ],
       urgency: "urgent"
     }
 

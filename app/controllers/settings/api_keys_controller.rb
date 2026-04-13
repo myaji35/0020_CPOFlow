@@ -31,7 +31,7 @@ module Settings
         client.messages.create(
           model: "claude-haiku-4-5-20251001",
           max_tokens: 10,
-          messages: [{ role: "user", content: "Say OK" }]
+          messages: [ { role: "user", content: "Say OK" } ]
         )
         render json: { status: "ok", message: "API 연결 정상 — #{source_label} 토큰 사용 중 (#{token_status[:masked]})" }
       rescue => e

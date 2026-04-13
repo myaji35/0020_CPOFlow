@@ -84,8 +84,8 @@ class Gmail::CostGuardTest < ActiveSupport::TestCase
     fake = Object.new
     fake.define_singleton_method(:warn) { |_msg| warn_count += 1 }
     fake.define_singleton_method(:info) { |_msg| }
-    fake.define_singleton_method(:error){ |_msg| }
-    fake.define_singleton_method(:debug){ |_msg| }
+    fake.define_singleton_method(:error) { |_msg| }
+    fake.define_singleton_method(:debug) { |_msg| }
     Rails.logger = fake
 
     Gmail::CostGuard.warn_once!

@@ -35,7 +35,7 @@ Rails.application.routes.draw do
     resources :order_quotes, only: %i[new create destroy] do
       member { patch :select }
     end
-    resource :flow, only: [:show], controller: "order_flows"
+    resource :flow, only: [ :show ], controller: "order_flows"
     member do
       patch :move_status
       patch :quick_update
@@ -92,17 +92,17 @@ Rails.application.routes.draw do
     delete "sheets_config/clear", to: "sheets_config#clear",  as: :sheets_config_clear
 
     # eCountERP API 동기화 관리
-    resources :ecount_sync, only: [:index] do
+    resources :ecount_sync, only: [ :index ] do
       collection { post :trigger }
     end
 
     # 중복 주문 병합
-    resources :duplicate_orders, only: [:index] do
+    resources :duplicate_orders, only: [ :index ] do
       collection { post :merge }
     end
 
     # Phase E: RFQ AI 학습 통계
-    resources :rfq_stats, only: [:index]
+    resources :rfq_stats, only: [ :index ]
   end
 
   # Gmail OAuth2
@@ -119,7 +119,7 @@ Rails.application.routes.draw do
   end
 
   # 거래처 (Suppliers) - destroy 제외 (발주 이력 보존)
-  resources :suppliers, except: [:destroy] do
+  resources :suppliers, except: [ :destroy ] do
     collection { get :search }
     resources :contact_persons, only: %i[new create edit update destroy]
     resources :supplier_products, only: %i[create destroy]
@@ -209,7 +209,7 @@ Rails.application.routes.draw do
     patch "profile", to: "profile#update"
     patch "locale", to: "profile#update_locale", as: :update_locale
     patch "theme",  to: "profile#update_theme",  as: :update_theme
-    get  "menu_permissions",    to: "menu_permissions#index",     as: :menu_permissions
+    get "menu_permissions",    to: "menu_permissions#index",     as: :menu_permissions
     patch "menu_permissions",   to: "menu_permissions#update_all", as: :update_menu_permissions
     patch "notifications",      to: "notifications#update",        as: :notifications
     post  "notifications/test", to: "notifications#test",          as: :test_notifications

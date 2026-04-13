@@ -41,7 +41,7 @@ module Ecount
       "country"     => :country,
       "email"       => :contact_email,
       "phone"       => :contact_phone,
-      "notes"       => :notes,
+      "notes"       => :notes
     }.freeze
 
     def initialize(file_path)

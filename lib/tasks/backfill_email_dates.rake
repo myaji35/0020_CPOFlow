@@ -12,7 +12,7 @@ namespace :email do
     end
 
     svc = Gmail::GmailService.new(account)
-    orders = Order.where(email_received_at: nil).where.not(source_email_id: [nil, ""])
+    orders = Order.where(email_received_at: nil).where.not(source_email_id: [ nil, "" ])
     total = orders.count
     puts "Backfilling #{total} orders..."
 
@@ -21,7 +21,7 @@ namespace :email do
     orders.find_each(batch_size: 100).with_index do |order, idx|
       begin
         # metadata format — 헤더/본문 없이 internalDate만 가져옴 (빠름)
-        msg = account.gmail_service_instance.get_user_message("me", order.source_email_id, format: "metadata", metadata_headers: ["Date"])
+        msg = account.gmail_service_instance.get_user_message("me", order.source_email_id, format: "metadata", metadata_headers: [ "Date" ])
         if msg&.internal_date
           received_at = Time.at(msg.internal_date.to_i / 1000).utc
           order.update_column(:email_received_at, received_at)

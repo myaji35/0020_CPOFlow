@@ -12,7 +12,7 @@ class OrderGraphBuilder
 
   def initialize(root, depth: MAX_DEPTH, include_suggested: false)
     @root = root
-    @depth = [[depth.to_i, 1].max, MAX_DEPTH].min
+    @depth = [ [ depth.to_i, 1 ].max, MAX_DEPTH ].min
     @include_suggested = include_suggested
     @nodes = {}          # id => node hash
     @edges = []          # array of edge hashes
@@ -36,8 +36,8 @@ class OrderGraphBuilder
   end
 
   def bfs_explicit
-    frontier = [[@root, 0]]
-    visited = Set.new(["#{@root.class.name}:#{@root.id}"])
+    frontier = [ [ @root, 0 ] ]
+    visited = Set.new([ "#{@root.class.name}:#{@root.id}" ])
     until frontier.empty?
       node, d = frontier.shift
       next if d >= @depth
@@ -46,16 +46,16 @@ class OrderGraphBuilder
       (out_links + in_links).each do |link|
         other = if link.source_type == node.class.name && link.source_id == node.id
                   link.target
-                else
+        else
                   link.source
-                end
+        end
         next if other.nil?
         key = "#{other.class.name}:#{other.id}"
         add_node(other) unless @nodes.key?(key)
         push_explicit_edge(link)
         unless visited.include?(key)
           visited << key
-          frontier << [other, d + 1]
+          frontier << [ other, d + 1 ]
         end
       end
     end
@@ -93,9 +93,9 @@ class OrderGraphBuilder
       order = Order.find_by(id: n[:id].split(":").last)
       next unless order
       [
-        [order.client,   "Client",   "requested_by"],
-        [order.supplier, "Supplier", "quoted_by"],
-        [order.project,  "Project",  "for_project"]
+        [ order.client,   "Client",   "requested_by" ],
+        [ order.supplier, "Supplier", "quoted_by" ],
+        [ order.project,  "Project",  "for_project" ]
       ].each do |obj, type, relation|
         next unless obj
         vnode_id = "#{type}:#{obj.id}"

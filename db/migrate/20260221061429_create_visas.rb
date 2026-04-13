@@ -12,7 +12,7 @@ class CreateVisas < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :visas, [:employee_id, :status]
+    add_index :visas, [ :employee_id, :status ]
     add_index :visas, :expiry_date
   end
 end

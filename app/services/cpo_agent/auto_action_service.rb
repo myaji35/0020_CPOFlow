@@ -30,7 +30,7 @@ module CpoAgent
 
     def auto_price_comparison
       past = Order.where(supplier_id: @order.supplier_id)
-                  .where.not(id: @order.id, estimated_value: [nil, 0])
+                  .where.not(id: @order.id, estimated_value: [ nil, 0 ])
                   .order(created_at: :desc).limit(3)
       return if past.empty?
 

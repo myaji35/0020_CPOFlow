@@ -144,12 +144,12 @@ module Gmail
     def normalize_haiku(haiku_hash)
       haiku_hash ||= {}
       verdict = case haiku_hash[:verdict] || haiku_hash[:rfq_verdict]
-                when :confirmed, "confirmed" then :confirmed
-                when :excluded, "excluded"   then :excluded
-                when :uncertain, "uncertain" then :uncertain
-                else
+      when :confirmed, "confirmed" then :confirmed
+      when :excluded, "excluded"   then :excluded
+      when :uncertain, "uncertain" then :uncertain
+      else
                   haiku_hash[:is_rfq] ? :confirmed : :uncertain
-                end
+      end
 
       Gmail::ClassificationResult.new(
         verdict: verdict,

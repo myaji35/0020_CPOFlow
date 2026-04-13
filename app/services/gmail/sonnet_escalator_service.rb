@@ -60,7 +60,7 @@ module Gmail
         model:      ENV.fetch("RFQ_SONNET_MODEL", DEFAULT_MODEL),
         max_tokens: 2048,
         system:     build_system_blocks,
-        messages:   [{ role: "user", content: build_user_prompt }]
+        messages:   [ { role: "user", content: build_user_prompt } ]
       )
     end
 
@@ -162,11 +162,11 @@ module Gmail
       first = response.content&.first
       text = if first.respond_to?(:text)
                first.text.to_s
-             elsif first.is_a?(Hash)
+      elsif first.is_a?(Hash)
                first[:text].to_s
-             else
+      else
                ""
-             end
+      end
 
       clean = text.gsub(/\A```(?:json)?\s*/i, "").gsub(/\s*```\z/, "").strip
       JSON.parse(clean)
@@ -178,10 +178,10 @@ module Gmail
     def build_result(parsed, latency:, response:)
       verdict_str = parsed["final_verdict"].to_s
       verdict_sym = case verdict_str
-                    when "confirmed" then :confirmed
-                    when "excluded"  then :excluded
-                    else :confirmed  # Recall 우선: 애매하면 confirmed
-                    end
+      when "confirmed" then :confirmed
+      when "excluded"  then :excluded
+      else :confirmed  # Recall 우선: 애매하면 confirmed
+      end
 
       confidence = parsed["sonnet_confidence"].to_s.presence || "medium"
 

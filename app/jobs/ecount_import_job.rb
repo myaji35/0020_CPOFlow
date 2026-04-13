@@ -16,7 +16,7 @@ class EcountImportJob < ApplicationJob
     Ecount::EcountImportService.new(log).run!
   rescue => e
     log&.update!(status: :failed,
-                 error_details: [{ row: 0, error: "#{e.class}: #{e.message}" }].to_json,
+                 error_details: [ { row: 0, error: "#{e.class}: #{e.message}" } ].to_json,
                  completed_at: Time.current)
     raise
   end

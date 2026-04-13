@@ -11,7 +11,7 @@ class CreateEmployeeAssignments < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :employee_assignments, [:employee_id, :project_id]
-    add_index :employee_assignments, [:project_id, :status]
+    add_index :employee_assignments, [ :employee_id, :project_id ]
+    add_index :employee_assignments, [ :project_id, :status ]
   end
 end

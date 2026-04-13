@@ -27,7 +27,7 @@ module Ecount
           contact_email: row[:contact_email].to_s.strip,
           contact_phone: row[:contact_phone].to_s.strip,
           notes:         row[:notes].to_s.strip,
-          active:        parse_active(row[:active]),
+          active:        parse_active(row[:active])
         }
       end
 

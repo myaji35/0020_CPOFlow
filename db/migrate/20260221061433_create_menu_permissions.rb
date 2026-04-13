@@ -10,6 +10,6 @@ class CreateMenuPermissions < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :menu_permissions, [:role, :menu_key], unique: true
+    add_index :menu_permissions, [ :role, :menu_key ], unique: true
   end
 end

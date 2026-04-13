@@ -11,7 +11,7 @@ module Ecount
         "발주확정" => "new_po",
         "조달중"   => "delivery_items",
         "품질검사" => "problem",
-        "납품완료" => "get_grn",
+        "납품완료" => "get_grn"
       }.freeze
 
       def initialize(user)
@@ -53,7 +53,7 @@ module Ecount
           tags:                   "ecount-import",
           original_email_from:    "ecount@import",
           original_email_subject: "eCount 거래이력: #{ref}",
-          user:                   @user,
+          user:                   @user
         }
       end
 

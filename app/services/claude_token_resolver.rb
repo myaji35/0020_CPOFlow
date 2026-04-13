@@ -18,7 +18,7 @@
 #   ClaudeTokenResolver.status       # => { source: :claude_cli, masked: "eyJhb...xyz" }
 class ClaudeTokenResolver
   CLAUDE_CONFIG_DIR = ENV.fetch("CLAUDE_CONFIG_DIR", File.join(Dir.home, ".claude"))
-  CREDENTIALS_FILES = [".credentials.json", "credentials.json"].freeze
+  CREDENTIALS_FILES = [ ".credentials.json", "credentials.json" ].freeze
 
   class << self
     def resolve

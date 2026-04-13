@@ -14,7 +14,7 @@
 if Rails.env.production?
   Rails.application.configure do
     # 에러 발생 시 상세 로그 (request_id 포함)
-    config.log_tags = [:request_id]
+    config.log_tags = [ :request_id ]
 
     # 미처리 예외 로깅
     config.exceptions_app = ->(env) {

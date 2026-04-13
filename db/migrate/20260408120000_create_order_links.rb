@@ -11,11 +11,11 @@ class CreateOrderLinks < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :order_links, [:source_type, :source_id], name: "idx_order_links_source"
-    add_index :order_links, [:target_type, :target_id], name: "idx_order_links_target"
-    add_index :order_links, [:relation, :status], name: "idx_order_links_rel_status"
+    add_index :order_links, [ :source_type, :source_id ], name: "idx_order_links_source"
+    add_index :order_links, [ :target_type, :target_id ], name: "idx_order_links_target"
+    add_index :order_links, [ :relation, :status ], name: "idx_order_links_rel_status"
     add_index :order_links,
-              [:source_type, :source_id, :target_type, :target_id, :relation],
+              [ :source_type, :source_id, :target_type, :target_id, :relation ],
               unique: true, name: "idx_order_links_unique"
   end
 end

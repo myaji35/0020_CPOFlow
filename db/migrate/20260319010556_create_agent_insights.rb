@@ -16,8 +16,8 @@ class CreateAgentInsights < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :agent_insights, [:order_id, :insight_type], name: "idx_insights_order_type"
+    add_index :agent_insights, [ :order_id, :insight_type ], name: "idx_insights_order_type"
     add_index :agent_insights, :expires_at
-    add_index :agent_insights, [:dismissed, :expires_at], name: "idx_insights_active"
+    add_index :agent_insights, [ :dismissed, :expires_at ], name: "idx_insights_active"
   end
 end

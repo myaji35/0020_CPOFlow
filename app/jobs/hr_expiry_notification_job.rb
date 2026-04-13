@@ -8,8 +8,8 @@
 class HrExpiryNotificationJob < ApplicationJob
   queue_as :default
 
-  VISA_TRIGGER_DAYS     = [60, 30, 14].freeze
-  CONTRACT_TRIGGER_DAYS = [30, 14].freeze
+  VISA_TRIGGER_DAYS     = [ 60, 30, 14 ].freeze
+  CONTRACT_TRIGGER_DAYS = [ 30, 14 ].freeze
 
   def perform
     today = Date.today

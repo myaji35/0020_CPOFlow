@@ -78,7 +78,7 @@ module Sap
       require "playwright"
 
       Playwright.create(playwright_cli_executable_path: `which npx`.strip + " playwright") do |playwright|
-        browser = playwright.chromium.launch(headless: true, args: ["--no-sandbox"])
+        browser = playwright.chromium.launch(headless: true, args: [ "--no-sandbox" ])
         context = browser.new_context(
           user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
           accept_downloads: true

@@ -94,11 +94,11 @@ class ClassifyV2Day3Gate
       next unless order
 
       user_verdict = case order.rfq_status.to_s
-                     when "rfq_triage"   then "confirmed"
-                     when "rfq_excluded" then "excluded"
-                     else
+      when "rfq_triage"   then "confirmed"
+      when "rfq_excluded" then "excluded"
+      else
                        next # pending 등은 집계 제외 (사용자 액션 없음)
-                     end
+      end
 
       total += 1
       disagreements += 1 if user_verdict != log.verdict.to_s

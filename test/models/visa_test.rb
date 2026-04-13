@@ -14,12 +14,12 @@ class VisaTest < ActiveSupport::TestCase
     Visa.where(status: "active").where.not(expiry_date: nil).limit(10).each do |v|
       days = (v.expiry_date - Date.today).to_i
       level = case days
-              when ..0      then "만료"
-              when 1..30    then "긴급"
-              when 31..60   then "경고"
-              when 61..90   then "주의"
-              else               "정상"
-              end
+      when ..0      then "만료"
+      when 1..30    then "긴급"
+      when 31..60   then "경고"
+      when 61..90   then "주의"
+      else               "정상"
+      end
       assert_includes valid_levels, level
     end
     assert valid_levels.any?, "경고 레벨 목록 존재"

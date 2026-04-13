@@ -159,7 +159,7 @@ module Sheets
         [
           month.strftime("%Y-%m"),
           mo.count, del.count,
-          mo.where.not(status: ["get_grn", "give_up"]).count,
+          mo.where.not(status: [ "get_grn", "give_up" ]).count,
           rate,
           mo.sum(:estimated_value).to_f.round(0),
           avg&.round(1) || 0
@@ -262,13 +262,13 @@ module Sheets
       visa_rows = Visa.includes(:employee).order(:expiry_date).map do |v|
         days  = v.expiry_date ? (v.expiry_date - Date.today).to_i : nil
         level = case days
-                when nil   then "N/A"
-                when ..0   then "만료"
-                when 1..30 then "긴급"
-                when 31..60 then "경고"
-                when 61..90 then "주의"
-                else "정상"
-                end
+        when nil   then "N/A"
+        when ..0   then "만료"
+        when 1..30 then "긴급"
+        when 31..60 then "경고"
+        when 61..90 then "주의"
+        else "정상"
+        end
         [ v.employee&.name, v.visa_type, v.issuing_country,
           v.visa_number, v.expiry_date&.strftime("%Y-%m-%d"),
           days || "N/A", level, v.status ]
@@ -342,8 +342,8 @@ module Sheets
     def write_dashboard_kpi_header
       today = Date.today
 
-      active   = Order.where.not(status: ["get_grn", "give_up"]).count
-      overdue  = Order.where.not(status: ["get_grn", "give_up"]).where("due_date < ?", today).count
+      active   = Order.where.not(status: [ "get_grn", "give_up" ]).count
+      overdue  = Order.where.not(status: [ "get_grn", "give_up" ]).where("due_date < ?", today).count
       del_m    = Order.where(status: "get_grn", updated_at: today.beginning_of_month..).count
       val_m    = Order.where(created_at: today.beginning_of_month..).sum(:estimated_value).to_f
 
@@ -359,7 +359,7 @@ module Sheets
         [ "진행중 발주", "지연 발주", "이달 납품", "이달 수주액(USD)", "납기준수율(이달)", "", "" ],
         [ active, overdue, del_m, val_m.round(0), "#{rate}%", "", "" ],
         [ "", "", "", "", "", "", "" ],
-        [ "← 월별 수주/납품 차트", "", "", "", "현장별 파이차트 →", "", "" ],
+        [ "← 월별 수주/납품 차트", "", "", "", "현장별 파이차트 →", "", "" ]
       ]
 
       range = "대시보드!A1"

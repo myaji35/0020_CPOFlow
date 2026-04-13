@@ -68,7 +68,7 @@ class E2ETestRunner
     response = http.request(req)
 
     # 리다이렉트 따라가기
-    if follow_redirect && [301, 302].include?(response.code.to_i)
+    if follow_redirect && [ 301, 302 ].include?(response.code.to_i)
       location = response["Location"]
       location = "#{BASE_URL}#{location}" unless location.start_with?("http")
       uri2 = URI(location)
@@ -107,7 +107,7 @@ class E2ETestRunner
     })
 
     # 로그인 성공 시 리다이렉트
-    if [301, 302].include?(resp2.code.to_i)
+    if [ 301, 302 ].include?(resp2.code.to_i)
       @cookie = resp2["Set-Cookie"] || @cookie
       return true
     end
@@ -151,12 +151,12 @@ class E2ETestRunner
 
   def test_1_health_check
     resp = get("/up", follow_redirect: false)
-    assert_status("Health Check (/up)", resp, [200])
+    assert_status("Health Check (/up)", resp, [ 200 ])
   end
 
   def test_2_login_page
     resp = get("/users/sign_in", follow_redirect: false)
-    assert_status("Login Page loads", resp, [200])
+    assert_status("Login Page loads", resp, [ 200 ])
     assert_body_contains("Login form present", resp, "sign_in")
   end
 
@@ -164,7 +164,7 @@ class E2ETestRunner
     if login!
       pass("Login as admin")
       resp = get("/dashboard")
-      assert_status("Dashboard accessible", resp, [200])
+      assert_status("Dashboard accessible", resp, [ 200 ])
       assert_body_contains("Dashboard KPI present", resp, "대시보드")
     else
       fail_test("Login as admin", "Authentication failed")
@@ -173,48 +173,48 @@ class E2ETestRunner
 
   def test_4_kanban_page
     resp = get("/kanban")
-    assert_status("Kanban Board loads", resp, [200])
+    assert_status("Kanban Board loads", resp, [ 200 ])
   end
 
   def test_5_orders_index
     resp = get("/orders")
-    assert_status("Orders Index loads", resp, [200])
+    assert_status("Orders Index loads", resp, [ 200 ])
   end
 
   def test_6_order_create_form
     resp = get("/orders/new")
-    assert_status("New Order form loads", resp, [200])
+    assert_status("New Order form loads", resp, [ 200 ])
     assert_body_contains("Order form fields", resp, "order")
   end
 
   def test_7_inbox_page
     resp = get("/inbox")
-    assert_status("Inbox loads", resp, [200])
+    assert_status("Inbox loads", resp, [ 200 ])
   end
 
   def test_8_clients_page
     resp = get("/clients")
-    assert_status("Clients page loads", resp, [200])
+    assert_status("Clients page loads", resp, [ 200 ])
   end
 
   def test_9_suppliers_page
     resp = get("/suppliers")
-    assert_status("Suppliers page loads", resp, [200])
+    assert_status("Suppliers page loads", resp, [ 200 ])
   end
 
   def test_10_calendar_page
     resp = get("/calendar")
-    assert_status("Calendar loads", resp, [200])
+    assert_status("Calendar loads", resp, [ 200 ])
   end
 
   def test_11_reports_page
     resp = get("/reports")
-    assert_status("Reports page loads", resp, [200])
+    assert_status("Reports page loads", resp, [ 200 ])
   end
 
   def test_12_search_page
     resp = get("/search?q=test")
-    assert_status("Search works", resp, [200])
+    assert_status("Search works", resp, [ 200 ])
   end
 
   def test_13_agent_insights_dashboard
@@ -230,7 +230,7 @@ class E2ETestRunner
     order = Order.first
     if order
       resp = get("/orders/#{order.id}/pdf/quote")
-      assert_status("PDF Quote generation", resp, [200, 302])
+      assert_status("PDF Quote generation", resp, [ 200, 302 ])
     else
       pass("PDF Quote generation", "Skipped (no orders)")
     end
@@ -238,7 +238,7 @@ class E2ETestRunner
 
   def test_15_settings_page
     resp = get("/settings")
-    assert_status("Settings page loads", resp, [200])
+    assert_status("Settings page loads", resp, [ 200 ])
   end
 end
 

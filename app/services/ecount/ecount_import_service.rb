@@ -59,7 +59,7 @@ module Ecount
       Rails.logger.info "[EcountImport] #{@log.import_type}: #{success_count} ok, #{errors.size} errors (log ##{@log.id})"
       { success: success_count, errors: errors.size }
     rescue => e
-      @log.update!(status: :failed, error_details: [{ row: 0, error: e.message }].to_json)
+      @log.update!(status: :failed, error_details: [ { row: 0, error: e.message } ].to_json)
       Rails.logger.error "[EcountImport] Failed: #{e.class} — #{e.message}"
       raise
     ensure
@@ -79,7 +79,7 @@ module Ecount
 
     # ActiveStorage 첨부 파일을 임시 파일로 다운로드
     def download_file
-      tmpfile = Tempfile.new(["ecount_import", File.extname(@log.filename.to_s)])
+      tmpfile = Tempfile.new([ "ecount_import", File.extname(@log.filename.to_s) ])
       tmpfile.binmode
       @log.import_file.download { |chunk| tmpfile.write(chunk) }
       tmpfile.flush
@@ -95,7 +95,7 @@ module Ecount
       CSV.open(path, "w", encoding: "UTF-8") do |csv|
         csv << %w[행번호 ecount_code 품목명 오류내용]
         errors.each do |e|
-          csv << [e[:row], e.dig(:data, :ecount_code), e.dig(:data, :name), e[:error]]
+          csv << [ e[:row], e.dig(:data, :ecount_code), e.dig(:data, :name), e[:error] ]
         end
       end
 

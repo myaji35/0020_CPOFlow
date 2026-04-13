@@ -18,7 +18,7 @@ class CreateClassificationLogs < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :classification_logs, [:classifier_version, :created_at]
+    add_index :classification_logs, [ :classifier_version, :created_at ]
     add_index :classification_logs, :would_exclude
   end
 end

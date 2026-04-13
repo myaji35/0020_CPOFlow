@@ -4,7 +4,7 @@
 # - development: 한국어 (대표님 확인용)
 # - production: 영어 (해외 사용자용)
 Rails.application.configure do
-  config.i18n.available_locales = [:en, :ko, :ar]
+  config.i18n.available_locales = [ :en, :ko, :ar ]
 
   config.i18n.default_locale = if Rails.env.production?
     :en
@@ -12,5 +12,5 @@ Rails.application.configure do
     :ko
   end
 
-  config.i18n.fallbacks = [:en]
+  config.i18n.fallbacks = [ :en ]
 end

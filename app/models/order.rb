@@ -264,11 +264,11 @@ class Order < ApplicationRecord
 
     prev, curr = saved_change_to_status
     relation = case
-               when prev == "pending_po" && curr == "new_po"
+    when prev == "pending_po" && curr == "new_po"
                  "confirmed_to"
-               when curr == "get_grn"
+    when curr == "get_grn"
                  "delivered_as"
-               end
+    end
     return unless relation
 
     OrderLink.find_or_create_by!(
