@@ -49,7 +49,9 @@ module Gmail
 
       case gate.action
       when :reject_no_signal
-        return log_and_return(build_stage1_excluded(gate))
+        # Recall 우선 정책: 신호 없는 메일도 uncertain으로 수신
+        # Stage 0에서 뉴스레터/자사도메인은 이미 제외됨. 여기 도달한 메일은 모호한 건.
+        return log_and_return(build_stage1_uncertain(gate))
       when :whitelist_fast, :pass_to_llm
         # fall through to Stage 2
       end
@@ -122,6 +124,17 @@ module Gmail
         verdict: :excluded, is_rfq: false, confidence: "high",
         stage_reached: 1, classifier_version: CLASSIFIER_VERSION,
         reason: "stage1_#{gate_result.reason}",
+        extracted: {}, cost_usd: 0.0, latency_ms: @stage1_ms || 0,
+        cache_hit: false, model: "rule-only"
+      )
+    end
+
+    # Recall 우선: 신호 없는 메일도 uncertain으로 수신 (모호한 건 = 수신)
+    def build_stage1_uncertain(gate_result)
+      Gmail::ClassificationResult.new(
+        verdict: :uncertain, is_rfq: nil, confidence: "low",
+        stage_reached: 1, classifier_version: CLASSIFIER_VERSION,
+        reason: "stage1_no_signal_but_recall_priority",
         extracted: {}, cost_usd: 0.0, latency_ms: @stage1_ms || 0,
         cache_hit: false, model: "rule-only"
       )

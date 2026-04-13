@@ -210,15 +210,14 @@ module Gmail
           :excluded
         end
       else
-        # LLM 불가: 키워드만으로 판정 (더 관대하게 — 놓치는 것보다 보이는 게 나음)
+        # LLM 불가: 키워드만으로 판정 (recall 우선 — 놓치는 것보다 보이는 게 나음)
+        # 이미 Stage 0에서 뉴스레터/자사도메인은 제외되었으므로, 여기 도달한 메일은 uncertain 이상
         hybrid_score = keyword_result[:score]
 
         rfq_verdict = if hybrid_score >= 50
           :confirmed
-        elsif hybrid_score >= 10
-          :uncertain    # 키워드가 조금이라도 매칭되면 uncertain으로 Inbox에 표시
         else
-          :excluded
+          :uncertain    # LLM 없으면 모호한 건도 수신 (recall 우선 정책)
         end
 
         Rails.logger.warn "[RfqDetector] LLM unavailable — keyword-only verdict: #{rfq_verdict} (score=#{hybrid_score}) for: #{@email[:subject]}"

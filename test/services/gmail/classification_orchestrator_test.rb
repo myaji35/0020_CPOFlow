@@ -122,8 +122,8 @@ class Gmail::ClassificationOrchestratorTest < ActiveSupport::TestCase
     assert_equal "stage0_excluded_pattern", result.reason
   end
 
-  # ===== 4. Stage 1: reject_no_signal → excluded (stage 1) =====
-  test "stage1_reject_no_signal: 일반 도메인 + RFQ 신호 0개 → excluded at stage 1" do
+  # ===== 4. Stage 1: reject_no_signal → uncertain (recall 우선 정책) =====
+  test "stage1_reject_no_signal: 일반 도메인 + RFQ 신호 0개 → uncertain at stage 1 (recall 우선)" do
     email = build_email(
       from: "friend@example-unknown.com",
       subject: "Lunch tomorrow",
@@ -133,9 +133,10 @@ class Gmail::ClassificationOrchestratorTest < ActiveSupport::TestCase
 
     result = with_haiku_forbidden { Gmail::ClassificationOrchestrator.new(email).classify }
 
-    assert_equal :excluded, result.verdict
+    assert_equal :uncertain, result.verdict,
+      "Recall 우선 정책: 신호 없는 메일도 uncertain으로 수신"
     assert_equal 1, result.stage_reached
-    assert_match(/stage1_no_rfq_signal/, result.reason)
+    assert_match(/stage1_no_signal_but_recall_priority/, result.reason)
     assert_equal before_count + 1, ClassificationLog.count
   end
 
