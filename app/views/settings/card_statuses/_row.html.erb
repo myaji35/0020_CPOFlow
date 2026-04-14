@@ -1,0 +1,49 @@
+<div class="flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-700 last:border-0"
+     data-card-status-row="<%= cs.id %>"
+     data-cs-id="<%= cs.id %>"
+     data-name="<%= cs.name %>"
+     data-bg="<%= cs.bg_color %>"
+     data-border="<%= cs.border_color %>"
+     data-text="<%= cs.text_color %>">
+
+  <span class="cursor-move text-gray-400 hover:text-gray-600" data-sortable-handle>≡</span>
+
+  <span class="inline-block w-6 h-6 rounded" style="background:<%= cs.bg_color %>; border:1px solid <%= cs.border_color %>"></span>
+
+  <span class="flex-1 text-sm font-medium"
+        contenteditable="true"
+        ondblclick="this.focus()"
+        onblur="inlineRename(<%= cs.id %>, this.textContent.trim())"><%= cs.name %></span>
+
+  <% if cs.is_system? %>
+    <span class="text-xs text-gray-400">시스템</span>
+  <% elsif cs.orders.count > 0 %>
+    <span class="text-xs text-gray-400">사용 <%= cs.orders.count %>건</span>
+  <% end %>
+
+  <% if cs.is_default? %>
+    <span class="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded">기본값</span>
+  <% end %>
+
+  <span class="text-xs text-gray-500">
+    <% if (r = cs.parsed_auto_rule) %>
+      자동: <%= r["when"] == "due_date" ? "마감 #{r["value"]}일 #{r["operator"] == "lte" ? "이내" : "이상"}" : r["when"] %>
+    <% else %>
+      수동
+    <% end %>
+  </span>
+
+  <button type="button" onclick="openCardStatusModal(<%= cs.id %>)"
+          class="text-xs text-blue-600 hover:underline">편집</button>
+
+  <% unless cs.is_system? %>
+    <%= button_to "삭제",
+                  settings_card_status_path(cs),
+                  method: :delete,
+                  data: { confirm: "정말 삭제하시겠습니까?" },
+                  form_class: "inline",
+                  class: "text-xs text-red-600 hover:underline bg-transparent border-0 cursor-pointer p-0 disabled:opacity-30 disabled:cursor-not-allowed",
+                  disabled: cs.orders.count.positive?,
+                  title: (cs.orders.count.positive? ? "사용 중인 카드 #{cs.orders.count}건 있음" : "삭제") %>
+  <% end %>
+</div>

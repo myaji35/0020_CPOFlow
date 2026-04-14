@@ -1,0 +1,106 @@
+<div id="card-status-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+     data-controller="card-status-preview">
+
+  <%= form_with model: card_status, url: (card_status.persisted? ? settings_card_status_path(card_status) : settings_card_statuses_path),
+                method: (card_status.persisted? ? :patch : :post),
+                id: "card-status-form",
+                class: "bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg p-6" do |f| %>
+
+    <h2 class="text-lg font-bold mb-4">상태 편집</h2>
+
+    <div class="space-y-3">
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1.5">라벨 이름</label>
+        <%= f.text_field :name, id: "cs-name",
+                         data: { action: "input->card-status-preview#refresh", card_status_preview_target: "name" },
+                         class: "w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white" %>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1.5">색상 프리셋</label>
+        <div class="grid grid-cols-6 gap-2">
+          <% color_presets.each do |preset| %>
+            <button type="button" title="<%= preset[:name] %>"
+                    class="w-full h-8 rounded border border-gray-300"
+                    style="background:<%= preset[:bg] %>"
+                    data-action="click->card-status-preview#applyPreset"
+                    data-bg="<%= preset[:bg] %>"
+                    data-border="<%= preset[:border] %>"
+                    data-text="<%= preset[:text] %>">
+            </button>
+          <% end %>
+        </div>
+      </div>
+
+      <details class="text-xs">
+        <summary class="cursor-pointer text-gray-600">▼ 커스텀 색상 직접 지정</summary>
+        <div class="grid grid-cols-3 gap-3 mt-2">
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">배경</label>
+            <%= f.color_field :bg_color, id: "cs-bg",
+                              data: { action: "input->card-status-preview#refresh", card_status_preview_target: "bg" },
+                              class: "w-full h-10" %>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">보더</label>
+            <%= f.color_field :border_color, id: "cs-border",
+                              data: { action: "input->card-status-preview#refresh", card_status_preview_target: "border" },
+                              class: "w-full h-10" %>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">글자</label>
+            <%= f.color_field :text_color, id: "cs-text",
+                              data: { action: "input->card-status-preview#refresh", card_status_preview_target: "text" },
+                              class: "w-full h-10" %>
+          </div>
+        </div>
+      </details>
+
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1.5">미리보기</label>
+        <div data-card-status-preview-target="card"
+             class="rounded-lg border p-3 shadow-sm text-sm"
+             style="background:<%= card_status.bg_color.presence || '#FAFAFA' %>; border-color:<%= card_status.border_color.presence || '#E5E7EB' %>; color:<%= card_status.text_color.presence || '#374151' %>">
+          <div data-card-status-preview-target="cardName" class="font-semibold mb-1"><%= card_status.name.presence || "샘플 상태" %></div>
+          <div>Nawah PO 4500019288</div>
+          <div class="text-xs opacity-75">2026-04-20 마감</div>
+        </div>
+      </div>
+
+      <details class="text-xs">
+        <summary class="cursor-pointer text-gray-600">자동 배정 규칙</summary>
+        <div class="mt-2 space-y-2">
+          <label class="flex items-center gap-2"><input type="radio" name="card_status[auto_mode]" value="manual" checked> 수동 전용</label>
+          <label class="flex items-center gap-2"><input type="radio" name="card_status[auto_mode]" value="lte_days"> 마감
+            <input type="number" name="card_status[auto_days]" min="0" max="90" class="w-16 px-2 py-1 border border-gray-300 rounded">
+            일 이내
+          </label>
+          <label class="flex items-center gap-2"><input type="radio" name="card_status[auto_mode]" value="overdue"> 마감 경과 시</label>
+
+          <label class="block mt-2">우선순위: <input type="number" name="card_status[auto_priority]" value="<%= card_status.auto_priority || 0 %>" class="w-20 px-2 py-1 border border-gray-300 rounded"></label>
+        </div>
+      </details>
+    </div>
+
+    <div class="flex justify-end gap-2 mt-5">
+      <button type="button" onclick="closeCardStatusModal()" class="px-4 py-2 text-sm border border-gray-300 rounded-lg">취소</button>
+      <%= f.submit "저장", class: "px-4 py-2 bg-[#00A1E0] text-white text-sm rounded-lg" %>
+    </div>
+
+    <%# auto_rule JSON 직렬화 — 폼 제출 시 라디오 값 → JSON 문자열 %>
+    <%= hidden_field_tag "card_status[auto_rule]", "", id: "cs-auto-rule-hidden" %>
+    <script>
+      document.getElementById("card-status-form")?.addEventListener("submit", function() {
+        const mode = document.querySelector('input[name="card_status[auto_mode]"]:checked')?.value;
+        const days = document.querySelector('input[name="card_status[auto_days]"]')?.value;
+        let rule = "";
+        if (mode === "lte_days" && days) {
+          rule = JSON.stringify({ when: "due_date", operator: "lte", value: parseInt(days, 10) });
+        } else if (mode === "overdue") {
+          rule = JSON.stringify({ when: "due_date", operator: "lte", value: 0 });
+        }
+        document.getElementById("cs-auto-rule-hidden").value = rule;
+      });
+    </script>
+  <% end %>
+</div>

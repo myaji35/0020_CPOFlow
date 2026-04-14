@@ -1,0 +1,63 @@
+<% content_for :title, "칸반 상태 관리" %>
+
+<div class="max-w-4xl mx-auto p-6">
+  <div class="flex items-center justify-between mb-5">
+    <h1 class="text-xl font-bold text-gray-900 dark:text-white">칸반 상태 관리</h1>
+    <button type="button" onclick="openCardStatusModal()"
+            class="px-3 py-2 bg-[#00A1E0] text-white rounded-lg text-sm font-medium hover:bg-[#0083b7]">
+      + 새 상태 추가
+    </button>
+  </div>
+
+  <% flash.each do |type, msg| %>
+    <div class="mb-3 px-3 py-2 rounded text-sm <%= type == 'notice' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800' %>"><%= msg %></div>
+  <% end %>
+
+  <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+       data-controller="card-status-sortable"
+       data-card-status-sortable-url-value="<%= reorder_settings_card_statuses_path %>">
+    <% @card_statuses.each do |cs| %>
+      <%= render "row", cs: cs %>
+    <% end %>
+  </div>
+
+  <p class="mt-4 text-xs text-gray-500">
+    💡 '시스템' 상태는 라벨·색상은 수정 가능, 삭제는 불가합니다. 삭제는 해당 상태를 쓰는 카드가 0건일 때만 가능합니다.
+  </p>
+</div>
+
+<%= render "edit_modal", card_status: @card_status || CardStatus.new, color_presets: @color_presets %>
+
+<script>
+  function openCardStatusModal(id) {
+    const modal = document.getElementById('card-status-modal');
+    modal.classList.remove('hidden');
+    if (id) {
+      modal.dataset.editingId = id;
+      // 실제 값 로드는 간단히 하려고 별도 edit 페이지 대신 data-* 속성에서 읽어옴
+      const row = document.querySelector(`[data-card-status-row="${id}"]`);
+      if (row) {
+        document.getElementById('cs-name').value = row.dataset.name;
+        document.getElementById('cs-bg').value   = row.dataset.bg;
+        document.getElementById('cs-border').value = row.dataset.border;
+        document.getElementById('cs-text').value = row.dataset.text;
+      }
+    } else {
+      modal.dataset.editingId = '';
+      document.getElementById('card-status-form').reset();
+    }
+  }
+  function closeCardStatusModal() {
+    document.getElementById('card-status-modal').classList.add('hidden');
+  }
+  function inlineRename(id, newName) {
+    const token = document.querySelector('meta[name="csrf-token"]')?.content;
+    fetch(`/settings/card_statuses/${id}/inline_rename`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': token },
+      body: JSON.stringify({ name: newName })
+    }).then(r => r.json()).then(d => {
+      if (d.status !== 'ok') alert(d.errors?.join(', ') || '저장 실패');
+    });
+  }
+</script>
