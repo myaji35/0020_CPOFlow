@@ -12,7 +12,8 @@
     grid-template-columns: 360px 1fr;
     overflow: hidden;
   }
-  .inbox-list { overflow-y: auto; }
+  .inbox-list { overflow-y: auto; display: flex; flex-direction: column; min-height: 0; }
+  turbo-frame.inbox-list { display: flex; flex-direction: column; min-height: 0; }
   .inbox-body { overflow-y: auto; }
   .email-item.active { background-color: rgba(0, 161, 224, 0.08); }
   .email-item.active.dark-active { background-color: rgba(0, 161, 224, 0.15); }
@@ -134,7 +135,8 @@
   <div class="inbox-main">
 
     <%# ===== PANE 2: Email list ===== %>
-    <div class="inbox-list border-r border-gray-200 dark:border-gray-700 flex flex-col">
+    <%# turbo-frame: 검색/필터/페이지네이션 시 좌측 리스트만 부분 교체 (깜빡임 제거) %>
+    <turbo-frame id="inbox-list" target="_top" class="inbox-list border-r border-gray-200 dark:border-gray-700 flex flex-col">
       <%# Toolbar with search %>
       <div class="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <%# Header row %>
@@ -439,7 +441,7 @@
           </div>
         <% end %>
       </div>
-    </div>
+    </turbo-frame>
 
     <%# ===== PANE 3: Email body (all orders, not just RFQ) ===== %>
     <div class="inbox-body bg-white dark:bg-gray-900" id="email-body-pane">
@@ -1145,26 +1147,71 @@
     if (firstId) showEmail(parseInt(firstId));
   }
 
-  // --- Search (debounced server-side) ---
+  // --- Search (Turbo frame, debounced, abortable) ---
   let searchTimer = null;
+  let searchAbortCtrl = null;
+
+  function buildInboxUrl(query) {
+    const currentFilter = '<%= @current_filter %>';
+    const params = new URLSearchParams();
+    if (query && query.trim()) params.set('q', query.trim());
+    if (currentFilter !== 'all') params.set('filter', currentFilter);
+    const qs = params.toString();
+    return '/inbox' + (qs ? '?' + qs : '');
+  }
+
+  async function visitInbox(url) {
+    // 이전 요청 취소
+    if (searchAbortCtrl) searchAbortCtrl.abort();
+    searchAbortCtrl = new AbortController();
+
+    const frame = document.getElementById('inbox-list');
+    if (frame) frame.setAttribute('busy', '');
+
+    try {
+      const res = await fetch(url, {
+        headers: { 'Accept': 'text/html', 'Turbo-Frame': 'inbox-list' },
+        signal: searchAbortCtrl.signal,
+        credentials: 'same-origin'
+      });
+      if (!res.ok) return;
+      const html = await res.text();
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const newFrame = doc.getElementById('inbox-list');
+      if (newFrame && frame) {
+        frame.innerHTML = newFrame.innerHTML;
+
+        // 상세 패널(#email-body-pane)도 함께 갱신 — 새 검색 결과의 상세 HTML 반영
+        const newBody = doc.getElementById('email-body-pane');
+        const curBody = document.getElementById('email-body-pane');
+        if (newBody && curBody) curBody.innerHTML = newBody.innerHTML;
+
+        // URL 동기화 (뒤로가기 가능)
+        history.replaceState({}, '', url);
+
+        // 교체 후 첫 이메일 자동 선택
+        const firstItem = frame.querySelector('.email-item');
+        if (firstItem) {
+          const firstId = firstItem.getAttribute('data-order-id');
+          if (firstId) showEmail(parseInt(firstId));
+        }
+      }
+    } catch (e) {
+      if (e.name !== 'AbortError') console.warn('[Inbox search]', e);
+    } finally {
+      if (frame) frame.removeAttribute('busy');
+    }
+  }
+
   function handleSearch(query) {
     clearTimeout(searchTimer);
-    searchTimer = setTimeout(() => {
-      const currentFilter = '<%= @current_filter %>';
-      const params = new URLSearchParams();
-      if (query.trim()) params.set('q', query.trim());
-      if (currentFilter !== 'all') params.set('filter', currentFilter);
-      const qs = params.toString();
-      window.location.href = '/inbox' + (qs ? '?' + qs : '');
-    }, 500);
+    searchTimer = setTimeout(() => visitInbox(buildInboxUrl(query)), 300);
   }
 
   function clearSearch() {
-    const currentFilter = '<%= @current_filter %>';
-    const params = new URLSearchParams();
-    if (currentFilter !== 'all') params.set('filter', currentFilter);
-    const qs = params.toString();
-    window.location.href = '/inbox' + (qs ? '?' + qs : '');
+    const input = document.getElementById('inbox-search');
+    if (input) input.value = '';
+    visitInbox(buildInboxUrl(''));
   }
 
   // --- Sync ---

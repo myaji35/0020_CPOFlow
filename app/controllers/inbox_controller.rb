@@ -28,13 +28,30 @@ class InboxController < ApplicationController
     end
 
     # Search support
+    # - 검색 범위: reference_no(인덱스), subject, from, customer_name, title
+    # - original_email_body는 풀스캔·느림 → 기본 제외 (?include_body=1로 옵션 복원)
+    # - 순수 숫자 쿼리(RFQ 번호 추정): reference_no 부분일치 우선
     @search_query = params[:q].to_s.strip
     if @search_query.present?
-      search_term = "%#{@search_query}%"
-      base_scope = base_scope.where(
-        "original_email_subject LIKE :q OR original_email_from LIKE :q OR customer_name LIKE :q OR title LIKE :q OR original_email_body LIKE :q",
-        q: search_term
-      )
+      search_term  = "%#{@search_query}%"
+      include_body = params[:include_body].to_s == "1"
+
+      if @search_query.match?(/\A[0-9\-]{3,}\z/)
+        base_scope = base_scope.where(
+          "reference_no LIKE :q OR original_email_subject LIKE :q",
+          q: search_term
+        )
+      else
+        conditions = [
+          "reference_no LIKE :q",
+          "original_email_subject LIKE :q",
+          "original_email_from LIKE :q",
+          "customer_name LIKE :q",
+          "title LIKE :q"
+        ]
+        conditions << "original_email_body LIKE :q" if include_body
+        base_scope = base_scope.where(conditions.join(" OR "), q: search_term)
+      end
     end
 
     # Pagination: 30건씩 로드 (UAE 느린 네트워크 대응)
