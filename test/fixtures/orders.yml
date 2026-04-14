@@ -1,0 +1,11 @@
+# Orders fixture — Task 2: card_status FK 추가 후 작성
+# fixtures :all 비활성화 상태 (test_helper.rb 참고)
+# card_status 참조는 card_statuses.yml의 'normal' 픽스처를 사용
+
+one:
+  title: "Test RFQ Order"
+  customer_name: "Test Customer"
+  status: 0
+  priority: 1
+  user_id: 1
+  card_status: normal

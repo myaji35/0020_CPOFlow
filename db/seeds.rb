@@ -376,3 +376,5 @@ puts "✅ Seed complete!"
 puts "   admin@atozone.com  / password123 (Admin)"
 puts "   kss@atozone.com    / password123 (Manager, Seoul)"
 puts "   ahmed@atozone.com  / password123 (Member, Abu Dhabi)"
+
+load Rails.root.join("db/seeds/card_statuses.rb")

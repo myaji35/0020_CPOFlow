@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_09_111117) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_14_120003) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -112,6 +112,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_09_111117) do
     t.index ["order_id", "employee_id"], name: "index_assignments_on_order_id_and_employee_id", unique: true
     t.index ["order_id"], name: "index_assignments_on_order_id"
     t.index ["user_id"], name: "index_assignments_on_user_id"
+  end
+
+  create_table "card_statuses", force: :cascade do |t|
+    t.integer "auto_priority", default: 0, null: false
+    t.text "auto_rule"
+    t.string "bg_color", limit: 7, null: false
+    t.string "border_color", limit: 7, null: false
+    t.datetime "created_at", null: false
+    t.boolean "is_default", default: false, null: false
+    t.boolean "is_system", default: false, null: false
+    t.string "key", null: false
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.string "text_color", limit: 7, null: false
+    t.datetime "updated_at", null: false
+    t.index ["is_default"], name: "index_card_statuses_on_single_default", unique: true, where: "is_default = 1"
+    t.index ["key"], name: "index_card_statuses_on_key", unique: true
+    t.index ["position"], name: "index_card_statuses_on_position"
   end
 
   create_table "certifications", force: :cascade do |t|
@@ -432,6 +450,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_09_111117) do
     t.string "ariba_event_url"
     t.text "attachment_urls"
     t.boolean "cache_hit", default: false, null: false
+    t.integer "card_status_id"
+    t.datetime "card_status_manually_set_at"
     t.decimal "classification_confidence", precision: 5, scale: 4
     t.string "classifier_version", default: "v1", null: false
     t.integer "client_id"
@@ -489,6 +509,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_09_111117) do
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
     t.index ["ariba_event_id"], name: "index_orders_on_ariba_event_id"
+    t.index ["card_status_id"], name: "index_orders_on_card_status_id"
+    t.index ["card_status_manually_set_at"], name: "index_orders_on_card_status_manually_set_at"
     t.index ["classifier_version", "created_at"], name: "index_orders_on_classifier_version_and_created_at"
     t.index ["classifier_version"], name: "index_orders_on_classifier_version"
     t.index ["client_id"], name: "index_orders_on_client_id"
@@ -695,6 +717,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_09_111117) do
   add_foreign_key "employment_contracts", "projects"
   add_foreign_key "import_logs", "users"
   add_foreign_key "order_links", "users", column: "created_by_id"
+  add_foreign_key "orders", "card_statuses"
   add_foreign_key "orders", "clients"
   add_foreign_key "orders", "projects"
   add_foreign_key "orders", "suppliers"
