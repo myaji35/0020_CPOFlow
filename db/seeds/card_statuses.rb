@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # 7개 샘플 프리셋 — 스펙 §4 표와 동일
-PRESETS = [
+card_status_presets = [
   { key: "urgent",  name: "긴급",     bg: "#FFF1F2", border: "#FECDD3", text: "#991B1B",
     position: 1, is_system: true,  is_default: false,
     auto_rule: { when: "due_date", operator: "lte", value: 3 }, auto_priority: 30 },
@@ -25,7 +25,7 @@ PRESETS = [
     auto_rule: { when: "due_date", operator: "lte", value: 0 }, auto_priority: 40 }
 ].freeze
 
-PRESETS.each do |p|
+card_status_presets.each do |p|
   cs = CardStatus.find_or_initialize_by(key: p[:key])
   cs.assign_attributes(
     name:          p[:name],
