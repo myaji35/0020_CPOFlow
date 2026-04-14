@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_14_120003) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_14_120004) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -479,7 +479,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_14_120003) do
     t.string "original_email_subject"
     t.integer "parent_order_id"
     t.string "po_no"
-    t.integer "priority", default: 1, null: false
     t.integer "project_id"
     t.integer "quantity"
     t.string "quo_no"

@@ -63,7 +63,7 @@
 
       <%# Meta Chips %>
       <div class="flex flex-wrap items-center gap-2 mt-4">
-        <%= priority_badge(@order) %>
+        <%= card_status_badge(@order) %>
         <% if @order.due_date %>
           <%= due_badge(@order) %>
           <span class="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border border-orange-100 dark:border-orange-800/50">

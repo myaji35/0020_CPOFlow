@@ -46,7 +46,7 @@
     </div>
     <div class="flex justify-between items-center">
       <dt class="text-gray-500 dark:text-gray-500">우선순위</dt>
-      <dd><%= priority_badge(order) %></dd>
+      <dd><%= card_status_badge(order) %></dd>
     </div>
     <% if order.due_date %>
       <div class="flex justify-between items-center">

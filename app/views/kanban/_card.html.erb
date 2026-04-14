@@ -58,7 +58,7 @@
           <circle cx="9"  cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/>
         </svg>
       </span>
-      <span class="shrink-0"><%= priority_badge(order) %></span>
+      <span class="shrink-0"><%= card_status_badge(order) %></span>
       <%# 관리번호 — 마지막(최신) 번호 1개만 표시 (PO > QUO > RFQ) %>
       <% latest_no = order.po_no.presence || order.quo_no.presence || order.rfq_no.presence %>
       <% if latest_no %>
