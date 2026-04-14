@@ -50,6 +50,12 @@ production:
     queue: default
     schedule: every day at 2am
 
+  # Card status 재평가 — UAE 21:00 / KST 02:00
+  card_status_reassess:
+    class: CardStatusAutoAssignJob
+    schedule: every day at 17:00 UTC
+    queue: default
+
 development:
   # Sync Gmail every 5 minutes in development for faster testing
   gmail_sync_all:
