@@ -282,8 +282,13 @@ class OrdersController < ApplicationController
   end
 
   def order_params
+    # 빈 문자열 → nil 정규화 (자동 배정으로 되돌리기 링크)
+    if params.dig(:order, :card_status_manually_set_at) == ""
+      params[:order][:card_status_manually_set_at] = nil
+    end
     params.require(:order).permit(
-      :title, :customer_name, :description, :status, :priority,
+      :title, :customer_name, :description, :status,
+      :card_status_id, :card_status_manually_set_at,
       :due_date, :item_name, :quantity, :currency, :estimated_value,
       :tags, :source_email_id, :original_email_subject,
       :original_email_body, :original_email_from,

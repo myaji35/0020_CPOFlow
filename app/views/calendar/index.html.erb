@@ -97,7 +97,7 @@
               title:    o.title,
               path:     order_path(o),
               status:   Order::STATUS_LABELS[o.status],
-              priority: o.priority,
+              priority: o.card_status&.key,
               due_date: o.due_date.strftime("%m/%d"),
               client:   o.client&.name || o.customer_name,
               project:  o.project&.name,
@@ -117,10 +117,10 @@
           </div>
           <% day_orders.first(3).each do |order| %>
             <div class="block text-xs truncate px-1.5 py-0.5 rounded mb-0.5 cursor-pointer
-                        <%= case order.priority
-                            when 'urgent' then 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-                            when 'high'   then 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
-                            else               'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+                        <%= case order.card_status&.key
+                            when 'urgent', 'overdue' then 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                            when 'high'              then 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
+                            else                          'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
                             end %>"
                  onclick="event.stopPropagation(); openOrderDrawer(<%= order.id %>, <%= order.title.to_json %>, '<%= order_path(order) %>')">
               <%= order.title %>

@@ -49,26 +49,37 @@
       <div class="flex flex-wrap items-center gap-2 mb-4">
         <%= status_badge(order) %>
 
-        <%# 우선순위 인라인 드롭다운 %>
+        <%# 카드 상태 인라인 드롭다운 %>
         <div class="relative inline-block" id="priority-dropdown-<%= order.id %>">
           <button onclick="togglePriorityDropdown('<%= order.id %>', event)"
                   class="cursor-pointer focus:outline-none">
-            <%= priority_badge(order) %>
+            <%= card_status_badge(order) %>
           </button>
           <div id="priority-menu-<%= order.id %>"
-               class="hidden absolute left-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-20 py-1 w-32">
-            <% [['low', '낮음'], ['medium', '보통'], ['high', '높음'], ['urgent', '긴급']].each do |val, label| %>
-              <%= form_with url: quick_update_order_path(order), method: :patch, local: true do |f| %>
-                <%= f.hidden_field :priority, value: val %>
+               class="hidden absolute left-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-20 py-1 w-40">
+            <% CardStatus.ordered.each do |cs| %>
+              <%= form_with model: order, url: order_path(order), method: :patch, local: true do |f| %>
+                <%= f.hidden_field :card_status_id, value: cs.id %>
+                <%= f.hidden_field :card_status_manually_set_at, value: Time.current.iso8601 %>
                 <button type="submit"
                         class="w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-gray-50 dark:hover:bg-gray-700
-                               <%= order.priority == val ? 'font-semibold text-primary' : 'text-gray-700 dark:text-gray-300' %>">
-                  <%= label %>
-                  <% if order.priority == val %>
+                               <%= order.card_status_id == cs.id ? 'font-semibold text-primary' : 'text-gray-700 dark:text-gray-300' %>">
+                  <%= cs.name %>
+                  <% if order.card_status_id == cs.id %>
                     <span class="float-right text-primary">✓</span>
                   <% end %>
                 </button>
               <% end %>
+            <% end %>
+            <% if order.card_status_manually_set_at.present? %>
+              <div class="border-t border-gray-100 dark:border-gray-700 mt-1 pt-1">
+                <%= form_with model: order, url: order_path(order), method: :patch, local: true do |f| %>
+                  <%= f.hidden_field :card_status_manually_set_at, value: "" %>
+                  <button type="submit" class="w-full text-left px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700">
+                    자동 배정으로 되돌리기
+                  </button>
+                <% end %>
+              </div>
             <% end %>
           </div>
         </div>

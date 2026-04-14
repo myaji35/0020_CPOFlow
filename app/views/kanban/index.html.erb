@@ -26,11 +26,16 @@
     <% end %>
   </select>
 
-  <%# 우선순위 토글 %>
+  <%# 카드 상태 토글 — CardStatus 프리셋 동적 렌더 %>
   <div class="flex rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden text-xs">
-    <% [["", "전체"], ["urgent", "긴급"], ["high", "높음"], ["medium", "보통"]].each do |val, lbl| %>
+    <button class="filter-priority-btn px-2.5 py-1.5 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-r border-gray-200 dark:border-gray-600 last:border-0"
+            data-value="">전체</button>
+    <% CardStatus.ordered.each do |cs| %>
       <button class="filter-priority-btn px-2.5 py-1.5 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-r border-gray-200 dark:border-gray-600 last:border-0"
-              data-value="<%= val %>"><%= lbl %></button>
+              data-value="<%= cs.key %>">
+        <span class="inline-block w-2 h-2 rounded-full mr-1 align-middle" style="background-color: <%= cs.text_color %>"></span>
+        <%= cs.name %>
+      </button>
     <% end %>
   </div>
 
@@ -655,7 +660,7 @@ function initKanban() {
       const assigneeIds = (card.dataset.assigneeIds || '').split(',').filter(Boolean);
       const assigneeOk  = !assigneeVal || assigneeIds.includes(assigneeVal);
 
-      const priorityOk  = !activePriority || card.dataset.priority === activePriority;
+      const priorityOk  = !activePriority || card.dataset.cardStatusKey === activePriority;
 
       const dueDays = parseInt(card.dataset.dueDays, 10);
       const dueOk   = !activeDue ? true

@@ -68,7 +68,7 @@ class ReportsController < ApplicationController
       on_time_rate:   curr[:on_time_rate],
       prev_on_time:   prev[:on_time_rate],
       overdue:        scoped_orders.where("due_date < ?", Date.today).where.not(status: [ :get_grn, :give_up ]).count,
-      urgent:         scoped_orders.where(priority: :urgent).where.not(status: [ :get_grn, :give_up ]).count,
+      urgent:         scoped_orders.joins(:card_status).where(card_statuses: { key: %w[urgent high overdue] }).where.not(status: [ :get_grn, :give_up ]).count,
       avg_lead_days:  calc_avg_lead_days(range)
     }
   end

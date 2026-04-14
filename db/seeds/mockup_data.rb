@@ -170,7 +170,6 @@ created = 0
       currency:        "USD",
       estimated_value: value,
       status:          status,
-      priority:        [ :low, :medium, :medium, :high, :urgent ].sample,
       due_date:        due,
       tags:            "#{template[:category]},sika,mockup",
       user:            user,

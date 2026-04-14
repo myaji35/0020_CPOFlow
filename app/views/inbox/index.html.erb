@@ -368,8 +368,8 @@
                         <span class="text-xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-500 rounded font-medium">제외</span>
                       <% end %>
                     <% end %>
-                    <% case order.priority
-                       when "urgent" %>
+                    <% case order.card_status&.key
+                       when "urgent", "overdue" %>
                       <span class="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" title="긴급"></span>
                     <% when "high" %>
                       <span class="w-2 h-2 rounded-full bg-orange-400 flex-shrink-0" title="높음"></span>

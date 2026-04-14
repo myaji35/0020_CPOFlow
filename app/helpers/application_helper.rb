@@ -33,18 +33,17 @@ module ApplicationHelper
     end
   end
 
-  # Priority badge (solid bg + white text — SLDS)
-  PRIORITY_COLORS = {
-    "low"    => "#6b7280",
-    "medium" => "#00A1E0",
-    "high"   => "#F4A83A",
-    "urgent" => "#D93025"
-  }.freeze
-
-  def priority_badge(order)
-    bg = PRIORITY_COLORS[order.priority] || "#6b7280"
-    content_tag(:span, order.priority.upcase, class: "text-xs font-semibold px-2 py-0.5 rounded-full", style: "background:#{bg}; color:white")
+  # Card status badge (solid bg + white text — SLDS)
+  def card_status_badge(order)
+    cs = order.card_status
+    return "".html_safe unless cs
+    content_tag(:span, cs.name,
+                class: "text-xs font-semibold px-2 py-0.5 rounded-full",
+                style: "background:#{cs.text_color}; color:white")
   end
+
+  # 호환 wrapper — 기존 호출 코드가 점진 전환될 때까지 유지
+  alias_method :priority_badge, :card_status_badge
 
   # Status badge (solid bg + white text — SLDS)
   STATUS_COLORS = {

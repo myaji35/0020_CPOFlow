@@ -44,7 +44,6 @@ module Ecount
           customer_name:          row[:customer_name].presence || "eCount Import",
           description:            "eCountERP 거래이력 이관 (거래번호: #{ref})",
           status:                 status,
-          priority:               infer_priority(due),
           due_date:               due,
           quantity:               row[:quantity].to_s.to_i,
           estimated_value:        row[:estimated_value].to_s.gsub(/[^\d.]/, "").to_f,
@@ -64,15 +63,6 @@ module Ecount
         nil
       end
 
-      def infer_priority(due)
-        return :medium unless due
-        days = (due - Date.today).to_i
-        if    days <= 7  then :urgent
-        elsif days <= 14 then :high
-        elsif days <= 30 then :medium
-        else                  :low
-        end
-      end
     end
   end
 end

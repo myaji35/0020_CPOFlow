@@ -235,7 +235,7 @@ module Sheets
           o.client&.name || o.customer_name,
           o.supplier&.name,
           o.project&.name,
-          o.status, o.priority,
+          o.status, o.card_status&.key,
           o.due_date&.strftime("%Y-%m-%d"),
           o.item_name, o.quantity,
           o.estimated_value.to_f.round(0),

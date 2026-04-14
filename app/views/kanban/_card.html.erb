@@ -1,23 +1,12 @@
 <%
-  card_bg_style = case order.priority
-  when "urgent" then "background-color:#FFF1F2;"
-  when "high"   then "background-color:#FFF7ED;"
-  when "medium" then "background-color:#FAFAFA;"
-  when "low"    then "background-color:#F0FDF4;"
-  else "background-color:#FFFFFF;"
-  end
-  card_border_style = case order.priority
-  when "urgent" then "border-color:#FECDD3;"
-  when "high"   then "border-color:#FED7AA;"
-  when "medium" then "border-color:#E5E7EB;"
-  when "low"    then "border-color:#BBF7D0;"
-  else "border-color:#E5E7EB;"
-  end
+  card_bg_style     = "background-color:#{order.card_bg_color};"
+  card_border_style = "border-color:#{order.card_border_color};"
 %>
 <div class="relative rounded-lg border p-3 shadow-sm hover:shadow-md hover:border-[#00A1E0] transition-all group cursor-pointer<%= ' ring-2 ring-[#D93025] ring-offset-1' if order.critical? %>"
      style="<%= card_bg_style %> <%= card_border_style %>"
      data-order-id="<%= order.id %>"
-     data-priority="<%= order.priority %>"
+     data-card-status-key="<%= order.card_status&.key %>"
+     data-card-status-id="<%= order.card_status_id %>"
      data-due-days="<%= order.days_until_due.to_i %>"
      data-assignee-ids="<%= order.assignees.map(&:id).join(',') %>"
      data-title="<%= order.title %>"

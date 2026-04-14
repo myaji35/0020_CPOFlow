@@ -31,7 +31,7 @@
   <div>
     <div class="hl-label">우선순위</div>
     <div class="hl-value">
-      <span class="badge badge-<%= @order.priority %>"><%= @order.priority&.upcase %></span>
+      <span class="badge badge-<%= @order.card_status&.key %>"><%= @order.card_status&.name %></span>
     </div>
   </div>
 </div>

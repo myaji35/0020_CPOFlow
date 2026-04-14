@@ -11,9 +11,13 @@ class Orders::BulkController < ApplicationController
     when "status"
       orders.update_all(status: Order.statuses[params[:status]])
       notice = "#{orders.count}건 상태를 '#{Order::STATUS_LABELS[params[:status]]}'로 변경했습니다."
-    when "priority"
-      orders.update_all(priority: Order.priorities[params[:priority]])
-      notice = "#{orders.count}건 우선순위를 변경했습니다."
+    when "priority", "card_status"
+      cs_key = params[:card_status].presence || params[:priority]
+      cs = CardStatus.find_by(key: cs_key)
+      if cs
+        orders.update_all(card_status_id: cs.id, card_status_manually_set_at: Time.current)
+        notice = "#{orders.count}건 상태를 '#{cs.name}'로 변경했습니다."
+      end
     when "assign"
       user = User.find_by(id: params[:user_id])
       if user
@@ -55,7 +59,7 @@ class Orders::BulkController < ApplicationController
           o.supplier&.name,
           o.project&.name,
           Order::STATUS_LABELS[o.status],
-          o.priority,
+          o.card_status&.key,
           o.due_date&.strftime("%Y-%m-%d"),
           o.estimated_value,
           o.assignees.map(&:name).join(", "),
