@@ -1,10 +1,7 @@
 # frozen_string_literal: true
 
 module Gmail
-  # RFQ(견적성) 이메일 판독 서비스
-  #
-  # 기본 엔진: Gemma 4 E4B (로컬 ollama, 무료)
-  # 폴백 엔진: Claude Haiku (ENV RFQ_LLM_ENGINE=claude 또는 Gemma 실패 시)
+  # Claude API를 활용한 지능형 RFQ 이메일 분석 서비스
   #
   # Usage:
   #   result = Gmail::LlmRfqAnalyzerService.new(parsed_email).analyze
@@ -20,21 +17,10 @@ module Gmail
     end
 
     def analyze
-      engine = ENV.fetch("RFQ_LLM_ENGINE", "gemma").downcase
-
-      if engine == "gemma"
-        begin
-          return parse_json_payload(call_gemma, source: "gemma")
-        rescue => e
-          Rails.logger.warn "[LlmRfqAnalyzer] Gemma 실패 → Claude 폴백: #{e.class} — #{e.message}"
-          # Claude 폴백 — API 키 있을 때만
-        end
-      end
-
       return fallback_result unless api_key_configured?
 
       response = call_claude_api
-      parse_claude_response(response)
+      parse_response(response)
     rescue => e
       Rails.logger.error "[LlmRfqAnalyzer] API error: #{e.class} — #{e.message}"
       fallback_result
@@ -44,20 +30,6 @@ module Gmail
 
     def api_key_configured?
       ClaudeTokenResolver.configured?
-    end
-
-    # Gemma 4 E4B (로컬 ollama) 호출 — 무료, 온프레미스
-    def call_gemma
-      raw = Gemma.generate(
-        prompt:      build_prompt,
-        temperature: 0.1,   # 판정은 결정적으로
-        max_tokens:  ENV.fetch("RFQ_LLM_MAX_TOKENS", "2048").to_i
-      )
-      # 마크다운 코드펜스 제거 후 { ... } 블록 추출
-      cleaned = raw.to_s.gsub(/\A```(?:json)?\s*/i, "").gsub(/\s*```\z/, "").strip
-      match = cleaned[/\{[\s\S]*\}/m]
-      raise "Gemma 응답 JSON 추출 실패 (len=#{raw.size}): #{raw[0, 300]}" unless match && match.length > 10
-      match
     end
 
     def call_claude_api
@@ -132,7 +104,7 @@ module Gmail
       PROMPT
     end
 
-    def parse_claude_response(response)
+    def parse_response(response)
       # SDK 1.x: response.content는 배열, 각 요소는 해시 또는 객체
       first = response.content&.first
       content = if first.respond_to?(:text)
@@ -143,13 +115,8 @@ module Gmail
         ""
       end
 
-      parse_json_payload(content, source: "claude")
-    end
-
-    # 공통 파서: Claude/Gemma 모두 JSON 문자열을 반환하므로 동일 스키마로 정규화
-    def parse_json_payload(content, source:)
       # 마크다운 코드블록 제거 (```json ... ``` 패턴)
-      clean_content = content.to_s.gsub(/\A```(?:json)?\s*/i, "").gsub(/\s*```\z/, "").strip
+      clean_content = content.gsub(/\A```(?:json)?\s*/i, "").gsub(/\s*```\z/, "").strip
       parsed = JSON.parse(clean_content)
 
       due_date = begin
@@ -172,11 +139,10 @@ module Gmail
         currency:          parsed.dig("extracted", "currency"),
         estimated_value:   parsed.dig("extracted", "estimated_value"),
         urgency:           parsed.dig("extracted", "urgency") || "normal",
-        engine:            source,
         raw:               parsed
       }
     rescue JSON::ParserError => e
-      Rails.logger.warn "[LlmRfqAnalyzer] JSON parse error (#{source}): #{e.message}"
+      Rails.logger.warn "[LlmRfqAnalyzer] JSON parse error: #{e.message}"
       fallback_result
     end
 
