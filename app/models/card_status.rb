@@ -18,10 +18,7 @@ class CardStatus < ApplicationRecord
   end
 
   def deletable?
-    return false if is_system?
-    # Guard: orders.card_status_id column may not exist yet (Task 2 migration)
-    return true unless self.class.connection.column_exists?(:orders, :card_status_id)
-    orders.empty?
+    !is_system? && orders.empty?
   end
 
   # auto_rule JSON 파싱 (예: {"when":"due_date","operator":"lte","value":3})
