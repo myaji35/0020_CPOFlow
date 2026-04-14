@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_14_120004) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_14_120005) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -446,6 +446,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_14_120004) do
   end
 
   create_table "orders", force: :cascade do |t|
+    t.datetime "archived_at"
     t.string "ariba_event_id"
     t.string "ariba_event_url"
     t.text "attachment_urls"
@@ -507,6 +508,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_14_120004) do
     t.text "translated_subject"
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
+    t.index ["archived_at"], name: "index_orders_on_archived_at"
     t.index ["ariba_event_id"], name: "index_orders_on_ariba_event_id"
     t.index ["card_status_id"], name: "index_orders_on_card_status_id"
     t.index ["card_status_manually_set_at"], name: "index_orders_on_card_status_manually_set_at"

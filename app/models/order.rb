@@ -69,6 +69,16 @@ class Order < ApplicationRecord
   scope :inbox_pending, -> { where(status: :new_rfq, rfq_status: :rfq_pending) }
   scope :inbox_excluded, -> { where(status: :new_rfq, rfq_status: :rfq_excluded) }
   scope :inbox_triaged, -> { where(rfq_status: :rfq_triage) }
+  scope :not_archived,  -> { where(archived_at: nil) }
+  scope :archived,      -> { where.not(archived_at: nil) }
+
+  def archived?
+    archived_at.present?
+  end
+
+  def archive!
+    update!(archived_at: Time.current)
+  end
 
   # ISS-039: urgent/high + 마감일 경과 + 담당자 미배정 = 즉시 조치 필요
   scope :critical, -> {

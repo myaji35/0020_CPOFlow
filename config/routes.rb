@@ -61,6 +61,7 @@ Rails.application.routes.draw do
   # Inbox (email view)
   get  "inbox",             to: "inbox#index"
   get  "inbox/:id",         to: "inbox#show",               as: :inbox_email
+  delete "inbox/:id",       to: "inbox#destroy",            as: :delete_inbox_email
   post "inbox/:id/convert", to: "inbox#convert_to_order",   as: :convert_email_to_order
   post "inbox/sync",        to: "inbox#sync",               as: :inbox_sync
   get  "inbox/:id/translate", to: "inbox#translate",        as: :inbox_translate

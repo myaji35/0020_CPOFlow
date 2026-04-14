@@ -90,6 +90,16 @@ module Gmail
       }
     end
 
+    # Move message to Gmail Trash (30일 후 Gmail 영구삭제)
+    def trash_message(gmail_message_id)
+      refresh_token_if_needed!
+      @gmail.trash_user_message("me", gmail_message_id)
+      true
+    rescue Google::Apis::Error => e
+      Rails.logger.error "[GmailService] trash_message error: #{e.message}"
+      false
+    end
+
     # Mark message as read in Gmail
     def mark_as_read(gmail_message_id)
       refresh_token_if_needed!

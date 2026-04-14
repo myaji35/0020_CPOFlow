@@ -46,6 +46,51 @@ class InboxControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "destroy — archived_at 설정 + redirect" do
+    client = Client.create!(name: "Inbox Del Client", code: "IDCL#{SecureRandom.hex(3)}")
+    order = Order.create!(
+      title: "Inbox Del Test",
+      customer_name: "Del Customer",
+      client: client,
+      status: :new_rfq,
+      user: @user,
+      original_email_from: "sender@example.com",
+      original_email_subject: "Test"
+    )
+
+    assert_nil order.archived_at
+    delete delete_inbox_email_path(order)
+    assert_response :redirect
+    assert order.reload.archived_at.present?
+
+    # archived 는 inbox에 다시 보이지 않음
+    get inbox_path
+    assert_response :success
+    assert_not_includes response.body, "Inbox Del Test"
+
+    order.destroy
+    client.destroy
+  end
+
+  test "destroy — turbo_stream 응답 시 row 제거" do
+    client = Client.create!(name: "Inbox TS Client", code: "ITCL#{SecureRandom.hex(3)}")
+    order = Order.create!(
+      title: "Inbox TS Test",
+      customer_name: "TS Customer",
+      client: client,
+      status: :new_rfq,
+      user: @user,
+      original_email_from: "sender@example.com"
+    )
+
+    delete delete_inbox_email_path(order), headers: { "Accept" => "text/vnd.turbo-stream.html" }
+    assert_response :success
+    assert_includes response.body, "email-item-#{order.id}"
+
+    order.destroy
+    client.destroy
+  end
+
   private
 
   def login_as(user)

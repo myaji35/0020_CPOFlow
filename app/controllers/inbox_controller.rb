@@ -12,7 +12,8 @@ class InboxController < ApplicationController
     perf_t0 = Time.now
     @prefetch_mode = params[:frame] == "prefetch"  # lazy turbo-frame prefetch 요청 여부
 
-    base_scope = scoped_orders.where.not(original_email_from: [ nil, "" ])
+    base_scope = scoped_orders.not_archived
+                      .where.not(original_email_from: [ nil, "" ])
                       .includes(:user, :assignees, :client, :supplier, :project,
                                 attachments_attachments: :blob)
 
@@ -274,6 +275,39 @@ class InboxController < ApplicationController
     render json: result
   rescue => e
     render json: { success: false, error: e.message }, status: :internal_server_error
+  end
+
+  # DELETE /inbox/:id — 받은편지함에서 제거 (Gmail Trash 이동 + CPOFlow archived)
+  def destroy
+    order = scoped_orders.find(params[:id])
+
+    gmail_trashed = false
+    if order.source_email_id.present?
+      current_user.email_accounts.where(connected: true).find_each do |acct|
+        begin
+          if Gmail::GmailService.new(acct).trash_message(order.source_email_id)
+            gmail_trashed = true
+            break
+          end
+        rescue => e
+          Rails.logger.warn "[inbox#destroy] Gmail trash 실패 ord=#{order.id} acct=#{acct.email}: #{e.class} #{e.message}"
+        end
+      end
+    end
+
+    order.archive!
+
+    notice = gmail_trashed ? "메일을 휴지통으로 이동했습니다 (Gmail·Inbox 동시)" : "Inbox에서 숨김 처리했습니다 (Gmail 삭제 실패 — 권한·토큰 확인 필요)"
+
+    respond_to do |format|
+      format.turbo_stream do
+        render turbo_stream: [
+          turbo_stream.remove("email-item-#{order.id}"),
+          turbo_stream.remove("email-detail-#{order.id}")
+        ]
+      end
+      format.html { redirect_to inbox_path, notice: notice }
+    end
   end
 
   private
