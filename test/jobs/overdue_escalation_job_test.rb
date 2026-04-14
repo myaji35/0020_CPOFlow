@@ -21,7 +21,7 @@ class OverdueEscalationJobTest < ActiveJob::TestCase
       title:         "긴급 담당자 없는 발주",
       customer_name: "Test Client",
       status:        :new_rfq,
-      priority:      :urgent,
+      card_status:   CardStatus.find_by!(key: "urgent"),
       due_date:      5.days.ago.to_date
     )
     # 기존 escalation 알림 클린업 (멱등성 테스트를 위해)

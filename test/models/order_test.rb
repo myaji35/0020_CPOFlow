@@ -1,6 +1,8 @@
 require "test_helper"
 
 class OrderTest < ActiveSupport::TestCase
+  fixtures :card_statuses
+
   test "Order scopes 정상 동작" do
     assert_nothing_raised { Order.active.count }
     assert_nothing_raised { Order.overdue.count }
@@ -15,11 +17,10 @@ class OrderTest < ActiveSupport::TestCase
     end
   end
 
-  test "Order priority enum 유효" do
-    valid = %w[low medium high urgent]
-    valid.each do |p|
-      assert Order.priorities.key?(p), "priority #{p} 누락"
-    end
+  test "Order card_status FK 유효" do
+    # CardStatus가 로드되고 기본값 확보
+    assert CardStatus.count > 0, "CardStatus fixtures 누락"
+    assert_not_nil CardStatus.default
   end
 
   test "Order associations 쿼리 정상" do
@@ -59,7 +60,7 @@ class OrderTest < ActiveSupport::TestCase
 
   test "critical? — urgent + overdue + unassigned이면 true" do
     order = Order.create!(user: @owner, title: "Critical Test", customer_name: "X",
-                          status: :new_rfq, priority: :urgent, due_date: 3.days.ago.to_date)
+                          status: :new_rfq, card_status: card_statuses(:urgent), due_date: 3.days.ago.to_date)
     assert order.critical?
   ensure
     order.destroy
@@ -67,7 +68,7 @@ class OrderTest < ActiveSupport::TestCase
 
   test "critical? — 담당자 있으면 false" do
     order = Order.create!(user: @owner, title: "Has Assignee", customer_name: "X",
-                          status: :new_rfq, priority: :urgent, due_date: 3.days.ago.to_date)
+                          status: :new_rfq, card_status: card_statuses(:urgent), due_date: 3.days.ago.to_date)
     emp = Employee.create!(name: "emp_#{SecureRandom.hex(3)}", nationality: "KR", active: true)
     Assignment.create!(order: order, employee: emp)
     assert_not order.critical?
@@ -77,9 +78,14 @@ class OrderTest < ActiveSupport::TestCase
     order.destroy
   end
 
-  test "critical? — medium 우선순위면 false" do
-    order = Order.create!(user: @owner, title: "Medium Prio", customer_name: "X",
-                          status: :new_rfq, priority: :medium, due_date: 3.days.ago.to_date)
+  test "critical? — normal 우선순위면 false" do
+    # card_status_manually_set_at을 미리 세팅해서 after_save 자동 재배정 차단
+    order = Order.create!(user: @owner, title: "Normal Prio", customer_name: "X",
+                          status: :new_rfq, card_status: card_statuses(:normal),
+                          card_status_manually_set_at: Time.current,
+                          due_date: 3.days.ago.to_date)
+    order.reload
+    assert_equal "normal", order.card_status.key
     assert_not order.critical?
   ensure
     order.destroy
@@ -87,7 +93,7 @@ class OrderTest < ActiveSupport::TestCase
 
   test "critical? — due_date 없으면 false" do
     order = Order.create!(user: @owner, title: "No Due", customer_name: "X",
-                          status: :new_rfq, priority: :urgent)
+                          status: :new_rfq, card_status: card_statuses(:urgent))
     assert_not order.critical?
   ensure
     order.destroy
@@ -107,7 +113,7 @@ class OrderTest < ActiveSupport::TestCase
   test "scope :critical — done/get_grn/give_up 제외" do
     # done 상태 + urgent + overdue는 critical에 포함되지 않아야 함
     order = Order.create!(user: @owner, title: "Done Critical", customer_name: "X",
-                          status: :done, priority: :urgent, due_date: 3.days.ago.to_date)
+                          status: :done, card_status: card_statuses(:urgent), due_date: 3.days.ago.to_date)
     assert_not Order.critical.exists?(order.id)
   ensure
     order.destroy

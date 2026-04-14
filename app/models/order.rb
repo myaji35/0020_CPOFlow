@@ -38,12 +38,13 @@ class Order < ApplicationRecord
     rfq_archived: 3
   }, default: :rfq_pending, prefix: :rfq
 
-  enum :priority, {
-    low: 0,
-    medium: 1,
-    high: 2,
-    urgent: 3
-  }, default: :medium
+  belongs_to :card_status, optional: true
+
+  # 기본값 보장: 새 Order는 default(normal)로 시작
+  before_validation :ensure_card_status, on: :create
+
+  # 저장 후 자동 배정: 수동 지정 없으면 규칙 재평가
+  after_save :maybe_auto_assign_card_status, if: :should_auto_reassign?
 
   enum :source_type, {
     email: 0,
@@ -56,7 +57,11 @@ class Order < ApplicationRecord
 
   scope :active, -> { where.not(status: [ :get_grn, :give_up, :done ]) }
   scope :overdue, -> { where("due_date < ?", Date.today).where.not(status: [ :get_grn, :give_up, :done ]) }
-  scope :urgent, -> { where("due_date <= ?", 7.days.from_now).where.not(status: [ :get_grn, :give_up, :done ]) }
+  scope :urgent, -> {
+    joins(:card_status)
+      .where(card_statuses: { key: %w[urgent high overdue] })
+      .where.not(status: [ :get_grn, :give_up, :done ])
+  }
   scope :due_soon, -> { where(due_date: Date.today..14.days.from_now).where.not(status: [ :get_grn, :give_up, :done ]) }
   scope :by_due_date, -> { order(due_date: :asc) }
   scope :by_reference_no, ->(ref) { where(reference_no: ref).order(created_at: :asc) }
@@ -67,7 +72,8 @@ class Order < ApplicationRecord
 
   # ISS-039: urgent/high + 마감일 경과 + 담당자 미배정 = 즉시 조치 필요
   scope :critical, -> {
-    where(priority: [ :urgent, :high ])
+    joins(:card_status)
+      .where(card_statuses: { key: %w[urgent high overdue] })
       .where("due_date < ?", Date.today)
       .where.not(status: [ :get_grn, :give_up, :done ])
       .left_joins(:assignments)
@@ -96,11 +102,17 @@ class Order < ApplicationRecord
 
   # ISS-039: urgent/high + 마감일 경과 + 담당자 미배정 = 즉시 조치 필요
   def critical?
-    return false unless %w[urgent high].include?(priority.to_s)
+    return false unless card_status
+    return false unless %w[urgent high overdue].include?(card_status.key)
     return false unless due_date.present? && due_date < Date.today
     return false if %w[get_grn give_up done].include?(status.to_s)
     unassigned?
   end
+
+  # 카드 색상 헬퍼 — 뷰 반복 호출 간소화
+  def card_bg_color;     card_status&.bg_color     || "#FAFAFA"; end
+  def card_border_color; card_status&.border_color || "#E5E7EB"; end
+  def card_text_color;   card_status&.text_color   || "#374151"; end
 
   # rfq_status 가드: Order로의 변환(워크플로우 진입)이 허용되는지 여부
   # rfq_excluded(제외) / rfq_archived(보관) 상태는 칸반 진입 차단.
@@ -239,6 +251,22 @@ class Order < ApplicationRecord
   after_create_commit { SuggestOrderLinksJob.perform_later(id) }
 
   private
+
+  def ensure_card_status
+    self.card_status ||= CardStatus.default
+  end
+
+  def should_auto_reassign?
+    card_status_manually_set_at.blank? &&
+      (saved_change_to_due_date? || saved_change_to_card_status_id?)
+  end
+
+  def maybe_auto_assign_card_status
+    target = CardStatus::AutoAssigner.call(self)
+    return unless target
+    return if target.id == card_status_id
+    update_column(:card_status_id, target.id)
+  end
 
   def create_derived_from_link
     return if parent_order_id.blank?
