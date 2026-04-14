@@ -221,11 +221,11 @@ module Gmail
       return "" unless payload
 
       if payload.mime_type == "text/plain" && payload.body&.data
-        Base64.urlsafe_decode64(payload.body.data).force_encoding("UTF-8").encode("UTF-8", invalid: :replace)
+        Gmail::BodyDecoder.decode(payload.body.data)
       elsif payload.parts
         plain = payload.parts.find { |p| p.mime_type == "text/plain" }
         return "" unless plain&.body&.data
-        Base64.urlsafe_decode64(plain.body.data).force_encoding("UTF-8").encode("UTF-8", invalid: :replace)
+        Gmail::BodyDecoder.decode(plain.body.data)
       else
         ""
       end
@@ -237,11 +237,11 @@ module Gmail
       return "" unless payload
 
       if payload.mime_type == "text/html" && payload.body&.data
-        Base64.urlsafe_decode64(payload.body.data).force_encoding("UTF-8").encode("UTF-8", invalid: :replace)
+        Gmail::BodyDecoder.decode(payload.body.data)
       elsif payload.parts
         html_part = payload.parts.find { |p| p.mime_type == "text/html" }
         return "" unless html_part&.body&.data
-        Base64.urlsafe_decode64(html_part.body.data).force_encoding("UTF-8").encode("UTF-8", invalid: :replace)
+        Gmail::BodyDecoder.decode(html_part.body.data)
       else
         ""
       end

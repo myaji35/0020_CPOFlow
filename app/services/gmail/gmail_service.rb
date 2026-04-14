@@ -102,25 +102,14 @@ module Gmail
       Rails.logger.error "[GmailService] mark_as_read error: #{e.message}"
     end
 
-    # Download attachment data from Gmail
-    # google-apis-gmail_v1 (≥ 0.47) returns already-decoded binary in response.data.
-    # Legacy versions returned a base64url-encoded string; we handle both.
+    # Download attachment data from Gmail.
+    # SDK 버전 차이(base64url 문자열 vs 디코딩된 바이너리)는 BodyDecoder가 흡수.
     def fetch_attachment(gmail_message_id, attachment_id)
       refresh_token_if_needed!
       response = @gmail.get_user_message_attachment("me", gmail_message_id, attachment_id)
       return nil unless response&.data
 
-      data = response.data
-      # If the SDK returned the raw base64url string (legacy), decode it.
-      # Heuristic: base64url payloads are ASCII and contain only [A-Za-z0-9_-=].
-      if data.encoding == Encoding::US_ASCII || data.encoding == Encoding::UTF_8
-        begin
-          return Base64.urlsafe_decode64(data)
-        rescue ArgumentError
-          # Fall through — already binary.
-        end
-      end
-      data
+      Gmail::BodyDecoder.decode_binary(response.data)
     rescue Google::Apis::Error => e
       Rails.logger.error "[GmailService] fetch_attachment error: #{e.message}"
       nil
@@ -184,34 +173,30 @@ module Gmail
 
       # Prefer text/plain, fallback to text/html stripped
       if payload.mime_type == "text/plain" && payload.body&.data
-        Base64.urlsafe_decode64(payload.body.data).force_encoding("UTF-8").encode("UTF-8", invalid: :replace)
+        Gmail::BodyDecoder.decode(payload.body.data)
       elsif payload.parts
         plain = find_part_recursive(payload.parts, "text/plain")
         html  = find_part_recursive(payload.parts, "text/html")
         part  = plain || html
         return "" unless part&.body&.data
-        text = Base64.urlsafe_decode64(part.body.data).force_encoding("UTF-8").encode("UTF-8", invalid: :replace)
+        text = Gmail::BodyDecoder.decode(part.body.data)
         # Strip HTML tags for plain text
         part.mime_type == "text/html" ? ActionView::Base.full_sanitizer.sanitize(text).gsub(/\s+/, " ").strip : text
       else
-        payload.body&.data ? Base64.urlsafe_decode64(payload.body.data).force_encoding("UTF-8") : ""
+        Gmail::BodyDecoder.decode(payload.body&.data)
       end
-    rescue ArgumentError
-      ""
     end
 
     def extract_html_body(payload)
       return nil unless payload
 
       if payload.mime_type == "text/html" && payload.body&.data
-        Base64.urlsafe_decode64(payload.body.data).force_encoding("UTF-8").encode("UTF-8", invalid: :replace)
+        Gmail::BodyDecoder.decode(payload.body.data)
       elsif payload.parts
         html = find_part_recursive(payload.parts, "text/html")
         return nil unless html&.body&.data
-        Base64.urlsafe_decode64(html.body.data).force_encoding("UTF-8").encode("UTF-8", invalid: :replace)
+        Gmail::BodyDecoder.decode(html.body.data)
       end
-    rescue ArgumentError
-      nil
     end
 
     def find_part_recursive(parts, mime_type)
