@@ -33,6 +33,10 @@ class CardStatusTest < ActiveSupport::TestCase
   end
 
   test "only one default allowed" do
+    # 기존 is_default=true 레코드가 있으면 unique index가 이미 걸려 있음 → 정리
+    CardStatus.where(is_default: true).update_all(is_default: false)
+    CardStatus.where(key: %w[default_a default_b]).destroy_all
+
     CardStatus.create!(
       key: "default_a", name: "A", is_default: true,
       bg_color: "#FFFFFF", border_color: "#E5E7EB", text_color: "#111827"

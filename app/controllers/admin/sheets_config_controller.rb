@@ -8,7 +8,10 @@ module Admin
       url = params[:spreadsheet_url].to_s.strip
       id  = AppConfig.extract_spreadsheet_id(url)
 
-      if id.present?
+      # extract가 실패하면 원본 문자열을 그대로 돌려주므로, "URL 형태가 아님 = 저장 거부"
+      valid = id.present? && url.match?(%r{\Ahttps?://.+/spreadsheets/d/[a-zA-Z0-9_-]+})
+
+      if valid
         AppConfig.set(
           AppConfig::SHEETS_SPREADSHEET_ID,
           id,
