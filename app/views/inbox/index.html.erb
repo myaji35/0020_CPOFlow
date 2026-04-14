@@ -1087,8 +1087,8 @@
   function bulkDelete() {
     const ids = getSelectedIds();
     if (!ids.length) return;
-    if (!confirm(ids.length + '건을 삭제하시겠습니까?')) return;
-    fetch('/inbox/bulk_delete', {
+    if (!confirm(ids.length + '건을 Gmail 휴지통으로 이동하고 Inbox에서 제거합니다. 계속하시겠습니까?')) return;
+    fetch('/inbox/bulk_trash', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF },
       body: JSON.stringify({ order_ids: ids })
@@ -1097,10 +1097,14 @@
         ids.forEach(id => {
           const el = document.getElementById('email-item-' + id);
           if (el) { el.style.transition = 'all 0.3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }
+          const detail = document.getElementById('email-detail-' + id);
+          if (detail) detail.remove();
         });
         setTimeout(updateBulkBar, 350);
+      } else {
+        alert('삭제 실패: ' + (data.message || 'unknown error'));
       }
-    });
+    }).catch(err => alert('삭제 실패: ' + err.message));
   }
 
   function bulkToKanban() {

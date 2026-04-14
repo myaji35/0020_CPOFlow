@@ -141,7 +141,38 @@ class InboxController < ApplicationController
     end
   end
 
-  # POST /inbox/bulk_delete — 멀티체크 삭제 (rfq_excluded)
+  # POST /inbox/bulk_trash — 멀티체크 진짜 삭제 (Gmail Trash + archived_at)
+  def bulk_trash
+    ids = Array(params[:order_ids]).map(&:to_i).uniq
+    orders = scoped_orders.where(id: ids).to_a
+    accounts = current_user.email_accounts.where(connected: true).to_a
+
+    trashed_count = 0
+    orders.each do |order|
+      if order.source_email_id.present?
+        accounts.each do |acct|
+          begin
+            if Gmail::GmailService.new(acct).trash_message(order.source_email_id)
+              trashed_count += 1
+              break
+            end
+          rescue => e
+            Rails.logger.warn "[inbox#bulk_trash] Gmail trash 실패 ord=#{order.id} acct=#{acct.email}: #{e.class} #{e.message}"
+          end
+        end
+      end
+      order.archive!
+    end
+
+    render json: {
+      status: "ok",
+      count: orders.size,
+      gmail_trashed: trashed_count,
+      message: "#{orders.size}건을 휴지통으로 이동 (Gmail 삭제 #{trashed_count}건)"
+    }
+  end
+
+  # POST /inbox/bulk_delete — [LEGACY] 멀티체크 삭제 (rfq_excluded 마킹만, Gmail 유지)
   def bulk_delete
     orders = scoped_orders.where(id: params[:order_ids], status: :new_rfq)
     count = orders.count

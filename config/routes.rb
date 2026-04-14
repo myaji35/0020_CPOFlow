@@ -71,6 +71,7 @@ Rails.application.routes.draw do
   post "inbox/:id/feedback",      to: "inbox#feedback",       as: :inbox_feedback
   post "inbox/:id/generate_reply", to: "inbox#generate_reply", as: :inbox_generate_reply
   post "inbox/bulk_delete",    to: "inbox#bulk_delete",    as: :inbox_bulk_delete
+  post "inbox/bulk_trash",     to: "inbox#bulk_trash",     as: :inbox_bulk_trash
   post "inbox/bulk_to_kanban", to: "inbox#bulk_to_kanban", as: :inbox_bulk_to_kanban
   post "inbox/bulk_restore",   to: "inbox#bulk_restore",   as: :inbox_bulk_restore
 

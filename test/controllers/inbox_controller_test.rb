@@ -91,6 +91,40 @@ class InboxControllerTest < ActionDispatch::IntegrationTest
     client.destroy
   end
 
+  test "bulk_trash — 여러 건 archived 처리 + JSON 응답" do
+    client = Client.create!(name: "Bulk Trash Client", code: "BTCL#{SecureRandom.hex(3)}")
+    orders = 3.times.map do |i|
+      Order.create!(
+        title: "Bulk Trash #{i}",
+        customer_name: "Bulk C#{i}",
+        client: client,
+        status: :new_rfq,
+        user: @user,
+        original_email_from: "sender#{i}@example.com"
+      )
+    end
+
+    post inbox_bulk_trash_path, params: { order_ids: orders.map(&:id) }, as: :json
+    assert_response :success
+
+    body = JSON.parse(response.body)
+    assert_equal "ok", body["status"]
+    assert_equal 3, body["count"]
+
+    orders.each { |o| assert o.reload.archived_at.present?, "ord #{o.id} should be archived" }
+
+    orders.each(&:destroy)
+    client.destroy
+  end
+
+  test "bulk_trash — order_ids 빈 배열이면 count 0" do
+    post inbox_bulk_trash_path, params: { order_ids: [] }, as: :json
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal "ok", body["status"]
+    assert_equal 0, body["count"]
+  end
+
   private
 
   def login_as(user)
