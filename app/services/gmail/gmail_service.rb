@@ -103,11 +103,24 @@ module Gmail
     end
 
     # Download attachment data from Gmail
+    # google-apis-gmail_v1 (≥ 0.47) returns already-decoded binary in response.data.
+    # Legacy versions returned a base64url-encoded string; we handle both.
     def fetch_attachment(gmail_message_id, attachment_id)
       refresh_token_if_needed!
       response = @gmail.get_user_message_attachment("me", gmail_message_id, attachment_id)
       return nil unless response&.data
-      Base64.urlsafe_decode64(response.data)
+
+      data = response.data
+      # If the SDK returned the raw base64url string (legacy), decode it.
+      # Heuristic: base64url payloads are ASCII and contain only [A-Za-z0-9_-=].
+      if data.encoding == Encoding::US_ASCII || data.encoding == Encoding::UTF_8
+        begin
+          return Base64.urlsafe_decode64(data)
+        rescue ArgumentError
+          # Fall through — already binary.
+        end
+      end
+      data
     rescue Google::Apis::Error => e
       Rails.logger.error "[GmailService] fetch_attachment error: #{e.message}"
       nil
