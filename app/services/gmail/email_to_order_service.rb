@@ -44,7 +44,6 @@ module Gmail
         description:            build_description,
         status:                 :new_rfq,
         rfq_status:             rfq_status_val,
-        priority:               infer_priority,
         due_date:               @detection[:due_date],
         source_email_id:        @email[:id],
         gmail_thread_id:        @email[:thread_id],
@@ -171,18 +170,6 @@ module Gmail
       parts << "프로젝트: #{@detection[:project_name]}" if @detection[:project_name].present?
       parts << "수량: #{@detection[:quantities].join(", ")}" if @detection[:quantities]&.any?
       parts.compact.join("\n")
-    end
-
-    def infer_priority
-      due = @detection[:due_date]
-      return :medium unless due
-
-      days = (due - Date.today).to_i
-      if    days <= 7  then :urgent
-      elsif days <= 14 then :high
-      elsif days <= 30 then :medium
-      else                  :low
-      end
     end
 
     def build_tags(ref_no = nil)
