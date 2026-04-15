@@ -462,10 +462,19 @@ class InboxController < ApplicationController
     # HTML content → 직접 읽어서 렌더링 (iframe 내 redirect 다운로드 방지)
     elsif content_type.include?("html")
       blob.open do |tempfile|
-        html_content = File.read(tempfile.path, encoding: "UTF-8")
-        # iframe 내 ESC 키 → 부모 모달 닫기
+        raw = File.read(tempfile.path)
+        # 인코딩 안전화: UTF-8 강제 + invalid 바이트는 치환 (Ariba HTML 스크랩 등 깨진 인코딩 방어)
+        html_content = raw.force_encoding("UTF-8")
+        unless html_content.valid_encoding?
+          html_content = raw.encode("UTF-8", "UTF-8", invalid: :replace, undef: :replace, replace: "")
+        end
+        # iframe 내 ESC 키 → 부모 모달 닫기 (</body> 없으면 끝에 덧붙임)
         esc_script = '<script>document.addEventListener("keydown",function(e){if(e.key==="Escape")window.parent.postMessage("close-preview-modal","*")});</script>'
-        html_content = html_content.sub("</body>", "#{esc_script}</body>")
+        html_content = if html_content.include?("</body>")
+          html_content.sub("</body>", "#{esc_script}</body>")
+        else
+          html_content + esc_script
+        end
         render html: html_content.html_safe, layout: false
       end
     # PDF, 이미지 → inline redirect
