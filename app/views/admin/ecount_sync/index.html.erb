@@ -5,15 +5,57 @@
   <div class="flex items-center justify-between mb-6">
     <div>
       <h1 class="text-xl font-bold text-gray-900 dark:text-white">eCountERP API 동기화</h1>
-      <p class="text-sm text-gray-500 dark:text-gray-500 mt-0.5">품목·거래처 자동 동기화 현황 및 수동 실행</p>
+      <p class="text-sm text-gray-500 dark:text-gray-500 mt-0.5">품목·거래처·거래내역 동기화 현황 (연결: <%= @connection_ready ? "<span class='text-green-600 font-semibold'>활성</span>".html_safe : "<span class='text-red-600 font-semibold'>비활성</span>".html_safe %>)</p>
     </div>
-    <% if @failed_today > 0 %>
-      <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-sm font-medium">
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        오늘 실패 <%= @failed_today %>건
-      </span>
-    <% end %>
+    <div class="flex items-center gap-2">
+      <% if @failed_today > 0 %>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-sm font-medium">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          오늘 실패 <%= @failed_today %>건
+        </span>
+      <% end %>
+    </div>
   </div>
+
+  <%# 현황 요약 카드 (Product 실제 건수 + 일일 사용량) %>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+      <p class="text-xs text-gray-500 dark:text-gray-500 font-medium mb-1">eCount 연동 품목</p>
+      <p class="text-2xl font-bold text-gray-900 dark:text-white tabular-nums"><%= number_with_delimiter(@products_with_ecount) %></p>
+      <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">전체 <%= number_with_delimiter(@total_products_db) %>건 중</p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+      <p class="text-xs text-gray-500 dark:text-gray-500 font-medium mb-1">세션 상태</p>
+      <p class="text-base font-bold <%= @session_cached ? 'text-green-600' : 'text-gray-400' %>"><%= @session_cached ? "캐시 활성 (23h TTL)" : "미발급" %></p>
+      <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">SESSION_ID 자동 갱신</p>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+      <p class="text-xs text-gray-500 dark:text-gray-500 font-medium mb-1">일일 API 한도</p>
+      <% if @daily_quota_info %>
+        <p class="text-base font-bold text-gray-900 dark:text-white tabular-nums"><%= @daily_quota_info %></p>
+      <% else %>
+        <p class="text-base font-bold text-gray-900 dark:text-white">5,000 회/일</p>
+      <% end %>
+      <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">80% 시 경고 · 95% 시 차단</p>
+    </div>
+  </div>
+
+  <%# 🚨 CAP 경고 (ISS-084 critical finding) %>
+  <% if @products_with_ecount >= 9900 %>
+    <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 rounded-lg">
+      <div class="flex items-start gap-3">
+        <svg class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div class="text-sm text-red-900 dark:text-red-200">
+          <p class="font-semibold mb-1">⚠ 10,000건 CAP 가능성</p>
+          <p class="text-xs mb-2">현재 OAPI 엔드포인트 <code class="bg-red-100 dark:bg-red-900/40 px-1 rounded">/InventoryBasic/GetBasicProductsList</code>가 <strong>10,000건</strong>에서 잘립니다. 필터/페이징 파라미터가 모두 무시되는 것으로 확인됨.</p>
+          <p class="text-xs">✅ eCount 웹 UI에서 <strong>품목 총 건수 확인 필요</strong>. 초과 시 명세서 확보 후 재동기화.</p>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
 
   <%# 동기화 상태 카드 %>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
@@ -60,7 +102,8 @@
     </div>
 
     <%# 거래처 동기화 카드 %>
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 relative">
+      <span class="absolute top-3 right-3 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">OAPI 엔드포인트 대기</span>
       <div class="flex items-start justify-between mb-4">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-lg bg-green-50 dark:bg-green-900/30 flex items-center justify-center">
@@ -68,14 +111,15 @@
           </div>
           <div>
             <p class="font-semibold text-gray-900 dark:text-white">거래처 동기화</p>
-            <p class="text-xs text-gray-500 dark:text-gray-500">매 시간 45분 자동 실행</p>
+            <p class="text-xs text-gray-500 dark:text-gray-500">1577-5020 문의 후 엔드포인트 확보 예정</p>
           </div>
         </div>
         <%= button_to trigger_admin_ecount_sync_index_path, method: :post,
               params: { sync_type: "customers" },
-              class: "text-xs px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center gap-1" do %>
+              class: "text-xs px-3 py-1.5 bg-gray-300 text-gray-600 rounded-lg font-medium cursor-not-allowed flex items-center gap-1",
+              disabled: true do %>
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-          즉시 실행
+          비활성
         <% end %>
       </div>
       <% if @customers_last %>
@@ -167,6 +211,90 @@
         <p class="text-xs text-gray-300 dark:text-gray-600 mt-1">위에서 즉시 실행 버튼을 누르거나 설정된 스케줄을 기다리세요.</p>
       </div>
     <% end %>
+  </div>
+
+  <%# === 거래내역 이관 검토 (Phase 계획) === %>
+  <div class="mt-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+      <div>
+        <h2 class="font-semibold text-gray-900 dark:text-white text-sm">📋 거래내역 이관 검토 (Phase 계획)</h2>
+        <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">판매/구매/재고현황 데이터 동기화 설계 — OAPI 엔드포인트 확정 후 순차 진행</p>
+      </div>
+      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">PLANNING</span>
+    </div>
+
+    <div class="p-5 space-y-4">
+      <%# 판매 전표 %>
+      <div class="flex items-start gap-4 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div class="w-10 h-10 rounded-lg bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-orange-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <h3 class="font-semibold text-gray-900 dark:text-white text-sm">판매 전표 (Sales Slips)</h3>
+            <span class="text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-800">Phase 2</span>
+          </div>
+          <p class="text-xs text-gray-500 mb-2"><strong>용도</strong>: CPOFlow Order → eCount 판매 전표 자동 등록 / 기존 판매 이력 조회</p>
+          <ul class="text-xs text-gray-600 space-y-0.5 list-disc list-inside">
+            <li>조회 후보 경로: <code class="bg-gray-100 px-1 rounded">/Sales/GetListSales</code> 또는 <code class="bg-gray-100 px-1 rounded">/SalesSlip/GetList</code></li>
+            <li>등록 후보 경로: <code class="bg-gray-100 px-1 rounded">/SalesSlip/SaveSales</code> (Purchases/SavePurchases 유사 패턴)</li>
+            <li>CPOFlow 대응: <code>Order</code> 모델 + <code>ecount_slip_no</code> 추가 필요</li>
+            <li>예상 호출량: 일 50~200건 (주문 승인 트리거)</li>
+          </ul>
+        </div>
+      </div>
+
+      <%# 구매 전표 %>
+      <div class="flex items-start gap-4 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div class="w-10 h-10 rounded-lg bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-purple-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        </div>
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <h3 class="font-semibold text-gray-900 dark:text-white text-sm">구매 전표 (Purchase Slips)</h3>
+            <span class="text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-800">Phase 2</span>
+          </div>
+          <p class="text-xs text-gray-500 mb-2"><strong>용도</strong>: 발주 확정 시 eCount 구매 전표 생성 + 기존 PO 이력 조회</p>
+          <ul class="text-xs text-gray-600 space-y-0.5 list-disc list-inside">
+            <li>이미 확인된 경로: <code class="bg-gray-100 px-1 rounded">/Purchases/SavePurchases</code> (블로그 레퍼런스)</li>
+            <li>CPOFlow 대응: <code>PurchaseOrder</code> 모델 + <code>ecount_slip_no</code> + <code>ecount_slip_dt</code> 추가</li>
+            <li>예상 호출량: 일 10~50건 (PO 승인 트리거)</li>
+            <li>리스크: 쓰기(Save) 권한이 테스트 인증키에서 거부될 수 있음 — 검증 필요</li>
+          </ul>
+        </div>
+      </div>
+
+      <%# 재고 현황 %>
+      <div class="flex items-start gap-4 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div class="w-10 h-10 rounded-lg bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-teal-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        </div>
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <h3 class="font-semibold text-gray-900 dark:text-white text-sm">재고 현황 (Inventory Stock)</h3>
+            <span class="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-700">Phase 1 (Priority)</span>
+          </div>
+          <p class="text-xs text-gray-500 mb-2"><strong>용도</strong>: 주문 상세에서 실시간 재고 조회 (CSV 업로드 대체)</p>
+          <ul class="text-xs text-gray-600 space-y-0.5 list-disc list-inside">
+            <li>기존 코드: <code>InventoryService</code> (스켈레톤 존재, 엔드포인트 미확정)</li>
+            <li>후보 경로: <code class="bg-gray-100 px-1 rounded">/InventoryStatus/GetListInventory</code> 또는 <code class="bg-gray-100 px-1 rounded">/Inventory/GetStock</code></li>
+            <li>대응: Rails.cache 10분 TTL (기존 설계대로)</li>
+            <li>예상 호출량: 일 200~500건 (사용자 주문 상세 진입)</li>
+          </ul>
+        </div>
+      </div>
+
+      <%# 일일 규정 준수 %>
+      <div class="mt-4 p-3 rounded-lg bg-blue-50 border border-blue-200">
+        <div class="flex items-start gap-2">
+          <svg class="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <div class="text-xs text-blue-900">
+            <strong>📐 일일 한도 예산:</strong> 5,000 req/day · <strong>예상 사용:</strong> 품목 1회 + 재고 500회 + 전표 250회 ≈ <strong>일 750회 (15%)</strong> · <strong>안전 마진 85%</strong>.
+            QUANTITY_INFO 자동 파서로 80% 경고, 95% 자동 차단.
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <%# credentials 설정 안내 %>

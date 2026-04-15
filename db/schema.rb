@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_14_120005) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_15_020715) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -548,7 +548,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_14_120005) do
     t.datetime "updated_at", null: false
     t.index ["category"], name: "index_products_on_category"
     t.index ["code"], name: "index_products_on_code", unique: true
-    t.index ["ecount_code"], name: "index_products_on_ecount_code"
+    t.index ["ecount_code"], name: "index_products_on_ecount_code_unique", unique: true, where: "ecount_code IS NOT NULL"
     t.index ["sika_product"], name: "index_products_on_sika_product"
   end
 

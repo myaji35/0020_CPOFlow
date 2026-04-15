@@ -1,83 +1,106 @@
 # frozen_string_literal: true
 
 module EcountApi
-  # eCountERP 품목 마스터 → CPOFlow products 테이블 Upsert 동기화
-  # ecount_code 기준 매핑, 1페이지 50건씩 페이징
+  # eCount OAPI 품목 마스터 → CPOFlow products 테이블 Upsert 동기화
+  # 엔드포인트: /InventoryBasic/GetBasicProductsList (검증 완료 2026-04-15)
+  # 단일 호출로 전체 수신 (TotalCnt ≈ 10,000건, 1.4s, 18MB)
   class ProductSyncService < BaseService
-    PAGE_SIZE = 50
+    CHUNK_SIZE = 500  # DB upsert chunk
 
     def sync!(sync_log)
-      session = AuthService.session_id
-      page    = 1
-      total   = 0
+      started = Time.current
+      sync_log.update_columns(started_at: started, status: 1) if sync_log
+
+      items = fetch_all
+      total = items.size
+      Rails.logger.info "[EcountApi::ProductSync] #{total}건 수신 (#{(Time.current - started).round(2)}s)"
+
       success = 0
       errors  = []
 
-      loop do
-        items = fetch_page(session, page)
-        break if items.empty?
-
-        items.each do |item|
-          result = upsert_product(item)
-          if result[:ok]
-            success += 1
-          else
-            errors << { code: item["PROD_CD"], name: item["PROD_DES"], error: result[:error] }
-          end
-          total += 1
+      items.each_slice(CHUNK_SIZE).with_index do |chunk, idx|
+        rows = chunk.map { |item| product_attrs(item) }.compact
+        begin
+          Product.upsert_all(rows, unique_by: :ecount_code, update_only: UPDATE_COLS)
+          success += rows.size
+        rescue ActiveRecord::RecordNotUnique, ActiveRecord::StatementInvalid => e
+          chunk.each { |item| upsert_one(item, errors) { success += 1 } }
         end
 
-        sync_log.update_columns(
+        sync_log&.update_columns(
           total_count:   total,
           success_count: success,
           error_count:   errors.size
         )
-
-        sleep(1)  # 레이트 리밋 방어 (60req/min)
-        page += 1
       end
 
-      Rails.logger.info "[EcountApi::ProductSync] #{success}/#{total} 완료, 오류 #{errors.size}건"
+      sync_log&.update_columns(
+        status: errors.empty? ? 2 : 3,
+        completed_at: Time.current,
+        error_details: errors.first(50).to_json
+      )
+
+      Rails.logger.info "[EcountApi::ProductSync] 완료: #{success}/#{total}, 오류 #{errors.size}건"
       { total: total, success: success, errors: errors }
     end
 
+    UPDATE_COLS = %i[name description unit category unit_price currency active ecount_synced_at updated_at].freeze
+
     private
 
-    def fetch_page(session, page)
-      post("/Inventory/BasicInfo/GetBasicInfoList", {
+    def fetch_all
+      session = AuthService.session_id
+      data = post("/InventoryBasic/GetBasicProductsList", {
         "SESSION_ID" => session,
-        "PAGE_COND"  => { "PAGE_SIZE" => PAGE_SIZE, "PAGE_NUM" => page }
+        "PROD_CD"    => ""
       })
+      extract_result(data)
     rescue EcountApi::AuthError
-      # 세션 만료 시 재인증 후 1회 재시도
       EcountApi::AuthService.new.invalidate!
       session = EcountApi::AuthService.session_id
-      post("/Inventory/BasicInfo/GetBasicInfoList", {
+      data = post("/InventoryBasic/GetBasicProductsList", {
         "SESSION_ID" => session,
-        "PAGE_COND"  => { "PAGE_SIZE" => PAGE_SIZE, "PAGE_NUM" => page }
+        "PROD_CD"    => ""
       })
+      extract_result(data)
     end
 
-    def upsert_product(item)
-      attrs = {
+    # BaseService.parse_response! 는 RESPONSE.DATA1 경로를 기대하나
+    # BA 존은 Data.Result 를 쓰므로 수동 추출 대비 (현재는 parse_response!가 반환한 구조 수용)
+    def extract_result(data)
+      return data if data.is_a?(Array)
+      result = data.is_a?(Hash) ? (data["Result"] || data.dig("Data", "Result")) : nil
+      Array(result)
+    end
+
+    def product_attrs(item)
+      code = item["PROD_CD"].to_s.strip
+      return nil if code.blank?
+      now = Time.current
+      {
+        ecount_code:      code,
         name:             item["PROD_DES"].to_s.strip,
         description:      item["SIZE_DES"].to_s.strip,
         unit:             item["UNIT"].to_s.strip,
         category:         item["CLASS_CD"].to_s.strip,
-        unit_price:       item["PRICE"].to_f,
+        unit_price:       item["IN_PRICE"].to_f,
         currency:         item["CURR_CD"].presence || "USD",
-        active:           item["USE_YN"] == "Y",
-        ecount_synced_at: Time.current
+        active:           item["USE_YN"] != "N",
+        ecount_synced_at: now,
+        created_at:       now,
+        updated_at:       now
       }
+    end
 
+    def upsert_one(item, errors)
       product = Product.find_or_initialize_by(ecount_code: item["PROD_CD"])
-      product.assign_attributes(attrs)
+      product.assign_attributes(product_attrs(item).except(:ecount_code, :created_at))
       product.save!
-      { ok: true }
+      yield if block_given?
     rescue ActiveRecord::RecordInvalid => e
-      { ok: false, error: e.message }
+      errors << { code: item["PROD_CD"], name: item["PROD_DES"], error: e.message }
     rescue StandardError => e
-      { ok: false, error: "예외: #{e.class} — #{e.message}" }
+      errors << { code: item["PROD_CD"], name: item["PROD_DES"], error: "예외: #{e.class} — #{e.message}" }
     end
   end
 end

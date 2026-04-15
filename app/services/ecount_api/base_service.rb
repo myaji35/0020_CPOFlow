@@ -63,7 +63,14 @@ module EcountApi
     end
 
     def send_request(method, path, payload)
-      uri  = URI("#{self.class.base_url}#{path}")
+      # eCount OAPI는 SESSION_ID를 반드시 query string으로 받음
+      # body에만 넣으면 "Please login" (Status 500) 오류
+      payload = payload.dup
+      session = payload.delete("SESSION_ID") || payload.delete(:SESSION_ID)
+      url = "#{self.class.base_url}#{path}"
+      url += (url.include?("?") ? "&" : "?") + "SESSION_ID=#{session}" if session.present?
+
+      uri  = URI(url)
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl      = true
       http.open_timeout = TIMEOUT
@@ -73,26 +80,57 @@ module EcountApi
         req      = Net::HTTP::Post.new(uri)
         req.body = payload.to_json
       else
-        uri.query = URI.encode_www_form(payload) if payload.any?
+        uri.query = [ uri.query, URI.encode_www_form(payload) ].compact.reject(&:empty?).join("&") if payload.any?
         req = Net::HTTP::Get.new(uri)
       end
 
       req["Content-Type"] = "application/json; charset=UTF-8"
       req["Accept"]       = "application/json"
+      req["User-Agent"]   = "CPOFlow/1.0 (AtoZ2010 Inc)"
 
       http.request(req)
     end
 
     def parse_response!(response)
       body = JSON.parse(response.body)
-      code = body.dig("RESPONSE", "HEADER", "RESULT_CODE")
-      msg  = body.dig("RESPONSE", "HEADER", "RESULT_MSG")
 
-      case code
-      when "0000" then body.dig("RESPONSE", "DATA1") || []
-      when "4001" then raise EcountApi::RateLimitError, "레이트 리밋 초과 (60req/min)"
-      when "4010" then raise EcountApi::AuthError, "세션 만료 — 재인증 필요"
-      else             raise EcountApi::ApiError, "eCount API 오류 [#{code}]: #{msg}"
+      # 두 가지 응답 구조 지원:
+      # 1) 실서버 일부: {"RESPONSE": {"HEADER": {"RESULT_CODE": "0000"}, "DATA1": [...]}}
+      # 2) BA 테스트존: {"Status": "200", "Data": {"Result": [...], "TotalCnt": N, "QUANTITY_INFO": "..."}}
+      if body["RESPONSE"]
+        code = body.dig("RESPONSE", "HEADER", "RESULT_CODE")
+        msg  = body.dig("RESPONSE", "HEADER", "RESULT_MSG")
+        case code
+        when "0000" then body.dig("RESPONSE", "DATA1") || []
+        when "4001" then raise EcountApi::RateLimitError, "레이트 리밋 초과 (60req/min)"
+        when "4010" then raise EcountApi::AuthError, "세션 만료 — 재인증 필요"
+        else             raise EcountApi::ApiError, "eCount API 오류 [#{code}]: #{msg}"
+        end
+      elsif body["Status"].to_s == "200" && body["Data"]
+        check_quota!(body.dig("Data", "QUANTITY_INFO"))
+        body["Data"]  # 품목/재고 sync가 TotalCnt + Result 모두 필요
+      else
+        err = body.dig("Errors", 0, "Message") || body.dig("Error", "Message") || body.to_s[0, 200]
+        status = body["Status"].to_s
+        raise EcountApi::AuthError, "세션 만료 — 재인증 필요" if status == "4010"
+        raise EcountApi::RateLimitError, "레이트 리밋 초과" if status == "4001"
+        raise EcountApi::ApiError, "eCount API 오류 [#{status}]: #{err}"
+      end
+    end
+
+    # QUANTITY_INFO: "시간당 연속 오류 제한 건수 : 0/30건, 1일 허용량 : 6/5000건"
+    # 사용량 80% 초과 시 경고, 95% 초과 시 예외
+    def check_quota!(info)
+      return if info.blank?
+      m = info.to_s.match(/1일\s*허용량\s*:\s*(\d+)\/(\d+)/)
+      return unless m
+      used, limit = m[1].to_i, m[2].to_i
+      ratio = limit.zero? ? 0 : (used.to_f / limit)
+      Rails.logger.info "[EcountApi] 일일 사용량 #{used}/#{limit} (#{(ratio * 100).round(1)}%)"
+      if ratio >= 0.95
+        raise EcountApi::RateLimitError, "일일 한도 95% 초과 (#{used}/#{limit}) — 내일까지 대기"
+      elsif ratio >= 0.80
+        Rails.logger.warn "[EcountApi] ⚠️ 일일 한도 80% 초과 — 호출 자제 필요 (#{used}/#{limit})"
       end
     end
   end

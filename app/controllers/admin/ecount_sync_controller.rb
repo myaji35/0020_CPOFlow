@@ -11,6 +11,24 @@ module Admin
       @products_last  = EcountSyncLog.where(sync_type: "products",  status: :completed).order(:completed_at).last
       @customers_last = EcountSyncLog.where(sync_type: "customers", status: :completed).order(:completed_at).last
       @failed_today   = EcountSyncLog.failed_today.count
+
+      # 실제 현황
+      @total_products_db     = Product.count
+      @products_with_ecount  = Product.where.not(ecount_code: nil).count
+
+      # 연결 상태 + 일일 규정 (캐시에 있는 세션 정보만 — 새 호출 없음)
+      @session_cached    = Rails.cache.read(:ecount_session_id).present?
+      @daily_quota_info  = Rails.cache.read(:ecount_daily_quota)  # 최근 호출의 QUANTITY_INFO
+      @connection_ready  = Rails.application.credentials.dig(:ecount).present? ||
+                           ENV["ECOUNT_API_CERT_KEY"].present?
+
+      # 거래내역 이관 검토 상태
+      @transaction_sync_status = {
+        # 아직 OAPI 엔드포인트 미확보 — Phase 계획만 노출
+        sales_slips:     { state: "planned", total: nil, note: "/Sales/GetListSales (엔드포인트 확인 중)" },
+        purchase_slips:  { state: "planned", total: nil, note: "/Purchase/GetListPurchase (엔드포인트 확인 중)" },
+        inventory_stock: { state: "planned", total: Product.count, note: "/InventoryStatus/GetListInventory (엔드포인트 확인 중)" }
+      }
     end
 
     # POST /admin/ecount_sync/trigger
