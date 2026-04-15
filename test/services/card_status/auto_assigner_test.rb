@@ -33,4 +33,19 @@ class CardStatus::AutoAssignerTest < ActiveSupport::TestCase
     order = Order.new(due_date: Date.current + 2)
     assert_equal @urgent, CardStatus::AutoAssigner.call(order)
   end
+
+  test "returns urgent when due today (0 days)" do
+    order = Order.new(due_date: Date.current)
+    assert_equal @urgent, CardStatus::AutoAssigner.call(order)
+  end
+
+  test "returns urgent when due in past (overdue)" do
+    order = Order.new(due_date: Date.current - 5)
+    assert_equal @urgent, CardStatus::AutoAssigner.call(order)
+  end
+
+  test "for_due_date helper delegates to call with stub order" do
+    assert_equal @urgent, CardStatus::AutoAssigner.for_due_date(Date.current + 1)
+    assert_equal @normal, CardStatus::AutoAssigner.for_due_date(nil)
+  end
 end
