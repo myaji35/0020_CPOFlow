@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_15_020715) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_15_040850) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -508,6 +508,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_15_020715) do
     t.text "translated_subject"
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
+    t.index ["archived_at", "email_received_at"], name: "index_orders_on_archived_received"
     t.index ["archived_at"], name: "index_orders_on_archived_at"
     t.index ["ariba_event_id"], name: "index_orders_on_ariba_event_id"
     t.index ["card_status_id"], name: "index_orders_on_card_status_id"
@@ -522,7 +523,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_15_020715) do
     t.index ["parent_order_id"], name: "index_orders_on_parent_order_id"
     t.index ["project_id"], name: "index_orders_on_project_id"
     t.index ["reference_no"], name: "index_orders_on_reference_no"
+    t.index ["rfq_status"], name: "index_orders_on_rfq_status"
     t.index ["source_email_id"], name: "index_orders_on_source_email_id", unique: true, where: "source_email_id IS NOT NULL"
+    t.index ["status", "rfq_status"], name: "index_orders_on_status_rfq_status"
     t.index ["status"], name: "index_orders_on_status"
     t.index ["supplier_id"], name: "index_orders_on_supplier_id"
     t.index ["user_id"], name: "index_orders_on_user_id"

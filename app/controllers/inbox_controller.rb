@@ -12,10 +12,11 @@ class InboxController < ApplicationController
     perf_t0 = Time.now
     @prefetch_mode = params[:frame] == "prefetch"  # lazy turbo-frame prefetch 요청 여부
 
+    # ISS-046 최적화: 목록에서 attachments/blob 미표시 → eager load 제거 (v1 대비 -60%)
+    # project도 목록 표시 무관 → 제거. 필요 시 상세 패널에서 개별 로드.
     base_scope = scoped_orders.not_archived
                       .where.not(original_email_from: [ nil, "" ])
-                      .includes(:user, :assignees, :client, :supplier, :project,
-                                attachments_attachments: :blob)
+                      .includes(:user, :assignees, :client, :supplier)
 
     # Filter support: all (default), rfq (inbox only), converted (non-inbox)
     @current_filter = params[:filter].presence || "all"
@@ -84,11 +85,17 @@ class InboxController < ApplicationController
     @count_all, @count_rfq, @count_uncertain, @count_converted = counts.map(&:to_i)
 
     # 견적성 메일 (rfq_triage) — 우측 패널용
-    triage_scope = scoped_orders.where.not(original_email_from: [ nil, "" ])
-                                .where(rfq_status: :rfq_triage)
-                                .includes(:user, :assignees, :client, :supplier)
-    @triage_orders = triage_scope.order(created_at: :desc).limit(100)
-    @triage_count = triage_scope.count
+    # ISS-046 후속: 100 → 20건으로 축소 + prefetch 모드에선 스킵 (1페이지 TTFB -50%)
+    if @prefetch_mode
+      @triage_orders = []
+      @triage_count = 0
+    else
+      triage_scope = scoped_orders.where.not(original_email_from: [ nil, "" ])
+                                  .where(rfq_status: :rfq_triage)
+                                  .includes(:user, :assignees, :client, :supplier)
+      @triage_orders = triage_scope.order(created_at: :desc).limit(20)
+      @triage_count  = triage_scope.count
+    end
 
     # Phase E: 견적성 탭 하단에 표시할 AI 학습 통계 (1페이지에서만 로드, prefetch 시 스킵)
     unless @prefetch_mode
