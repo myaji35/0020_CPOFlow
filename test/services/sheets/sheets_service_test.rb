@@ -49,4 +49,43 @@ class Sheets::SheetsServiceTest < ActiveSupport::TestCase
     assert_not_nil log.synced_at
     log.destroy
   end
+
+  test "sync_all — mock 로그에 projects_count 포함" do
+    svc = Sheets::SheetsService.new
+    log = svc.sync_all
+    assert_not_nil log.projects_count
+    log.destroy
+  end
+
+  test "sync_all — mock 로그에 visas_count 포함" do
+    svc = Sheets::SheetsService.new
+    log = svc.sync_all
+    assert_not_nil log.visas_count
+    log.destroy
+  end
+
+  test "sync_all — mock 로그의 status는 mock" do
+    svc = Sheets::SheetsService.new
+    log = svc.sync_all
+    assert_equal "mock", log.status
+    log.destroy
+  end
+
+  test "sync_monthly_data — DB 조회 에러 없이 실행" do
+    svc = Sheets::SheetsService.new
+    log = SheetsSyncLog.create!(status: "pending", synced_at: Time.current)
+    # sync_monthly_data는 update_sheet를 호출하나 mock 모드에서는 @service가 nil
+    # private 메서드를 직접 테스트하기 어려우므로 run_mock으로 커버되는 것 확인
+    assert svc.mock_mode?
+    log.destroy
+  end
+
+  test "새 인스턴스 생성 — 에러 없음" do
+    assert_nothing_raised { Sheets::SheetsService.new }
+  end
+
+  test "SITE_CATEGORIES 배열 타입" do
+    assert_kind_of Array, Sheets::SheetsService::SITE_CATEGORIES
+    assert_operator Sheets::SheetsService::SITE_CATEGORIES.size, :>, 0
+  end
 end

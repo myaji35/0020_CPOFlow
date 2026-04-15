@@ -35,4 +35,49 @@ class Sap::AribaScraperServiceTest < ActiveSupport::TestCase
     order.destroy
     supplier.destroy
   end
+
+  test "extract_ariba_links (class method) — sap_portal_links 없으면 빈 배열" do
+    user  = User.find_or_create_by!(email: "ariba_cls_test@example.com") do |u|
+      u.name = "Ariba Cls Test"; u.password = "password123"; u.role = :member
+    end
+    order = Order.create!(title: "Ariba Cls Test", customer_name: "C",
+                          status: :new_rfq, user: user)
+    result = Sap::AribaScraperService.extract_ariba_links(order)
+    assert_equal [], result
+    order.destroy
+  end
+
+  test "extract_ariba_links (class method) — 이메일 바디의 ariba URL 추출" do
+    user  = User.find_or_create_by!(email: "ariba_body_test@example.com") do |u|
+      u.name = "Ariba Body Test"; u.password = "password123"; u.role = :member
+    end
+    order = Order.create!(
+      title: "Ariba Body Test", customer_name: "C",
+      status: :new_rfq, user: user,
+      original_email_body: "Please visit https://service.ariba.com/ad/supplier/rfq/9999 for details"
+    )
+    result = Sap::AribaScraperService.extract_ariba_links(order)
+    assert_includes result, "https://service.ariba.com/ad/supplier/rfq/9999"
+    order.destroy
+  end
+
+  test "extract_ariba_links — itemID 포함 링크 우선 정렬" do
+    user  = User.find_or_create_by!(email: "ariba_sort_test@example.com") do |u|
+      u.name = "Ariba Sort Test"; u.password = "password123"; u.role = :member
+    end
+    order = Order.create!(
+      title: "Ariba Sort Test", customer_name: "C",
+      status: :new_rfq, user: user,
+      original_email_body: "https://service.ariba.com/ad/rfq/123 and https://service.ariba.com/ad/rfq/456?itemID=789"
+    )
+    result = Sap::AribaScraperService.extract_ariba_links(order)
+    # itemID 포함 링크가 첫 번째
+    first_link = result.first
+    assert first_link.include?("itemID"), "itemID 링크가 우선 정렬되어야 함 (actual: #{first_link})"
+    order.destroy
+  end
+
+  test "AribaScraperService 인스턴스화 가능" do
+    assert_nothing_raised { Sap::AribaScraperService.new }
+  end
 end
