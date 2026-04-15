@@ -7,7 +7,21 @@ module Settings
     def index
       @card_statuses = CardStatus.ordered
       @color_presets = CardStatusColorPresets::ALL
+      @themes        = CardStatusThemes::ALL
       @card_status ||= CardStatus.new
+    end
+
+    # POST /settings/card_statuses/apply_theme
+    # 4개 테마(Pastel/Vivid/Mono/Corporate) 일괄 적용
+    def apply_theme
+      theme_key = params[:theme_key].to_s
+      result = CardStatusThemes.apply!(theme_key)
+      if result[:ok]
+        redirect_to settings_card_statuses_path,
+                    notice: "#{result[:theme]} 테마 적용: #{result[:updated]}개 상태 색상 변경"
+      else
+        redirect_to settings_card_statuses_path, alert: "테마 적용 실패: #{result[:error]}"
+      end
     end
 
     def create

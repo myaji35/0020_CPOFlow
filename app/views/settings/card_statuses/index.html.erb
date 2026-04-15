@@ -13,6 +13,37 @@
     <div class="mb-3 px-3 py-2 rounded text-sm <%= type == 'notice' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800' %>"><%= msg %></div>
   <% end %>
 
+  <%# 🎨 4개 테마 선택 — 한 번 클릭으로 시스템 상태 7종 색상 일괄 변경 %>
+  <div class="mb-5 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+    <div class="flex items-center justify-between mb-3">
+      <div>
+        <h2 class="text-sm font-semibold text-gray-900 dark:text-white">🎨 컬러 테마</h2>
+        <p class="text-xs text-gray-500 mt-0.5">테마를 클릭하면 시스템 상태 7개의 색상이 일괄 변경됩니다. 사용자 추가 상태는 보존됩니다.</p>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <% @themes.each do |theme| %>
+        <%= form_with url: apply_theme_settings_card_statuses_path, method: :post, local: true, class: "contents" do |f| %>
+          <%= hidden_field_tag :theme_key, theme[:key] %>
+          <button type="submit"
+                  data-turbo-confirm="<%= theme[:name] %> 테마를 적용하면 7개 상태 색상이 모두 바뀝니다. 계속할까요?"
+                  class="group relative overflow-hidden rounded-lg border-2 border-gray-200 hover:border-[#00A1E0] transition-colors p-3 text-left">
+            <%# 테마 미니 미리보기 — 7개 상태 색상 스와치 %>
+            <div class="flex gap-0.5 mb-2">
+              <% theme[:colors].each do |_key, palette| %>
+                <span class="flex-1 h-5 rounded-sm border" style="background:<%= palette[:bg] %>; border-color:<%= palette[:border] %>;"></span>
+              <% end %>
+            </div>
+            <div class="flex items-baseline justify-between">
+              <span class="text-sm font-semibold text-gray-900"><%= theme[:name] %></span>
+              <span class="text-[10px] text-gray-500"><%= theme[:desc] %></span>
+            </div>
+          </button>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
   <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
        data-controller="card-status-sortable"
        data-card-status-sortable-url-value="<%= reorder_settings_card_statuses_path %>">
