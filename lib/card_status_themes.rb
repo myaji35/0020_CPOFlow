@@ -56,16 +56,17 @@ module CardStatusThemes
     {
       key: "corporate",
       name: "Corporate",
-      desc: "AtoZ 브랜드 톤 (Navy/Sky)",
-      preview_bg: "#1E3A5F", preview_border: "#00A1E0",
+      desc: "Pastel+Vivid 중간 채도",
+      preview_bg: "#FCA5A5", preview_border: "#F87171",
       colors: {
-        "urgent"  => { bg: "#D93025", border: "#991B1B", text: "#FFFFFF" },
-        "high"    => { bg: "#F4A83A", border: "#B45309", text: "#1E3A5F" },
-        "normal"  => { bg: "#1E3A5F", border: "#16325C", text: "#FFFFFF" },
-        "low"     => { bg: "#1E8E3E", border: "#14532D", text: "#FFFFFF" },
-        "vip"     => { bg: "#00A1E0", border: "#0369A1", text: "#FFFFFF" },
-        "hold"    => { bg: "#F3F4F6", border: "#1E3A5F", text: "#16325C" },
-        "overdue" => { bg: "#7F1D1D", border: "#450A0A", text: "#FFFFFF" }
+        # Pastel과 Vivid의 중간 채도 (Tailwind 300 계열). 배경 가독성 유지 + 색 구분 명확.
+        "urgent"  => { bg: "#FCA5A5", border: "#EF4444", text: "#7F1D1D" }, # red-300
+        "high"    => { bg: "#FDBA74", border: "#F97316", text: "#7C2D12" }, # orange-300
+        "normal"  => { bg: "#93C5FD", border: "#3B82F6", text: "#1E3A8A" }, # blue-300 (AtoZ Sky 파생)
+        "low"     => { bg: "#86EFAC", border: "#22C55E", text: "#14532D" }, # green-300
+        "vip"     => { bg: "#C4B5FD", border: "#8B5CF6", text: "#4C1D95" }, # violet-300
+        "hold"    => { bg: "#FDE68A", border: "#F59E0B", text: "#78350F" }, # amber-300
+        "overdue" => { bg: "#F87171", border: "#B91C1C", text: "#FFFFFF" }  # red-400 (강조)
       }
     }
   ].freeze
