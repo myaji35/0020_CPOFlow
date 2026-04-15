@@ -216,6 +216,20 @@
 
       <div class="flex-1 overflow-y-auto">
         <% if @all_orders.any? %>
+          <%# 1페이지 로드 직후 브라우저가 2~(N)페이지를 백그라운드로 병렬 fetch (ISS-046 복원)
+              loading="lazy" + display:none → turbo가 fetch 수행, 사용자 눈에 안 보임. %>
+          <% if @page == 1 && @total_pages > 1 && !@prefetch_mode %>
+            <% paging_params_for_prefetch = { filter: @current_filter == 'all' ? nil : @current_filter, q: @search_query.presence, frame: 'prefetch' }.compact %>
+            <div aria-hidden="true" style="display:none;">
+              <% prefetch_upto = [ @total_pages, InboxController::PREFETCH_PAGES + 1 ].min %>
+              <% (2..prefetch_upto).each do |pg| %>
+                <turbo-frame id="inbox-prefetch-page-<%= pg %>"
+                             src="<%= inbox_path(**paging_params_for_prefetch, page: pg) %>"
+                             loading="lazy"></turbo-frame>
+              <% end %>
+            </div>
+          <% end %>
+
           <%# Pagination (top) %>
           <% if @total_pages > 1 %>
             <% paging_params = { filter: @current_filter == 'all' ? nil : @current_filter, q: @search_query.presence } %>

@@ -1,18 +1,34 @@
 class KanbanController < ApplicationController
+  # ISS-046 후속: 칸반 컬럼별 첫 N건만 즉시 렌더, 나머지는 turbo-frame lazy로 백그라운드.
+  # 8개 컬럼 × 평균 20~50건 = 첫 페이지 ~200건 인서트 부담 → INITIAL_LIMIT로 80% 단축.
+  INITIAL_LIMIT = 20  # 컬럼당 즉시 렌더 카드 수
+  PREFETCH_LIMIT = 80 # 컬럼당 백그라운드 추가 페치 상한
+
   def index
-    # Phase F (ISS-034): new_rfq 컬럼은 rfq_status 게이트 적용
-    # → rfq_triage(견적성 확정)인 카드만 노출, rfq_pending/excluded/archived는 인박스에만 존재.
-    # 다른 컬럼(make_quo 이후)은 이미 변환된 카드이므로 게이트 무관.
+    perf_t0 = Time.now
+    @prefetch_mode = params[:frame] == "prefetch"  # column lazy frame 요청 여부
+    @prefetch_status = params[:status]             # 어느 컬럼을 prefetch?
+
+    # prefetch 모드: 단일 컬럼의 추가 데이터만 반환
+    if @prefetch_mode && @prefetch_status.present?
+      load_single_column_more
+      return
+    end
+
+    # 정상 로드: 모든 컬럼 첫 INITIAL_LIMIT건만
+    @column_totals = {}
     @columns = Order::KANBAN_COLUMNS.map do |status|
       base = scoped_orders.root_orders
                     .by_due_date
                     .includes(:assignees, :tasks, :user, :sub_orders)
-      orders = if status == "new_rfq"
+      relation = if status == "new_rfq"
         base.where(status: :new_rfq, rfq_status: Order::KANBAN_VISIBLE_RFQ_STATUSES)
       else
         base.where(status: status)
       end
-      [ status, orders ]
+      total = relation.count
+      @column_totals[status] = total
+      [ status, relation.limit(INITIAL_LIMIT).to_a ]
     end.to_h
     @filter_employees = Employee.active.by_name
 
@@ -34,6 +50,31 @@ class KanbanController < ApplicationController
                     .order(created_at: :asc)
       { thread_id: tid, orders: orders }
     end
+
+    elapsed_ms = ((Time.now - perf_t0) * 1000).round(1)
+    initial_total = @columns.values.sum(&:size)
+    Rails.logger.info "[PERF][kanban] initial=#{initial_total} columns=#{@columns.size} totals=#{@column_totals} ms=#{elapsed_ms}"
+  end
+
+  # turbo-frame lazy 응답 — 특정 컬럼의 INITIAL_LIMIT 이후 카드들
+  def load_single_column_more
+    status = @prefetch_status
+    return render(html: "", layout: false) unless Order::KANBAN_COLUMNS.include?(status)
+
+    base = scoped_orders.root_orders
+                  .by_due_date
+                  .includes(:assignees, :tasks, :user, :sub_orders)
+    relation = if status == "new_rfq"
+      base.where(status: :new_rfq, rfq_status: Order::KANBAN_VISIBLE_RFQ_STATUSES)
+    else
+      base.where(status: status)
+    end
+
+    @more_orders = relation.offset(INITIAL_LIMIT).limit(PREFETCH_LIMIT - INITIAL_LIMIT).to_a
+    @prefetch_status_for_view = status
+    Rails.logger.info "[PERF][kanban] prefetch column=#{status} more=#{@more_orders.size}"
+
+    render partial: "kanban/column_more", locals: { status: status, orders: @more_orders }, layout: false
   end
 
   def move

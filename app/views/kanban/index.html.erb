@@ -218,6 +218,15 @@
           <% end %>
         <% end %>
 
+        <%# ISS-046 후속: 컬럼별 INITIAL_LIMIT 초과분 백그라운드 lazy 로드 %>
+        <% column_total = (status == "inbox") ? @inbox_grouped.size : (@column_totals && @column_totals[status]) %>
+        <% if column_total && column_total > KanbanController::INITIAL_LIMIT %>
+          <turbo-frame id="kanban-more-<%= status %>"
+                       src="<%= kanban_path(frame: 'prefetch', status: status) %>"
+                       loading="lazy"
+                       class="contents"></turbo-frame>
+        <% end %>
+
         <!-- Empty state -->
         <% empty_check = status == "inbox" ? @inbox_grouped.empty? : orders.empty? %>
         <div class="empty-state flex-1 flex items-center justify-center text-xs text-gray-500 dark:text-gray-500 py-8<%= empty_check ? '' : ' hidden' %>">

@@ -443,8 +443,11 @@ class InboxController < ApplicationController
 
   # 첨부파일 미리보기 (xlsx/xls → HTML 테이블 변환, 기타 → inline redirect)
   def preview_attachment
-    order = Order.find(params[:id])
-    blob = ActiveStorage::Blob.find(params[:blob_id])
+    # ISS-062 권한 가드 복원: scoped_orders로 사용자 접근 가능 주문만, blob은 해당 order 첨부에서만
+    order = scoped_orders.includes(attachments_attachments: :blob).find(params[:id])
+    attachment = order.attachments.find { |a| a.blob_id.to_s == params[:blob_id].to_s }
+    return render(html: "<p style='padding:2rem;color:#c00;'>권한 없음</p>".html_safe, layout: false, status: :forbidden) unless attachment
+    blob = attachment.blob
 
     content_type = blob.content_type.to_s
 
@@ -479,10 +482,10 @@ class InboxController < ApplicationController
 
   # 첨부파일 다운로드 (ActiveStorage blob proxy)
   def download_attachment
-    order = Order.find(params[:id])
+    # ISS-062 권한 가드 복원: scoped_orders로 사용자 접근 가능 주문만
+    order = scoped_orders.includes(attachments_attachments: :blob).find(params[:id])
     blob_key = params[:blob_key]
 
-    # Find the attachment blob by key
     attachment = order.attachments.find { |a| a.blob.key == blob_key }
     if attachment
       redirect_to rails_blob_path(attachment.blob, disposition: "attachment"), allow_other_host: false
@@ -490,6 +493,6 @@ class InboxController < ApplicationController
       render json: { error: "첨부파일을 찾을 수 없습니다" }, status: :not_found
     end
   rescue ActiveRecord::RecordNotFound
-    render json: { error: "not found" }, status: :not_found
+    render json: { error: "권한 없음 또는 not found" }, status: :forbidden
   end
 end
