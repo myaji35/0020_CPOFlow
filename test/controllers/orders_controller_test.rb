@@ -147,6 +147,56 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     assert_includes [200, 406], response.status
   end
 
+  # ─── destroy ─────────────────────────────
+  test "orders destroy — 삭제 성공 후 kanban redirect" do
+    order = Order.create!(title: "Destroy Test", customer_name: "Cust", user: @user, status: :new_rfq)
+    delete order_path(order)
+    assert_response :redirect
+    assert_not Order.exists?(order.id)
+  end
+
+  test "orders destroy — JSON 요청 시 success:true" do
+    order = Order.create!(title: "Destroy JSON Test", customer_name: "Cust", user: @user, status: :new_rfq)
+    delete order_path(order), as: :json
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal true, body["success"]
+  end
+
+  # ─── detach ──────────────────────────────
+  test "detach — 존재하지 않는 blob_id는 에러 없이 처리됨" do
+    order = Order.create!(title: "Detach Test", customer_name: "Cust", user: @user, status: :new_rfq)
+    delete detach_order_path(order, blob_id: 99999999)
+    assert_includes [302, 404, 422], response.status
+    order.destroy
+  end
+
+  # ─── preview_by_ref ───────────────────────
+  test "preview_by_ref — ref_no 없으면 에러 없이 처리됨" do
+    get preview_by_ref_orders_path, params: { ref_no: "NONEXISTENT_REF_#{SecureRandom.hex(4)}" }
+    assert_includes [200, 400, 404], response.status
+  end
+
+  # ─── quick_update 추가 케이스 ─────────────
+  test "quick_update — rfq_no 변경 성공" do
+    order = Order.create!(title: "QU RFQ Test", customer_name: "Cust", user: @user, status: :new_rfq)
+    patch quick_update_order_path(order), params: { order: { rfq_no: "RFQ-2026-001" } }, as: :json
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal true, body["success"]
+    order.destroy
+  end
+
+  # ─── move_status 추가 케이스 ─────────────
+  test "move_status — done 상태로 변경" do
+    order = Order.create!(title: "Move Done Test", customer_name: "Cust", user: @user, status: :new_rfq)
+    patch move_status_order_path(order), params: { status: "done" }
+    assert_response :redirect
+    order.reload
+    assert_equal "done", order.status
+    order.destroy
+  end
+
   private
 
   def login_as(user)
