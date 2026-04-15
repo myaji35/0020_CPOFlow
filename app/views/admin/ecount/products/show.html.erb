@@ -1,0 +1,24 @@
+<div class="max-w-4xl mx-auto px-4 py-6">
+  <div class="mb-4">
+    <%= link_to "← 품목 목록", admin_ecount_products_path, class: "text-sm text-blue-600 hover:underline" %>
+  </div>
+
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+    <div class="mb-5">
+      <p class="text-xs text-gray-500 font-mono mb-1"><%= @product.ecount_code %></p>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white"><%= @product.name %></h1>
+      <p class="text-sm text-gray-600 mt-1"><%= @product.description %></p>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+      <div><p class="text-xs text-gray-500 mb-0.5">단위</p><p class="font-medium"><%= @product.unit %></p></div>
+      <div><p class="text-xs text-gray-500 mb-0.5">단가</p><p class="font-medium tabular-nums"><%= @product.currency %> <%= number_with_precision(@product.unit_price, precision: 2, delimiter: ",") %></p></div>
+      <div><p class="text-xs text-gray-500 mb-0.5">분류</p><p class="font-medium"><%= @product.category.presence || "—" %></p></div>
+      <div><p class="text-xs text-gray-500 mb-0.5">상태</p><p class="font-medium"><%= @product.active ? "사용" : "중지" %></p></div>
+      <div><p class="text-xs text-gray-500 mb-0.5">브랜드</p><p class="font-medium"><%= @product.brand.presence || "—" %></p></div>
+      <div><p class="text-xs text-gray-500 mb-0.5">공급처 코드</p><p class="font-medium font-mono text-xs"><%= @product.supplier_code.presence || "—" %></p></div>
+      <div><p class="text-xs text-gray-500 mb-0.5">재고</p><p class="font-medium tabular-nums"><%= @product.stock_quantity %></p></div>
+      <div><p class="text-xs text-gray-500 mb-0.5">동기화</p><p class="font-medium text-xs"><%= @product.ecount_synced_at&.strftime("%Y-%m-%d %H:%M") %></p></div>
+    </div>
+  </div>
+</div>

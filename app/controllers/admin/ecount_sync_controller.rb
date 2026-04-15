@@ -7,7 +7,7 @@ module Admin
 
     # GET /admin/ecount_sync
     def index
-      @logs = EcountSyncLog.recent.limit(50)
+      @logs = EcountSyncLog.recent.limit(5)
       @products_last  = EcountSyncLog.where(sync_type: "products",  status: :completed).order(:completed_at).last
       @customers_last = EcountSyncLog.where(sync_type: "customers", status: :completed).order(:completed_at).last
       @failed_today   = EcountSyncLog.failed_today.count

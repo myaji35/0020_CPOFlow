@@ -49,7 +49,9 @@
       <div class="my-2 mx-3 border-t border-white/20"></div>
       <%= nav_link_to reports_path, icon: "lni lni-bar-chart", label: "경영 리포트" %>
       <%= nav_link_to admin_imports_path, icon: "lni lni-upload", label: "eCount Import" %>
-      <%= nav_link_to admin_ecount_sync_index_path, icon: "lni lni-sync", label: "eCount API 동기화" %>
+      <%= nav_link_to admin_ecount_sync_index_path, icon: "lni lni-reload", label: "eCount API 동기화" %>
+      <%= nav_link_to admin_ecount_products_path, icon: "lni lni-package", label: "eCount 품목" %>
+      <%= nav_link_to admin_ecount_transactions_path, icon: "lni lni-files", label: "eCount 거래내역" %>
     <% end %>
     <% if current_user.admin? %>
       <%= nav_link_to settings_menu_permissions_path, icon: "lni lni-shield", label: "메뉴 권한" %>
