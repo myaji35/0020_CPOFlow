@@ -7,66 +7,70 @@ module CardStatusThemes
   # 키 순서 = 우선순위 (긴급도 / 운영 흐름)
   SYSTEM_KEYS = %w[urgent high normal low vip hold overdue].freeze
 
+  # 4단계 농도 테마 — 검정 글씨(#111827) 고정, 배경색만 Pastel→Vivid 방향 농도 변화.
+  # 명도(L) 기준 ≥60 유지로 검정 글씨 대비 4.5:1 이상 (WCAG AA 통과).
+  # 각 테마의 7개 상태는 같은 농도 레벨에서 Tailwind 색상 변형.
+  BLACK_TEXT = "#111827" # gray-900 — 모든 테마 공통 검정 글씨
+
   ALL = [
     {
-      key: "pastel",
-      name: "Pastel",
-      desc: "부드러운 톤 (기본)",
-      preview_bg: "#FFF1F2", preview_border: "#FECDD3",
+      key: "level1",
+      name: "L1 · Soft",
+      desc: "가장 연한 파스텔 (50/100)",
+      preview_bg: "#FEF2F2", preview_border: "#FECACA",
       colors: {
-        "urgent"  => { bg: "#FFF1F2", border: "#FECDD3", text: "#991B1B" },
-        "high"    => { bg: "#FFF7ED", border: "#FED7AA", text: "#9A3412" },
-        "normal"  => { bg: "#FAFAFA", border: "#E5E7EB", text: "#374151" },
-        "low"     => { bg: "#F0FDF4", border: "#BBF7D0", text: "#14532D" },
-        "vip"     => { bg: "#F5F3FF", border: "#DDD6FE", text: "#5B21B6" },
-        "hold"    => { bg: "#FEFCE8", border: "#FEF08A", text: "#854D0E" },
-        "overdue" => { bg: "#FEE2E2", border: "#FCA5A5", text: "#7F1D1D" }
+        "urgent"  => { bg: "#FEF2F2", border: "#FECACA", text: BLACK_TEXT }, # red-50/200
+        "high"    => { bg: "#FFF7ED", border: "#FED7AA", text: BLACK_TEXT }, # orange-50/200
+        "normal"  => { bg: "#EFF6FF", border: "#BFDBFE", text: BLACK_TEXT }, # blue-50/200
+        "low"     => { bg: "#F0FDF4", border: "#BBF7D0", text: BLACK_TEXT }, # green-50/200
+        "vip"     => { bg: "#F5F3FF", border: "#DDD6FE", text: BLACK_TEXT }, # violet-50/200
+        "hold"    => { bg: "#FEFCE8", border: "#FEF08A", text: BLACK_TEXT }, # yellow-50/200
+        "overdue" => { bg: "#FEE2E2", border: "#FCA5A5", text: BLACK_TEXT }  # red-100/300
       }
     },
     {
-      key: "vivid",
-      name: "Vivid",
-      desc: "채도 높은 명확한 구분",
-      preview_bg: "#DC2626", preview_border: "#991B1B",
+      key: "level2",
+      name: "L2 · Light",
+      desc: "연한 중간 톤 (200)",
+      preview_bg: "#FECACA", preview_border: "#FCA5A5",
       colors: {
-        "urgent"  => { bg: "#DC2626", border: "#991B1B", text: "#FFFFFF" },
-        "high"    => { bg: "#EA580C", border: "#9A3412", text: "#FFFFFF" },
-        "normal"  => { bg: "#3B82F6", border: "#1E40AF", text: "#FFFFFF" },
-        "low"     => { bg: "#16A34A", border: "#14532D", text: "#FFFFFF" },
-        "vip"     => { bg: "#9333EA", border: "#5B21B6", text: "#FFFFFF" },
-        "hold"    => { bg: "#CA8A04", border: "#854D0E", text: "#FFFFFF" },
-        "overdue" => { bg: "#7F1D1D", border: "#450A0A", text: "#FFFFFF" }
+        "urgent"  => { bg: "#FECACA", border: "#FCA5A5", text: BLACK_TEXT }, # red-200
+        "high"    => { bg: "#FED7AA", border: "#FDBA74", text: BLACK_TEXT }, # orange-200
+        "normal"  => { bg: "#BFDBFE", border: "#93C5FD", text: BLACK_TEXT }, # blue-200
+        "low"     => { bg: "#BBF7D0", border: "#86EFAC", text: BLACK_TEXT }, # green-200
+        "vip"     => { bg: "#DDD6FE", border: "#C4B5FD", text: BLACK_TEXT }, # violet-200
+        "hold"    => { bg: "#FEF08A", border: "#FDE047", text: BLACK_TEXT }, # yellow-200
+        "overdue" => { bg: "#FCA5A5", border: "#F87171", text: BLACK_TEXT }  # red-300
       }
     },
     {
-      key: "mono",
-      name: "Mono",
-      desc: "무채색 농도 차이",
-      preview_bg: "#1F2937", preview_border: "#374151",
-      colors: {
-        "urgent"  => { bg: "#1F2937", border: "#111827", text: "#F9FAFB" },
-        "high"    => { bg: "#374151", border: "#1F2937", text: "#F9FAFB" },
-        "normal"  => { bg: "#9CA3AF", border: "#6B7280", text: "#FFFFFF" },
-        "low"     => { bg: "#D1D5DB", border: "#9CA3AF", text: "#1F2937" },
-        "vip"     => { bg: "#E5E7EB", border: "#9CA3AF", text: "#111827" },
-        "hold"    => { bg: "#F3F4F6", border: "#D1D5DB", text: "#374151" },
-        "overdue" => { bg: "#111827", border: "#000000", text: "#F9FAFB" }
-      }
-    },
-    {
-      key: "corporate",
-      name: "Corporate",
-      desc: "Pastel+Vivid 중간 채도",
+      key: "level3",
+      name: "L3 · Medium",
+      desc: "중간 채도 (300)",
       preview_bg: "#FCA5A5", preview_border: "#F87171",
       colors: {
-        # Pastel과 Vivid의 중간 채도 (Tailwind 300 계열). 배경 가독성 유지 + 색 구분 명확.
-        "urgent"  => { bg: "#FCA5A5", border: "#EF4444", text: "#7F1D1D" }, # red-300
-        "high"    => { bg: "#FDBA74", border: "#F97316", text: "#7C2D12" }, # orange-300
-        "normal"  => { bg: "#93C5FD", border: "#3B82F6", text: "#1E3A8A" }, # blue-300 (AtoZ Sky 파생)
-        "low"     => { bg: "#86EFAC", border: "#22C55E", text: "#14532D" }, # green-300
-        "vip"     => { bg: "#C4B5FD", border: "#8B5CF6", text: "#4C1D95" }, # violet-300
-        "hold"    => { bg: "#FDE68A", border: "#F59E0B", text: "#78350F" }, # amber-300
-        "overdue" => { bg: "#F87171", border: "#B91C1C", text: "#FFFFFF" }  # red-400 (강조)
+        "urgent"  => { bg: "#FCA5A5", border: "#F87171", text: BLACK_TEXT }, # red-300
+        "high"    => { bg: "#FDBA74", border: "#FB923C", text: BLACK_TEXT }, # orange-300
+        "normal"  => { bg: "#93C5FD", border: "#60A5FA", text: BLACK_TEXT }, # blue-300
+        "low"     => { bg: "#86EFAC", border: "#4ADE80", text: BLACK_TEXT }, # green-300
+        "vip"     => { bg: "#C4B5FD", border: "#A78BFA", text: BLACK_TEXT }, # violet-300
+        "hold"    => { bg: "#FDE047", border: "#FACC15", text: BLACK_TEXT }, # yellow-300
+        "overdue" => { bg: "#F87171", border: "#EF4444", text: BLACK_TEXT }  # red-400
+      }
+    },
+    {
+      key: "level4",
+      name: "L4 · Strong",
+      desc: "가장 진한 파스텔 (400, 글씨 가독 한계)",
+      preview_bg: "#F87171", preview_border: "#EF4444",
+      colors: {
+        "urgent"  => { bg: "#F87171", border: "#EF4444", text: BLACK_TEXT }, # red-400
+        "high"    => { bg: "#FB923C", border: "#F97316", text: BLACK_TEXT }, # orange-400
+        "normal"  => { bg: "#60A5FA", border: "#3B82F6", text: BLACK_TEXT }, # blue-400
+        "low"     => { bg: "#4ADE80", border: "#22C55E", text: BLACK_TEXT }, # green-400
+        "vip"     => { bg: "#A78BFA", border: "#8B5CF6", text: BLACK_TEXT }, # violet-400
+        "hold"    => { bg: "#FACC15", border: "#EAB308", text: BLACK_TEXT }, # yellow-400
+        "overdue" => { bg: "#EF4444", border: "#DC2626", text: BLACK_TEXT }  # red-500 (경계)
       }
     }
   ].freeze
