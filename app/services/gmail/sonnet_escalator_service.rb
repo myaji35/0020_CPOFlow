@@ -108,7 +108,12 @@ module Gmail
     def build_few_shots_text
       return "" unless defined?(Gmail::RfqFeedbackService)
 
-      shots = Gmail::RfqFeedbackService.few_shot_examples(limit: FEW_SHOT_LIMIT) rescue []
+      shots = begin
+        Gmail::RfqFeedbackService.few_shot_examples(limit: FEW_SHOT_LIMIT)
+      rescue StandardError => e
+        Rails.logger.warn "[SonnetEscalator] few_shot 조회 실패 — 빈 배열로 폴백: #{e.class} #{e.message}"
+        []
+      end
       return "" if shots.empty?
 
       lines = shots.map do |ex|
