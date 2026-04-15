@@ -28,16 +28,12 @@ class DueNotificationJobTest < ActiveJob::TestCase
     @order_7days.destroy if Order.exists?(@order_7days.id)
   end
 
-  test "perform — GoogleChatService stub하고 실행 성공" do
-    # GoogleChatService의 notify를 no-op으로 대체
-    notify_stub = ->(*, **) { nil }
-    GoogleChatService.define_singleton_method(:notify, notify_stub)
+  test "perform — GoogleChatService 호출 에러 없이 실행 성공" do
+    # GoogleChatService.notify는 webhook URL 미설정 시 false 반환 (API 호출 없음)
+    AppSetting.find_by(key: "google_chat_webhook_url")&.destroy
     assert_nothing_raised do
       DueNotificationJob.new.perform
     end
-  ensure
-    # 원래 메서드 복원 (singleton_method 제거)
-    GoogleChatService.singleton_class.send(:remove_method, :notify) rescue nil
   end
 
   test "TRIGGER_DAYS — 14, 7, 3, 0 포함" do

@@ -104,6 +104,49 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     order.destroy
   end
 
+  # ─── move_status ─────────────────────────
+  test "move_status — status 변경 성공" do
+    order = Order.create!(title: "Move Status Test", customer_name: "Cust", user: @user, status: :new_rfq)
+    patch move_status_order_path(order), params: { status: "make_quo" }
+    order.reload
+    assert_equal "make_quo", order.status
+    order.destroy
+  end
+
+  test "move_status — 다른 유효 status로 변경" do
+    order = Order.create!(title: "Move Status Bad Test", customer_name: "Cust", user: @user, status: :new_rfq)
+    patch move_status_order_path(order), params: { status: "pending_po" }
+    order.reload
+    assert_equal "pending_po", order.status
+    order.destroy
+  end
+
+  # ─── attach — 파일 없이 호출 ──────────────
+  test "attach — 파일 없으면 alert redirect" do
+    order = Order.create!(title: "Attach Test", customer_name: "Cust", user: @user, status: :new_rfq)
+    post attach_order_path(order), params: { files: nil }
+    assert_response :redirect
+    order.destroy
+  end
+
+  test "attach — JSON 요청 시 422 반환" do
+    order = Order.create!(title: "Attach JSON Test", customer_name: "Cust", user: @user, status: :new_rfq)
+    post attach_order_path(order), params: { files: nil }, as: :json
+    assert_response :unprocessable_entity
+    order.destroy
+  end
+
+  # ─── index 필터 ──────────────────────────
+  test "orders index — status 필터 적용" do
+    get orders_path, params: { status: "new_rfq" }
+    assert_response :success
+  end
+
+  test "orders index — JSON 응답" do
+    get orders_path, as: :json
+    assert_includes [200, 406], response.status
+  end
+
   private
 
   def login_as(user)
