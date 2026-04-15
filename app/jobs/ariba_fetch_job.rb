@@ -29,7 +29,7 @@ class AribaFetchJob < ApplicationJob
     if result[:saved].any?
       Rails.logger.info "[AribaFetchJob] Order##{order.id}: #{result[:saved].size}개 문서 저장 완료"
       # Activity에 details 컬럼 없으므로 action 필드에 요약 기록
-      if (admin = User.find_by(admin: true))
+      if (admin = User.where(role: :admin).first)
         begin
           Activity.create!(order: order, user: admin, action: "ariba_docs_fetched")
         rescue StandardError => e
@@ -40,7 +40,7 @@ class AribaFetchJob < ApplicationJob
 
     if result[:errors].any?
       Rails.logger.warn "[AribaFetchJob] Order##{order.id}: 오류 #{result[:errors].join(', ')}"
-      if (admin = User.find_by(admin: true))
+      if (admin = User.where(role: :admin).first)
         begin
           Activity.create!(order: order, user: admin, action: "ariba_fetch_failed")
         rescue StandardError => e
