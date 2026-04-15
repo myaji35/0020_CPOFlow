@@ -17,19 +17,32 @@
       </div>
 
       <div>
-        <label class="block text-xs font-semibold text-gray-600 mb-1.5">색상 프리셋</label>
-        <div class="grid grid-cols-6 gap-2">
+        <% current_theme = defined?(@current_theme) ? @current_theme : CardStatusThemes.current_theme %>
+        <label class="block text-xs font-semibold text-gray-600 mb-1.5">
+          <% if current_theme %>
+            🎨 <%= current_theme[:name] %> 팔레트 <span class="font-normal text-gray-400">· <%= current_theme[:desc] %></span>
+          <% else %>
+            색상 프리셋 <span class="font-normal text-gray-400">· 커스텀 상태</span>
+          <% end %>
+        </label>
+        <div class="grid <%= color_presets.size <= 7 ? 'grid-cols-7' : 'grid-cols-6' %> gap-2">
           <% color_presets.each do |preset| %>
             <button type="button" title="<%= preset[:name] %>"
-                    class="w-full h-8 rounded border border-gray-300"
-                    style="background:<%= preset[:bg] %>"
+                    class="w-full h-10 rounded border border-gray-300 hover:border-[#00A1E0] transition-colors relative group"
+                    style="background:<%= preset[:bg] %>; border-color:<%= preset[:border] %>"
                     data-action="click->card-status-preview#applyPreset"
                     data-bg="<%= preset[:bg] %>"
                     data-border="<%= preset[:border] %>"
                     data-text="<%= preset[:text] %>">
+              <% if current_theme %>
+                <span class="text-[10px] font-medium" style="color:<%= preset[:text] %>"><%= preset[:name] %></span>
+              <% end %>
             </button>
           <% end %>
         </div>
+        <% if current_theme %>
+          <p class="mt-1.5 text-[11px] text-gray-500">💡 테마 변경은 상단 '컬러 테마' 카드에서, 개별 상태 세부 조정은 아래 커스텀 색상 직접 지정에서.</p>
+        <% end %>
       </div>
 
       <details class="text-xs">

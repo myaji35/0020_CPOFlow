@@ -6,8 +6,10 @@ module Settings
 
     def index
       @card_statuses = CardStatus.ordered
-      @color_presets = CardStatusColorPresets::ALL
       @themes        = CardStatusThemes::ALL
+      @current_theme = CardStatusThemes.current_theme
+      # 프리셋: 현재 테마가 감지되면 그 테마의 7색, 없으면 기존 12색 fallback
+      @color_presets = CardStatusThemes.current_palette || CardStatusColorPresets::ALL
       @card_status ||= CardStatus.new
     end
 

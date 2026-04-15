@@ -79,6 +79,25 @@ module CardStatusThemes
     ALL.find { |t| t[:key] == key.to_s }
   end
 
+  # 현재 CardStatus 7개의 색상이 어느 테마와 일치하는지 감지.
+  # urgent 상태의 bg_color로 판별 (테마별 고유값).
+  # 일치 없으면 nil → 커스텀 상태 간주.
+  def self.current_theme
+    urgent = CardStatus.find_by(key: "urgent")
+    return nil unless urgent
+    ALL.find { |t| t.dig(:colors, "urgent", :bg)&.casecmp?(urgent.bg_color) }
+  end
+
+  # 편집 모달 프리셋용: 현 테마의 7개 색상 반환 (없으면 nil)
+  def self.current_palette
+    t = current_theme
+    return nil unless t
+    t[:colors].map do |key, palette|
+      { key: key, name: I18n.t("card_status.keys.#{key}", default: key.humanize),
+        bg: palette[:bg], border: palette[:border], text: palette[:text] }
+    end
+  end
+
   # 적용: 시스템 키만 색상 일괄 변경 (사용자 추가 상태는 보존)
   def self.apply!(theme_key)
     theme = find(theme_key)
