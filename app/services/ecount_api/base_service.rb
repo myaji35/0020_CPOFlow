@@ -5,7 +5,29 @@ module EcountApi
   # - 지수 백오프 재시도 (최대 3회)
   # - 응답 파싱 + 에러 클래스 분기
   class BaseService
-    BASE_URL = "https://oapi.ecounterp.com/OAPI/V2"
+    # Zone 및 환경별 BASE_URL 자동 결정
+    # - ENV["ECOUNT_BASE_URL"]이 있으면 최우선
+    # - credentials.ecount.zone 기반 자동 선택 (BA = 한국 외 해외존, A = 한국)
+    # - 테스트/실서버는 credentials.ecount.environment = "test" | "production"
+    def self.base_url
+      return ENV["ECOUNT_BASE_URL"] if ENV["ECOUNT_BASE_URL"].present?
+      cred = Rails.application.credentials.dig(:ecount) || {}
+      zone = (cred[:zone] || ENV["ECOUNT_ZONE"] || "BA").to_s.downcase
+      env  = (cred[:environment] || ENV["ECOUNT_ENV"] || "test").to_s
+      host = env == "production" ? "oapi#{zone}.ecount.com" : "sboapi#{zone}.ecount.com"
+      "https://#{host}/OAPI/V2"
+    end
+
+    def self.login_base_url
+      return ENV["ECOUNT_LOGIN_URL"] if ENV["ECOUNT_LOGIN_URL"].present?
+      cred = Rails.application.credentials.dig(:ecount) || {}
+      zone = (cred[:zone] || ENV["ECOUNT_ZONE"] || "BA").to_s.downcase
+      env  = (cred[:environment] || ENV["ECOUNT_ENV"] || "test").to_s
+      host = env == "production" ? "oapi#{zone}.ecount.com" : "sboapi#{zone}.ecount.com"
+      "https://#{host}/OAPI/V2"
+    end
+
+    BASE_URL = "https://oapi.ecounterp.com/OAPI/V2"  # deprecated — use self.base_url
     TIMEOUT  = 30  # seconds
 
     MAX_RETRIES  = 3
@@ -41,7 +63,7 @@ module EcountApi
     end
 
     def send_request(method, path, payload)
-      uri  = URI("#{BASE_URL}#{path}")
+      uri  = URI("#{self.class.base_url}#{path}")
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl      = true
       http.open_timeout = TIMEOUT
