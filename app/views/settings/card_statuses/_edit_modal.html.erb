@@ -72,19 +72,19 @@
         <div class="mt-2 space-y-2">
           <label class="flex items-center gap-2"><input type="radio" name="card_status[auto_mode]" value="manual" checked> 수동 전용</label>
           <label class="flex items-center gap-2"><input type="radio" name="card_status[auto_mode]" value="lte_days"> 마감
-            <input type="number" name="card_status[auto_days]" min="0" max="90" class="w-16 px-2 py-1 border border-gray-300 rounded">
+            <input type="number" name="card_status[auto_days]" min="0" max="90" class="w-16 px-3 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white">
             일 이내
           </label>
           <label class="flex items-center gap-2"><input type="radio" name="card_status[auto_mode]" value="overdue"> 마감 경과 시</label>
 
-          <label class="block mt-2">우선순위: <input type="number" name="card_status[auto_priority]" value="<%= card_status.auto_priority || 0 %>" class="w-20 px-2 py-1 border border-gray-300 rounded"></label>
+          <label class="block mt-2 text-sm text-gray-700">우선순위: <input type="number" name="card_status[auto_priority]" value="<%= card_status.auto_priority || 0 %>" class="w-20 px-3 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white"></label>
         </div>
       </details>
     </div>
 
     <div class="flex justify-end gap-2 mt-5">
-      <button type="button" onclick="closeCardStatusModal()" class="px-4 py-2 text-sm border border-gray-300 rounded-lg">취소</button>
-      <%= f.submit "저장", class: "px-4 py-2 bg-[#00A1E0] text-white text-sm rounded-lg" %>
+      <button type="button" onclick="closeCardStatusModal()" class="px-4 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">취소</button>
+      <%= f.submit "저장", class: "px-4 py-2.5 bg-[#00A1E0] text-white text-sm font-medium rounded-lg hover:bg-[#0083b7] cursor-pointer" %>
     </div>
 
     <%# auto_rule JSON 직렬화 — 폼 제출 시 라디오 값 → JSON 문자열 %>
