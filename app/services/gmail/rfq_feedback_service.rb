@@ -125,6 +125,13 @@ module Gmail
     #   avg_score: ai_score 평균 (0~1)
     #   confirmed_count, rejected_count: verdict 분포
     def self.accuracy_stats(window_days: 7)
+      # 15분 캐시 — inbox 1페이지 TTFB 개선 (ISS-046 후속)
+      Rails.cache.fetch("rfq_feedback:accuracy_stats:#{window_days}", expires_in: 15.minutes) do
+        _compute_accuracy_stats(window_days)
+      end
+    end
+
+    def self._compute_accuracy_stats(window_days)
       total = RfqFeedback.count
       scored = RfqFeedback.with_ai_score.to_a   # GROUP BY 후 .to_a 패턴 적용
       with_score_count = scored.size

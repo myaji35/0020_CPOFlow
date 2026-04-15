@@ -85,8 +85,8 @@ class InboxController < ApplicationController
     @count_all, @count_rfq, @count_uncertain, @count_converted = counts.map(&:to_i)
 
     # 견적성 메일 (rfq_triage) — 우측 패널용
-    # ISS-046 후속: 100 → 20건으로 축소 + prefetch 모드에선 스킵 (1페이지 TTFB -50%)
-    if @prefetch_mode
+    # ISS-046 후속: 100 → 20건 + prefetch/2페이지에서는 스킵 + count 5분 캐시
+    if @prefetch_mode || @page > 1
       @triage_orders = []
       @triage_count = 0
     else
@@ -94,7 +94,9 @@ class InboxController < ApplicationController
                                   .where(rfq_status: :rfq_triage)
                                   .includes(:user, :assignees, :client, :supplier)
       @triage_orders = triage_scope.order(created_at: :desc).limit(20)
-      @triage_count  = triage_scope.count
+      @triage_count  = Rails.cache.fetch("inbox:triage_count:#{current_user.id}", expires_in: 5.minutes) do
+        triage_scope.count
+      end
     end
 
     # Phase E: 견적성 탭 하단에 표시할 AI 학습 통계 (1페이지에서만 로드, prefetch 시 스킵)
