@@ -48,10 +48,41 @@
       <!-- Admin 섹션 구분선 -->
       <div class="my-2 mx-3 border-t border-white/20"></div>
       <%= nav_link_to reports_path, icon: "lni lni-bar-chart", label: "경영 리포트" %>
-      <%= nav_link_to admin_imports_path, icon: "lni lni-upload", label: "eCount Import" %>
-      <%= nav_link_to admin_ecount_sync_index_path, icon: "lni lni-reload", label: "eCount API 동기화" %>
-      <%= nav_link_to admin_ecount_products_path, icon: "lni lni-package", label: "eCount 품목" %>
-      <%= nav_link_to admin_ecount_transactions_path, icon: "lni lni-files", label: "eCount 거래내역" %>
+
+      <%# eCount 그룹 — 5개 하위 메뉴를 접힘/펼침으로 묶음 %>
+      <% ecount_active = request.path.start_with?("/admin/ecount") || request.path.start_with?("/admin/imports") %>
+      <div x-data="{ open: <%= ecount_active ? 'true' : 'false' %> }" class="mx-1">
+        <%# 부모 항목: eCount %>
+        <button type="button"
+                @click="open = !open"
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors overflow-hidden <%= ecount_active ? 'bg-white/20 text-white' : 'text-blue-100 hover:bg-white/10 hover:text-white' %>">
+          <i class="lni lni-network text-xl shrink-0 w-5 text-center"></i>
+          <span class="whitespace-nowrap transition-opacity duration-200 truncate flex-1 text-left"
+                x-bind:class="collapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'">eCount</span>
+          <i class="lni lni-chevron-down text-sm transition-transform duration-200"
+             :class="{ 'rotate-180': open }"
+             x-bind:style="collapsed ? 'display:none' : ''"></i>
+        </button>
+
+        <%# 하위 메뉴 — open일 때만 표시 + collapsed면 전체 숨김 %>
+        <div x-show="open" x-transition x-cloak
+             x-bind:class="collapsed ? 'hidden' : ''"
+             class="mt-1 ml-3 pl-3 border-l border-white/20 space-y-0.5">
+          <% ecount_children = [
+            { path: admin_ecount_sync_index_path,    icon: "lni lni-reload",  label: "API 동기화" },
+            { path: admin_ecount_products_path,      icon: "lni lni-package", label: "품목" },
+            { path: admin_ecount_transactions_path,  icon: "lni lni-files",   label: "거래내역" },
+            { path: admin_imports_path,              icon: "lni lni-upload",  label: "Import (CSV)" }
+          ] %>
+          <% ecount_children.each do |item| %>
+            <% is_active = current_page?(item[:path]) || request.path.start_with?(item[:path]) %>
+            <%= link_to item[:path], class: "flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] #{ is_active ? 'bg-white/15 text-white font-medium' : 'text-blue-100/80 hover:bg-white/10 hover:text-white' }" do %>
+              <i class="<%= item[:icon] %> text-base w-4 text-center"></i>
+              <span class="truncate"><%= item[:label] %></span>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
     <% end %>
     <% if current_user.admin? %>
       <%= nav_link_to settings_menu_permissions_path, icon: "lni lni-shield", label: "메뉴 권한" %>
