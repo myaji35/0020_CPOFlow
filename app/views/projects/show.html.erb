@@ -26,32 +26,31 @@
     </div>
   </div>
 
-  <!-- 예산 집행률 카드 -->
-  <% if @project.budget.present? && @project.budget > 0 %>
-    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-5">
-      <div class="flex justify-between mb-3">
-        <div>
-          <p class="text-xs text-gray-500 dark:text-gray-500">총 예산</p>
-          <p class="text-xl font-bold text-gray-900 dark:text-white">$<%= number_with_delimiter(@project.budget.round.to_i) %></p>
-        </div>
-        <div>
-          <p class="text-xs text-gray-500 dark:text-gray-500">집행 금액</p>
-          <p class="text-xl font-bold text-primary">$<%= number_with_delimiter(@project.budget_utilized.round.to_i) %></p>
-        </div>
-        <div>
-          <p class="text-xs text-gray-500 dark:text-gray-500">잔여 금액</p>
-          <p class="text-xl font-bold text-gray-700 dark:text-gray-300">$<%= number_with_delimiter(@project.budget_remaining.round.to_i) %></p>
-        </div>
-        <div>
-          <p class="text-xs text-gray-500 dark:text-gray-500">집행률</p>
-          <p class="text-2xl font-bold text-gray-900 dark:text-white"><%= @project.utilization_rate %>%</p>
-        </div>
-      </div>
-      <div class="bg-gray-100 dark:bg-gray-700 rounded-full h-3">
-        <div class="bg-primary rounded-full h-3 transition-all" style="width: <%= [@project.utilization_rate, 100].min %>%"></div>
-      </div>
+  <!-- 예산/주문 요약 카드 -->
+  <div class="grid grid-cols-4 gap-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+      <p class="text-xs text-gray-500 dark:text-gray-500 font-medium">총 예산</p>
+      <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">$<%= number_with_delimiter((@project.budget || 0).round.to_i) %></p>
     </div>
-  <% end %>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+      <p class="text-xs text-gray-500 dark:text-gray-500 font-medium">주문 총 금액</p>
+      <p class="text-xl font-bold text-primary mt-1">$<%= number_with_delimiter(@order_total_value.round.to_i) %></p>
+      <p class="text-xs text-gray-500 dark:text-gray-500 mt-1"><%= @total_orders_count %>건 합계</p>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+      <p class="text-xs text-gray-500 dark:text-gray-500 font-medium">잔여 예산</p>
+      <p class="text-xl font-bold text-gray-700 dark:text-gray-300 mt-1">$<%= number_with_delimiter(@project.budget_remaining.round.to_i) %></p>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+      <p class="text-xs text-gray-500 dark:text-gray-500 font-medium">집행률</p>
+      <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><%= @project.utilization_rate %>%</p>
+      <% if @project.budget.present? && @project.budget > 0 %>
+        <div class="bg-gray-100 dark:bg-gray-700 rounded-full h-2 mt-2">
+          <div class="bg-primary rounded-full h-2 transition-all" style="width: <%= [@project.utilization_rate, 100].min %>%"></div>
+        </div>
+      <% end %>
+    </div>
+  </div>
 
   <!-- 탭: 오더 + 투입 인력 -->
   <% @employee_assignments = @project.employee_assignments.active.includes(:employee) %>
@@ -60,7 +59,7 @@
       <nav class="flex gap-6">
         <button @click="tab='orders'" :class="tab==='orders' ? 'border-primary text-primary' : 'border-transparent text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
             class="py-3 border-b-2 text-sm font-medium transition-colors">
-          관련 오더 (<%= @orders.count %>)
+          관련 오더 (<%= @total_orders_count %>)
         </button>
         <button @click="tab='employees'" :class="tab==='employees' ? 'border-primary text-primary' : 'border-transparent text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
             class="py-3 border-b-2 text-sm font-medium transition-colors">
@@ -103,7 +102,9 @@
           <% if params[:period].present? %>
             <%= link_to "초기화", project_path(@project), class: "text-xs text-gray-500 dark:text-gray-500 hover:text-primary px-2 py-1.5" %>
           <% end %>
-          <span class="ml-auto text-xs text-gray-500 dark:text-gray-500">총 <%= @orders.count %>건</span>
+          <span class="ml-auto text-xs text-gray-500 dark:text-gray-500">
+            총 <%= @total_orders_count %>건<% if @total_orders_count > 20 %> (최근 20건 표시)<% end %>
+          </span>
         <% end %>
       </div>
       <div class="divide-y divide-gray-50 dark:divide-gray-700">
@@ -120,11 +121,22 @@
           <div class="flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
             <div class="flex-1 min-w-0 mr-3">
               <div class="text-sm font-medium text-gray-900 dark:text-white truncate"><%= order.title %></div>
-              <% if order.client.present? %>
-                <div class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">
-                  발주처: <%= link_to order.client.name, order.client, class: "hover:text-primary" %>
-                </div>
-              <% end %>
+              <div class="flex items-center gap-2 mt-0.5 text-xs text-gray-500 dark:text-gray-500">
+                <% if order.client.present? %>
+                  <span>발주처: <%= link_to order.client.name, order.client, class: "hover:text-primary" %></span>
+                <% end %>
+                <% if order.assignees.any? %>
+                  <span class="text-gray-300 dark:text-gray-600">|</span>
+                  <div class="flex items-center gap-1">
+                    <% order.assignees.first(3).each do |user| %>
+                      <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold" title="<%= user.name %>"><%= user.name.first.upcase %></span>
+                    <% end %>
+                    <% if order.assignees.size > 3 %>
+                      <span class="text-xs text-gray-400">+<%= order.assignees.size - 3 %></span>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
             </div>
             <div class="flex items-center gap-2 shrink-0">
               <% if order.due_date.present? %>

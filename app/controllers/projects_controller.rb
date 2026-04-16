@@ -8,13 +8,22 @@ class ProjectsController < ApplicationController
     @projects = @projects.where(site_category: params[:category]) if params[:category].present?
     @projects = @projects.where(status: params[:status]) if params[:status].present?
     @projects = @projects.where(client_id: params[:client_id]) if params[:client_id].present?
-    @projects = @projects.where("projects.name LIKE ?", "%#{params[:q]}%") if params[:q].present?
+    # 검색 강화: 이름 + 위치 + 코드
+    if params[:q].present?
+      q = "%#{params[:q]}%"
+      @projects = @projects.where("projects.name LIKE ? OR projects.location LIKE ? OR projects.code LIKE ?", q, q, q)
+    end
+    # 활성/비활성 필터
+    @projects = @projects.active if params[:active_only] == "1"
 
-    # FR-07: 통계 카드
-    all_projects     = Project.includes(:orders).all
-    @total_budget    = all_projects.sum { |p| p.budget.to_f }
-    @total_utilized  = all_projects.sum(&:budget_utilized)
-    @active_count    = Project.active.count
+    # FR-07: KPI 통계 카드 (4개)
+    all_projects       = Project.includes(:orders).all
+    @total_count       = all_projects.size
+    @total_budget      = all_projects.sum { |p| p.budget.to_f }
+    @total_utilized    = all_projects.sum(&:budget_utilized)
+    @active_count      = Project.active.count
+    @active_order_count = Order.joins(:project).where(projects: { status: :active }).count
+    @avg_orders_per_project = @total_count > 0 ? (Order.where.not(project_id: nil).count.to_f / @total_count).round(1) : 0
   end
 
   def show
@@ -26,7 +35,9 @@ class ProjectsController < ApplicationController
     when "this_year"  then orders_scope = orders_scope.where(created_at: Time.current.beginning_of_year..)
     end
 
-    @orders              = orders_scope.by_due_date.includes(:client, :supplier, :assignees)
+    @orders              = orders_scope.by_due_date.includes(:client, :supplier, :assignees).limit(20)
+    @total_orders_count  = orders_scope.count
+    @order_total_value   = @project.orders.sum(:estimated_value).to_f
     @order_status_counts = @project.orders.group(:status).count
   end
 
@@ -62,7 +73,7 @@ class ProjectsController < ApplicationController
   def search
     q = params[:q].to_s.strip
     projects = Project.includes(:client).active.by_name
-    projects = projects.where("projects.name LIKE ?", "%#{q}%") if q.present?
+    projects = projects.where("projects.name LIKE ? OR projects.location LIKE ? OR projects.code LIKE ?", "%#{q}%", "%#{q}%", "%#{q}%") if q.present?
     projects = projects.where(client_id: params[:client_id]) if params[:client_id].present?
     results = projects.limit(10).map { |p| { id: p.id, name: p.name, client_name: p.client&.name, status: p.status } }
     render json: results

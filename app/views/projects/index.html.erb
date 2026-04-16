@@ -13,24 +13,65 @@
     <% end %>
   </div>
 
-  <!-- 통계 카드 -->
-  <div class="grid grid-cols-3 gap-4">
+  <!-- KPI 통계 카드 (4칸) -->
+  <div class="grid grid-cols-4 gap-4">
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-      <p class="text-xs text-gray-500 dark:text-gray-500 font-medium">총 예산</p>
-      <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">$<%= number_with_delimiter(@total_budget.round.to_i) %></p>
+      <div class="flex items-center gap-2 mb-1">
+        <svg class="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <p class="text-xs text-gray-500 dark:text-gray-500 font-medium">총 현장 수</p>
+      </div>
+      <p class="text-2xl font-bold text-gray-900 dark:text-white"><%= @total_count %>개</p>
+      <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">활성 <%= @active_count %>개</p>
     </div>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-      <p class="text-xs text-gray-500 dark:text-gray-500 font-medium">총 집행금액</p>
-      <p class="text-2xl font-bold text-primary mt-1">$<%= number_with_delimiter(@total_utilized.round.to_i) %></p>
+      <div class="flex items-center gap-2 mb-1">
+        <svg class="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <p class="text-xs text-gray-500 dark:text-gray-500 font-medium">활성 주문 연결</p>
+      </div>
+      <p class="text-2xl font-bold text-primary"><%= number_with_delimiter(@active_order_count) %>건</p>
+      <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">진행중 현장의 주문</p>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+      <div class="flex items-center gap-2 mb-1">
+        <svg class="w-4 h-4 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <p class="text-xs text-gray-500 dark:text-gray-500 font-medium">총 집행금액</p>
+      </div>
+      <p class="text-2xl font-bold text-green-600 dark:text-green-400">$<%= number_with_delimiter(@total_utilized.round.to_i) %></p>
       <% if @total_budget > 0 %>
         <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">예산 대비 <%= (@total_utilized / @total_budget * 100).round(1) %>%</p>
       <% end %>
     </div>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-      <p class="text-xs text-gray-500 dark:text-gray-500 font-medium">진행 현장</p>
-      <p class="text-2xl font-bold text-green-600 dark:text-green-400 mt-1"><%= @active_count %></p>
-      <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">전체 <%= @projects.size %>개 중</p>
+      <div class="flex items-center gap-2 mb-1">
+        <svg class="w-4 h-4 text-orange-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <p class="text-xs text-gray-500 dark:text-gray-500 font-medium">평균 주문/현장</p>
+      </div>
+      <p class="text-2xl font-bold text-orange-600 dark:text-orange-400"><%= @avg_orders_per_project %>건</p>
+      <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">현장당 평균 발주</p>
     </div>
+  </div>
+
+  <!-- 검색 + 활성 필터 -->
+  <div class="flex items-center gap-3">
+    <%= form_with url: projects_path, method: :get, local: true, class: "flex-1 flex items-center gap-2" do %>
+      <div class="relative flex-1 max-w-md">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" name="q" value="<%= params[:q] %>" placeholder="이름, 위치, 코드로 검색..."
+               class="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 dark:text-white dark:bg-gray-800 dark:border-gray-600 placeholder-gray-400 focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]">
+      </div>
+      <% if params[:category].present? %><input type="hidden" name="category" value="<%= params[:category] %>"><% end %>
+      <% if params[:status].present? %><input type="hidden" name="status" value="<%= params[:status] %>"><% end %>
+      <label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 cursor-pointer select-none">
+        <input type="checkbox" name="active_only" value="1" <%= params[:active_only] == "1" ? "checked" : "" %>
+               onchange="this.form.submit()"
+               class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
+        활성만
+      </label>
+      <button type="submit" class="bg-primary text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors">검색</button>
+      <% if params[:q].present? || params[:active_only] == "1" %>
+        <%= link_to "초기화", projects_path(category: params[:category], status: params[:status]), class: "text-sm text-gray-500 hover:text-primary" %>
+      <% end %>
+    <% end %>
   </div>
 
   <!-- 카테고리 + 상태 필터 -->
