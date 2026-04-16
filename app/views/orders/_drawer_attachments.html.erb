@@ -1,4 +1,6 @@
-<div id="drawer-panel-<%= order.id %>-attachments" class="p-6 hidden">
+<%# replace 후에도 탭 가시성 유지: 초기 로드만 hidden, replace 시에는 현재 상태 보존 %>
+<% initial_render = local_assigns.fetch(:initial_render, true) %>
+<div id="drawer-panel-<%= order.id %>-attachments" class="p-6<%= ' hidden' if initial_render %>">
   <% att_meta = order.respond_to?(:attachment_urls) && order.attachment_urls.present? ? (JSON.parse(order.attachment_urls) rescue []) : [] %>
   <% active_storage_attachments = order.respond_to?(:attachments) ? (order.attachments.includes(:blob) rescue []) : [] %>
   <% links = order.respond_to?(:extracted_links) && order.extracted_links.present? ? (JSON.parse(order.extracted_links) rescue []) : [] %>

@@ -177,7 +177,7 @@ class OrdersController < ApplicationController
       format.turbo_stream {
         render turbo_stream: turbo_stream.replace(
           "drawer-panel-#{@order.id}-attachments",
-          partial: "orders/drawer_attachments", locals: { order: @order.reload }
+          partial: "orders/drawer_attachments", locals: { order: @order.reload, initial_render: false }
         )
       }
       format.html { redirect_back fallback_location: @order, notice: "#{file_list.size}개 파일이 첨부되었습니다." }
@@ -195,7 +195,7 @@ class OrdersController < ApplicationController
         format.turbo_stream {
           render turbo_stream: turbo_stream.replace(
             "drawer-panel-#{@order.id}-attachments",
-            partial: "orders/drawer_attachments", locals: { order: @order.reload }
+            partial: "orders/drawer_attachments", locals: { order: @order.reload, initial_render: false }
           )
         }
         format.html { redirect_to @order, notice: "첨부파일이 삭제되었습니다." }
