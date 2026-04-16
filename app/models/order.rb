@@ -145,8 +145,14 @@ class Order < ApplicationRecord
   }.freeze
 
   # RE/FW 접두사 제거 + reference_no 분리한 간소화 제목 (표시용)
+  # 사용자가 title을 수동 편집한 경우(original_email_subject와 불일치) 편집본 우선
   def display_subject
-    subject = original_email_subject.to_s.strip
+    orig = original_email_subject.to_s.strip
+    user_title = title.to_s.strip
+    if user_title.present? && orig.present? && user_title != orig
+      return user_title
+    end
+    subject = orig
     # 1. RE:/FW:/Fwd: 접두사 반복 제거
     subject = subject.sub(/\A\s*(RE|FW|Fwd)\s*:\s*/i, "").strip while subject.match?(/\A\s*(RE|FW|Fwd)\s*:/i)
     # 2. reference_no가 있으면 제목에서 해당 번호 제거 (배지로 별도 표시)
