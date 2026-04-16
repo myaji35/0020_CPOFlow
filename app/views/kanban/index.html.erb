@@ -186,11 +186,11 @@
 
 <!-- 발주 보드 -->
 <div class="flex gap-4 overflow-x-auto pb-4 min-h-[calc(100vh-200px)]" id="kanban-board">
-  <% Order::KANBAN_COLUMNS.each_with_index do |status, col_idx| %>
+  <% @kanban_column_keys.each_with_index do |status, col_idx| %>
     <% orders = @columns[status] || [] %>
-    <% label = Order::STATUS_LABELS[status] %>
-    <% prev_stat = col_idx > 0 ? Order::KANBAN_COLUMNS[col_idx - 1] : nil %>
-    <% next_stat = col_idx < Order::KANBAN_COLUMNS.length - 1 ? Order::KANBAN_COLUMNS[col_idx + 1] : nil %>
+    <% label = @kanban_column_labels[status] || status.humanize %>
+    <% prev_stat = col_idx > 0 ? @kanban_column_keys[col_idx - 1] : nil %>
+    <% next_stat = col_idx < @kanban_column_keys.length - 1 ? @kanban_column_keys[col_idx + 1] : nil %>
 
     <div class="kanban-column flex flex-col w-72 shrink-0" data-status="<%= status %>">
       <!-- Column Header -->
@@ -314,10 +314,10 @@
     <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm p-6">
       <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-4">일괄 이동</h3>
       <div class="grid grid-cols-2 gap-2 mb-5">
-        <% Order::KANBAN_COLUMNS.each do |st| %>
+        <% @kanban_column_keys.each do |st| %>
           <button onclick="executeBulkMove('<%= st %>')"
                   class="text-left px-3 py-2 text-xs font-medium rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-700 text-gray-700 dark:text-gray-300 transition-colors">
-            <%= Order::STATUS_LABELS[st] %>
+            <%= @kanban_column_labels[st] || st.humanize %>
           </button>
         <% end %>
       </div>

@@ -29,9 +29,22 @@ class KanbanController < ApplicationController
       return
     end
 
+    # 칼럼 목록: 기본 보드는 Order::KANBAN_COLUMNS, 커스텀 보드는 KanbanColumn에서
+    if @current_board.is_default?
+      @kanban_column_keys = Order::KANBAN_COLUMNS
+    else
+      @kanban_column_keys = @current_board.kanban_columns.ordered.pluck(:key)
+      @kanban_column_keys = %w[todo in_progress completed] if @kanban_column_keys.empty?
+    end
+    @kanban_column_labels = if @current_board.is_default?
+      Order::STATUS_LABELS
+    else
+      @current_board.kanban_columns.ordered.pluck(:key, :name).to_h
+    end
+
     # 정상 로드: 모든 컬럼 첫 INITIAL_LIMIT건만
     @column_totals = {}
-    @columns = Order::KANBAN_COLUMNS.map do |status|
+    @columns = @kanban_column_keys.map do |status|
       base = board_scoped_orders
                     .root_orders
                     .by_due_date
