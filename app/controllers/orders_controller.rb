@@ -200,12 +200,16 @@ class OrdersController < ApplicationController
       return render_attach_error("유효하지 않은 URL입니다.")
     end
 
-    # Google Drive URL 자동 변환
+    # Google Drive 폴더 → 폴더 내 파일 전부 다운로드
+    if url.match?(%r{drive\.google\.com/drive/folders/([a-zA-Z0-9_-]+)})
+      folder_id = $1
+      return attach_gdrive_folder(folder_id)
+    end
+
+    # Google Drive 파일 URL 자동 변환
     gdrive_file_id = extract_gdrive_file_id(url)
     if gdrive_file_id
       url = "https://drive.google.com/uc?export=download&confirm=t&id=#{gdrive_file_id}"
-    elsif url.match?(%r{drive\.google\.com/drive/folders/})
-      return render_attach_error("Google Drive 폴더 링크입니다. 폴더 안의 개별 파일을 우클릭 → '링크 복사'로 파일별 공유 링크를 사용하세요.")
     end
 
     begin
@@ -337,6 +341,67 @@ class OrdersController < ApplicationController
       }
       format.json { render json: { error: msg }, status: :unprocessable_entity }
       format.html { redirect_back fallback_location: @order, alert: msg }
+    end
+  end
+
+  # Google Drive 폴더 내 파일 전부 다운로드하여 첨부
+  def attach_gdrive_folder(folder_id)
+    # embeddedfolderview로 파일 ID 목록 추출
+    embed_url = "https://drive.google.com/embeddedfolderview?id=#{folder_id}"
+    embed_res = fetch_url_with_redirect(embed_url)
+    unless embed_res.is_a?(Net::HTTPSuccess)
+      return render_attach_error("Google Drive 폴더에 접근할 수 없습니다. 공유 설정을 확인하세요.")
+    end
+
+    file_ids = embed_res.body.scan(%r{drive\.google\.com/file/d/([a-zA-Z0-9_-]+)}).flatten.uniq
+    if file_ids.empty?
+      return render_attach_error("폴더가 비어있거나 접근 권한이 없습니다.")
+    end
+
+    attached = 0
+    errors = []
+    file_ids.each do |fid|
+      dl_url = "https://drive.google.com/uc?export=download&confirm=t&id=#{fid}"
+      begin
+        res = fetch_url_with_redirect(dl_url)
+        ct = res["Content-Type"]&.split(";")&.first || "application/octet-stream"
+        # confirm 페이지 대응
+        if ct.include?("text/html") && res.body.include?("download_warning")
+          token = res.body.match(/confirm=([^&"]+)/)[1] rescue "t"
+          res = fetch_url_with_redirect("https://drive.google.com/uc?export=download&confirm=#{token}&id=#{fid}")
+          ct = res["Content-Type"]&.split(";")&.first || "application/octet-stream"
+        end
+        next if ct.include?("text/html") # 여전히 HTML이면 skip
+
+        fn = nil
+        if res["Content-Disposition"]
+          m = res["Content-Disposition"].match(/filename[*]?=(?:UTF-8''|"?)([^";]+)/i)
+          fn = m[1].strip if m
+        end
+        fn ||= "gdrive_#{fid[0..7]}"
+        fn = URI.decode_www_form_component(fn) rescue fn
+
+        @order.attachments.attach(io: StringIO.new(res.body), filename: fn, content_type: ct)
+        attached += 1
+      rescue => e
+        errors << "#{fid}: #{e.message}"
+      end
+    end
+
+    Activity.create!(order: @order, user: current_user, action: "attachment_added") if attached > 0
+
+    msg = "Google Drive 폴더에서 #{attached}개 파일 첨부 완료"
+    msg += " (#{errors.size}건 실패)" if errors.any?
+
+    respond_to do |format|
+      format.turbo_stream {
+        render turbo_stream: turbo_stream.replace(
+          "drawer-panel-#{@order.id}-attachments",
+          partial: "orders/drawer_attachments", locals: { order: @order.reload, initial_render: false, flash_error: errors.any? ? msg : nil }
+        )
+      }
+      format.json { render json: { success: true, attached: attached, errors: errors } }
+      format.html { redirect_back fallback_location: @order, notice: msg }
     end
   end
 
