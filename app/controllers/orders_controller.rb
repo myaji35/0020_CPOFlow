@@ -200,12 +200,12 @@ class OrdersController < ApplicationController
       return render_attach_error("유효하지 않은 URL입니다.")
     end
 
-    # Google Drive 파일 URL 자동 변환 (file/d/ID → direct download)
-    if url.match?(%r{drive\.google\.com/file/d/([^/]+)})
-      file_id = url.match(%r{drive\.google\.com/file/d/([^/]+)})[1]
-      url = "https://drive.google.com/uc?export=download&id=#{file_id}"
+    # Google Drive URL 자동 변환
+    gdrive_file_id = extract_gdrive_file_id(url)
+    if gdrive_file_id
+      url = "https://drive.google.com/uc?export=download&confirm=t&id=#{gdrive_file_id}"
     elsif url.match?(%r{drive\.google\.com/drive/folders/})
-      return render_attach_error("Google Drive 폴더는 다운로드할 수 없습니다. 개별 파일 링크를 사용하세요.")
+      return render_attach_error("Google Drive 폴더 링크입니다. 폴더 안의 개별 파일을 우클릭 → '링크 복사'로 파일별 공유 링크를 사용하세요.")
     end
 
     begin
@@ -216,9 +216,16 @@ class OrdersController < ApplicationController
       end
 
       content_type = response["Content-Type"]&.split(";")&.first || "application/octet-stream"
-      # HTML 반환 = 파일이 아닌 웹페이지 (로그인 필요 등)
+      # Google Drive 바이러스 스캔 confirm 페이지 대응
+      if content_type.include?("text/html") && gdrive_file_id && response.body.include?("download_warning")
+        confirm_token = response.body.match(/confirm=([^&"]+)/)[1] rescue "t"
+        url = "https://drive.google.com/uc?export=download&confirm=#{confirm_token}&id=#{gdrive_file_id}"
+        response = fetch_url_with_redirect(url)
+        content_type = response["Content-Type"]&.split(";")&.first || "application/octet-stream"
+      end
+      # HTML 반환 = 파일이 아닌 웹페이지 (로그인 필요, 비공개 등)
       if content_type.include?("text/html") && !url.match?(/\.html?\z/i)
-        return render_attach_error("이 URL은 파일이 아닌 웹페이지입니다. 직접 파일 다운로드 URL을 사용하세요.")
+        return render_attach_error("파일을 다운로드할 수 없습니다. 파일이 '링크가 있는 모든 사용자' 공유인지 확인하세요.")
       end
 
       # 파일명 결정: Content-Disposition > URL 경로 > fallback
@@ -331,6 +338,20 @@ class OrdersController < ApplicationController
       format.json { render json: { error: msg }, status: :unprocessable_entity }
       format.html { redirect_back fallback_location: @order, alert: msg }
     end
+  end
+
+  # Google Drive 파일 ID 추출 (다양한 URL 패턴 대응)
+  def extract_gdrive_file_id(url)
+    patterns = [
+      %r{drive\.google\.com/file/d/([a-zA-Z0-9_-]+)},          # /file/d/ID/view
+      %r{drive\.google\.com/open\?id=([a-zA-Z0-9_-]+)},        # /open?id=ID
+      %r{docs\.google\.com/document/d/([a-zA-Z0-9_-]+)},       # Docs
+      %r{docs\.google\.com/spreadsheets/d/([a-zA-Z0-9_-]+)},   # Sheets
+      %r{docs\.google\.com/presentation/d/([a-zA-Z0-9_-]+)},   # Slides
+      %r{drive\.google\.com/uc\?.*id=([a-zA-Z0-9_-]+)}         # direct download
+    ]
+    patterns.each { |p| return $1 if url.match?(p) && url.match(p) }
+    nil
   end
 
   def fetch_url_with_redirect(url, limit = 5)
