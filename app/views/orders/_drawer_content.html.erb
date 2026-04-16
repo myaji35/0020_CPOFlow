@@ -5,17 +5,17 @@
 <div id="order-drawer-content-<%= order.id %>">
 
   <%# ── 탭 바 ─────────────────────────────────────────────── %>
+  <% board = order.kanban_board %>
+  <% is_purchase = board&.is_default? || board&.board_type == "purchase" %>
   <div class="flex border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 sticky top-0 z-10"
        id="drawer-tabs-<%= order.id %>">
     <% att_count = order.respond_to?(:attachments) ? (order.attachments.size rescue 0) : 0 %>
-    <% [
-      ['detail',      '상세'],
-      ['tasks',       '태스크'],
-      ['comments',    '코멘트'],
-      ['attachments', '첨부파일'],
-      ['history',     '히스토리'],
-      ['flow',        '플로우']
-    ].each_with_index do |(tab_id, label), i| %>
+    <% tabs = if is_purchase
+      [['detail','상세'], ['tasks','태스크'], ['comments','코멘트'], ['attachments','첨부파일'], ['history','히스토리'], ['flow','플로우']]
+    else
+      [['detail','상세'], ['tasks','체크리스트'], ['comments','코멘트'], ['attachments','첨부파일']]
+    end %>
+    <% tabs.each_with_index do |(tab_id, label), i| %>
       <button onclick="switchDrawerTab('<%= order.id %>', '<%= tab_id %>')"
               id="drawer-tab-<%= order.id %>-<%= tab_id %>"
               class="flex items-center gap-1.5 px-4 py-3 text-sm font-medium transition-colors border-b-2
@@ -101,79 +101,98 @@
         <% end %>
       </div>
 
-      <%# 주요 정보 그리드 %>
-      <dl class="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
-        <div>
-          <dt class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-1">고객사</dt>
-          <dd class="font-medium text-gray-900 dark:text-white">
-            <% if order.client %>
-              <%= link_to order.client.name, client_path(order.client), class: "text-accent hover:underline" %>
-            <% else %>
-              <%= order.customer_name %>
-            <% end %>
-          </dd>
-        </div>
-        <div>
-          <dt class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-1">마감일</dt>
-          <dd class="font-medium text-gray-900 dark:text-white"><%= order.due_date&.strftime("%Y년 %m월 %d일") || "—" %></dd>
-        </div>
-        <% if order.project %>
+      <%# 주요 정보 그리드 — 구매/커스텀 분기 %>
+      <% if is_purchase %>
+        <dl class="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
           <div>
-            <dt class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-1">프로젝트</dt>
+            <dt class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-1">고객사</dt>
             <dd class="font-medium text-gray-900 dark:text-white">
-              <%= link_to order.project.name, project_path(order.project), class: "text-accent hover:underline" %>
-            </dd>
-          </div>
-        <% end %>
-        <% if order.supplier %>
-          <div>
-            <dt class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-1">공급사</dt>
-            <dd class="font-medium text-gray-900 dark:text-white">
-              <%= link_to order.supplier.name, supplier_path(order.supplier), class: "text-accent hover:underline" %>
-            </dd>
-          </div>
-        <% end %>
-        <% if order.item_name.present? %>
-          <div>
-            <dt class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-1">품목</dt>
-            <dd class="font-medium text-gray-900 dark:text-white"><%= order.item_name %> <%= "× #{order.quantity}" if order.quantity %></dd>
-            <%# eCountERP 실시간 재고 표시 — 연동된 제품만 표시 %>
-            <% product = Product.find_by(name: order.item_name) %>
-            <% if product&.ecount_code.present? %>
-              <% stock = EcountApi::InventoryService.stock_for(product.ecount_code) rescue nil %>
-              <% if stock.present? %>
-                <dd class="mt-1 flex items-center gap-1.5 text-xs">
-                  <svg class="w-3.5 h-3.5 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-                  <span class="text-gray-500 dark:text-gray-500">재고</span>
-                  <% if stock <= 0 %>
-                    <span class="font-semibold text-red-600 dark:text-red-400">재고 없음</span>
-                  <% elsif stock <= 10 %>
-                    <span class="font-semibold text-orange-600 dark:text-orange-400"><%= stock %>개 (부족)</span>
-                  <% else %>
-                    <span class="font-medium text-green-600 dark:text-green-400"><%= stock %>개</span>
-                  <% end %>
-                </dd>
+              <% if order.client %>
+                <%= link_to order.client.name, client_path(order.client), class: "text-accent hover:underline" %>
+              <% else %>
+                <%= order.customer_name %>
               <% end %>
-            <% end %>
-          </div>
-        <% end %>
-        <% if order.estimated_value.present? %>
-          <div>
-            <dt class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-1">예상 금액</dt>
-            <dd class="font-medium text-gray-900 dark:text-white">
-              <%= number_to_currency(order.estimated_value, unit: order.currency.presence || "$", format: "%u %n") %>
             </dd>
           </div>
-        <% end %>
-        <% if order.ariba_event_id.present? %>
           <div>
-            <dt class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-1">Ariba 이벤트 ID</dt>
-            <dd class="font-medium text-gray-900 dark:text-white font-mono"><%= order.ariba_event_id %></dd>
+            <dt class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-1">마감일</dt>
+            <dd class="font-medium text-gray-900 dark:text-white"><%= order.due_date&.strftime("%Y년 %m월 %d일") || "—" %></dd>
           </div>
-        <% end %>
-      </dl>
+          <% if order.project %>
+            <div>
+              <dt class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-1">프로젝트</dt>
+              <dd class="font-medium text-gray-900 dark:text-white">
+                <%= link_to order.project.name, project_path(order.project), class: "text-accent hover:underline" %>
+              </dd>
+            </div>
+          <% end %>
+          <% if order.supplier %>
+            <div>
+              <dt class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-1">공급사</dt>
+              <dd class="font-medium text-gray-900 dark:text-white">
+                <%= link_to order.supplier.name, supplier_path(order.supplier), class: "text-accent hover:underline" %>
+              </dd>
+            </div>
+          <% end %>
+          <% if order.item_name.present? %>
+            <div>
+              <dt class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-1">품목</dt>
+              <dd class="font-medium text-gray-900 dark:text-white"><%= order.item_name %> <%= "× #{order.quantity}" if order.quantity %></dd>
+              <%# eCountERP 실시간 재고 표시 — 연동된 제품만 표시 %>
+              <% product = Product.find_by(name: order.item_name) %>
+              <% if product&.ecount_code.present? %>
+                <% stock = EcountApi::InventoryService.stock_for(product.ecount_code) rescue nil %>
+                <% if stock.present? %>
+                  <dd class="mt-1 flex items-center gap-1.5 text-xs">
+                    <svg class="w-3.5 h-3.5 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                    <span class="text-gray-500 dark:text-gray-500">재고</span>
+                    <% if stock <= 0 %>
+                      <span class="font-semibold text-red-600 dark:text-red-400">재고 없음</span>
+                    <% elsif stock <= 10 %>
+                      <span class="font-semibold text-orange-600 dark:text-orange-400"><%= stock %>개 (부족)</span>
+                    <% else %>
+                      <span class="font-medium text-green-600 dark:text-green-400"><%= stock %>개</span>
+                    <% end %>
+                  </dd>
+                <% end %>
+              <% end %>
+            </div>
+          <% end %>
+          <% if order.estimated_value.present? %>
+            <div>
+              <dt class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-1">예상 금액</dt>
+              <dd class="font-medium text-gray-900 dark:text-white">
+                <%= number_to_currency(order.estimated_value, unit: order.currency.presence || "$", format: "%u %n") %>
+              </dd>
+            </div>
+          <% end %>
+          <% if order.ariba_event_id.present? %>
+            <div>
+              <dt class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-1">Ariba 이벤트 ID</dt>
+              <dd class="font-medium text-gray-900 dark:text-white font-mono"><%= order.ariba_event_id %></dd>
+            </div>
+          <% end %>
+        </dl>
+      <% else %>
+        <%# ── 커스텀 보드 상세 ──────────────────────────────────── %>
+        <dl class="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
+          <div>
+            <dt class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-1">마감일</dt>
+            <dd class="font-medium text-gray-900 dark:text-white"><%= order.due_date&.strftime("%Y년 %m월 %d일") || "—" %></dd>
+          </div>
+          <div>
+            <dt class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-1">현재 칼럼</dt>
+            <dd class="font-medium text-gray-900 dark:text-white">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-accent/10 text-accent text-sm font-semibold">
+                <%= Order::STATUS_LABELS[order.status] || order.status.humanize %>
+              </span>
+            </dd>
+          </div>
+        </dl>
+      <% end %>
 
-      <%# ── 관리번호 (RFQ / QUO / PO) ─────────────────────────── %>
+      <%# ── 관리번호 (RFQ / QUO / PO) — 구매보드 전용 ────────── %>
+      <% if is_purchase %>
       <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
         <p class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wide mb-3">관리번호</p>
         <div class="grid grid-cols-3 gap-3">
@@ -220,9 +239,10 @@
           <% end %>
         </div>
       </div>
+      <% end %><%# /is_purchase 관리번호 %>
 
-      <%# Ariba 포털 링크 버튼 %>
-      <% if order.ariba_event_url.present? %>
+      <%# Ariba 포털 링크 버튼 — 구매보드 전용 %>
+      <% if is_purchase && order.ariba_event_url.present? %>
         <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
           <%= link_to order.ariba_event_url, target: "_blank", rel: "noopener noreferrer",
               class: "inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors" do %>
@@ -340,8 +360,8 @@
       </div>
     </div>
 
-    <%# ── 3. 이메일 원문 (있을 때만) ─────────────────────────── %>
-    <% if order.original_email_body.present? %>
+    <%# ── 3. 이메일 원문 (구매보드 + 있을 때만) ──────────────── %>
+    <% if is_purchase && order.original_email_body.present? %>
       <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div class="flex items-center justify-between px-5 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
           <div class="flex items-center gap-2">
@@ -482,8 +502,9 @@
   ══════════════════════════════════════════════════════════ %>
   <%= render "orders/drawer_attachments", order: order %>
 
+  <% if is_purchase %>
   <%# ══════════════════════════════════════════════════════════
-      탭 패널 5: 히스토리
+      탭 패널 5: 히스토리 (구매보드 전용)
   ══════════════════════════════════════════════════════════ %>
   <div id="drawer-panel-<%= order.id %>-history" class="p-6 hidden">
     <%# 관련 메일 스레드 (동일 발주번호) %>
@@ -629,7 +650,7 @@
   </div>
 
   <%# ══════════════════════════════════════════════════════════
-      탭 패널 6: 플로우 (Cytoscape, M2)
+      탭 패널 6: 플로우 (Cytoscape, M2) — 구매보드 전용
   ══════════════════════════════════════════════════════════ %>
   <div id="drawer-panel-<%= order.id %>-flow" class="p-6 hidden">
     <turbo-frame id="drawer-panel-<%= order.id %>-flow-frame"
@@ -644,6 +665,7 @@
       </div>
     </turbo-frame>
   </div>
+  <% end %><%# /is_purchase 히스토리+플로우 %>
 
 </div>
 
