@@ -188,7 +188,7 @@
     <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
       <h2 class="text-sm font-semibold text-gray-900 dark:text-white">
         관련 오더
-        <span class="ml-1.5 text-xs font-normal text-gray-500 dark:text-gray-500">(<%= @contactable.name %>)</span>
+        <span class="ml-1.5 text-xs font-normal text-gray-500 dark:text-gray-500">(<%= @contactable.name %> · 최근 10건)</span>
       </h2>
       <% if @contactable.is_a?(Client) %>
         <%= link_to client_path(@contactable, tab: "orders"), class: "text-xs text-primary hover:underline" do %>모두 보기<% end %>
@@ -255,6 +255,60 @@
       </div>
     <% end %>
   </div>
+
+  <!-- 이메일 이력 -->
+  <% if @contact_person.email.present? %>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+        <h2 class="text-sm font-semibold text-gray-900 dark:text-white">
+          이메일 이력
+          <span class="ml-1.5 text-xs font-normal text-gray-500 dark:text-gray-500">(<%= @contact_person.email %>)</span>
+        </h2>
+        <span class="text-xs text-gray-500 dark:text-gray-500">최근 10건</span>
+      </div>
+
+      <% if @email_orders.empty? %>
+        <div class="text-center py-10">
+          <svg class="w-10 h-10 mx-auto text-gray-300 dark:text-gray-600 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+          </svg>
+          <p class="text-sm text-gray-500 dark:text-gray-500">이메일 이력이 없습니다</p>
+        </div>
+      <% else %>
+        <div class="divide-y divide-gray-50 dark:divide-gray-700/50">
+          <% @email_orders.each do |order| %>
+            <%= link_to order_path(order), class: "flex items-center gap-3 px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors group" do %>
+              <svg class="w-4 h-4 text-gray-400 dark:text-gray-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+              </svg>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm text-gray-800 dark:text-gray-200 truncate group-hover:text-primary transition-colors">
+                  <%= order.original_email_subject.presence || order.title %>
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-500">
+                  <%= order.created_at.strftime("%Y-%m-%d %H:%M") %>
+                </p>
+              </div>
+              <span class="flex-shrink-0 text-xs px-2 py-0.5 rounded-full font-medium
+                <%= case order.status
+                    when 'new_rfq'        then 'bg-gray-500 text-white'
+                    when 'make_quo'       then 'bg-blue-600 text-white'
+                    when 'pending_po'     then 'bg-indigo-600 text-white'
+                    when 'new_po'         then 'bg-green-600 text-white'
+                    when 'delivery_items' then 'bg-orange-500 text-white'
+                    when 'problem'        then 'bg-yellow-500 text-white'
+                    when 'get_grn'        then 'bg-emerald-600 text-white'
+                    when 'give_up'        then 'bg-gray-400 text-white'
+                    when 'done'          then 'bg-teal-600 text-white'
+                    end %>">
+                <%= Order::STATUS_LABELS[order.status] || order.status %>
+              </span>
+            <% end %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
 
   <!-- 같은 회사 담당자들 -->
   <% other_contacts = @contactable.contact_persons.where.not(id: @contact_person.id).order(primary: :desc, name: :asc).limit(10) %>

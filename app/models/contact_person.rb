@@ -26,10 +26,14 @@ class ContactPerson < ApplicationRecord
   scope :search, ->(q) {
     return all if q.blank?
     term = "%#{q.downcase}%"
-    where(
-      "LOWER(contact_persons.name) LIKE ? OR LOWER(contact_persons.email) LIKE ? " \
-      "OR contact_persons.phone LIKE ? OR contact_persons.mobile LIKE ?",
-      term, term, term, term
+    joins(
+      "LEFT JOIN clients ON clients.id = contact_persons.contactable_id AND contact_persons.contactable_type = 'Client' " \
+      "LEFT JOIN suppliers ON suppliers.id = contact_persons.contactable_id AND contact_persons.contactable_type = 'Supplier'"
+    ).where(
+      "LOWER(contact_persons.name) LIKE :t OR LOWER(contact_persons.email) LIKE :t " \
+      "OR contact_persons.phone LIKE :t OR contact_persons.mobile LIKE :t " \
+      "OR LOWER(clients.name) LIKE :t OR LOWER(suppliers.name) LIKE :t",
+      t: term
     )
   }
 
