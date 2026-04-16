@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>CPOFlow - 경영 리포트 (<%= @from_str %> ~ <%= @to_str %>)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @media print {
+      .no-print { display: none !important; }
+      body { font-size: 10pt; }
+      .print-break { page-break-before: always; }
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+  </style>
+</head>
+<body class="bg-white text-gray-900 p-8 max-w-[210mm] mx-auto">
+
+  <%# 인쇄 버튼 %>
+  <div class="no-print flex justify-end gap-2 mb-6">
+    <button onclick="window.print()"
+            class="inline-flex items-center gap-1.5 px-4 py-2 bg-[#1E3A5F] text-white rounded-lg text-sm hover:bg-[#16325C] transition-colors">
+      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      인쇄 / PDF 저장
+    </button>
+    <button onclick="window.close()"
+            class="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition-colors">
+      닫기
+    </button>
+  </div>
+
+  <%# 헤더 %>
+  <div class="flex items-center justify-between border-b-2 border-gray-900 pb-3 mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">CPOFlow - 경영 리포트</h1>
+      <p class="text-sm text-gray-600 mt-1"><%= @from_str %> ~ <%= @to_str %><%= " | #{@selected_board.name}" if @selected_board %></p>
+    </div>
+    <div class="text-right">
+      <p class="text-xs text-gray-500">AtoZ2010 Inc.</p>
+      <p class="text-xs text-gray-500">출력일: <%= Date.today.strftime("%Y-%m-%d") %></p>
+    </div>
+  </div>
+
+  <%# KPI 요약 %>
+  <h2 class="text-sm font-bold text-gray-700 mb-3 border-b border-gray-200 pb-1">핵심 지표 (KPI)</h2>
+  <table class="w-full text-sm mb-6 border border-gray-200">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 border border-gray-200">지표</th>
+        <th class="px-3 py-2 text-right text-xs font-semibold text-gray-500 border border-gray-200">현재</th>
+        <th class="px-3 py-2 text-right text-xs font-semibold text-gray-500 border border-gray-200">전기</th>
+        <th class="px-3 py-2 text-right text-xs font-semibold text-gray-500 border border-gray-200">증감</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% [
+        ["수주 건수", "#{@kpi[:new_orders]}건", "#{@kpi[:prev_orders]}건", @kpi[:new_orders], @kpi[:prev_orders]],
+        ["납품 건수", "#{@kpi[:delivered]}건", "#{@kpi[:prev_delivered]}건", @kpi[:delivered], @kpi[:prev_delivered]],
+        ["수주액", "$#{number_with_delimiter((@kpi[:total_value] / 1000).round)}K", "$#{number_with_delimiter((@kpi[:prev_value] / 1000).round)}K", @kpi[:total_value], @kpi[:prev_value]],
+        ["납기 준수율", "#{@kpi[:on_time_rate]}%", "#{@kpi[:prev_on_time]}%", @kpi[:on_time_rate], @kpi[:prev_on_time]]
+      ].each do |label, curr_str, prev_str, curr_val, prev_val| %>
+        <% pct = (prev_val && prev_val != 0) ? ((curr_val - prev_val).to_f / prev_val * 100).round(1) : nil %>
+        <tr>
+          <td class="px-3 py-1.5 border border-gray-200 font-medium"><%= label %></td>
+          <td class="px-3 py-1.5 border border-gray-200 text-right tabular-nums font-semibold"><%= curr_str %></td>
+          <td class="px-3 py-1.5 border border-gray-200 text-right tabular-nums text-gray-500"><%= prev_str %></td>
+          <td class="px-3 py-1.5 border border-gray-200 text-right tabular-nums">
+            <% if pct %>
+              <span class="<%= pct >= 0 ? 'text-green-600' : 'text-red-500' %> font-medium">
+                <%= pct >= 0 ? "\u25B2" : "\u25BC" %> <%= pct.abs %>%
+              </span>
+            <% else %>
+              <span class="text-gray-400">-</span>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+      <tr>
+        <td class="px-3 py-1.5 border border-gray-200 font-medium">납기 지연</td>
+        <td class="px-3 py-1.5 border border-gray-200 text-right tabular-nums font-semibold <%= @kpi[:overdue] > 0 ? 'text-red-600' : '' %>"><%= @kpi[:overdue] %>건</td>
+        <td class="px-3 py-1.5 border border-gray-200 text-right text-gray-400">-</td>
+        <td class="px-3 py-1.5 border border-gray-200 text-right text-gray-400">-</td>
+      </tr>
+      <tr>
+        <td class="px-3 py-1.5 border border-gray-200 font-medium">평균 소요일</td>
+        <td class="px-3 py-1.5 border border-gray-200 text-right tabular-nums font-semibold"><%= @kpi[:avg_lead_days] %>일</td>
+        <td class="px-3 py-1.5 border border-gray-200 text-right text-gray-400">-</td>
+        <td class="px-3 py-1.5 border border-gray-200 text-right text-gray-400">-</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <%# 파이프라인 현황 %>
+  <h2 class="text-sm font-bold text-gray-700 mb-3 border-b border-gray-200 pb-1">파이프라인 현황</h2>
+  <table class="w-full text-sm mb-6 border border-gray-200">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 border border-gray-200">단계</th>
+        <th class="px-3 py-2 text-right text-xs font-semibold text-gray-500 border border-gray-200">건수</th>
+        <th class="px-3 py-2 text-right text-xs font-semibold text-gray-500 border border-gray-200">비율</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% funnel_stages = [
+           ["new_rfq", "New RFQ"], ["make_quo", "Make QUO"], ["pending_po", "Pending PO"],
+           ["new_po", "New PO"], ["delivery_items", "Delivery Items"], ["problem", "Problem"],
+           ["get_grn", "Get GRN"], ["give_up", "Give Up"]
+         ]
+         funnel_total = [@funnel.values.sum, 1].max %>
+      <% funnel_stages.each do |key, label| %>
+        <% cnt = @funnel[key] || 0 %>
+        <tr>
+          <td class="px-3 py-1.5 border border-gray-200"><%= label %></td>
+          <td class="px-3 py-1.5 border border-gray-200 text-right tabular-nums"><%= cnt %>건</td>
+          <td class="px-3 py-1.5 border border-gray-200 text-right tabular-nums"><%= (cnt.to_f / funnel_total * 100).round(1) %>%</td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <%# 월별 트렌드 %>
+  <div class="print-break"></div>
+  <h2 class="text-sm font-bold text-gray-700 mb-3 border-b border-gray-200 pb-1">월별 수주 트렌드 (최근 12개월)</h2>
+  <table class="w-full text-sm mb-6 border border-gray-200">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 border border-gray-200">월</th>
+        <th class="px-3 py-2 text-right text-xs font-semibold text-gray-500 border border-gray-200">수주</th>
+        <th class="px-3 py-2 text-right text-xs font-semibold text-gray-500 border border-gray-200">납품</th>
+        <th class="px-3 py-2 text-right text-xs font-semibold text-gray-500 border border-gray-200">수주액($K)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @monthly.each do |m| %>
+        <tr>
+          <td class="px-3 py-1.5 border border-gray-200"><%= m[:label] %></td>
+          <td class="px-3 py-1.5 border border-gray-200 text-right tabular-nums"><%= m[:orders] %></td>
+          <td class="px-3 py-1.5 border border-gray-200 text-right tabular-nums"><%= m[:delivered] %></td>
+          <td class="px-3 py-1.5 border border-gray-200 text-right tabular-nums">$<%= m[:value] %>K</td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <%# Top 10 발주처 %>
+  <% if @by_client.any? %>
+    <h2 class="text-sm font-bold text-gray-700 mb-3 border-b border-gray-200 pb-1">발주처별 수주액 Top 10</h2>
+    <table class="w-full text-sm mb-6 border border-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 border border-gray-200">#</th>
+          <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 border border-gray-200">발주처</th>
+          <th class="px-3 py-2 text-right text-xs font-semibold text-gray-500 border border-gray-200">수주액</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @by_client.each_with_index do |(name, val), i| %>
+          <tr>
+            <td class="px-3 py-1.5 border border-gray-200 text-gray-500"><%= i + 1 %></td>
+            <td class="px-3 py-1.5 border border-gray-200"><%= name %></td>
+            <td class="px-3 py-1.5 border border-gray-200 text-right tabular-nums">$<%= number_with_delimiter((val.to_f / 1000).round) %>K</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+
+  <%# Top 10 거래처 %>
+  <% if @by_supplier.any? %>
+    <h2 class="text-sm font-bold text-gray-700 mb-3 border-b border-gray-200 pb-1">거래처별 발주 건수 Top 10</h2>
+    <table class="w-full text-sm mb-6 border border-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 border border-gray-200">#</th>
+          <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 border border-gray-200">거래처</th>
+          <th class="px-3 py-2 text-right text-xs font-semibold text-gray-500 border border-gray-200">건수</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @by_supplier.each_with_index do |(name, cnt), i| %>
+          <tr>
+            <td class="px-3 py-1.5 border border-gray-200 text-gray-500"><%= i + 1 %></td>
+            <td class="px-3 py-1.5 border border-gray-200"><%= name %></td>
+            <td class="px-3 py-1.5 border border-gray-200 text-right tabular-nums"><%= cnt %>건</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+
+  <%# 담당자별 성과 %>
+  <% if @by_assignee.any? %>
+    <div class="print-break"></div>
+    <h2 class="text-sm font-bold text-gray-700 mb-3 border-b border-gray-200 pb-1">담당자별 성과</h2>
+    <table class="w-full text-sm mb-6 border border-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 border border-gray-200">담당자</th>
+          <th class="px-3 py-2 text-right text-xs font-semibold text-gray-500 border border-gray-200">담당 건수</th>
+          <th class="px-3 py-2 text-right text-xs font-semibold text-gray-500 border border-gray-200">납품 건수</th>
+          <th class="px-3 py-2 text-right text-xs font-semibold text-gray-500 border border-gray-200">납기 준수율</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @by_assignee.each do |u| %>
+          <% rate = u.delivered_count.to_i > 0 ? (u.on_time_count.to_f / u.delivered_count * 100).round(1) : 0.0 %>
+          <tr>
+            <td class="px-3 py-1.5 border border-gray-200 font-medium"><%= u.name %></td>
+            <td class="px-3 py-1.5 border border-gray-200 text-right tabular-nums"><%= u.order_count %></td>
+            <td class="px-3 py-1.5 border border-gray-200 text-right tabular-nums"><%= u.delivered_count %></td>
+            <td class="px-3 py-1.5 border border-gray-200 text-right tabular-nums font-semibold <%= rate >= 90 ? 'text-green-600' : rate >= 70 ? 'text-yellow-600' : 'text-red-500' %>"><%= rate %>%</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+
+  <%# 자동 인쇄 대화상자 %>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // 자동 인쇄 다이얼로그는 표시하지 않음 — 사용자가 직접 "인쇄/PDF 저장" 버튼 클릭
+    });
+  </script>
+</body>
+</html>

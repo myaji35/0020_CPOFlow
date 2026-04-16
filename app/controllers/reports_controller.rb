@@ -9,6 +9,9 @@ class ReportsController < ApplicationController
     @from_str   = @date_range.first.strftime("%Y-%m-%d")
     @to_str     = @date_range.last.strftime("%Y-%m-%d")
 
+    @boards        = KanbanBoard.ordered
+    @selected_board = params[:board_id].present? ? KanbanBoard.find_by(id: params[:board_id]) : nil
+
     @kpi         = build_kpi(@date_range)
     @monthly     = build_monthly_trend
     @funnel      = build_funnel
@@ -18,10 +21,31 @@ class ReportsController < ApplicationController
     @by_assignee = build_by_assignee(@date_range)
   end
 
+  def export_pdf
+    @period     = params[:period] || "this_month"
+    @date_range = parse_period(@period, params[:from], params[:to])
+    @from_str   = @date_range.first.strftime("%Y-%m-%d")
+    @to_str     = @date_range.last.strftime("%Y-%m-%d")
+
+    @boards        = KanbanBoard.ordered
+    @selected_board = params[:board_id].present? ? KanbanBoard.find_by(id: params[:board_id]) : nil
+
+    @kpi         = build_kpi(@date_range)
+    @monthly     = build_monthly_trend
+    @funnel      = build_funnel
+    @by_client   = build_by_client(@date_range)
+    @by_supplier = build_by_supplier(@date_range)
+    @by_project  = build_by_project(@date_range)
+    @by_assignee = build_by_assignee(@date_range)
+
+    render layout: false
+  end
+
   def export_csv
     @period     = params[:period] || "this_month"
     @date_range = parse_period(@period, params[:from], params[:to])
-    orders      = scoped_orders.includes(:client, :supplier, :project, :user)
+    @selected_board = params[:board_id].present? ? KanbanBoard.find_by(id: params[:board_id]) : nil
+    orders      = report_scoped_orders.includes(:client, :supplier, :project, :user)
                        .where(created_at: @date_range)
                        .order(created_at: :desc)
 
@@ -36,6 +60,12 @@ class ReportsController < ApplicationController
   end
 
   private
+
+  # ── 보드 스코핑 ────────────────────────────────────────────
+  def report_scoped_orders
+    base = scoped_orders
+    @selected_board ? base.where(kanban_board_id: @selected_board.id) : base
+  end
 
   # ── 기간 파싱 ──────────────────────────────────────────────
   def parse_period(period, from, to)
@@ -67,15 +97,15 @@ class ReportsController < ApplicationController
       prev_value:     prev[:value],
       on_time_rate:   curr[:on_time_rate],
       prev_on_time:   prev[:on_time_rate],
-      overdue:        scoped_orders.where("due_date < ?", Date.today).where.not(status: [ :get_grn, :give_up ]).count,
-      urgent:         scoped_orders.joins(:card_status).where(card_statuses: { key: %w[urgent high overdue] }).where.not(status: [ :get_grn, :give_up ]).count,
+      overdue:        report_scoped_orders.where("due_date < ?", Date.today).where.not(status: [ :get_grn, :give_up ]).count,
+      urgent:         report_scoped_orders.joins(:card_status).where(card_statuses: { key: %w[urgent high overdue] }).where.not(status: [ :get_grn, :give_up ]).count,
       avg_lead_days:  calc_avg_lead_days(range)
     }
   end
 
   def order_stats(range)
-    base      = scoped_orders.where(created_at: range)
-    delivered = scoped_orders.get_grn.where(updated_at: range)
+    base      = report_scoped_orders.where(created_at: range)
+    delivered = report_scoped_orders.get_grn.where(updated_at: range)
     on_time   = delivered.where("orders.due_date >= DATE(orders.updated_at)").count
     {
       count:        base.count,
@@ -91,7 +121,7 @@ class ReportsController < ApplicationController
   end
 
   def calc_avg_lead_days(range)
-    delivered = scoped_orders.get_grn.where(updated_at: range)
+    delivered = report_scoped_orders.get_grn.where(updated_at: range)
     return 0.0 if delivered.empty?
     total = delivered.sum { |o| (o.updated_at.to_date - o.created_at.to_date).to_i }
     (total.to_f / delivered.count).round(1)
@@ -104,42 +134,43 @@ class ReportsController < ApplicationController
       r = m..(m.end_of_month)
       {
         label:     m.strftime("%y.%m"),
-        orders:    scoped_orders.where(created_at: r).count,
-        delivered: scoped_orders.get_grn.where(updated_at: r).count,
-        value:     (scoped_orders.where(created_at: r).sum(:estimated_value).to_f / 1000).round
+        orders:    report_scoped_orders.where(created_at: r).count,
+        delivered: report_scoped_orders.get_grn.where(updated_at: r).count,
+        value:     (report_scoped_orders.where(created_at: r).sum(:estimated_value).to_f / 1000).round
       }
     end
   end
 
   # ── 파이프라인 퍼널 ────────────────────────────────────────
   def build_funnel
-    scoped_orders.group(:status).count
+    report_scoped_orders.group(:status).count
   end
 
   # ── Top 10 ─────────────────────────────────────────────────
   def build_by_client(range)
-    Order.joins(:client).where(created_at: range)
+    report_scoped_orders.joins(:client).where(created_at: range)
          .group("clients.name").sum(:estimated_value)
          .sort_by { |_, v| -(v || 0) }.first(10)
   end
 
   def build_by_supplier(range)
-    Order.joins(:supplier).where(created_at: range)
+    report_scoped_orders.joins(:supplier).where(created_at: range)
          .group("suppliers.name").count
          .sort_by { |_, v| -v }.first(10)
   end
 
   def build_by_project(range)
-    Order.joins(:project).where(created_at: range)
+    report_scoped_orders.joins(:project).where(created_at: range)
          .group("projects.name").sum(:estimated_value)
          .sort_by { |_, v| -(v || 0) }.first(10)
   end
 
   # ── 담당자별 성과 ──────────────────────────────────────────
   def build_by_assignee(range)
-    User.joins(:created_orders)
+    scope = User.joins(:created_orders)
         .where(created_orders: { created_at: range })
-        .group("users.id", "users.name")
+    scope = scope.where(created_orders: { kanban_board_id: @selected_board.id }) if @selected_board
+    scope.group("users.id", "users.name")
         .select(
           "users.id, users.name,
            COUNT(created_orders.id) AS order_count,

@@ -180,6 +180,7 @@ Rails.application.routes.draw do
   # 경영 리포트
   get "/reports",            to: "reports#index",      as: :reports
   get "/reports/export_csv", to: "reports#export_csv", as: :reports_export_csv
+  get "/reports/export_pdf", to: "reports#export_pdf", as: :reports_export_pdf
 
   # CPO Agent Insights (dismiss/feedback)
   resources :agent_insights, only: [] do

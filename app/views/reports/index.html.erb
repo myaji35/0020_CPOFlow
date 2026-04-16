@@ -8,10 +8,16 @@
 <style>
   @media print {
     nav, aside, header, .no-print { display: none !important; }
+    .print-only { display: block !important; }
     .print-break { page-break-before: always; }
     body { font-size: 10pt; background: white !important; }
     .bg-white, .dark\:bg-gray-800 { box-shadow: none !important; border: 1px solid #e5e7eb !important; background: white !important; }
-    canvas { max-height: 200px !important; }
+    canvas { display: none !important; }
+    .chart-table { display: table !important; }
+  }
+  @media screen {
+    .print-only { display: none !important; }
+    .chart-table { display: none !important; }
   }
 </style>
 
@@ -27,8 +33,15 @@
       <p class="text-sm text-gray-500 dark:text-gray-500 mt-0.5"><%= @from_str %> ~ <%= @to_str %></p>
     </div>
     <div class="flex items-center gap-2 no-print">
+      <%# PDF 내보내기 %>
+      <%= link_to reports_export_pdf_path(period: @period, from: params[:from], to: params[:to], board_id: @selected_board&.id),
+            class: "inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#1E3A5F] text-white rounded-lg text-sm hover:bg-[#16325C] transition-colors",
+            target: "_blank" do %>
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        PDF 내보내기
+      <% end %>
       <%# CSV 다운로드 %>
-      <%= link_to reports_export_csv_path(period: @period, from: params[:from], to: params[:to], format: :csv),
+      <%= link_to reports_export_csv_path(period: @period, from: params[:from], to: params[:to], board_id: @selected_board&.id, format: :csv),
             class: "inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" do %>
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         CSV 내보내기
@@ -42,9 +55,24 @@
     </div>
   </div>
 
-  <%# ── 기간 필터 ── %>
+  <%# ── 필터 영역 ── %>
   <div class="no-print">
-    <div class="flex flex-wrap items-center gap-2">
+    <div class="flex flex-wrap items-center gap-3">
+      <%# 보드 필터 %>
+      <% if @boards.size > 1 %>
+        <div class="flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          <select onchange="applyBoardFilter(this.value)"
+                  class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]">
+            <option value="">전체 보드</option>
+            <% @boards.each do |board| %>
+              <option value="<%= board.id %>" <%= 'selected' if @selected_board&.id == board.id %>><%= board.name %></option>
+            <% end %>
+          </select>
+        </div>
+        <div class="w-px h-6 bg-gray-200 dark:bg-gray-700"></div>
+      <% end %>
+      <%# 기간 필터 %>
       <div class="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
         <% [
           ["this_month",   "이번달"],
@@ -54,7 +82,7 @@
           ["custom",       "직접입력"]
         ].each do |val, label| %>
           <% active_cls = @period == val ? 'bg-white dark:bg-gray-700 shadow text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300' %>
-          <%= link_to label, reports_path(period: val),
+          <%= link_to label, reports_path(period: val, board_id: @selected_board&.id),
                 class: "px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer #{active_cls}" %>
         <% end %>
       </div>
@@ -62,6 +90,7 @@
       <% if @period == "custom" %>
         <%= form_with url: reports_path, method: :get, class: "flex items-center gap-2" do |f| %>
           <%= f.hidden_field :period, value: "custom" %>
+          <%= f.hidden_field :board_id, value: @selected_board&.id %>
           <%= f.date_field :from, value: params[:from] || @from_str,
                 class: "text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" %>
           <span class="text-gray-500 text-sm">~</span>
@@ -129,6 +158,42 @@
         <%= @kpi[:avg_lead_days] %><span class="text-sm font-normal ml-0.5">일</span>
       </p>
     </div>
+  </div>
+
+  <%# ── 인쇄 전용 헤더 ── %>
+  <div class="print-only mb-4">
+    <div class="flex items-center justify-between border-b-2 border-gray-900 pb-3 mb-3">
+      <div>
+        <h1 class="text-xl font-bold text-gray-900">CPOFlow - 경영 리포트</h1>
+        <p class="text-sm text-gray-600"><%= @from_str %> ~ <%= @to_str %><%= " | #{@selected_board.name}" if @selected_board %></p>
+      </div>
+      <p class="text-xs text-gray-500">출력일: <%= Date.today.strftime("%Y-%m-%d") %></p>
+    </div>
+  </div>
+
+  <%# ── 월별 트렌드 인쇄용 테이블 ── %>
+  <div class="print-break">
+    <table class="chart-table w-full text-sm border border-gray-200 mb-4">
+      <caption class="text-left text-sm font-semibold text-gray-700 mb-2">월별 수주 트렌드 (최근 12개월)</caption>
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 border border-gray-200">월</th>
+          <th class="px-3 py-2 text-right text-xs font-semibold text-gray-500 border border-gray-200">수주</th>
+          <th class="px-3 py-2 text-right text-xs font-semibold text-gray-500 border border-gray-200">납품</th>
+          <th class="px-3 py-2 text-right text-xs font-semibold text-gray-500 border border-gray-200">수주액($K)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @monthly.each do |m| %>
+          <tr>
+            <td class="px-3 py-1.5 border border-gray-200 text-gray-700"><%= m[:label] %></td>
+            <td class="px-3 py-1.5 border border-gray-200 text-right tabular-nums"><%= m[:orders] %></td>
+            <td class="px-3 py-1.5 border border-gray-200 text-right tabular-nums"><%= m[:delivered] %></td>
+            <td class="px-3 py-1.5 border border-gray-200 text-right tabular-nums">$<%= m[:value] %>K</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
   </div>
 
   <%# ── 차트 행 (2열) ── %>
@@ -307,6 +372,17 @@
   const ctx = document.getElementById('trendChart');
   if (!ctx) return;
 
+  // 월 라벨 → 날짜 범위 매핑 (yy.mm → from/to)
+  function monthLabelToRange(label) {
+    const parts = label.split('.');
+    const year = 2000 + parseInt(parts[0]);
+    const month = parseInt(parts[1]) - 1;
+    const from = new Date(year, month, 1);
+    const to = new Date(year, month + 1, 0);
+    const fmt = d => d.toISOString().slice(0, 10);
+    return { from: fmt(from), to: fmt(to) };
+  }
+
   new Chart(ctx, {
     data: {
       labels,
@@ -351,8 +427,19 @@
       responsive: true,
       maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
+      onClick: function(evt, elements) {
+        if (!elements.length) return;
+        const idx = elements[0].index;
+        const range = monthLabelToRange(labels[idx]);
+        window.location = '/orders?created_from=' + range.from + '&created_to=' + range.to;
+      },
       plugins: {
-        legend: { labels: { color: tickColor, font: { size: 11 }, boxWidth: 12, padding: 12 } }
+        legend: { labels: { color: tickColor, font: { size: 11 }, boxWidth: 12, padding: 12 } },
+        tooltip: {
+          callbacks: {
+            footer: function() { return '클릭하면 해당 월 주문 목록으로 이동'; }
+          }
+        }
       },
       scales: {
         x: {
@@ -375,4 +462,15 @@
     }
   });
 })();
+
+// 보드 필터
+function applyBoardFilter(boardId) {
+  const url = new URL(window.location.href);
+  if (boardId) {
+    url.searchParams.set('board_id', boardId);
+  } else {
+    url.searchParams.delete('board_id');
+  }
+  window.location = url.toString();
+}
 </script>
