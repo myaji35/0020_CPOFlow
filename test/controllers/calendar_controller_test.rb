@@ -38,6 +38,23 @@ class CalendarControllerTest < ActionDispatch::IntegrationTest
     assert_match "토", response.body
   end
 
+  test "calendar weekly view 200 응답" do
+    get calendar_path(view: "weekly")
+    assert_response :success
+  end
+
+  test "calendar weekly view — 특정 날짜 파라미터" do
+    get calendar_path(view: "weekly", date: "2026-04-16")
+    assert_response :success
+    assert_match "04/12", response.body # week start (Sunday)
+  end
+
+  test "calendar monthly view — 오늘 강조" do
+    get calendar_path
+    assert_response :success
+    assert_match "ring-blue-400", response.body
+  end
+
   test "calendar index — 납기 주문 히트맵 포함" do
     order = Order.create!(
       title: "Calendar Test Order",

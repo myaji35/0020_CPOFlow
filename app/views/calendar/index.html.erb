@@ -1,140 +1,226 @@
 <% content_for :title, "캘린더" %>
 
+<%
+  today = Date.today
+  orders_by_date = @orders.group_by { |o| o.due_date.to_date }
+%>
+
 <div class="flex flex-col gap-6">
-  <%# Header %>
-  <div class="flex items-center justify-between">
+  <%# === Header === %>
+  <div class="flex items-center justify-between flex-wrap gap-3">
     <div>
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white">캘린더</h1>
-      <p class="text-sm text-gray-500 dark:text-gray-500 mt-1"><%= @month.strftime("%Y년 %m월") %> 마감일 현황</p>
+      <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">
+        <%= @view == "weekly" ? "#{@week_start.strftime('%Y.%m.%d')} ~ #{@week_end.strftime('%m.%d')}" : "#{@month.strftime('%Y년 %m월')} 마감일 현황" %>
+      </p>
     </div>
     <div class="flex items-center gap-2">
-      <%= link_to "오늘", calendar_path,
-          class: "text-xs px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" %>
-      <%= link_to calendar_path(month: (@month - 1.month).strftime("%Y-%m-%d")),
-          class: "p-2 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" do %>
+      <%# 뷰 탭 %>
+      <div class="flex rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
+        <%= link_to "월간", calendar_path(view: "monthly", month: @month.strftime("%Y-%m-%d")),
+            class: "text-xs px-3 py-1.5 transition-colors #{@view == 'monthly' ? 'bg-[#1E3A5F] text-white font-semibold' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}" %>
+        <%= link_to "주간", calendar_path(view: "weekly", date: today.strftime("%Y-%m-%d")),
+            class: "text-xs px-3 py-1.5 transition-colors #{@view == 'weekly' ? 'bg-[#1E3A5F] text-white font-semibold' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}" %>
+      </div>
+
+      <div class="w-px h-6 bg-gray-200 dark:bg-gray-600"></div>
+
+      <%# 오늘 버튼 %>
+      <% today_params = @view == "weekly" ? { view: "weekly", date: today.strftime("%Y-%m-%d") } : {} %>
+      <%= link_to "오늘", calendar_path(today_params),
+          class: "text-xs px-3 py-1.5 rounded-lg bg-[#00A1E0] text-white font-semibold hover:bg-[#0090c8] transition-colors" %>
+
+      <%# 이전/다음 네비게이션 %>
+      <% if @view == "weekly" %>
+        <% prev_link = calendar_path(view: "weekly", date: (@week_start - 7.days).strftime("%Y-%m-%d")) %>
+        <% next_link = calendar_path(view: "weekly", date: (@week_start + 7.days).strftime("%Y-%m-%d")) %>
+      <% else %>
+        <% prev_link = calendar_path(month: (@month - 1.month).strftime("%Y-%m-%d")) %>
+        <% next_link = calendar_path(month: (@month + 1.month).strftime("%Y-%m-%d")) %>
+      <% end %>
+      <%= link_to prev_link, class: "p-2 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" do %>
         <svg class="w-4 h-4 text-gray-600 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
       <% end %>
-      <span class="text-sm font-semibold text-gray-700 dark:text-gray-300 px-3"><%= @month.strftime("%Y년 %m월") %></span>
-      <%= link_to calendar_path(month: (@month + 1.month).strftime("%Y-%m-%d")),
-          class: "p-2 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" do %>
+      <span class="text-sm font-semibold text-gray-700 dark:text-gray-300 px-3">
+        <%= @view == "weekly" ? "#{@week_start.strftime('%m/%d')} ~ #{@week_end.strftime('%m/%d')}" : @month.strftime("%Y년 %m월") %>
+      </span>
+      <%= link_to next_link, class: "p-2 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" do %>
         <svg class="w-4 h-4 text-gray-600 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
       <% end %>
     </div>
   </div>
 
-  <%# FR-01: 월별 납기 통계 바 %>
+  <%# === 통계 카드 === %>
   <div class="grid grid-cols-4 gap-3">
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
       <p class="text-2xl font-bold text-gray-900 dark:text-white"><%= @stats[:total] %></p>
-      <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">총 마감</p>
+      <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">이번 달 총 건</p>
     </div>
-    <div class="bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-800 p-4 text-center">
+    <div class="bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800 p-4 text-center">
       <p class="text-2xl font-bold text-red-600 dark:text-red-400"><%= @stats[:overdue] %></p>
-      <p class="text-xs text-red-500 dark:text-red-400 mt-1">지연</p>
+      <p class="text-xs text-red-500 dark:text-red-400 mt-1">연체</p>
     </div>
-    <div class="bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-100 dark:border-orange-800 p-4 text-center">
-      <p class="text-2xl font-bold text-orange-600 dark:text-orange-400"><%= @stats[:urgent] %></p>
-      <p class="text-xs text-orange-500 dark:text-orange-400 mt-1">D-7 이내</p>
+    <div class="bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-200 dark:border-orange-800 p-4 text-center">
+      <p class="text-2xl font-bold text-orange-600 dark:text-orange-400"><%= @stats[:this_week] %></p>
+      <p class="text-xs text-orange-500 dark:text-orange-400 mt-1">이번 주 마감</p>
     </div>
-    <div class="bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800 p-4 text-center">
-      <p class="text-2xl font-bold text-green-600 dark:text-green-400"><%= @stats[:normal] %></p>
-      <p class="text-xs text-green-500 dark:text-green-400 mt-1">정상</p>
+    <div class="bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800 p-4 text-center">
+      <p class="text-2xl font-bold text-green-600 dark:text-green-400"><%= @stats[:completed] %></p>
+      <p class="text-xs text-green-500 dark:text-green-400 mt-1">완료</p>
     </div>
   </div>
 
-  <%# 캘린더 그리드 %>
-  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-    <%# 요일 헤더 %>
-    <div class="grid grid-cols-7 border-b border-gray-200 dark:border-gray-700">
-      <% %w[일 월 화 수 목 금 토].each_with_index do |day, i| %>
-        <div class="py-3 text-center text-xs font-semibold <%= i == 0 ? 'text-red-400' : i == 6 ? 'text-blue-400' : 'text-gray-500 dark:text-gray-500' %>">
-          <%= day %>
-        </div>
-      <% end %>
-    </div>
-
-    <%# 날짜 그리드 %>
-    <%
-      today      = Date.today
-      first_day  = @month.beginning_of_month
-      last_day   = @month.end_of_month
-      start_date = first_day - first_day.wday.days
-      orders_by_date = @orders.group_by { |o| o.due_date.to_date }
-    %>
-    <div class="grid grid-cols-7">
-      <% (start_date..start_date + 41.days).each do |date| %>
-        <%
-          is_current_month = date.month == @month.month
-          is_today         = date == today
-          day_orders       = orders_by_date[date] || []
-
-          # FR-01: 히트맵 배경색 (건수 기반)
-          heatmap_bg = case day_orders.size
-                       when 0    then ''
-                       when 1    then 'bg-blue-50 dark:bg-blue-900/10'
-                       when 2..3 then 'bg-blue-100 dark:bg-blue-900/20'
-                       when 4..6 then 'bg-blue-200 dark:bg-blue-900/30'
-                       else           'bg-blue-300 dark:bg-blue-900/40'
-                       end
-
-          # FR-02: 위험도 배경색 (히트맵보다 우선)
-          has_overdue = day_orders.any? { |o| o.due_date < today }
-          has_urgent  = day_orders.any? { |o| o.due_date >= today && o.due_date <= today + 7 }
-          risk_bg     = if has_overdue
-                          'bg-red-50 dark:bg-red-900/15'
-                        elsif has_urgent
-                          'bg-orange-50 dark:bg-orange-900/15'
-                        else
-                          heatmap_bg
-                        end
-
-          cell_bg = is_current_month ? (risk_bg.present? ? risk_bg : 'bg-white dark:bg-gray-800') : 'bg-gray-50 dark:bg-gray-700/30'
-
-          # FR-03: data-orders JSON (client/project/assignee 포함)
-          day_orders_json = day_orders.map { |o|
-            {
-              id:       o.id,
-              title:    o.title,
-              path:     order_path(o),
-              status:   Order::STATUS_LABELS[o.status],
-              priority: o.card_status&.key,
-              due_date: o.due_date.strftime("%m/%d"),
-              client:   o.client&.name || o.customer_name,
-              project:  o.project&.name,
-              assignee: o.assignees.first&.name
-            }
-          }.to_json
-        %>
-        <div class="min-h-24 border-b border-r border-gray-50 dark:border-gray-700 p-2 cursor-pointer
-                    hover:opacity-90 transition-colors <%= cell_bg %>
-                    <%= is_today ? 'ring-2 ring-inset ring-primary/30' : '' %>"
-             data-calendar-date="<%= date.strftime('%Y-%m-%d') %>"
-             data-orders="<%= html_escape(day_orders_json) %>">
-          <div class="flex justify-between items-center mb-1">
-            <span class="text-xs font-medium <%= is_today ? 'w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center' : is_current_month ? 'text-gray-700 dark:text-gray-300' : 'text-gray-300 dark:text-gray-600' %>">
-              <%= date.day %>
-            </span>
+  <% if @view == "monthly" %>
+    <%# =========== 월간 뷰 =========== %>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <%# 요일 헤더 %>
+      <div class="grid grid-cols-7 border-b border-gray-200 dark:border-gray-700">
+        <% %w[일 월 화 수 목 금 토].each_with_index do |day, i| %>
+          <div class="py-3 text-center text-xs font-semibold <%= i == 0 ? 'text-red-400' : i == 6 ? 'text-blue-400' : 'text-gray-500 dark:text-gray-500' %>">
+            <%= day %>
           </div>
-          <% day_orders.first(3).each do |order| %>
-            <div class="block text-xs truncate px-1.5 py-0.5 rounded mb-0.5 cursor-pointer
-                        <%= case order.card_status&.key
-                            when 'urgent', 'overdue' then 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-                            when 'high'              then 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
-                            else                          'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
-                            end %>"
-                 onclick="event.stopPropagation(); openOrderDrawer(<%= order.id %>, <%= order.title.to_json %>, '<%= order_path(order) %>')">
-              <%= order.title %>
-            </div>
-          <% end %>
-          <% if day_orders.size > 3 %>
-            <span class="text-xs text-gray-500 dark:text-gray-500">+<%= day_orders.size - 3 %> more</span>
-          <% end %>
-        </div>
-      <% end %>
-    </div>
-  </div>
+        <% end %>
+      </div>
 
-  <%# 사이드 패널 HTML %>
+      <%# 날짜 그리드 %>
+      <%
+        first_day  = @month.beginning_of_month
+        start_date = first_day - first_day.wday.days
+      %>
+      <div class="grid grid-cols-7">
+        <% (start_date..start_date + 41.days).each do |date| %>
+          <%
+            is_current_month = date.month == @month.month
+            is_today         = date == today
+            day_orders       = orders_by_date[date] || []
+
+            # 히트맵 배경색
+            heatmap_bg = case day_orders.size
+                         when 0    then ''
+                         when 1    then 'bg-blue-50 dark:bg-blue-900/10'
+                         when 2..3 then 'bg-blue-100 dark:bg-blue-900/20'
+                         when 4..6 then 'bg-blue-200 dark:bg-blue-900/30'
+                         else           'bg-blue-300 dark:bg-blue-900/40'
+                         end
+
+            # 위험도 배경색
+            has_overdue = day_orders.any? { |o| o.due_date < today && !o.done? }
+            has_urgent  = day_orders.any? { |o| o.due_date >= today && o.due_date <= today + 7 && !o.done? }
+            risk_bg     = if has_overdue
+                            'bg-red-50 dark:bg-red-900/15'
+                          elsif has_urgent
+                            'bg-orange-50 dark:bg-orange-900/15'
+                          else
+                            heatmap_bg
+                          end
+
+            cell_bg = is_current_month ? (risk_bg.present? ? risk_bg : 'bg-white dark:bg-gray-800') : 'bg-gray-50 dark:bg-gray-700/30'
+
+            day_orders_json = day_orders.map { |o|
+              {
+                id:       o.id,
+                title:    o.title,
+                path:     order_path(o),
+                status:   Order::STATUS_LABELS[o.status],
+                priority: o.card_status&.key,
+                due_date: o.due_date.strftime("%m/%d"),
+                client:   o.client&.name || o.customer_name,
+                project:  o.project&.name,
+                assignee: o.assignees.first&.name
+              }
+            }.to_json
+          %>
+          <div class="min-h-24 border-b border-r border-gray-100 dark:border-gray-700 p-2 cursor-pointer
+                      hover:opacity-90 transition-colors <%= cell_bg %>
+                      <%= is_today ? 'bg-blue-50 dark:bg-blue-900/20 ring-2 ring-inset ring-blue-400' : '' %>"
+               data-calendar-date="<%= date.strftime('%Y-%m-%d') %>"
+               data-orders="<%= html_escape(day_orders_json) %>">
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-xs font-medium <%= is_today ? 'w-6 h-6 bg-[#00A1E0] text-white rounded-full flex items-center justify-center' : is_current_month ? 'text-gray-700 dark:text-gray-300' : 'text-gray-300 dark:text-gray-600' %>">
+                <%= date.day %>
+              </span>
+              <% if day_orders.size > 0 %>
+                <span class="text-[10px] font-semibold text-gray-400 dark:text-gray-500"><%= day_orders.size %></span>
+              <% end %>
+            </div>
+            <% day_orders.first(3).each do |order| %>
+              <% order_color = calendar_order_color(order, today) %>
+              <div class="block text-xs truncate px-1.5 py-0.5 rounded mb-0.5 cursor-pointer <%= order_color %>"
+                   onclick="event.stopPropagation(); openOrderDrawer(<%= order.id %>, <%= order.title.to_json %>, '<%= order_path(order) %>')">
+                <span class="inline-block w-1.5 h-1.5 rounded-full mr-1 <%= calendar_dot_color(order, today) %>"></span><%= order.title %>
+              </div>
+            <% end %>
+            <% if day_orders.size > 3 %>
+              <span class="text-[10px] text-gray-500 dark:text-gray-500">+<%= day_orders.size - 3 %> more</span>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+  <% else %>
+    <%# =========== 주간 뷰 =========== %>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <%# 요일 헤더 %>
+      <div class="grid grid-cols-7 border-b border-gray-200 dark:border-gray-700">
+        <% (@week_start..@week_end).each_with_index do |date, i| %>
+          <% is_today = date == today %>
+          <div class="py-3 text-center <%= is_today ? 'bg-blue-50 dark:bg-blue-900/20' : '' %>">
+            <p class="text-xs font-semibold <%= i == 0 ? 'text-red-400' : i == 6 ? 'text-blue-400' : 'text-gray-500 dark:text-gray-500' %>">
+              <%= %w[일 월 화 수 목 금 토][i] %>
+            </p>
+            <p class="text-lg font-bold mt-0.5 <%= is_today ? 'text-[#00A1E0]' : 'text-gray-900 dark:text-white' %>">
+              <%= date.day %>
+            </p>
+          </div>
+        <% end %>
+      </div>
+
+      <%# 주간 그리드 (각 컬럼에 해당 날짜의 오더 리스트) %>
+      <div class="grid grid-cols-7 min-h-[400px]">
+        <% (@week_start..@week_end).each_with_index do |date, i| %>
+          <% is_today = date == today %>
+          <% day_orders = orders_by_date[date] || [] %>
+          <div class="border-r border-gray-100 dark:border-gray-700 p-2
+                      <%= is_today ? 'bg-blue-50/50 dark:bg-blue-900/10' : '' %>
+                      <%= i == 6 ? 'border-r-0' : '' %>">
+            <% day_orders.each do |order| %>
+              <% order_color = calendar_order_color(order, today) %>
+              <div class="text-xs p-2 rounded-lg mb-2 cursor-pointer hover:shadow-md transition-shadow border border-gray-100 dark:border-gray-600 <%= order_color %>"
+                   onclick="openOrderDrawer(<%= order.id %>, <%= order.title.to_json %>, '<%= order_path(order) %>')">
+                <div class="flex items-start gap-1.5 mb-1">
+                  <span class="inline-block w-2 h-2 rounded-full mt-0.5 shrink-0 <%= calendar_dot_color(order, today) %>"></span>
+                  <p class="font-medium text-gray-900 dark:text-white truncate leading-tight"><%= order.title %></p>
+                </div>
+                <% if order.client || order.customer_name.present? %>
+                  <p class="text-[10px] text-gray-500 dark:text-gray-400 truncate ml-3.5"><%= order.client&.name || order.customer_name %></p>
+                <% end %>
+                <div class="flex items-center gap-1 mt-1 ml-3.5">
+                  <span class="text-[10px] px-1.5 py-0.5 rounded-full font-semibold
+                    <%= case order.card_status&.key
+                        when 'urgent', 'overdue' then 'bg-red-600 text-white'
+                        when 'high'              then 'bg-orange-500 text-white'
+                        when 'medium'            then 'bg-yellow-500 text-white'
+                        else                          'bg-gray-400 text-white'
+                        end %>">
+                    <%= order.card_status&.key&.upcase || 'NORMAL' %>
+                  </span>
+                  <% if order.assignees.any? %>
+                    <span class="text-[10px] text-gray-400 dark:text-gray-500"><%= order.assignees.first.name %></span>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+            <% if day_orders.empty? %>
+              <p class="text-[10px] text-gray-300 dark:text-gray-600 text-center mt-4">마감 없음</p>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <%# === 사이드 패널 HTML === %>
   <div id="calendar-panel-overlay" class="fixed inset-0 z-40 hidden"></div>
   <div id="calendar-side-panel"
        class="fixed top-0 right-0 h-full w-80 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 shadow-xl z-50 transform translate-x-full transition-transform duration-200 flex flex-col">
@@ -150,7 +236,7 @@
     <div id="panel-orders-list" class="flex-1 overflow-y-auto py-2"></div>
   </div>
 
-  <%# 하단 이번 달 주문 목록 %>
+  <%# === 하단 이번 달 주문 목록 === %>
   <% month_orders = @orders.select { |o| o.due_date.month == @month.month && o.due_date.year == @month.year } %>
   <% if month_orders.any? %>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -182,6 +268,7 @@
               </div>
             </div>
             <div class="flex items-center gap-2 shrink-0">
+              <span class="inline-block w-2.5 h-2.5 rounded-full <%= calendar_dot_color(order, today) %>"></span>
               <%= status_badge(order) %>
               <%= card_status_badge(order) %>
               <%= due_badge(order) %>
@@ -194,14 +281,15 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('turbo:load', function() {
   var sidePanel  = document.getElementById('calendar-side-panel');
   var panelTitle = document.getElementById('panel-date-title');
   var panelList  = document.getElementById('panel-orders-list');
   var panelClose = document.getElementById('calendar-panel-close');
   var overlay    = document.getElementById('calendar-panel-overlay');
 
-  // FR-03: 강화된 우선순위 배지
+  if (!sidePanel) return;
+
   var PRIORITY_LABELS = { urgent: 'URGENT', high: 'HIGH', medium: 'MEDIUM', low: 'LOW' };
   var PRIORITY_COLORS = {
     urgent: 'bg-red-600 text-white dark:bg-red-700',
@@ -210,7 +298,6 @@ document.addEventListener('DOMContentLoaded', function() {
     low:    'bg-gray-500 text-white dark:bg-gray-600'
   };
 
-  // FR-03: 강화된 카드 렌더링 (client/project/assignee/due_date 포함)
   function renderOrderCard(o) {
     var priColor = PRIORITY_COLORS[o.priority] || PRIORITY_COLORS.low;
     var priLabel = PRIORITY_LABELS[o.priority] || (o.priority || '').toUpperCase();
@@ -256,8 +343,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  panelClose.addEventListener('click', closeDatePanel);
-  overlay.addEventListener('click', closeDatePanel);
+  if (panelClose) panelClose.addEventListener('click', closeDatePanel);
+  if (overlay) overlay.addEventListener('click', closeDatePanel);
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeDatePanel();
   });
