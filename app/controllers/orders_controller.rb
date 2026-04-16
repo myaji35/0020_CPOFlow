@@ -76,6 +76,12 @@ class OrdersController < ApplicationController
   def new
     @order = Order.new
     @order.due_date = 30.days.from_now
+    @board = if params[:board_id].present?
+      KanbanBoard.find_by(id: params[:board_id])
+    else
+      KanbanBoard.default_board.first || KanbanBoard.ensure_default!
+    end
+    @order.kanban_board_id = @board.id
   end
 
   def create
@@ -354,7 +360,7 @@ class OrdersController < ApplicationController
       :tags, :source_email_id, :original_email_subject,
       :original_email_body, :original_email_from,
       :client_id, :supplier_id, :project_id,
-      :rfq_no, :quo_no, :po_no, :kanban_board_id
+      :rfq_no, :quo_no, :po_no, :kanban_board_id, :kanban_column_id
     )
   end
 end
