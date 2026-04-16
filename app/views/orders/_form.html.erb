@@ -199,9 +199,9 @@
                   class="px-2.5 py-2 text-xs font-medium border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-500 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors whitespace-nowrap">1개월</button>
         </div>
       </div>
-      <%# 칼럼(단계) 선택 %>
-      <% columns = board.kanban_columns.ordered %>
-      <% if columns.any? %>
+      <%# 칼럼(단계) 선택 — 커스텀 보드만 %>
+      <% columns = board&.kanban_columns&.ordered || [] %>
+      <% if !is_purchase && columns.any? %>
         <div>
           <%= f.label :kanban_column_id, "칼럼(단계)", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
           <%= f.select :kanban_column_id, columns.map { |c| [c.name, c.id] },
