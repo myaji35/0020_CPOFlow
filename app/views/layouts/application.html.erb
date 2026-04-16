@@ -136,6 +136,10 @@
           <div class="flex-1 min-w-0 flex items-center gap-1.5 truncate">
             <span id="drawer-ref-badge" class="hidden font-bold text-[#1E3A5F] dark:text-blue-400 font-mono text-xs flex-shrink-0"></span>
             <span id="drawer-title" class="text-sm font-semibold text-gray-900 dark:text-white truncate"></span>
+            <button id="drawer-edit-title-btn" onclick="editDrawerTitle()" title="제목 수정"
+                    class="flex-shrink-0 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-400 hover:text-gray-600">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
           </div>
           <div class="flex items-center gap-2 flex-shrink-0">
             <%# 다음 단계 버튼 (JS로 제어) %>
@@ -152,7 +156,7 @@
             <a id="drawer-open-link" href="#"
                class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-500 border border-gray-200 dark:border-gray-600 px-2.5 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-              전체 화면
+              펼침 화면
             </a>
             <button onclick="closeOrderDrawer()"
                     class="p-1.5 rounded-lg text-gray-500 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
@@ -175,7 +179,12 @@
           new_po:'New PO(발주확정)', delivery_items:'Delivery Items(납품진행)', problem:'Problem(문제)', get_grn:'Get GRN(수령확인)', give_up:'Give Up(포기)'
         };
 
+        var _drawerOrderId = null;
+        var _drawerOrderPath = null;
+
         function openOrderDrawer(orderId, orderTitle, orderPath, referenceNo) {
+          _drawerOrderId = orderId;
+          _drawerOrderPath = orderPath;
           var drawer   = document.getElementById('order-drawer');
           var backdrop = document.getElementById('order-drawer-backdrop');
           var body     = document.getElementById('order-drawer-body');
@@ -243,6 +252,39 @@
             backdrop.classList.add('hidden');
             document.body.style.overflow = '';
           }, 300);
+        }
+
+        // ── 드로어 제목 인라인 편집 ──────────────────────────
+        function editDrawerTitle() {
+          var titleEl = document.getElementById('drawer-title');
+          var btn = document.getElementById('drawer-edit-title-btn');
+          if (!titleEl || !_drawerOrderPath) return;
+          var currentTitle = titleEl.textContent.trim();
+          var newTitle = prompt('제목 수정', currentTitle);
+          if (newTitle === null || newTitle.trim() === '' || newTitle.trim() === currentTitle) return;
+          var csrf = document.querySelector('meta[name="csrf-token"]');
+          fetch(_drawerOrderPath, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': csrf ? csrf.content : '',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({ order: { title: newTitle.trim() } })
+          }).then(function(r) {
+            if (r.ok) {
+              titleEl.textContent = newTitle.trim();
+              // 칸반 카드 제목도 업데이트
+              var card = document.querySelector('[data-order-id="' + _drawerOrderId + '"]');
+              if (card) {
+                var h4 = card.querySelector('h4');
+                if (h4) h4.textContent = newTitle.trim();
+                card.dataset.title = newTitle.trim();
+              }
+            } else {
+              alert('저장 실패');
+            }
+          });
         }
 
         // ── 관리번호 인라인 편집 ──────────────────────────────

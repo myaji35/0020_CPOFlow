@@ -1,7 +1,7 @@
 class OrdersController < ApplicationController
   include AttachmentPreviewable
 
-  before_action :set_order, only: %i[show edit update destroy move_status quick_update preview_attachment attach detach]
+  before_action :set_order, only: %i[show edit update destroy move_status quick_update preview_attachment attach attach_from_url detach]
 
   def index
     @orders = Order.all.includes(:assignees, :tasks, :user, :client, :project, :supplier).by_due_date
@@ -182,6 +182,65 @@ class OrdersController < ApplicationController
       }
       format.html { redirect_back fallback_location: @order, notice: "#{file_list.size}개 파일이 첨부되었습니다." }
       format.json { render json: { success: true, count: file_list.size, message: "#{file_list.size}개 파일 첨부 완료" } }
+    end
+  end
+
+  # POST /orders/:id/attach_from_url — URL에서 파일 다운로드 후 첨부
+  def attach_from_url
+    url = params[:url].to_s.strip
+    if url.blank? || !url.match?(/\Ahttps?:\/\//i)
+      return respond_to do |format|
+        format.turbo_stream { head :unprocessable_entity }
+        format.json { render json: { error: "유효하지 않은 URL" }, status: :unprocessable_entity }
+      end
+    end
+
+    begin
+      uri = URI.parse(url)
+      response = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https", open_timeout: 15, read_timeout: 30) do |http|
+        http.get(uri.request_uri, { "User-Agent" => "CPOFlow/1.0" })
+      end
+
+      unless response.is_a?(Net::HTTPSuccess)
+        return respond_to do |format|
+          format.turbo_stream { head :unprocessable_entity }
+          format.json { render json: { error: "다운로드 실패 (HTTP #{response.code})" }, status: :unprocessable_entity }
+        end
+      end
+
+      # 파일명 결정: Content-Disposition > URL 경로 > fallback
+      filename = nil
+      if response["Content-Disposition"]
+        match = response["Content-Disposition"].match(/filename[*]?=(?:UTF-8''|"?)([^";]+)/i)
+        filename = match[1].strip if match
+      end
+      filename ||= File.basename(uri.path).presence
+      filename = "download_#{Time.current.to_i}" if filename.blank? || filename == "/"
+      filename = URI.decode_www_form_component(filename) rescue filename
+
+      content_type = response["Content-Type"]&.split(";")&.first || "application/octet-stream"
+
+      @order.attachments.attach(
+        io: StringIO.new(response.body),
+        filename: filename,
+        content_type: content_type
+      )
+      Activity.create!(order: @order, user: current_user, action: "attachment_added")
+
+      respond_to do |format|
+        format.turbo_stream {
+          render turbo_stream: turbo_stream.replace(
+            "drawer-panel-#{@order.id}-attachments",
+            partial: "orders/drawer_attachments", locals: { order: @order.reload, initial_render: false }
+          )
+        }
+        format.json { render json: { success: true, filename: filename } }
+      end
+    rescue => e
+      respond_to do |format|
+        format.turbo_stream { head :unprocessable_entity }
+        format.json { render json: { error: e.message }, status: :internal_server_error }
+      end
     end
   end
 
