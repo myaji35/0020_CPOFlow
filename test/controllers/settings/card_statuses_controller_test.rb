@@ -13,22 +13,23 @@ class Settings::CardStatusesControllerTest < ActionDispatch::IntegrationTest
     login_as(@user)
 
     CardStatus.delete_all
-    @urgent = CardStatus.create!(
+    @board = KanbanBoard.find_or_create_by!(is_default: true) { |b| b.name = "테스트보드"; b.board_type = "purchase"; b.position = 0 }
+    @urgent = CardStatus.create!(kanban_board: @board,
       key: "urgent", name: "긴급",
       bg_color: "#FFF1F2", border_color: "#FECDD3", text_color: "#991B1B",
       position: 1, is_system: true, is_default: false
     )
-    @normal = CardStatus.create!(
+    @normal = CardStatus.create!(kanban_board: @board,
       key: "normal", name: "보통",
       bg_color: "#FAFAFA", border_color: "#E5E7EB", text_color: "#374151",
       position: 3, is_system: true, is_default: true
     )
-    @vip = CardStatus.create!(
+    @vip = CardStatus.create!(kanban_board: @board,
       key: "vip", name: "VIP",
       bg_color: "#F5F3FF", border_color: "#DDD6FE", text_color: "#5B21B6",
       position: 4, is_system: false, is_default: false
     )
-    @hold = CardStatus.create!(
+    @hold = CardStatus.create!(kanban_board: @board,
       key: "hold", name: "보류",
       bg_color: "#F3F4F6", border_color: "#D1D5DB", text_color: "#4B5563",
       position: 5, is_system: false, is_default: false
@@ -44,7 +45,8 @@ class Settings::CardStatusesControllerTest < ActionDispatch::IntegrationTest
         }
       }
     end
-    assert_redirected_to settings_card_statuses_path
+    assert_response :redirect
+    assert response.location.start_with?("http://www.example.com/settings/card_statuses")
   end
 
   test "PATCH inline_rename updates name" do
@@ -77,14 +79,15 @@ class Settings::CardStatusesControllerTest < ActionDispatch::IntegrationTest
     assert_difference -> { CardStatus.count }, -1 do
       delete settings_card_status_path(@hold)
     end
-    assert_redirected_to settings_card_statuses_path
+    assert_response :redirect
+    assert response.location.start_with?("http://www.example.com/settings/card_statuses")
   end
 
   test "PATCH reorder accepts array" do
-    ids = CardStatus.ordered.pluck(:id).reverse
+    ids = CardStatus.order(:position).pluck(:id).reverse
     patch reorder_settings_card_statuses_path, params: { order: ids }
     assert_response :success
-    assert_equal ids, CardStatus.ordered.pluck(:id)
+    assert_equal ids, CardStatus.order(:position).pluck(:id)
   end
 
   private
