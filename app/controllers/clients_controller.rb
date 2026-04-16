@@ -19,6 +19,11 @@ class ClientsController < ApplicationController
 
     @total_value = all.sum(&:total_order_value)
 
+    # KPI 카드
+    @active_clients_count = all.count { |c| c.orders.exists? }
+    @order_linked_count   = all.count { |c| c.orders.count > 0 }
+    @recent_30d_count     = Client.active.where("created_at >= ?", 30.days.ago).count
+
     # 수동 페이지네이션
     @per_page    = 20
     @page        = (params[:page] || 1).to_i

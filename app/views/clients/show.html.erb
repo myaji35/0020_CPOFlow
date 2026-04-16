@@ -66,9 +66,19 @@
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
       <p class="text-xs text-gray-500 dark:text-gray-500">리스크 등급</p>
       <% if @risk_grade && @risk_grade != "N/A" %>
-        <p class="mt-1"><span class="inline-flex px-3 py-1 text-xl font-bold rounded-lg <%= risk_color[@risk_grade] || 'bg-gray-500 text-white' %>"><%= @risk_grade %></span></p>
+        <%
+          risk_desc = { "A" => "우수 (납기율 90%+, 연체 0건)",
+                        "B" => "양호 (납기율 75%+, 연체 1건 이하)",
+                        "C" => "주의 (납기율 60%+, 연체 3건 이하)",
+                        "D" => "위험 (납기율 60% 미만)" }
+        %>
+        <p class="mt-1">
+          <span class="inline-flex px-3 py-1 text-xl font-bold rounded-lg <%= risk_color[@risk_grade] || 'bg-gray-500 text-white' %>" title="<%= risk_desc[@risk_grade] %>"><%= @risk_grade %></span>
+        </p>
+        <p class="text-xs text-gray-500 dark:text-gray-500 mt-1"><%= risk_desc[@risk_grade] %></p>
       <% else %>
         <p class="text-2xl font-bold text-gray-300 dark:text-gray-600 mt-1">-</p>
+        <p class="text-xs text-gray-400 dark:text-gray-600 mt-1">납기 데이터 부족</p>
       <% end %>
     </div>
   </div>

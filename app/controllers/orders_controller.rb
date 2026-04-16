@@ -41,6 +41,12 @@ class OrdersController < ApplicationController
     @filter_employees = Rails.cache.fetch("filter/employees",  expires_in: 5.minutes) { Employee.active.by_name.to_a }
 
     @total_count = @orders.count
+
+    # KPI 카드용 집계
+    @kpi_in_progress = @orders.where.not(status: [:get_grn, :give_up, :done]).count
+    @kpi_completed   = @orders.where(status: [:get_grn, :done]).count
+    @kpi_overdue     = @orders.where("due_date < ? AND status NOT IN (?, ?, ?)", Date.today, Order.statuses[:get_grn], Order.statuses[:give_up], Order.statuses[:done]).count
+
     @orders = @orders.limit(50).offset((params[:page].to_i > 0 ? params[:page].to_i - 1 : 0) * 50)
     @current_page = [ params[:page].to_i, 1 ].max
     @total_pages = (@total_count / 50.0).ceil

@@ -13,6 +13,8 @@ class SuppliersController < ApplicationController
     @total_count        = all_suppliers.size
     @total_supply_value = all_suppliers.sum(&:total_supply_value)
     @active_count       = Supplier.active.count
+    @order_linked_count = all_suppliers.count { |s| s.orders.exists? }
+    @recent_30d_count   = Supplier.where("created_at >= ?", 30.days.ago).count
 
     # 수동 페이지네이션
     @per_page    = 20

@@ -83,16 +83,27 @@
         <div class="space-y-1.5 text-sm">
           <div class="flex justify-between text-gray-600 dark:text-gray-500">
             <span>마지막 성공</span>
-            <span class="font-medium text-gray-900 dark:text-white"><%= @products_last.completed_at&.strftime("%m/%d %H:%M") %></span>
+            <div class="text-right">
+              <span class="font-medium text-gray-900 dark:text-white"><%= @products_last.completed_at&.strftime("%m/%d %H:%M") %></span>
+              <% if @products_last.completed_at %>
+                <% hours_ago = ((Time.current - @products_last.completed_at) / 3600).round %>
+                <span class="ml-1 text-xs px-1.5 py-0.5 rounded-full <%= hours_ago > 24 ? 'bg-red-600 text-white' : hours_ago > 6 ? 'bg-yellow-500 text-white' : 'bg-green-600 text-white' %>">
+                  <%= hours_ago < 1 ? '방금' : hours_ago < 24 ? "#{hours_ago}시간 전" : "#{hours_ago / 24}일 전" %>
+                </span>
+              <% end %>
+            </div>
           </div>
           <div class="flex justify-between text-gray-600 dark:text-gray-500">
             <span>처리 / 성공</span>
             <span class="font-medium"><%= @products_last.total_count %> / <span class="text-green-600"><%= @products_last.success_count %></span></span>
           </div>
           <% if @products_last.error_count > 0 %>
-            <div class="flex justify-between text-gray-600 dark:text-gray-500">
+            <div class="flex justify-between items-center text-gray-600 dark:text-gray-500">
               <span>실패</span>
-              <span class="font-medium text-red-600"><%= @products_last.error_count %>건</span>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-600 text-white">
+                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <%= @products_last.error_count %>건 실패
+              </span>
             </div>
           <% end %>
         </div>
@@ -126,7 +137,15 @@
         <div class="space-y-1.5 text-sm">
           <div class="flex justify-between text-gray-600 dark:text-gray-500">
             <span>마지막 성공</span>
-            <span class="font-medium text-gray-900 dark:text-white"><%= @customers_last.completed_at&.strftime("%m/%d %H:%M") %></span>
+            <div class="text-right">
+              <span class="font-medium text-gray-900 dark:text-white"><%= @customers_last.completed_at&.strftime("%m/%d %H:%M") %></span>
+              <% if @customers_last.completed_at %>
+                <% c_hours_ago = ((Time.current - @customers_last.completed_at) / 3600).round %>
+                <span class="ml-1 text-xs px-1.5 py-0.5 rounded-full <%= c_hours_ago > 24 ? 'bg-red-600 text-white' : c_hours_ago > 6 ? 'bg-yellow-500 text-white' : 'bg-green-600 text-white' %>">
+                  <%= c_hours_ago < 1 ? '방금' : c_hours_ago < 24 ? "#{c_hours_ago}시간 전" : "#{c_hours_ago / 24}일 전" %>
+                </span>
+              <% end %>
+            </div>
           </div>
           <div class="flex justify-between text-gray-600 dark:text-gray-500">
             <span>처리 / 성공</span>

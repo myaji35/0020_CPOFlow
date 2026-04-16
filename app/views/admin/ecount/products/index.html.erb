@@ -89,11 +89,14 @@
         </div>
       <% end %>
     <% else %>
-      <div class="text-center py-16 text-sm text-gray-500">
+      <div class="flex flex-col items-center justify-center py-16 text-center">
+        <svg class="w-10 h-10 text-gray-300 dark:text-gray-600 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <% if @q.present? %>
-          "<%= @q %>" 검색 결과 없음
+          <p class="text-sm font-medium text-gray-700 dark:text-gray-300">"<%= @q %>" 검색 결과가 없습니다</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">다른 키워드로 검색하거나 <%= link_to "전체 목록", admin_ecount_products_path, class: "text-blue-600 hover:underline" %>을 확인하세요.</p>
         <% else %>
-          품목이 없습니다. <%= link_to "동기화 실행", admin_ecount_sync_index_path, class: "text-blue-600 hover:underline" %>
+          <p class="text-sm font-medium text-gray-700 dark:text-gray-300">품목이 없습니다</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1"><%= link_to "동기화 실행", admin_ecount_sync_index_path, class: "text-blue-600 hover:underline" %>으로 eCount에서 데이터를 가져오세요.</p>
         <% end %>
       </div>
     <% end %>

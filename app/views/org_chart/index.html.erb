@@ -240,9 +240,9 @@
                             </div>
                           </div>
                           <div class="flex items-center gap-3">
-                            <span class="inline-flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">
+                            <span class="inline-flex items-center gap-1 text-xs <%= dept_employees.empty? ? 'text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-700/50' : 'text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700' %> px-2 py-0.5 rounded-full">
                               <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                              <%= dept_employees.count %>명
+                              <%= dept_employees.empty? ? '직원 없음' : "#{dept_employees.count}명" %>
                             </span>
                             <% if current_user.manager? || current_user.admin? %>
                               <%= link_to edit_org_chart_company_department_path(company, dept),

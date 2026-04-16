@@ -1,6 +1,31 @@
 <% content_for :title, @employee.name %>
 
+<%# 만료 30일 이내 항목 경고 배지 %>
+<%
+  _visa = @employee.active_visa
+  _contract = @employee.current_contract
+  _visa_days = _visa ? _visa.days_until_expiry : nil
+  _contract_days = _contract&.end_date ? (_contract.end_date - Date.today).to_i : nil
+  _alerts = []
+  _alerts << { label: "비자 만료 D-#{_visa_days}", urgent: _visa_days <= 14 } if _visa_days && _visa_days <= 30
+  _alerts << { label: "계약 만료 D-#{_contract_days}", urgent: _contract_days <= 14 } if _contract_days && _contract_days <= 30
+%>
+
 <div class="flex flex-col gap-6">
+  <% if _alerts.any? %>
+    <div class="flex items-center gap-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-4 py-3">
+      <svg class="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <div class="flex items-center gap-2 flex-wrap">
+        <% _alerts.each do |a| %>
+          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold <%= a[:urgent] ? 'bg-red-600 text-white' : 'bg-orange-500 text-white' %>">
+            <%= a[:label] %>
+          </span>
+        <% end %>
+        <span class="text-sm text-red-700 dark:text-red-300 font-medium ml-1">갱신 절차를 확인하세요</span>
+      </div>
+    </div>
+  <% end %>
+
   <!-- Header -->
   <div class="flex items-start justify-between">
     <div class="flex items-center gap-4">

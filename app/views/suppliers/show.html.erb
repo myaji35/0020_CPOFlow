@@ -19,6 +19,17 @@
         <% if @supplier.credit_grade.present? %><span class="text-xs font-bold"><%= @supplier.credit_grade %>등급</span><% end %>
         <% if @supplier.payment_terms.present? %><span><%= @supplier.payment_terms %></span><% end %>
         <% if @supplier.lead_time_days.present? %><span>리드타임 <%= @supplier.lead_time_days %>일</span><% end %>
+        <% if @supplier.ecount_synced_at.present? %>
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-green-600 text-white" title="<%= @supplier.ecount_synced_at.strftime('%Y-%m-%d %H:%M') %>">
+            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            eCount 동기화됨
+          </span>
+        <% elsif @supplier.ecount_code.present? %>
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-yellow-500 text-white">
+            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            eCount 미동기화
+          </span>
+        <% end %>
       </div>
     </div>
     <div class="flex gap-2">
