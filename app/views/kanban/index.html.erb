@@ -6,7 +6,14 @@
 
 <div class="flex items-center justify-between mb-5">
   <div class="flex items-center gap-2">
-    <h2 class="text-lg font-semibold text-gray-900 dark:text-white"><%= t("kanban.title", default: "Procurement Board") %></h2>
+    <select onchange="window.location.href='/kanban?board_id=' + this.value"
+            class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-semibold text-gray-900 dark:text-white focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]">
+      <% @boards.each do |board| %>
+        <option value="<%= board.id %>" <%= "selected" if board.id == @current_board.id %>>
+          <%= board.name %>
+        </option>
+      <% end %>
+    </select>
     <span class="text-sm text-gray-500 dark:text-gray-500">— AtoZ2010 Inc.</span>
   </div>
   <%= link_to new_order_path, class: "flex items-center gap-2 bg-accent text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-500 transition-colors" do %>
@@ -30,7 +37,7 @@
   <div class="flex rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden text-xs">
     <button class="filter-priority-btn px-2.5 py-1.5 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-r border-gray-200 dark:border-gray-600 last:border-0"
             data-value="">전체</button>
-    <% CardStatus.ordered.each do |cs| %>
+    <% @card_statuses.each do |cs| %>
       <button class="filter-priority-btn px-2.5 py-1.5 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors border-r border-gray-200 dark:border-gray-600 last:border-0"
               data-value="<%= cs.key %>">
         <span class="inline-block w-2 h-2 rounded-full mr-1 align-middle" style="background-color: <%= cs.text_color %>"></span>

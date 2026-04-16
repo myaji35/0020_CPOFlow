@@ -9,6 +9,15 @@ class KanbanController < ApplicationController
     @prefetch_mode = params[:frame] == "prefetch"  # column lazy frame 요청 여부
     @prefetch_status = params[:status]             # 어느 컬럼을 prefetch?
 
+    # 보드 로딩
+    @boards = KanbanBoard.ordered
+    @current_board = if params[:board_id].present?
+      KanbanBoard.find_by(id: params[:board_id])
+    else
+      KanbanBoard.default_board.first
+    end
+    @current_board ||= KanbanBoard.ensure_default!
+
     # prefetch 모드: 단일 컬럼의 추가 데이터만 반환
     if @prefetch_mode && @prefetch_status.present?
       load_single_column_more
@@ -18,7 +27,8 @@ class KanbanController < ApplicationController
     # 정상 로드: 모든 컬럼 첫 INITIAL_LIMIT건만
     @column_totals = {}
     @columns = Order::KANBAN_COLUMNS.map do |status|
-      base = scoped_orders.root_orders
+      base = board_scoped_orders
+                    .root_orders
                     .by_due_date
                     .includes(:assignees, :tasks, :user, :sub_orders)
       relation = if status == "new_rfq"
@@ -31,13 +41,15 @@ class KanbanController < ApplicationController
       [ status, relation.limit(INITIAL_LIMIT).to_a ]
     end.to_h
     @filter_employees = Employee.active.by_name
+    @card_statuses = @current_board.card_statuses.order(:position)
 
     # Inbox 전용 그룹핑 (reference_no 기준)
     inbox_orders = @columns["inbox"] || []
     @inbox_grouped = build_inbox_groups(inbox_orders)
 
     # 중복 스레드 ID 목록 (병합대상 버튼용)
-    @duplicate_thread_ids = scoped_orders.where(parent_order_id: nil)
+    @duplicate_thread_ids = board_scoped_orders
+                                 .where(parent_order_id: nil)
                                  .where.not(gmail_thread_id: [ nil, "" ])
                                  .group(:gmail_thread_id)
                                  .having("COUNT(*) > 1")
@@ -61,7 +73,8 @@ class KanbanController < ApplicationController
     status = @prefetch_status
     return render(html: "", layout: false) unless Order::KANBAN_COLUMNS.include?(status)
 
-    base = scoped_orders.root_orders
+    base = board_scoped_orders
+                  .root_orders
                   .by_due_date
                   .includes(:assignees, :tasks, :user, :sub_orders)
     relation = if status == "new_rfq"
@@ -113,6 +126,15 @@ class KanbanController < ApplicationController
   end
 
   private
+
+  # 현재 보드에 속한 주문만 필터. 기본 보드이면 kanban_board_id=nil도 포함.
+  def board_scoped_orders
+    if @current_board.is_default?
+      scoped_orders.where(kanban_board_id: [ @current_board.id, nil ])
+    else
+      board_scoped_orders
+    end
+  end
 
   # Inbox 컬럼 전용: reference_no 기준 그룹핑
   # reference_no 있는 그룹 → 대표 카드 1개 + thread_count
