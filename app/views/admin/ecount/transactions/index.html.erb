@@ -1,72 +1,168 @@
 <div class="max-w-7xl mx-auto px-4 py-6">
 
+  <%# ── 헤더 ── %>
   <div class="flex items-center justify-between mb-6">
     <div>
-      <h1 class="text-xl font-bold text-gray-900">📋 eCount 거래내역</h1>
-      <p class="text-sm text-gray-500 mt-0.5">판매/구매 전표 (현재는 RFQ/PO 참조번호 기반 임시 표시)</p>
+      <h1 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+        <svg class="w-5 h-5 text-[#00A1E0]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        eCount 거래내역
+      </h1>
+      <p class="text-sm text-gray-500 mt-0.5">구매보드 Order 기반 실질 거래 현황</p>
     </div>
-    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-100 text-amber-800 text-sm font-medium">⏳ Phase 2 계획</span>
   </div>
 
-  <div class="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-900">
-    <p class="font-semibold mb-1">eCount 전표 직접 동기화 미활성</p>
-    <p class="text-xs"><%= @sync_pending_reason %></p>
+  <%# ── KPI 카드 ── %>
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-xl border border-gray-200 p-4">
+      <p class="text-xs font-semibold text-gray-500 mb-1">총 건수</p>
+      <p class="text-2xl font-bold text-[#1E3A5F]"><%= number_with_delimiter(@total) %></p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-4">
+      <p class="text-xs font-semibold text-gray-500 mb-1">총 금액</p>
+      <p class="text-2xl font-bold text-[#1E3A5F]"><%= tx_fmt_amount(@total_amount) %></p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-4">
+      <p class="text-xs font-semibold text-gray-500 mb-1">진행 중</p>
+      <p class="text-2xl font-bold text-[#00A1E0]"><%= number_with_delimiter(@in_progress) %></p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-4">
+      <p class="text-xs font-semibold text-gray-500 mb-1">완료</p>
+      <p class="text-2xl font-bold text-[#1E8E3E]"><%= number_with_delimiter(@completed) %></p>
+    </div>
   </div>
 
-  <div class="bg-white rounded-xl border overflow-hidden">
-    <div class="px-5 py-3 border-b">
-      <%= form_with url: admin_ecount_transactions_path, method: :get, local: true, class: "flex gap-2" do %>
-        <input type="text" name="q" value="<%= @q %>" placeholder="참조번호 / 제목 검색" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+  <%# ── 필터 바 ── %>
+  <div class="bg-white rounded-xl border border-gray-200 mb-6">
+    <div class="px-5 py-3">
+      <%= form_with url: admin_ecount_transactions_path, method: :get, local: true, class: "flex flex-wrap gap-3 items-end" do %>
+        <div class="flex-1 min-w-[200px]">
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5">검색</label>
+          <input type="text" name="q" value="<%= @q %>" placeholder="참조번호 / 제목"
+                 class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]" />
+        </div>
+
+        <div class="w-36">
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5">기간</label>
+          <select name="period" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]">
+            <option value="all" <%= "selected" if params[:period].blank? || params[:period] == "all" %>>전체</option>
+            <option value="month" <%= "selected" if params[:period] == "month" %>>이번 달</option>
+            <option value="3months" <%= "selected" if params[:period] == "3months" %>>최근 3개월</option>
+          </select>
+        </div>
+
+        <div class="w-36">
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5">상태</label>
+          <select name="status" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]">
+            <option value="">전체</option>
+            <% Order.statuses.each_key do |s| %>
+              <option value="<%= s %>" <%= "selected" if params[:status] == s %>><%= tx_status_label(s) %></option>
+            <% end %>
+          </select>
+        </div>
+
+        <div class="w-44">
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5">발주처</label>
+          <select name="client_id" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]">
+            <option value="">전체</option>
+            <% @clients.each do |c| %>
+              <option value="<%= c.id %>" <%= "selected" if params[:client_id].to_s == c.id.to_s %>><%= c.name.truncate(25) %></option>
+            <% end %>
+          </select>
+        </div>
+
+        <div class="w-44">
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5">거래처</label>
+          <select name="supplier_id" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]">
+            <option value="">전체</option>
+            <% @suppliers.each do |s| %>
+              <option value="<%= s.id %>" <%= "selected" if params[:supplier_id].to_s == s.id.to_s %>><%= s.name.truncate(25) %></option>
+            <% end %>
+          </select>
+        </div>
+
+        <button type="submit" class="px-4 py-2.5 bg-[#1E3A5F] text-white text-sm font-medium rounded-lg hover:bg-[#16325C] transition">
+          검색
+        </button>
+
+        <% if params[:status].present? || params[:client_id].present? || params[:supplier_id].present? || params[:period].present? || @q.present? %>
+          <%= link_to "초기화", admin_ecount_transactions_path, class: "px-4 py-2.5 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition" %>
+        <% end %>
       <% end %>
     </div>
+  </div>
 
+  <%# ── 테이블 ── %>
+  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
     <% if @transactions.any? %>
-      <table class="w-full text-sm">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-600">참조번호</th>
-            <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-600">제목</th>
-            <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-600">발주처</th>
-            <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-600">거래처</th>
-            <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-600">상태</th>
-            <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-600">생성일</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-100">
-          <% @transactions.each do |o| %>
-            <tr class="hover:bg-gray-50 cursor-pointer" onclick="window.location='<%= order_path(o) %>'">
-              <td class="px-4 py-2 font-mono text-xs text-[#00A1E0]"><%= o.reference_no %></td>
-              <td class="px-4 py-2"><%= o.original_email_subject.to_s.truncate(60) %></td>
-              <td class="px-4 py-2 text-gray-600"><%= o.client&.name %></td>
-              <td class="px-4 py-2 text-gray-600"><%= o.supplier&.name %></td>
-              <td class="px-4 py-2">
-                <% if o.card_status %>
-                  <span class="inline-block px-2 py-0.5 rounded text-xs" style="background:<%= o.card_status.bg_color %>; color:<%= o.card_status.text_color %>; border:1px solid <%= o.card_status.border_color %>;">
-                    <%= o.card_status.name %>
-                  </span>
-                <% end %>
-              </td>
-              <td class="px-4 py-2 text-gray-500 text-xs"><%= o.created_at.strftime("%m/%d %H:%M") %></td>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-600"><%= tx_sort_link("참조번호", "reference_no") %></th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-600">제목</th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-600">발주처</th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-600">거래처</th>
+              <th class="px-4 py-2.5 text-right text-xs font-semibold text-gray-600"><%= tx_sort_link("금액", "estimated_value") %></th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-600"><%= tx_sort_link("상태", "status") %></th>
+              <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-600"><%= tx_sort_link("생성일", "created_at") %></th>
             </tr>
-          <% end %>
-        </tbody>
-      </table>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <% @transactions.each do |o| %>
+              <tr class="hover:bg-gray-50 cursor-pointer transition-colors" onclick="window.location='<%= order_path(o) %>'">
+                <td class="px-4 py-2.5 font-mono text-xs text-[#00A1E0] font-medium"><%= o.reference_no %></td>
+                <td class="px-4 py-2.5 text-gray-900"><%= o.original_email_subject.to_s.truncate(55) %></td>
+                <td class="px-4 py-2.5 text-gray-600"><%= o.client&.name&.truncate(20) || "-" %></td>
+                <td class="px-4 py-2.5 text-gray-600"><%= o.supplier&.name&.truncate(20) || "-" %></td>
+                <td class="px-4 py-2.5 text-right font-mono text-gray-900"><%= tx_fmt_amount(o.estimated_value) %></td>
+                <td class="px-4 py-2.5">
+                  <% if o.card_status %>
+                    <span class="inline-block px-2 py-0.5 rounded text-xs font-medium"
+                          style="background:<%= o.card_status.bg_color %>; color:<%= o.card_status.text_color %>; border:1px solid <%= o.card_status.border_color %>;">
+                      <%= o.card_status.name %>
+                    </span>
+                  <% else %>
+                    <% sc = tx_status_color(o.status) %>
+                    <span class="inline-block px-2 py-0.5 rounded text-xs font-medium"
+                          style="background:<%= sc[:bg] %>; color:<%= sc[:text] %>; border:1px solid <%= sc[:border] %>;">
+                      <%= tx_status_label(o.status) %>
+                    </span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-2.5 text-gray-500 text-xs"><%= o.created_at.strftime("%Y-%m-%d %H:%M") %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
 
       <% if @total_pages > 1 %>
-        <div class="px-5 py-3 border-t flex items-center justify-between">
-          <span class="text-xs text-gray-500">페이지 <%= @page %> / <%= @total_pages %></span>
+        <div class="px-5 py-3 border-t border-gray-200 flex items-center justify-between bg-gray-50">
+          <span class="text-xs text-gray-500">
+            총 <strong><%= number_with_delimiter(@total) %></strong>건 &middot;
+            페이지 <%= @page %> / <%= @total_pages %>
+          </span>
           <div class="flex gap-1">
             <% if @page > 1 %>
-              <%= link_to "‹ 이전", admin_ecount_transactions_path(q: @q, page: @page - 1), class: "px-3 py-1.5 text-sm border rounded hover:bg-gray-50" %>
+              <%= link_to "‹ 이전", admin_ecount_transactions_path(tx_filter_params(page: @page - 1)),
+                    class: "px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-white transition" %>
             <% end %>
             <% if @page < @total_pages %>
-              <%= link_to "다음 ›", admin_ecount_transactions_path(q: @q, page: @page + 1), class: "px-3 py-1.5 text-sm border rounded hover:bg-gray-50" %>
+              <%= link_to "다음 ›", admin_ecount_transactions_path(tx_filter_params(page: @page + 1)),
+                    class: "px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-white transition" %>
             <% end %>
           </div>
         </div>
       <% end %>
+
     <% else %>
-      <p class="text-center py-16 text-sm text-gray-500">거래내역 없음</p>
+      <div class="text-center py-16">
+        <svg class="w-12 h-12 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        <p class="text-sm text-gray-500">조건에 맞는 거래내역이 없습니다</p>
+        <% if @q.present? || params[:status].present? || params[:client_id].present? || params[:supplier_id].present? %>
+          <%= link_to "필터 초기화", admin_ecount_transactions_path, class: "inline-block mt-3 text-sm text-[#00A1E0] hover:underline" %>
+        <% end %>
+      </div>
     <% end %>
   </div>
 </div>
