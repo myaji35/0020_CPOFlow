@@ -46,11 +46,16 @@
         <div class="flex items-center gap-2 flex-shrink-0">
           <%= status_badge(@order) %>
           <% if @order.status.to_s == "new_rfq" %>
-            <%= button_to convert_email_to_order_path(@order),
-                data: { turbo_confirm: "칸반 보드로 이동하시겠습니까?" },
-                class: "flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors" do %>
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-              칸반으로 이동
+            <%= form_with url: convert_email_to_order_path(@order), method: :post, class: "flex items-center gap-1.5", data: { turbo_confirm: "칸반 보드로 이동하시겠습니까?" } do %>
+              <select name="board_id" class="px-2 py-1.5 border border-gray-300 rounded-lg text-xs bg-white focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]">
+                <% KanbanBoard.ordered.each do |board| %>
+                  <option value="<%= board.id %>" <%= "selected" if board.is_default? %>><%= board.name %></option>
+                <% end %>
+              </select>
+              <button type="submit" class="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                칸반으로 이동
+              </button>
             <% end %>
           <% else %>
             <%= link_to order_path(@order), class: "flex items-center gap-1.5 px-4 py-2 bg-accent hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors" do %>
@@ -463,11 +468,16 @@
     <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">빠른 액션</h3>
     <div class="flex flex-wrap gap-3">
       <% if @order.status.to_s == "new_rfq" %>
-        <%= button_to convert_email_to_order_path(@order),
-            data: { turbo_confirm: "칸반 보드로 이동하시겠습니까?" },
-            class: "flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors" do %>
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-          칸반으로 이동
+        <%= form_with url: convert_email_to_order_path(@order), method: :post, class: "flex items-center gap-2", data: { turbo_confirm: "칸반 보드로 이동하시겠습니까?" } do %>
+          <select name="board_id" class="px-2 py-1.5 border border-gray-300 rounded-lg text-xs bg-white focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]">
+            <% KanbanBoard.ordered.each do |board| %>
+              <option value="<%= board.id %>" <%= "selected" if board.is_default? %>><%= board.name %></option>
+            <% end %>
+          </select>
+          <button type="submit" class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            칸반으로 이동
+          </button>
         <% end %>
       <% end %>
       <%= link_to order_path(@order), class: "flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium rounded-lg transition-colors" do %>

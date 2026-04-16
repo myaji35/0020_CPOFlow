@@ -141,7 +141,12 @@ class InboxController < ApplicationController
     end
 
     # ISS-055: 칸반 진입은 항상 new_rfq 칼럼 (status :new_rfq 유지 + rfq_status :rfq_triage)
-    if @order.update(status: :new_rfq, rfq_status: :rfq_triage)
+    board = if params[:board_id].present?
+      KanbanBoard.find_by(id: params[:board_id])
+    else
+      KanbanBoard.default_board.first || KanbanBoard.ensure_default!
+    end
+    if @order.update(status: :new_rfq, rfq_status: :rfq_triage, kanban_board_id: board.id)
       Activity.create!(order: @order, user: current_user, action: "moved_to_kanban")
       record_bulk_feedback([ @order ], "confirmed")
       redirect_to kanban_path, notice: t("inbox.convert_success")
@@ -198,9 +203,14 @@ class InboxController < ApplicationController
     blocked_count = Array(params[:order_ids]).size - orders.count
     count = orders.count
     record_bulk_feedback(orders, "confirmed")
+    board = if params[:board_id].present?
+      KanbanBoard.find_by(id: params[:board_id])
+    else
+      KanbanBoard.default_board.first || KanbanBoard.ensure_default!
+    end
     orders.each do |order|
       # ISS-055: 칸반 진입은 항상 new_rfq 칼럼
-      order.update!(status: :new_rfq, rfq_status: :rfq_triage)
+      order.update!(status: :new_rfq, rfq_status: :rfq_triage, kanban_board_id: board.id)
       Activity.create!(order: order, user: current_user, action: "moved_to_kanban")
     end
     message = "#{count}건 견적으로 이동"
