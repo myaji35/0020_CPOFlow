@@ -1,7 +1,7 @@
 <div id="card-status-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
      data-controller="card-status-preview">
 
-  <%= form_with url: settings_card_statuses_path, method: :post,
+  <%= form_with url: settings_card_statuses_path, method: :post, scope: :card_status,
                 id: "card-status-form",
                 class: "bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg p-6" do |f| %>
     <input type="hidden" name="editing_id" id="cs-editing-id" value="" />
