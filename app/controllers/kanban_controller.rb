@@ -44,19 +44,28 @@ class KanbanController < ApplicationController
 
     # 정상 로드: 모든 컬럼 첫 INITIAL_LIMIT건만
     @column_totals = {}
-    @columns = @kanban_column_keys.map do |status|
+    @columns = @kanban_column_keys.map do |col_key|
       base = board_scoped_orders
                     .root_orders
                     .by_due_date
                     .includes(:assignees, :tasks, :user, :sub_orders)
-      relation = if status == "new_rfq"
-        base.where(status: :new_rfq, rfq_status: Order::KANBAN_VISIBLE_RFQ_STATUSES)
+
+      relation = if @current_board.is_default? || @current_board.board_type == "purchase"
+        # 구매보드: 기존 status 기반
+        if col_key == "new_rfq"
+          base.where(status: :new_rfq, rfq_status: Order::KANBAN_VISIBLE_RFQ_STATUSES)
+        else
+          base.where(status: col_key)
+        end
       else
-        base.where(status: status)
+        # 커스텀 보드: kanban_column.key 기반
+        column = @current_board.kanban_columns.find_by(key: col_key)
+        column ? base.where(kanban_column_id: column.id) : base.none
       end
+
       total = relation.count
-      @column_totals[status] = total
-      [ status, relation.limit(INITIAL_LIMIT).to_a ]
+      @column_totals[col_key] = total
+      [ col_key, relation.limit(INITIAL_LIMIT).to_a ]
     end.to_h
     @filter_employees = Employee.active.by_name
     @card_statuses = @current_board.card_statuses.order(:position)
@@ -89,16 +98,27 @@ class KanbanController < ApplicationController
   # turbo-frame lazy 응답 — 특정 컬럼의 INITIAL_LIMIT 이후 카드들
   def load_single_column_more
     status = @prefetch_status
-    return render(html: "", layout: false) unless Order::KANBAN_COLUMNS.include?(status)
+    valid_key = if @current_board.is_default? || @current_board.board_type == "purchase"
+      Order::KANBAN_COLUMNS.include?(status)
+    else
+      @current_board.kanban_columns.exists?(key: status)
+    end
+    return render(html: "", layout: false) unless valid_key
 
     base = board_scoped_orders
                   .root_orders
                   .by_due_date
                   .includes(:assignees, :tasks, :user, :sub_orders)
-    relation = if status == "new_rfq"
-      base.where(status: :new_rfq, rfq_status: Order::KANBAN_VISIBLE_RFQ_STATUSES)
+
+    relation = if @current_board.is_default? || @current_board.board_type == "purchase"
+      if status == "new_rfq"
+        base.where(status: :new_rfq, rfq_status: Order::KANBAN_VISIBLE_RFQ_STATUSES)
+      else
+        base.where(status: status)
+      end
     else
-      base.where(status: status)
+      column = @current_board.kanban_columns.find_by(key: status)
+      column ? base.where(kanban_column_id: column.id) : base.none
     end
 
     @more_orders = relation.offset(INITIAL_LIMIT).limit(PREFETCH_LIMIT - INITIAL_LIMIT).to_a
@@ -110,19 +130,32 @@ class KanbanController < ApplicationController
 
   def move
     @order = Order.find(params[:id])
-    old_status = @order.status
+    board = @order.kanban_board
 
-    if @order.update(status: params[:status])
-      Activity.create!(
-        order: @order,
-        user: current_user,
-        action: "status_changed",
-        from_status: Order.statuses[old_status],
-        to_status: Order.statuses[@order.status]
-      )
-      render json: { success: true, new_status: @order.status }
+    if board.nil? || board.is_default? || board.board_type == "purchase"
+      # 구매보드(기본): 기존 status enum 이동
+      old_status = @order.status
+      if @order.update(status: params[:status])
+        Activity.create!(
+          order: @order,
+          user: current_user,
+          action: "status_changed",
+          from_status: Order.statuses[old_status],
+          to_status: Order.statuses[@order.status]
+        )
+        render json: { success: true, new_status: @order.status }
+      else
+        render json: { success: false, errors: @order.errors.full_messages }, status: :unprocessable_entity
+      end
     else
-      render json: { success: false, errors: @order.errors.full_messages }, status: :unprocessable_entity
+      # 커스텀 보드: kanban_column_id 이동
+      column = KanbanColumn.find_by(kanban_board_id: board.id, key: params[:status])
+      if column && @order.update(kanban_column_id: column.id)
+        Activity.create!(order: @order, user: current_user, action: "column_moved")
+        render json: { success: true, new_status: column.key }
+      else
+        render json: { success: false, errors: @order.errors.full_messages }, status: :unprocessable_entity
+      end
     end
   end
 
