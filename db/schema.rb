@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_15_040850) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_16_043033) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -122,12 +122,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_15_040850) do
     t.datetime "created_at", null: false
     t.boolean "is_default", default: false, null: false
     t.boolean "is_system", default: false, null: false
+    t.integer "kanban_board_id"
     t.string "key", null: false
     t.string "name", null: false
     t.integer "position", default: 0, null: false
     t.string "text_color", limit: 7, null: false
     t.datetime "updated_at", null: false
     t.index ["is_default"], name: "index_card_statuses_on_single_default", unique: true, where: "is_default = 1"
+    t.index ["kanban_board_id"], name: "index_card_statuses_on_kanban_board_id"
     t.index ["key"], name: "index_card_statuses_on_key", unique: true
     t.index ["position"], name: "index_card_statuses_on_position"
   end
@@ -388,6 +390,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_15_040850) do
     t.index ["name"], name: "index_job_titles_on_name", unique: true
   end
 
+  create_table "kanban_boards", force: :cascade do |t|
+    t.string "board_type", default: "custom"
+    t.string "color_palette", default: "corporate"
+    t.datetime "created_at", null: false
+    t.string "description"
+    t.boolean "is_default", default: false
+    t.string "name", null: false
+    t.integer "owner_id"
+    t.integer "position", default: 0
+    t.datetime "updated_at", null: false
+    t.index ["owner_id"], name: "index_kanban_boards_on_owner_id"
+    t.index ["position"], name: "index_kanban_boards_on_position"
+  end
+
   create_table "menu_permissions", force: :cascade do |t|
     t.boolean "can_create", default: false, null: false
     t.boolean "can_delete", default: false, null: false
@@ -472,6 +488,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_15_040850) do
     t.text "extracted_quantities"
     t.string "gmail_thread_id"
     t.string "item_name"
+    t.integer "kanban_board_id"
     t.text "llm_analysis"
     t.datetime "llm_analyzed_at"
     t.text "original_email_body"
@@ -520,6 +537,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_15_040850) do
     t.index ["ecount_slip_no"], name: "index_orders_on_ecount_slip_no"
     t.index ["email_received_at"], name: "index_orders_on_email_received_at"
     t.index ["gmail_thread_id"], name: "index_orders_on_gmail_thread_id"
+    t.index ["kanban_board_id"], name: "index_orders_on_kanban_board_id"
     t.index ["parent_order_id"], name: "index_orders_on_parent_order_id"
     t.index ["project_id"], name: "index_orders_on_project_id"
     t.index ["reference_no"], name: "index_orders_on_reference_no"
@@ -706,6 +724,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_15_040850) do
   add_foreign_key "agent_trust_levels", "users"
   add_foreign_key "assignments", "orders"
   add_foreign_key "assignments", "users"
+  add_foreign_key "card_statuses", "kanban_boards"
   add_foreign_key "certifications", "employees"
   add_foreign_key "classification_logs", "orders"
   add_foreign_key "comments", "orders"
@@ -720,9 +739,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_15_040850) do
   add_foreign_key "employment_contracts", "employees"
   add_foreign_key "employment_contracts", "projects"
   add_foreign_key "import_logs", "users"
+  add_foreign_key "kanban_boards", "users", column: "owner_id"
   add_foreign_key "order_links", "users", column: "created_by_id"
   add_foreign_key "orders", "card_statuses"
   add_foreign_key "orders", "clients"
+  add_foreign_key "orders", "kanban_boards"
   add_foreign_key "orders", "projects"
   add_foreign_key "orders", "suppliers"
   add_foreign_key "orders", "users"

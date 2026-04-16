@@ -3,6 +3,7 @@
 class CardStatus < ApplicationRecord
   HEX_COLOR = /\A#[0-9A-Fa-f]{6}\z/.freeze
 
+  belongs_to :kanban_board, optional: true
   has_many :orders, dependent: :restrict_with_error
 
   validates :key,          presence: true, uniqueness: true, format: { with: /\A[a-z0-9_]+\z/ }

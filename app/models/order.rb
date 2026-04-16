@@ -39,6 +39,7 @@ class Order < ApplicationRecord
   }, default: :rfq_pending, prefix: :rfq
 
   belongs_to :card_status, optional: true
+  belongs_to :kanban_board, optional: true
 
   # 기본값 보장: 새 Order는 default(normal)로 시작
   before_validation :ensure_card_status, on: :create
