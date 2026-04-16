@@ -3,6 +3,7 @@
 class KanbanBoard < ApplicationRecord
   belongs_to :owner, class_name: "User", optional: true
   has_many :card_statuses, -> { order(:position) }, dependent: :nullify
+  has_many :kanban_columns, -> { order(:position) }, dependent: :destroy
   has_many :orders, dependent: :nullify
 
   validates :name, presence: true, length: { maximum: 50 }

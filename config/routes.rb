@@ -239,5 +239,8 @@ Rails.application.routes.draw do
       end
       member { patch :inline_rename }
     end
+    resources :kanban_columns, except: %i[show new edit] do
+      collection { patch :reorder }
+    end
   end
 end

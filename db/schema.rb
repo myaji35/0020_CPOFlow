@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_16_043033) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_16_052020) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -404,6 +404,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_16_043033) do
     t.index ["position"], name: "index_kanban_boards_on_position"
   end
 
+  create_table "kanban_columns", force: :cascade do |t|
+    t.string "color", default: "#E5E7EB"
+    t.datetime "created_at", null: false
+    t.boolean "is_final", default: false
+    t.integer "kanban_board_id", null: false
+    t.string "key", null: false
+    t.string "name", null: false
+    t.integer "position", default: 0
+    t.datetime "updated_at", null: false
+    t.integer "wip_limit"
+    t.index ["kanban_board_id", "key"], name: "index_kanban_columns_on_kanban_board_id_and_key", unique: true
+    t.index ["kanban_board_id", "position"], name: "index_kanban_columns_on_kanban_board_id_and_position"
+    t.index ["kanban_board_id"], name: "index_kanban_columns_on_kanban_board_id"
+  end
+
   create_table "menu_permissions", force: :cascade do |t|
     t.boolean "can_create", default: false, null: false
     t.boolean "can_delete", default: false, null: false
@@ -740,6 +755,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_16_043033) do
   add_foreign_key "employment_contracts", "projects"
   add_foreign_key "import_logs", "users"
   add_foreign_key "kanban_boards", "users", column: "owner_id"
+  add_foreign_key "kanban_columns", "kanban_boards"
   add_foreign_key "order_links", "users", column: "created_by_id"
   add_foreign_key "orders", "card_statuses"
   add_foreign_key "orders", "clients"
