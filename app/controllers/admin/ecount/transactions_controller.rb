@@ -13,7 +13,7 @@ module Admin
         @q = params[:q].to_s.strip
         # Order에 ecount_slip_no 같은 컬럼이 아직 없음 → reference_no 기반 임시 표시
         # Phase 2 구현 후 실제 ecount 거래내역만 필터링
-        scope = Order.where.not(reference_no: [ nil, "" ])
+        scope = Order.not_archived.where.not(reference_no: [ nil, "" ])
         if @q.present?
           like = "%#{@q}%"
           scope = scope.where("reference_no LIKE ? OR original_email_subject LIKE ?", like, like)

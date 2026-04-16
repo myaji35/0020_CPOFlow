@@ -28,6 +28,46 @@ module Gmail
     # Ariba /ad/ 하위 경로 전용 정밀 패턴 (인증 링크 제외)
     ARIBA_AD_PATTERN = %r{https?://(?:[a-z0-9\-]+\.)*ariba\.com/ad/(?!pswdRe|Authenticator)[^\s"'<>]*}i
 
+    # 노이즈 링크 필터 — 뉴스레터/SNS/추적/CDN/이미지 URL 제외
+    NOISE_LINK_PATTERNS = [
+      # 뉴스레터 플랫폼
+      /beehiiv\.com/i,
+      /mailchimp\.com/i,
+      /sendgrid\.net/i,
+      /constantcontact\.com/i,
+      /campaign-archive\.com/i,
+      # SNS
+      /instagram\.com/i,
+      /facebook\.com/i,
+      /twitter\.com/i,
+      %r{(?<!\.)x\.com/}i,
+      /linkedin\.com\/posts/i,
+      /youtube\.com/i,
+      /tiktok\.com/i,
+      # 단축 URL
+      /\bbit\.ly\b/i,
+      /\baug\.us\b/i,
+      /\bt\.co\//i,
+      /\bgoo\.gl\b/i,
+      /\bow\.ly\b/i,
+      /\btinyurl\.com\b/i,
+      # 이미지 CDN
+      /\/cdn-cgi\/image\//i,
+      /cloudfront\.net\/images\//i,
+      /imgix\.net/i,
+      # 추적 / 언구독
+      /\/unsubscribe/i,
+      /\/track\//i,
+      /\/click\//i,
+      /\/open\//i,
+      /utm_source=/i,
+      # 일반 이미지 확장자 (URL 끝)
+      /\.(?:png|jpe?g|gif|svg|ico)(?:\?[^\s]*)?$/i,
+    ].freeze
+
+    # SAP/Ariba 도메인은 절대 필터링하지 않음
+    SAP_ARIBA_SAFELIST = /(?:ariba|sap|sourcing|supplier)/i
+
     def initialize(gmail_service, gmail_message, order)
       @svc     = gmail_service
       @message = gmail_message
@@ -195,7 +235,18 @@ module Gmail
 
       # URL 패턴 추출
       urls = body.scan(%r{https?://[^\s<>"'\)]+}).uniq
-      urls.select { |url| url.length < 500 }.first(10)  # 최대 10개, 500자 이하
+      urls = urls.select { |url| url.length < 500 }
+
+      # 노이즈 필터링 (SAP/Ariba 링크는 보존)
+      urls = urls.reject { |url| noise_link?(url) }
+
+      urls.first(10)
+    end
+
+    def noise_link?(url)
+      return false if url.match?(SAP_ARIBA_SAFELIST)
+
+      NOISE_LINK_PATTERNS.any? { |pattern| url.match?(pattern) }
     end
 
     # SAP Ariba 포털 이벤트 링크를 HTML/plain body에서 추출

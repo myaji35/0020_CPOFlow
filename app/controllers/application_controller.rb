@@ -10,7 +10,7 @@ class ApplicationController < ActionController::Base
   # Branch 데이터 격리: current_user의 branch에 속한 Order만 반환
   # admin은 전체 접근 가능
   def scoped_orders
-    base = Order.all
+    base = Order.not_archived
     return base if current_user.admin?
     base.joins(:user).where(users: { branch: current_user.branch })
   end
