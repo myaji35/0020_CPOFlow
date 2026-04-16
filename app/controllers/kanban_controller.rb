@@ -180,7 +180,7 @@ class KanbanController < ApplicationController
 
   # move 응답용: 각 칼럼의 최신 카운트를 반환
   def build_column_counts(board)
-    board ||= @current_board
+    board ||= @current_board || KanbanBoard.default_board.first || KanbanBoard.ensure_default!
     base = if board.is_default?
       scoped_orders.where(kanban_board_id: [ board.id, nil ])
     else
