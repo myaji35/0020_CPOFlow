@@ -9,14 +9,19 @@ class KanbanController < ApplicationController
     @prefetch_mode = params[:frame] == "prefetch"  # column lazy frame 요청 여부
     @prefetch_status = params[:status]             # 어느 컬럼을 prefetch?
 
-    # 보드 로딩
-    @boards = KanbanBoard.ordered
+    # 보드 로딩 (권한 필터링)
+    @boards = KanbanBoard.ordered.select { |b| can_access_board?(b) }
     @current_board = if params[:board_id].present?
       KanbanBoard.find_by(id: params[:board_id])
     else
       KanbanBoard.default_board.first
     end
     @current_board ||= KanbanBoard.ensure_default!
+
+    # 현재 보드 접근 권한 체크
+    unless can_access_board?(@current_board)
+      @current_board = @boards.first || KanbanBoard.ensure_default!
+    end
 
     # prefetch 모드: 단일 컬럼의 추가 데이터만 반환
     if @prefetch_mode && @prefetch_status.present?

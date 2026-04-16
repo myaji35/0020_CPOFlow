@@ -52,4 +52,12 @@ class ApplicationController < ActionController::Base
   def can_delete?(menu_key) = current_user&.admin? || menu_permission_for(menu_key)&.can_delete? || false
 
   helper_method :can_read?, :can_create?, :can_update?, :can_delete?
+
+  def can_access_board?(board)
+    return true if current_user&.admin?
+    return true if board&.owner_id == current_user&.id
+    return can_read?(:kanban) if board&.is_default?
+    can_read?(:kanban)
+  end
+  helper_method :can_access_board?
 end
