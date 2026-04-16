@@ -6,6 +6,8 @@ class CardStatus < ApplicationRecord
   belongs_to :kanban_board, optional: true
   has_many :orders, dependent: :restrict_with_error
 
+  before_validation :generate_key_from_name, if: -> { key.blank? && name.present? }
+
   validates :key,          presence: true, uniqueness: true, format: { with: /\A[a-z0-9_]+\z/ }
   validates :name,         presence: true, length: { maximum: 40 }
   validates :bg_color,     :border_color, :text_color,
@@ -46,5 +48,19 @@ class CardStatus < ApplicationRecord
     else
       false
     end
+  end
+
+  private
+
+  def generate_key_from_name
+    base = name.to_s.downcase.gsub(/[^a-z0-9\s]/, "").gsub(/\s+/, "_").first(30)
+    base = "status_#{SecureRandom.hex(3)}" if base.blank?
+    candidate = base
+    counter = 1
+    while CardStatus.where(key: candidate).where.not(id: id).exists?
+      candidate = "#{base}_#{counter}"
+      counter += 1
+    end
+    self.key = candidate
   end
 end
