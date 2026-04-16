@@ -34,8 +34,8 @@
         </thead>
         <tbody class="divide-y divide-gray-100">
           <% @transactions.each do |o| %>
-            <tr class="hover:bg-gray-50">
-              <td class="px-4 py-2 font-mono text-xs"><%= o.reference_no %></td>
+            <tr class="hover:bg-gray-50 cursor-pointer" onclick="window.location='<%= order_path(o) %>'">
+              <td class="px-4 py-2 font-mono text-xs text-[#00A1E0]"><%= o.reference_no %></td>
               <td class="px-4 py-2"><%= o.original_email_subject.to_s.truncate(60) %></td>
               <td class="px-4 py-2 text-gray-600"><%= o.client&.name %></td>
               <td class="px-4 py-2 text-gray-600"><%= o.supplier&.name %></td>

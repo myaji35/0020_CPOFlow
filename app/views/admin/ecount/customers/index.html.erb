@@ -1,0 +1,82 @@
+<div class="max-w-7xl mx-auto px-4 py-6">
+
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-xl font-bold text-gray-900">eCount 거래처</h1>
+      <p class="text-sm text-gray-500 mt-0.5">eCount 연동 거래처 목록 (Client + Supplier)</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <% if @last_sync %>
+        <span class="text-xs text-gray-500">마지막 동기화: <%= @last_sync.completed_at&.in_time_zone("Asia/Seoul")&.strftime("%m/%d %H:%M") || "진행중" %></span>
+      <% end %>
+      <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-100 text-blue-800 text-sm font-medium"><%= @total %>건</span>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl border overflow-hidden">
+    <div class="px-5 py-3 border-b flex gap-2 items-center">
+      <%= form_with url: admin_ecount_customers_path, method: :get, local: true, class: "flex gap-2 flex-1" do %>
+        <input type="text" name="q" value="<%= @q %>" placeholder="거래처명, eCount 코드 검색..." class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+        <select name="type" class="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white">
+          <option value="">전체</option>
+          <option value="client" <%= "selected" if @type_filter == "client" %>>발주처 (Client)</option>
+          <option value="supplier" <%= "selected" if @type_filter == "supplier" %>>거래처 (Supplier)</option>
+        </select>
+        <button type="submit" class="px-4 py-2 bg-[#1E3A5F] text-white text-sm rounded-lg hover:bg-[#1E3A5F]/90">검색</button>
+      <% end %>
+    </div>
+
+    <% if @customers.any? %>
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-600">eCount 코드</th>
+            <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-600">거래처명</th>
+            <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-600">유형</th>
+            <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-600">국가</th>
+            <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-600">이메일</th>
+            <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-600">전화</th>
+            <th class="px-4 py-2.5 text-left text-xs font-semibold text-gray-600">동기화</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <% @customers.each do |c| %>
+            <% rec_type = c.respond_to?(:record_type) ? c.record_type : c.class.name %>
+            <% type_param = rec_type == "Supplier" ? "supplier" : "client" %>
+            <tr class="hover:bg-gray-50 cursor-pointer" onclick="window.location='<%= admin_ecount_customer_path(c.id, type: type_param) %>'">
+              <td class="px-4 py-2 font-mono text-xs text-[#00A1E0]"><%= c.ecount_code %></td>
+              <td class="px-4 py-2 font-medium text-gray-900"><%= c.name %></td>
+              <td class="px-4 py-2">
+                <% if rec_type == "Supplier" %>
+                  <span class="inline-block px-2 py-0.5 rounded text-xs bg-emerald-100 text-emerald-700">Supplier</span>
+                <% else %>
+                  <span class="inline-block px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700">Client</span>
+                <% end %>
+              </td>
+              <td class="px-4 py-2 text-gray-600"><%= c.country %></td>
+              <td class="px-4 py-2 text-gray-500 text-xs"><%= c.contact_email %></td>
+              <td class="px-4 py-2 text-gray-500 text-xs"><%= c.contact_phone %></td>
+              <td class="px-4 py-2 text-gray-500 text-xs"><%= c.ecount_synced_at&.in_time_zone("Asia/Seoul")&.strftime("%m/%d %H:%M") %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+
+      <% if @total_pages > 1 %>
+        <div class="px-5 py-3 border-t flex items-center justify-between">
+          <span class="text-xs text-gray-500">페이지 <%= @page %> / <%= @total_pages %></span>
+          <div class="flex gap-1">
+            <% if @page > 1 %>
+              <%= link_to "‹ 이전", admin_ecount_customers_path(q: @q, type: @type_filter, page: @page - 1), class: "px-3 py-1.5 text-sm border rounded hover:bg-gray-50" %>
+            <% end %>
+            <% if @page < @total_pages %>
+              <%= link_to "다음 ›", admin_ecount_customers_path(q: @q, type: @type_filter, page: @page + 1), class: "px-3 py-1.5 text-sm border rounded hover:bg-gray-50" %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    <% else %>
+      <p class="text-center py-16 text-sm text-gray-500">eCount 연동 거래처가 없습니다</p>
+    <% end %>
+  </div>
+</div>

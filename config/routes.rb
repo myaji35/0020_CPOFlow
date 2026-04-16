@@ -98,10 +98,10 @@ Rails.application.routes.draw do
       collection { post :trigger }
     end
 
-    # eCount 데이터 조회 메뉴 (품목 / 거래내역)
-    # 거래처는 기존 /clients · /suppliers 메뉴에서 통합 표시 (대표님 결정 2026-04-15)
+    # eCount 데이터 조회 메뉴 (품목 / 거래처 / 거래내역)
     namespace :ecount do
       resources :products,     only: %i[index show]
+      resources :customers,    only: %i[index show]
       resources :transactions, only: %i[index]
     end
 
