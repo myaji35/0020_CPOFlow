@@ -80,6 +80,18 @@ class DashboardController < ApplicationController
     @overdue_orders_brief = orders.overdue.by_due_date.limit(8).includes(:client, :assignees)
     @urgent_orders_brief  = orders.urgent.by_due_date.limit(8).includes(:client, :assignees)
 
+    # 보드별 KPI 요약
+    @board_summaries = KanbanBoard.ordered.map do |board|
+      board_orders = board.orders.not_archived
+      {
+        board: board,
+        total: board_orders.count,
+        new_rfq: board_orders.where(status: :new_rfq).count,
+        in_progress: board_orders.where.not(status: [:new_rfq, :done, :give_up]).count,
+        done: board_orders.where(status: [:done, :give_up]).count
+      }
+    end
+
     # FR-03: 7일 스파크라인
     @daily_sparkline = (6.downto(0)).map do |i|
       day = Date.today - i.days

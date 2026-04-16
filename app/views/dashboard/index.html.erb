@@ -56,6 +56,25 @@
   </div>
 </div>
 
+<%# 보드별 요약 — admin/owner만 전체, 일반 사용자는 접근 가능한 보드만 %>
+<% if @board_summaries.size > 1 %>
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+    <% @board_summaries.each do |summary| %>
+      <% next unless can_access_board?(summary[:board]) %>
+      <a href="<%= kanban_path(board_id: summary[:board].id) %>"
+         class="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-[#00A1E0] hover:shadow-sm transition-all">
+        <p class="text-xs text-gray-500 dark:text-gray-400 font-medium"><%= summary[:board].name %></p>
+        <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><%= summary[:total] %></p>
+        <div class="flex gap-3 mt-2 text-xs">
+          <span class="text-blue-600 dark:text-blue-400">신규 <%= summary[:new_rfq] %></span>
+          <span class="text-amber-600 dark:text-amber-400">진행 <%= summary[:in_progress] %></span>
+          <span class="text-emerald-600 dark:text-emerald-400">완료 <%= summary[:done] %></span>
+        </div>
+      </a>
+    <% end %>
+  </div>
+<% end %>
+
 <!-- ════════════════════════════════════════════════════════════
      ROW 1: 핵심 KPI 카드 (6개)
      ════════════════════════════════════════════════════════════ -->
