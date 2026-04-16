@@ -40,6 +40,7 @@ class Order < ApplicationRecord
 
   belongs_to :card_status, optional: true
   belongs_to :kanban_board, optional: true
+  belongs_to :kanban_column, optional: true
 
   # 기본값 보장: 새 Order는 default(normal)로 시작
   before_validation :ensure_card_status, on: :create

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_16_052020) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_16_064344) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -504,6 +504,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_16_052020) do
     t.string "gmail_thread_id"
     t.string "item_name"
     t.integer "kanban_board_id"
+    t.integer "kanban_column_id"
     t.text "llm_analysis"
     t.datetime "llm_analyzed_at"
     t.text "original_email_body"
@@ -553,6 +554,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_16_052020) do
     t.index ["email_received_at"], name: "index_orders_on_email_received_at"
     t.index ["gmail_thread_id"], name: "index_orders_on_gmail_thread_id"
     t.index ["kanban_board_id"], name: "index_orders_on_kanban_board_id"
+    t.index ["kanban_column_id"], name: "index_orders_on_kanban_column_id"
     t.index ["parent_order_id"], name: "index_orders_on_parent_order_id"
     t.index ["project_id"], name: "index_orders_on_project_id"
     t.index ["reference_no"], name: "index_orders_on_reference_no"
@@ -760,6 +762,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_16_052020) do
   add_foreign_key "orders", "card_statuses"
   add_foreign_key "orders", "clients"
   add_foreign_key "orders", "kanban_boards"
+  add_foreign_key "orders", "kanban_columns"
   add_foreign_key "orders", "projects"
   add_foreign_key "orders", "suppliers"
   add_foreign_key "orders", "users"

@@ -2,6 +2,7 @@
 
 class KanbanColumn < ApplicationRecord
   belongs_to :kanban_board
+  has_many :orders, dependent: :nullify
 
   validates :key, presence: true, format: { with: /\A[a-z0-9_]+\z/ },
             uniqueness: { scope: :kanban_board_id }
