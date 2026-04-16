@@ -172,7 +172,65 @@
         </div>
       </div>
 
+      <%# ===== 첨부파일 미리보기 모달 (전역 — 드로어에서도 사용) ===== %>
+      <div id="preview-modal" class="fixed inset-0 z-[60] hidden" onclick="closePreviewModal(event)">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+        <div class="relative flex flex-col mx-auto mt-8 mb-8 w-[95vw] max-w-6xl h-[calc(100vh-4rem)] bg-white dark:bg-gray-900 rounded-xl shadow-2xl overflow-hidden" onclick="event.stopPropagation()">
+          <div class="flex items-center justify-between px-5 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+            <div class="flex items-center gap-2 min-w-0">
+              <svg class="w-4 h-4 text-gray-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <span id="preview-modal-title" class="text-sm font-semibold text-gray-700 dark:text-gray-200 truncate"></span>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <a id="preview-modal-newtab" href="#" target="_blank" class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" title="새 탭에서 열기">
+                <svg class="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              </a>
+              <button onclick="closePreviewModal()" class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" title="닫기">
+                <svg class="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+          </div>
+          <div id="preview-modal-loading" class="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-gray-900/80 z-10" style="top:48px;">
+            <div class="flex flex-col items-center gap-3">
+              <div class="w-8 h-8 border-3 border-blue-200 border-t-blue-500 rounded-full animate-spin"></div>
+              <span class="text-sm text-gray-500">미리보기 로딩 중...</span>
+            </div>
+          </div>
+          <iframe id="preview-modal-iframe" class="flex-1 w-full border-0" src="about:blank" onload="document.getElementById('preview-modal-loading').style.display='none'"></iframe>
+        </div>
+      </div>
+
       <script>
+        // 첨부파일 미리보기 모달 (전역)
+        function openPreviewModal(filename, url) {
+          var modal = document.getElementById('preview-modal');
+          var iframe = document.getElementById('preview-modal-iframe');
+          var title = document.getElementById('preview-modal-title');
+          var newtab = document.getElementById('preview-modal-newtab');
+          var loading = document.getElementById('preview-modal-loading');
+          title.textContent = filename;
+          newtab.href = url;
+          loading.style.display = 'flex';
+          iframe.src = url;
+          modal.classList.remove('hidden');
+          document.body.style.overflow = 'hidden';
+        }
+        function closePreviewModal(event) {
+          if (event && event.target !== event.currentTarget) return;
+          var modal = document.getElementById('preview-modal');
+          var iframe = document.getElementById('preview-modal-iframe');
+          modal.classList.add('hidden');
+          iframe.src = 'about:blank';
+          document.body.style.overflow = '';
+        }
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape' && !document.getElementById('preview-modal').classList.contains('hidden')) closePreviewModal();
+        });
+        // postMessage로 iframe 내부에서 모달 닫기
+        window.addEventListener('message', function(e) {
+          if (e.data === 'close-preview-modal') closePreviewModal();
+        });
+
         var KANBAN_COLUMNS = ['new_rfq','make_quo','pending_po','new_po','delivery_items','problem','get_grn','give_up'];
         var STATUS_LABELS  = {
           new_rfq:'New(신규)', make_quo:'Make QUO(견적작성)', pending_po:'Pending PO(발주대기)',
