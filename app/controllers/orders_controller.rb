@@ -204,10 +204,7 @@ class OrdersController < ApplicationController
     end
 
     begin
-      uri = URI.parse(url)
-      response = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https", open_timeout: 15, read_timeout: 30) do |http|
-        http.get(uri.request_uri, { "User-Agent" => "CPOFlow/1.0" })
-      end
+      response = fetch_url_with_redirect(url)
 
       unless response.is_a?(Net::HTTPSuccess)
         return respond_to do |format|
@@ -312,6 +309,19 @@ class OrdersController < ApplicationController
 
   def set_order
     @order = Order.find(params[:id])
+  end
+
+  def fetch_url_with_redirect(url, limit = 5)
+    raise "URL 리다이렉트 초과" if limit == 0
+    uri = URI.parse(url)
+    response = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https", open_timeout: 15, read_timeout: 30) do |http|
+      http.get(uri.request_uri, { "User-Agent" => "CPOFlow/1.0" })
+    end
+    if response.is_a?(Net::HTTPRedirection) && response["location"]
+      fetch_url_with_redirect(response["location"], limit - 1)
+    else
+      response
+    end
   end
 
   def sync_thread_siblings_status(new_status)
