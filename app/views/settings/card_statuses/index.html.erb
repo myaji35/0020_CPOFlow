@@ -1,11 +1,14 @@
 <% content_for :title, "칸반 상태 관리" %>
 
 <div class="max-w-4xl mx-auto p-6">
-  <div class="flex items-center justify-between mb-5">
-    <h1 class="text-xl font-bold text-gray-900 dark:text-white">칸반 상태 관리</h1>
+  <div class="flex items-center justify-between mb-2">
+    <div>
+      <h1 class="text-xl font-bold text-gray-900 dark:text-white">칸반 블럭(칼럼) 관리</h1>
+      <p class="text-sm text-gray-500 mt-1">각 상태가 칸반 보드의 하나의 칼럼(블럭)이 됩니다. 추가/편집/순서 변경/삭제가 가능합니다.</p>
+    </div>
     <button type="button" onclick="openCardStatusModal()"
-            class="px-3 py-2 bg-[#00A1E0] text-white rounded-lg text-sm font-medium hover:bg-[#0083b7]">
-      + 새 상태 추가
+            class="px-3 py-2 bg-[#00A1E0] text-white rounded-lg text-sm font-medium hover:bg-[#0083b7] shrink-0">
+      + 새 블럭 추가
     </button>
   </div>
 
