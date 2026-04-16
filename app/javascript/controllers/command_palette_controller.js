@@ -130,7 +130,14 @@ export default class extends Controller {
 
   renderResults(items, q) {
     if (items.length === 0) {
-      this.resultsTarget.innerHTML = `<div class="px-4 py-6 text-center text-sm text-gray-400 dark:text-gray-500">"${q}" 검색 결과 없음</div>`
+      this.saveRecentSearch(q)
+      this.resultsTarget.innerHTML = `
+        <div class="px-4 py-8 text-center">
+          <svg class="w-10 h-10 mx-auto text-gray-200 dark:text-gray-600 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">검색 결과가 없습니다</p>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">"${q}"에 대한 결과를 찾을 수 없습니다</p>
+          <p class="text-xs text-gray-300 dark:text-gray-600 mt-2">다른 검색어를 시도하거나 철자를 확인해 주세요</p>
+        </div>`
       return
     }
 
