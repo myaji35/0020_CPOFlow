@@ -197,20 +197,28 @@ class OrdersController < ApplicationController
   def attach_from_url
     url = params[:url].to_s.strip
     if url.blank? || !url.match?(/\Ahttps?:\/\//i)
-      return respond_to do |format|
-        format.turbo_stream { head :unprocessable_entity }
-        format.json { render json: { error: "유효하지 않은 URL" }, status: :unprocessable_entity }
-      end
+      return render_attach_error("유효하지 않은 URL입니다.")
+    end
+
+    # Google Drive 파일 URL 자동 변환 (file/d/ID → direct download)
+    if url.match?(%r{drive\.google\.com/file/d/([^/]+)})
+      file_id = url.match(%r{drive\.google\.com/file/d/([^/]+)})[1]
+      url = "https://drive.google.com/uc?export=download&id=#{file_id}"
+    elsif url.match?(%r{drive\.google\.com/drive/folders/})
+      return render_attach_error("Google Drive 폴더는 다운로드할 수 없습니다. 개별 파일 링크를 사용하세요.")
     end
 
     begin
       response = fetch_url_with_redirect(url)
 
       unless response.is_a?(Net::HTTPSuccess)
-        return respond_to do |format|
-          format.turbo_stream { head :unprocessable_entity }
-          format.json { render json: { error: "다운로드 실패 (HTTP #{response.code})" }, status: :unprocessable_entity }
-        end
+        return render_attach_error("다운로드 실패 (HTTP #{response.code})")
+      end
+
+      content_type = response["Content-Type"]&.split(";")&.first || "application/octet-stream"
+      # HTML 반환 = 파일이 아닌 웹페이지 (로그인 필요 등)
+      if content_type.include?("text/html") && !url.match?(/\.html?\z/i)
+        return render_attach_error("이 URL은 파일이 아닌 웹페이지입니다. 직접 파일 다운로드 URL을 사용하세요.")
       end
 
       # 파일명 결정: Content-Disposition > URL 경로 > fallback
@@ -219,7 +227,8 @@ class OrdersController < ApplicationController
         match = response["Content-Disposition"].match(/filename[*]?=(?:UTF-8''|"?)([^";]+)/i)
         filename = match[1].strip if match
       end
-      filename ||= File.basename(uri.path).presence
+      uri = URI.parse(url) rescue nil
+      filename ||= uri ? File.basename(uri.path).presence : nil
       filename = "download_#{Time.current.to_i}" if filename.blank? || filename == "/"
       filename = URI.decode_www_form_component(filename) rescue filename
 
@@ -309,6 +318,19 @@ class OrdersController < ApplicationController
 
   def set_order
     @order = Order.find(params[:id])
+  end
+
+  def render_attach_error(msg)
+    respond_to do |format|
+      format.turbo_stream {
+        render turbo_stream: turbo_stream.replace(
+          "drawer-panel-#{@order.id}-attachments",
+          partial: "orders/drawer_attachments", locals: { order: @order.reload, initial_render: false, flash_error: msg }
+        )
+      }
+      format.json { render json: { error: msg }, status: :unprocessable_entity }
+      format.html { redirect_back fallback_location: @order, alert: msg }
+    end
   end
 
   def fetch_url_with_redirect(url, limit = 5)

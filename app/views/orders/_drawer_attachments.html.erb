@@ -45,6 +45,12 @@
     </div>
   </div>
 
+  <% if local_assigns[:flash_error] %>
+    <div class="mb-3 px-4 py-2.5 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+      <%= flash_error %>
+    </div>
+  <% end %>
+
   <% if att_meta.any? || active_storage_attachments.any? || links.any? %>
     <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
       <div class="px-5 py-3 border-b border-gray-200 flex items-center justify-between">
