@@ -2,10 +2,11 @@
 
 module Settings
   class CardStatusesController < BaseController
+    before_action :set_current_board
     before_action :set_card_status, only: %i[update destroy inline_rename]
 
     def index
-      @card_statuses = CardStatus.ordered
+      @card_statuses = @current_board.card_statuses.order(:position, :id)
       @themes        = CardStatusThemes::ALL
       @current_theme = CardStatusThemes.current_theme
       # 프리셋: 현재 테마가 감지되면 그 테마의 7색, 없으면 기존 12색 fallback
@@ -19,19 +20,19 @@ module Settings
       theme_key = params[:theme_key].to_s
       result = CardStatusThemes.apply!(theme_key)
       if result[:ok]
-        redirect_to settings_card_statuses_path,
+        redirect_to settings_card_statuses_path(board_id: @current_board.id),
                     notice: "#{result[:theme]} 테마 적용: #{result[:updated]}개 상태 색상 변경"
       else
-        redirect_to settings_card_statuses_path, alert: "테마 적용 실패: #{result[:error]}"
+        redirect_to settings_card_statuses_path(board_id: @current_board.id), alert: "테마 적용 실패: #{result[:error]}"
       end
     end
 
     def create
-      @card_status = CardStatus.new(card_status_params)
+      @card_status = @current_board.card_statuses.build(card_status_params)
       if @card_status.save
-        redirect_to settings_card_statuses_path, notice: "상태가 추가되었습니다."
+        redirect_to settings_card_statuses_path(board_id: @current_board.id), notice: "상태가 추가되었습니다."
       else
-        @card_statuses = CardStatus.ordered
+        @card_statuses = @current_board.card_statuses.order(:position, :id)
         @color_presets = CardStatusColorPresets::ALL
         render :index, status: :unprocessable_entity
       end
@@ -39,9 +40,9 @@ module Settings
 
     def update
       if @card_status.update(card_status_params)
-        redirect_to settings_card_statuses_path, notice: "상태가 수정되었습니다."
+        redirect_to settings_card_statuses_path(board_id: @current_board.id), notice: "상태가 수정되었습니다."
       else
-        @card_statuses = CardStatus.ordered
+        @card_statuses = @current_board.card_statuses.order(:position, :id)
         @color_presets = CardStatusColorPresets::ALL
         render :index, status: :unprocessable_entity
       end
@@ -71,28 +72,35 @@ module Settings
       end
 
       if deletable
-        redirect_to settings_card_statuses_path, notice: "상태가 삭제되었습니다."
+        redirect_to settings_card_statuses_path(board_id: @current_board.id), notice: "상태가 삭제되었습니다."
       else
         respond_to do |format|
-          format.html { redirect_to settings_card_statuses_path, alert: reason, status: :see_other }
+          format.html { redirect_to settings_card_statuses_path(board_id: @current_board.id), alert: reason, status: :see_other }
           format.any  { render json: { status: "error", error: reason }, status: :unprocessable_entity }
         end
       end
     rescue ActiveRecord::RecordNotDestroyed
-      redirect_to settings_card_statuses_path, alert: "삭제 실패."
+      redirect_to settings_card_statuses_path(board_id: @current_board.id), alert: "삭제 실패."
     end
 
     def reorder
       ids = Array(params[:order]).map(&:to_i)
       CardStatus.transaction do
         ids.each_with_index do |id, idx|
-          CardStatus.where(id: id).update_all(position: idx + 1)
+          @current_board.card_statuses.where(id: id).update_all(position: idx + 1)
         end
       end
       render json: { status: "ok" }
     end
 
     private
+
+    def set_current_board
+      @current_board = if params[:board_id].present?
+        KanbanBoard.find_by(id: params[:board_id])
+      end
+      @current_board ||= KanbanBoard.default_board.first || KanbanBoard.ensure_default!
+    end
 
     def set_card_status
       @card_status = CardStatus.find(params[:id])

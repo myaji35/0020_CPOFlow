@@ -9,6 +9,16 @@
     </button>
   </div>
 
+  <div class="flex items-center gap-3 mb-4">
+    <label class="text-sm font-semibold text-gray-600">보드:</label>
+    <select onchange="window.location.href='<%= settings_card_statuses_path %>?board_id=' + this.value"
+            class="px-3 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]">
+      <% KanbanBoard.ordered.each do |board| %>
+        <option value="<%= board.id %>" <%= "selected" if board.id == @current_board.id %>><%= board.name %></option>
+      <% end %>
+    </select>
+  </div>
+
   <% flash.each do |type, msg| %>
     <div class="mb-3 px-3 py-2 rounded text-sm <%= type == 'notice' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800' %>"><%= msg %></div>
   <% end %>
