@@ -1,6 +1,12 @@
 <% content_for :title, "칸반 보드 관리" %>
 
 <div class="max-w-4xl mx-auto p-6">
+  <nav class="flex items-center gap-2 text-sm mb-4">
+    <%= link_to "설정", settings_root_path, class: "text-[#00A1E0] hover:underline" %>
+    <span class="text-gray-400">›</span>
+    <span class="text-gray-600 font-medium">칸반 보드 관리</span>
+  </nav>
+
   <div class="flex items-center justify-between mb-5">
     <div>
       <h1 class="text-xl font-bold text-gray-900 dark:text-white">칸반 보드 관리</h1>

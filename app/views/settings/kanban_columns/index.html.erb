@@ -1,6 +1,15 @@
 <% content_for :title, "블럭(칼럼) 관리" %>
 
 <div class="max-w-4xl mx-auto p-6">
+  <%# 상위 네비게이션 %>
+  <nav class="flex items-center gap-2 text-sm mb-4">
+    <%= link_to "설정", settings_root_path, class: "text-[#00A1E0] hover:underline" %>
+    <span class="text-gray-400">›</span>
+    <%= link_to "칸반 보드 관리", settings_kanban_boards_path, class: "text-[#00A1E0] hover:underline" %>
+    <span class="text-gray-400">›</span>
+    <span class="text-gray-600 font-medium"><%= @current_board&.name %> 블럭 관리</span>
+  </nav>
+
   <%# Header %>
   <div class="flex items-center justify-between mb-2">
     <div>
