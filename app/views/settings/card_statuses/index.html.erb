@@ -74,20 +74,12 @@
     const modal = document.getElementById('card-status-modal');
     const form  = document.getElementById('card-status-form');
     const boardId = '<%= @current_board&.id %>';
+    const editingIdInput = document.getElementById('cs-editing-id');
     modal.classList.remove('hidden');
     if (id) {
       modal.dataset.editingId = id;
-      // 폼을 PATCH (update)로 전환
-      form.action = `/settings/card_statuses/${id}`;
-      let methodInput = form.querySelector('input[name="_method"]');
-      if (!methodInput) {
-        methodInput = document.createElement('input');
-        methodInput.type = 'hidden';
-        methodInput.name = '_method';
-        form.prepend(methodInput);
-      }
-      methodInput.value = 'patch';
-      // data-* 속성에서 값 로드
+      editingIdInput.value = id;
+      form.action = `/settings/card_statuses?board_id=${boardId}`;
       const row = document.querySelector(`[data-card-status-row="${id}"]`);
       if (row) {
         document.getElementById('cs-name').value = row.dataset.name;
@@ -97,8 +89,8 @@
       }
     } else {
       modal.dataset.editingId = '';
-      // 폼을 POST (create)로 전환
-      form.action = `/settings/card_statuses${boardId ? '?board_id=' + boardId : ''}`;
+      editingIdInput.value = '';
+      form.action = `/settings/card_statuses?board_id=${boardId}`;
       const methodInput = form.querySelector('input[name="_method"]');
       if (methodInput) methodInput.remove();
       form.reset();

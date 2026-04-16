@@ -28,12 +28,23 @@ module Settings
     end
 
     def create
+      # 편집 모달에서 editing_id가 전달되면 update로 분기
+      if params[:editing_id].present?
+        @card_status = CardStatus.find(params[:editing_id])
+        if @card_status.update(card_status_params)
+          redirect_to settings_card_statuses_path(board_id: @current_board.id), notice: "상태가 수정되었습니다."
+        else
+          prepare_index_vars
+          render :index, status: :unprocessable_entity
+        end
+        return
+      end
+
       @card_status = @current_board.card_statuses.build(card_status_params)
       if @card_status.save
         redirect_to settings_card_statuses_path(board_id: @current_board.id), notice: "상태가 추가되었습니다."
       else
-        @card_statuses = @current_board.card_statuses.order(:position, :id)
-        @color_presets = CardStatusColorPresets::ALL
+        prepare_index_vars
         render :index, status: :unprocessable_entity
       end
     end
@@ -42,8 +53,7 @@ module Settings
       if @card_status.update(card_status_params)
         redirect_to settings_card_statuses_path(board_id: @current_board.id), notice: "상태가 수정되었습니다."
       else
-        @card_statuses = @current_board.card_statuses.order(:position, :id)
-        @color_presets = CardStatusColorPresets::ALL
+        prepare_index_vars
         render :index, status: :unprocessable_entity
       end
     end
@@ -104,6 +114,13 @@ module Settings
 
     def set_card_status
       @card_status = CardStatus.find(params[:id])
+    end
+
+    def prepare_index_vars
+      @card_statuses = @current_board.card_statuses.order(:position, :id)
+      @themes        = CardStatusThemes::ALL
+      @current_theme = CardStatusThemes.current_theme
+      @color_presets = CardStatusThemes.current_palette || CardStatusColorPresets::ALL
     end
 
     def card_status_params
