@@ -354,7 +354,7 @@ class OrdersController < ApplicationController
       :tags, :source_email_id, :original_email_subject,
       :original_email_body, :original_email_from,
       :client_id, :supplier_id, :project_id,
-      :rfq_no, :quo_no, :po_no
+      :rfq_no, :quo_no, :po_no, :kanban_board_id
     )
   end
 end
