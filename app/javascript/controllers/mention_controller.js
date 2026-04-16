@@ -144,8 +144,8 @@ export default class extends Controller {
       before.length + item.display_name.length + 2
     )
 
-    // task 모드: hidden input에 user_id 설정 (Task.assignee_id는 User FK)
-    if (this.modeValue === "task" && this.hasEmployeeIdTarget) {
+    // task/assign 모드: hidden input에 user_id 또는 employee_id 설정
+    if ((this.modeValue === "task" || this.modeValue === "assign") && this.hasEmployeeIdTarget) {
       this.employeeIdTarget.value = item.id
     }
 

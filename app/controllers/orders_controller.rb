@@ -92,12 +92,28 @@ class OrdersController < ApplicationController
     @order.kanban_board_id ||= (KanbanBoard.default_board.first || KanbanBoard.ensure_default!).id
 
     if @order.save
+      # 첨부파일 처리
+      if params.dig(:order, :files).present?
+        @order.attachments.attach(Array(params[:order][:files]))
+      end
+      # 담당자 배정 (@멘션)
+      if params.dig(:order, :assigned_employee_id).present?
+        emp = Employee.find_by(user_id: params[:order][:assigned_employee_id])
+        Assignment.create(order: @order, employee: emp) if emp
+      end
       Activity.create!(order: @order, user: current_user, action: "created")
-      redirect_to kanban_path(board_id: @order.kanban_board_id), notice: t("orders.create_success")
+      redirect_to kanban_path(board_id: @order.kanban_board_id), notice: is_purchase_board? ? "발주가 등록되었습니다." : "카드가 등록되었습니다."
     else
+      @board = @order.kanban_board || KanbanBoard.default_board.first
       render :new, status: :unprocessable_entity
     end
   end
+
+  private def is_purchase_board?
+    board = @order&.kanban_board
+    board.nil? || board.is_default? || board.board_type == "purchase"
+  end
+  public
 
   def edit; end
 
