@@ -143,7 +143,7 @@ class KanbanController < ApplicationController
           from_status: Order.statuses[old_status],
           to_status: Order.statuses[@order.status]
         )
-        render json: { success: true, new_status: @order.status }
+        render json: { success: true, new_status: @order.status, column_counts: build_column_counts(board) }
       else
         render json: { success: false, errors: @order.errors.full_messages }, status: :unprocessable_entity
       end
@@ -152,7 +152,7 @@ class KanbanController < ApplicationController
       column = KanbanColumn.find_by(kanban_board_id: board.id, key: params[:status])
       if column && @order.update(kanban_column_id: column.id)
         Activity.create!(order: @order, user: current_user, action: "column_moved")
-        render json: { success: true, new_status: column.key }
+        render json: { success: true, new_status: column.key, column_counts: build_column_counts(board) }
       else
         render json: { success: false, errors: @order.errors.full_messages }, status: :unprocessable_entity
       end
@@ -177,6 +177,31 @@ class KanbanController < ApplicationController
   end
 
   private
+
+  # move 응답용: 각 칼럼의 최신 카운트를 반환
+  def build_column_counts(board)
+    board ||= @current_board
+    base = if board.is_default?
+      scoped_orders.where(kanban_board_id: [ board.id, nil ])
+    else
+      scoped_orders.where(kanban_board_id: board.id)
+    end.root_orders
+
+    if board.is_default? || board.board_type == "purchase"
+      Order::KANBAN_COLUMNS.each_with_object({}) do |col_key, h|
+        rel = if col_key == "new_rfq"
+          base.where(status: :new_rfq, rfq_status: Order::KANBAN_VISIBLE_RFQ_STATUSES)
+        else
+          base.where(status: col_key)
+        end
+        h[col_key] = rel.count
+      end
+    else
+      board.kanban_columns.ordered.each_with_object({}) do |col, h|
+        h[col.key] = base.where(kanban_column_id: col.id).count
+      end
+    end
+  end
 
   # 현재 보드에 속한 주문만 필터. 기본 보드이면 kanban_board_id=nil도 포함.
   def board_scoped_orders

@@ -5,16 +5,21 @@
 <% end %>
 
 <div class="flex items-center justify-between mb-5">
-  <div class="flex items-center gap-2">
-    <select onchange="window.location.href='/kanban?board_id=' + this.value"
-            class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-semibold text-gray-900 dark:text-white focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]">
-      <% @boards.each do |board| %>
-        <option value="<%= board.id %>" <%= "selected" if board.id == @current_board.id %>>
-          <%= board.name %>
-        </option>
-      <% end %>
-    </select>
-    <span class="text-sm text-gray-500 dark:text-gray-500">— AtoZ2010 Inc.</span>
+  <div>
+    <div class="flex items-center gap-2">
+      <select onchange="window.location.href='/kanban?board_id=' + this.value"
+              class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-semibold text-gray-900 dark:text-white focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]">
+        <% @boards.each do |board| %>
+          <option value="<%= board.id %>" <%= "selected" if board.id == @current_board.id %>>
+            <%= board.name %>
+          </option>
+        <% end %>
+      </select>
+      <span class="text-sm text-gray-500 dark:text-gray-500">— AtoZ2010 Inc.</span>
+    </div>
+    <% if @current_board.description.present? %>
+      <p class="text-xs text-gray-400 dark:text-gray-500 mt-1 ml-1"><%= @current_board.description %></p>
+    <% end %>
   </div>
   <% is_purchase_board = @current_board.is_default? || @current_board.board_type == "purchase" %>
   <%= link_to new_order_path(board_id: @current_board.id), class: "flex items-center gap-2 bg-accent text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-500 transition-colors" do %>
@@ -607,12 +612,18 @@ function initKanban() {
   window._kanbanInitialized = true;
   const CSRF = document.querySelector('meta[name="csrf-token"]').content;
 
-  // 컬럼 카운트 배지 업데이트
-  function updateCounts() {
+  // 컬럼 카운트 배지 업데이트 (serverCounts: 서버 응답의 column_counts 또는 null)
+  function updateCounts(serverCounts) {
     document.querySelectorAll('.kanban-column').forEach(function(col) {
-      const count = col.querySelectorAll('[data-order-id]:not(.hidden)').length;
+      const status = col.dataset.status;
       const badge = col.querySelector('.column-count');
-      if (badge) badge.textContent = count;
+      if (badge) {
+        if (serverCounts && serverCounts[status] !== undefined) {
+          badge.textContent = serverCounts[status];
+        } else {
+          badge.textContent = col.querySelectorAll('[data-order-id]:not(.hidden)').length;
+        }
+      }
 
       // 빈 칼럼 empty-state 토글
       const cards  = col.querySelector('.kanban-cards');
@@ -754,7 +765,7 @@ function initKanban() {
         const targetCol = document.getElementById('column-' + moveTo);
         if (targetCol) {
           targetCol.insertBefore(cardEl, targetCol.firstChild);
-          updateCounts();
+          updateCounts(data.column_counts || null);
           const colLabel = targetCol.closest('.kanban-column')?.querySelector('.column-name')?.textContent || moveTo;
           showToast('→ ' + colLabel + ' 이동 완료', true);
         }
@@ -866,7 +877,7 @@ function initKanban() {
         const statusBadge = cardEl.querySelector('.card-status-badge');
         if (statusBadge) statusBadge.textContent = newCol.closest('.kanban-column').querySelector('.column-name')?.textContent || '';
 
-        updateCounts();
+        updateCounts(null);
 
         fetch('/orders/' + orderId + '/move', {
           method:  'PATCH',
@@ -876,6 +887,7 @@ function initKanban() {
         .then(function(r) { return r.json(); })
         .then(function(data) {
           if (data.success) {
+            updateCounts(data.column_counts || null);
             const colLabel = newCol.closest('.kanban-column').querySelector('.column-name')?.textContent || newStatus;
             showToast('→ ' + colLabel + ' 이동 완료', true);
           } else {
@@ -885,13 +897,13 @@ function initKanban() {
             } else {
               oldCol.appendChild(cardEl);
             }
-            updateCounts();
+            updateCounts(null);
             showToast('이동 실패: ' + (data.errors || []).join(', '), false);
           }
         })
         .catch(function() {
           oldCol.insertBefore(cardEl, oldCol.children[evt.oldIndex] || null);
-          updateCounts();
+          updateCounts(null);
           showToast('네트워크 오류가 발생했습니다.', false);
         });
       }

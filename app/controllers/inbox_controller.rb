@@ -259,6 +259,12 @@ class InboxController < ApplicationController
     }
   rescue ActiveRecord::RecordNotFound
     render json: { error: "not found" }, status: :not_found
+  rescue => e
+    if e.message.to_s.match?(/credit|quota|limit|insufficient|exceeded|401|402|429/i)
+      render json: { error: "API 크레딧 부족. keyword 기반 분석으로 전환됩니다.", api_exhausted: true }, status: :service_unavailable
+    else
+      render json: { error: "번역 중 오류: #{e.message.truncate(100)}" }, status: :internal_server_error
+    end
   end
 
   # AJAX: 사용자 RFQ 피드백 (맞음/아님)
@@ -300,6 +306,18 @@ class InboxController < ApplicationController
     end
   rescue ActiveRecord::RecordNotFound
     render json: { error: "not found" }, status: :not_found
+  rescue Faraday::ClientError, Faraday::ServerError, Net::HTTPClientException => e
+    if e.message.to_s.match?(/401|402|403|429|quota|credit|limit|insufficient/i)
+      render json: { error: "API 크레딧 부족. keyword 기반 분석으로 전환됩니다.", api_exhausted: true }, status: :service_unavailable
+    else
+      render json: { error: "AI 서비스 오류: #{e.message.truncate(100)}" }, status: :service_unavailable
+    end
+  rescue => e
+    if e.message.to_s.match?(/credit|quota|limit|insufficient|exceeded/i)
+      render json: { error: "API 크레딧 부족. keyword 기반 분석으로 전환됩니다.", api_exhausted: true }, status: :service_unavailable
+    else
+      render json: { error: "답변 초안 생성 중 오류: #{e.message.truncate(100)}" }, status: :internal_server_error
+    end
   end
 
   # AJAX: 이메일 본문 링크 URL 내용 추출 + AI 요약
