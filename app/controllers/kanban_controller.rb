@@ -150,7 +150,7 @@ class KanbanController < ApplicationController
     if @current_board.is_default?
       scoped_orders.where(kanban_board_id: [ @current_board.id, nil ])
     else
-      board_scoped_orders
+      scoped_orders.where(kanban_board_id: @current_board.id)
     end
   end
 
