@@ -1,0 +1,214 @@
+<% content_for :title, "칸반 보드 관리" %>
+
+<div class="max-w-4xl mx-auto p-6">
+  <div class="flex items-center justify-between mb-5">
+    <div>
+      <h1 class="text-xl font-bold text-gray-900 dark:text-white">칸반 보드 관리</h1>
+      <p class="text-xs text-gray-500 mt-1">보드를 추가·수정·삭제하고, 각 보드에 속한 블럭(상태)을 관리합니다.</p>
+    </div>
+    <button type="button" onclick="openBoardModal()"
+            class="px-3 py-2 bg-[#00A1E0] text-white rounded-lg text-sm font-medium hover:bg-[#0083b7]">
+      + 새 보드 추가
+    </button>
+  </div>
+
+  <% flash.each do |type, msg| %>
+    <div class="mb-3 px-3 py-2 rounded text-sm <%= type == 'notice' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800' %>"><%= msg %></div>
+  <% end %>
+
+  <%# 보드 목록 테이블 %>
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+        <tr>
+          <th class="px-4 py-3 text-left font-semibold">보드명</th>
+          <th class="px-4 py-3 text-left font-semibold">성격</th>
+          <th class="px-4 py-3 text-center font-semibold">블럭 수</th>
+          <th class="px-4 py-3 text-left font-semibold">팔레트</th>
+          <th class="px-4 py-3 text-center font-semibold">주문 수</th>
+          <th class="px-4 py-3 text-center font-semibold">관리</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+        <% @boards.each do |board| %>
+          <tr class="hover:bg-gray-50 dark:hover:bg-gray-750"
+              data-board-row="<%= board.id %>"
+              data-name="<%= board.name %>"
+              data-type="<%= board.board_type %>"
+              data-desc="<%= board.description %>"
+              data-palette="<%= board.color_palette %>">
+            <td class="px-4 py-3">
+              <div class="flex items-center gap-2">
+                <span class="font-medium text-gray-900 dark:text-white"><%= board.name %></span>
+                <% if board.is_default? %>
+                  <span class="px-1.5 py-0.5 text-[10px] font-semibold rounded bg-[#00A1E0] text-white">기본</span>
+                <% end %>
+              </div>
+              <% if board.description.present? %>
+                <p class="text-xs text-gray-500 mt-0.5 truncate max-w-xs"><%= board.description %></p>
+              <% end %>
+            </td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-0.5 rounded text-xs font-medium
+                <%= case board.board_type
+                    when 'purchase' then 'bg-[#1E3A5F] text-white'
+                    when 'sales'    then 'bg-[#1E8E3E] text-white'
+                    when 'project'  then 'bg-[#F4A83A] text-white'
+                    else 'bg-gray-500 text-white'
+                    end %>">
+                <%= { 'purchase' => '구매', 'sales' => '영업', 'project' => '프로젝트', 'custom' => '커스텀' }[board.board_type] || board.board_type %>
+              </span>
+            </td>
+            <td class="px-4 py-3 text-center text-gray-700 dark:text-gray-300">
+              <%= board.card_statuses.size %>
+            </td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-200">
+                <%= { 'pastel' => 'Pastel', 'vivid' => 'Vivid', 'mono' => 'Mono', 'corporate' => 'Corporate' }[board.color_palette] || board.color_palette %>
+              </span>
+            </td>
+            <td class="px-4 py-3 text-center text-gray-700 dark:text-gray-300">
+              <%= board.orders.size %>
+            </td>
+            <td class="px-4 py-3 text-center">
+              <div class="flex items-center justify-center gap-1">
+                <%# 블럭 관리 %>
+                <%= link_to settings_card_statuses_path(board_id: board.id),
+                    class: "p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-500 hover:text-[#00A1E0]",
+                    title: "블럭 관리" do %>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                <% end %>
+                <%# 수정 %>
+                <button type="button"
+                        onclick="openBoardEditModal(<%= board.id %>, '<%= j(board.name) %>', '<%= board.board_type %>', '<%= j(board.description.to_s) %>', '<%= board.color_palette %>')"
+                        class="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-500 hover:text-[#00A1E0]"
+                        title="수정">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <%# 복제 %>
+                <%= button_to duplicate_settings_kanban_board_path(board), method: :post,
+                    class: "p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-500 hover:text-[#00A1E0]",
+                    title: "복제",
+                    data: { turbo_confirm: "'#{board.name}' 보드를 복제하시겠습니까?" },
+                    form: { class: "inline" } do %>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <% end %>
+                <%# 삭제 %>
+                <% unless board.is_default? %>
+                  <%= button_to settings_kanban_board_path(board), method: :delete,
+                      class: "p-1.5 rounded hover:bg-red-50 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500",
+                      title: "삭제",
+                      data: { turbo_confirm: "'#{board.name}' 보드를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다." },
+                      form: { class: "inline" } do %>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  <% end %>
+                <% end %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+        <% if @boards.empty? %>
+          <tr>
+            <td colspan="6" class="px-4 py-8 text-center text-gray-400">등록된 보드가 없습니다.</td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="mt-4 text-xs text-gray-500">
+    '기본' 보드는 삭제할 수 없으며, 활성 주문이 있는 보드도 삭제 불가합니다.
+  </p>
+</div>
+
+<%# ── 생성/수정 모달 ── %>
+<div id="board-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md mx-4">
+    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+      <h3 id="board-modal-title" class="text-base font-semibold text-gray-900 dark:text-white">새 보드 추가</h3>
+      <button type="button" onclick="closeBoardModal()" class="text-gray-400 hover:text-gray-600">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <form id="board-form" method="post" action="<%= settings_kanban_boards_path %>" class="px-6 py-4 space-y-4">
+      <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+      <input type="hidden" id="board-method" name="_method" value="post">
+
+      <div>
+        <label for="board-name" class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">보드명</label>
+        <input type="text" id="board-name" name="kanban_board[name]"
+               class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white dark:bg-gray-700 placeholder-gray-400 focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]"
+               placeholder="예: 구매 보드" required maxlength="50">
+      </div>
+
+      <div>
+        <label for="board-type" class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">성격</label>
+        <select id="board-type" name="kanban_board[board_type]"
+                class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white dark:bg-gray-700 bg-white focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]">
+          <option value="purchase">구매</option>
+          <option value="sales">영업</option>
+          <option value="project">프로젝트</option>
+          <option value="custom">커스텀</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="board-desc" class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">설명</label>
+        <textarea id="board-desc" name="kanban_board[description]" rows="2"
+                  class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white dark:bg-gray-700 placeholder-gray-400 focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]"
+                  placeholder="보드에 대한 간단한 설명 (선택사항)"></textarea>
+      </div>
+
+      <div>
+        <label for="board-palette" class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">컬러 팔레트</label>
+        <select id="board-palette" name="kanban_board[color_palette]"
+                class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white dark:bg-gray-700 bg-white focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]">
+          <option value="pastel">Pastel</option>
+          <option value="vivid">Vivid</option>
+          <option value="mono">Mono</option>
+          <option value="corporate">Corporate</option>
+        </select>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="closeBoardModal()"
+                class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">취소</button>
+        <button type="submit"
+                class="px-4 py-2 text-sm font-medium text-white bg-[#1E3A5F] hover:bg-[#162d4a] rounded-lg">저장</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function openBoardModal() {
+    var modal = document.getElementById('board-modal');
+    modal.classList.remove('hidden');
+    document.getElementById('board-modal-title').textContent = '새 보드 추가';
+    document.getElementById('board-form').action = '<%= settings_kanban_boards_path %>';
+    document.getElementById('board-method').value = 'post';
+    document.getElementById('board-form').reset();
+    document.getElementById('board-method').value = 'post';
+  }
+
+  function openBoardEditModal(id, name, type, desc, palette) {
+    var modal = document.getElementById('board-modal');
+    modal.classList.remove('hidden');
+    document.getElementById('board-modal-title').textContent = '보드 수정';
+    document.getElementById('board-form').action = '/settings/kanban_boards/' + id;
+    document.getElementById('board-method').value = 'patch';
+    document.getElementById('board-name').value = name;
+    document.getElementById('board-type').value = type;
+    document.getElementById('board-desc').value = desc;
+    document.getElementById('board-palette').value = palette;
+  }
+
+  function closeBoardModal() {
+    document.getElementById('board-modal').classList.add('hidden');
+  }
+
+  // ESC 키로 모달 닫기
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeBoardModal();
+  });
+</script>
