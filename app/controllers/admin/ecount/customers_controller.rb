@@ -41,10 +41,16 @@ module Admin
       def show
         @type = params[:type] # "client" or "supplier"
         @customer = if @type == "supplier"
-          Supplier.find(params[:id])
+          Supplier.find_by(id: params[:id])
         else
-          Client.find(params[:id])
+          Client.find_by(id: params[:id])
         end
+
+        unless @customer
+          redirect_to admin_ecount_customers_path, alert: "거래처를 찾을 수 없습니다."
+          return
+        end
+
         @orders = Order.where(
           @type == "supplier" ? { supplier_id: @customer.id } : { client_id: @customer.id }
         ).order(created_at: :desc).limit(30).includes(:card_status)

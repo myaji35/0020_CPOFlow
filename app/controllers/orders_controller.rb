@@ -4,7 +4,7 @@ class OrdersController < ApplicationController
   before_action :set_order, only: %i[show edit update destroy move_status quick_update preview_attachment attach attach_from_url detach]
 
   def index
-    @orders = Order.all.includes(:assignees, :tasks, :user, :client, :project, :supplier).by_due_date
+    @orders = Order.all.includes(:assignees, :tasks, :user, :client, :project, :supplier, :card_status).by_due_date
 
     # 기존 필터
     @orders = @orders.where(status: params[:status]) if params[:status].present?
@@ -34,11 +34,11 @@ class OrdersController < ApplicationController
       @orders = @orders.where(created_at: ..Date.parse(params[:date_to]).end_of_day) if params[:date_to].present?
     end
 
-    # 필터 드롭다운용 데이터
-    @filter_clients   = Client.active.by_name
-    @filter_suppliers = Supplier.active.by_name
-    @filter_projects  = Project.active.by_name
-    @filter_employees = Employee.active.by_name
+    # 필터 드롭다운용 데이터 (5분 캐시)
+    @filter_clients   = Rails.cache.fetch("filter/clients",   expires_in: 5.minutes) { Client.active.by_name.to_a }
+    @filter_suppliers = Rails.cache.fetch("filter/suppliers",  expires_in: 5.minutes) { Supplier.active.by_name.to_a }
+    @filter_projects  = Rails.cache.fetch("filter/projects",   expires_in: 5.minutes) { Project.active.by_name.to_a }
+    @filter_employees = Rails.cache.fetch("filter/employees",  expires_in: 5.minutes) { Employee.active.by_name.to_a }
 
     @total_count = @orders.count
     @orders = @orders.limit(50).offset((params[:page].to_i > 0 ? params[:page].to_i - 1 : 0) * 50)

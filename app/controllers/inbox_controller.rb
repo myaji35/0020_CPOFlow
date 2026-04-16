@@ -100,7 +100,9 @@ class InboxController < ApplicationController
     end
 
     # Phase E: 견적성 탭 하단에 표시할 AI 학습 통계 (1페이지에서만 로드, prefetch 시 스킵)
-    unless @prefetch_mode
+    if @prefetch_mode
+      @rfq_ai_stats = nil
+    else
       begin
         @rfq_ai_stats = Gmail::RfqFeedbackService.accuracy_stats(window_days: 7)
       rescue => e

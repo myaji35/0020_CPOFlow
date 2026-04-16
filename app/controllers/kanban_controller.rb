@@ -48,7 +48,7 @@ class KanbanController < ApplicationController
       base = board_scoped_orders
                     .root_orders
                     .by_due_date
-                    .includes(:assignees, :tasks, :user, :sub_orders)
+                    .includes(:assignees, :tasks, :user, :sub_orders, :card_status, :client, :project, :comments)
 
       relation = if @current_board.is_default? || @current_board.board_type == "purchase"
         # 구매보드: 기존 status 기반
@@ -108,7 +108,7 @@ class KanbanController < ApplicationController
     base = board_scoped_orders
                   .root_orders
                   .by_due_date
-                  .includes(:assignees, :tasks, :user, :sub_orders)
+                  .includes(:assignees, :tasks, :user, :sub_orders, :card_status, :client, :project, :comments)
 
     relation = if @current_board.is_default? || @current_board.board_type == "purchase"
       if status == "new_rfq"

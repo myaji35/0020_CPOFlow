@@ -1,4 +1,6 @@
 class TeamController < ApplicationController
+  before_action :set_member, only: %i[show update_role]
+
   def index
     branch = params[:branch].presence
     scope  = User.order(:branch, :name).includes(:assigned_orders, :tasks)
@@ -30,7 +32,6 @@ class TeamController < ApplicationController
   end
 
   def show
-    @member         = User.find(params[:id])
     @overdue_orders = @member.assigned_orders.overdue.by_due_date
                              .includes(:client, :project)
     @active_orders  = @member.assigned_orders.active
@@ -43,10 +44,18 @@ class TeamController < ApplicationController
   def update_role
     redirect_to team_index_path, alert: "권한이 없습니다." and return unless current_user.admin?
 
-    @member = User.find(params[:id])
     @member.update!(role: params[:role])
     redirect_to team_index_path, notice: "#{@member.display_name} 역할이 변경되었습니다."
   rescue ActiveRecord::RecordInvalid => e
     redirect_to team_index_path, alert: "변경 실패: #{e.message}"
+  end
+
+  private
+
+  def set_member
+    @member = User.find_by(id: params[:id])
+    unless @member
+      redirect_to team_index_path, alert: "멤버를 찾을 수 없습니다."
+    end
   end
 end

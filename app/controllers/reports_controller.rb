@@ -122,9 +122,10 @@ class ReportsController < ApplicationController
 
   def calc_avg_lead_days(range)
     delivered = report_scoped_orders.get_grn.where(updated_at: range)
-    return 0.0 if delivered.empty?
-    total = delivered.sum { |o| (o.updated_at.to_date - o.created_at.to_date).to_i }
-    (total.to_f / delivered.count).round(1)
+    cnt = delivered.count
+    return 0.0 if cnt == 0
+    total_days = delivered.sum("JULIANDAY(orders.updated_at) - JULIANDAY(orders.created_at)")
+    (total_days.to_f / cnt).round(1)
   end
 
   # ── 월별 트렌드 (최근 12개월 고정) ────────────────────────
