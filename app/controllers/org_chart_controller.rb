@@ -6,5 +6,13 @@ class OrgChartController < ApplicationController
     @selected_country_code = params[:country].presence || @countries.first&.code
     @selected_country = @countries.find { |c| c.code == @selected_country_code }
     @companies = @selected_country&.companies&.active&.includes(departments: { employees: :visas }) || []
+
+    # 통계
+    @stats = {
+      countries: @countries.count,
+      companies: Company.active.count,
+      departments: Department.where(active: true).count,
+      employees: Employee.active.count
+    }
   end
 end
