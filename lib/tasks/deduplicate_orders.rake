@@ -59,14 +59,16 @@ namespace :orders do
         dup_ids = duplicates.map(&:id)
         Order.where(id: dup_ids).update_all(archived_at: Time.current)
 
-        # Activity 기록
+        # Activity 기록 (action 필드에 요약)
         duplicates.each do |dup|
           Activity.create(
             order: keeper,
-            action: "duplicate_archived",
-            user_id: keeper.user_id,
-            metadata: { archived_order_id: dup.id, reason: "duplicate_ref_subject" }.to_json
+            action: "duplicate_archived(##{dup.id})",
+            user_id: keeper.user_id
           )
+        rescue => e
+          # Activity 기록 실패해도 아카이브 자체는 이미 완료
+          Rails.logger.warn "[dedup] Activity 기록 실패: #{e.message}"
         end
       end
 
