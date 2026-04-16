@@ -82,10 +82,12 @@ class OrdersController < ApplicationController
     @order = Order.new(order_params)
     @order.user = current_user
     @order.status = :new_rfq
+    @order.rfq_status = :rfq_triage
+    @order.kanban_board_id ||= (KanbanBoard.default_board.first || KanbanBoard.ensure_default!).id
 
     if @order.save
       Activity.create!(order: @order, user: current_user, action: "created")
-      redirect_to kanban_path, notice: t("orders.create_success")
+      redirect_to kanban_path(board_id: @order.kanban_board_id), notice: t("orders.create_success")
     else
       render :new, status: :unprocessable_entity
     end

@@ -487,6 +487,15 @@ class InboxController < ApplicationController
         unless html_content.valid_encoding?
           html_content = raw.encode("UTF-8", "UTF-8", invalid: :replace, undef: :replace, replace: "")
         end
+        # 상대경로 링크 차단: base href를 about:blank로 설정하여 iframe 내 링크 클릭이 메인창을 이동시키지 않음
+        base_tag = '<base href="about:blank" target="_blank">'
+        if html_content.include?("<head>")
+          html_content = html_content.sub("<head>", "<head>#{base_tag}")
+        elsif html_content.include?("<html")
+          html_content = html_content.sub(/<html[^>]*>/i) { |m| "#{m}<head>#{base_tag}</head>" }
+        else
+          html_content = "#{base_tag}#{html_content}"
+        end
         # iframe 내 ESC 키 → 부모 모달 닫기 (</body> 없으면 끝에 덧붙임)
         esc_script = '<script>document.addEventListener("keydown",function(e){if(e.key==="Escape")window.parent.postMessage("close-preview-modal","*")});</script>'
         html_content = if html_content.include?("</body>")
