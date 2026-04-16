@@ -3,13 +3,13 @@ require "test_helper"
 class OrderExtendedTest < ActiveSupport::TestCase
   # display_subject 테스트
   test "display_subject: RE: 접두사 제거" do
-    order = Order.new(title: "Test Order", customer_name: "Test Co",
+    order = Order.new(title: "RE: 견적 요청", customer_name: "Test Co",
                       original_email_subject: "RE: 견적 요청")
     assert_equal "견적 요청", order.display_subject
   end
 
   test "display_subject: 중첩 RE:/FW: 접두사 제거" do
-    order = Order.new(title: "Test Order", customer_name: "Test Co",
+    order = Order.new(title: "RE: RE: FW: 견적 요청", customer_name: "Test Co",
                       original_email_subject: "RE: RE: FW: 견적 요청")
     assert_equal "견적 요청", order.display_subject
   end
@@ -21,15 +21,21 @@ class OrderExtendedTest < ActiveSupport::TestCase
   end
 
   test "display_subject: Event 접두사 제거" do
-    order = Order.new(title: "Test Order", customer_name: "Test Co",
+    order = Order.new(title: "Event 견적 요청", customer_name: "Test Co",
                       original_email_subject: "Event 견적 요청")
     assert_equal "견적 요청", order.display_subject
   end
 
   test "display_subject: RFQ 접두사 제거" do
-    order = Order.new(title: "Test Order", customer_name: "Test Co",
+    order = Order.new(title: "RFQ: 자재 구매 요청", customer_name: "Test Co",
                       original_email_subject: "RFQ: 자재 구매 요청")
     assert_equal "자재 구매 요청", order.display_subject
+  end
+
+  test "display_subject: title을 사용자가 수정하면 편집본 우선" do
+    order = Order.new(title: "사용자 수정 제목", customer_name: "Test Co",
+                      original_email_subject: "RE: 원본 이메일 제목")
+    assert_equal "사용자 수정 제목", order.display_subject
   end
 
   # subject_tags 테스트
