@@ -32,6 +32,35 @@
     </div>
   </div>
 
+  <%# 최근 30일 처리 건수 미니 바 차트 %>
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-sm font-semibold text-gray-900 dark:text-white">최근 30일 처리 현황</h2>
+      <span class="text-xs text-gray-500 dark:text-gray-500">총 <span class="font-semibold text-gray-700 dark:text-gray-300"><%= @activity_total %></span>건 처리</span>
+    </div>
+    <div class="flex items-end gap-px" style="height: 64px;">
+      <% @daily_activity.each do |d| %>
+        <% bar_h = d[:count] > 0 ? [(d[:count].to_f / @activity_max * 100).round, 8].max : 0 %>
+        <% is_today = d[:date] == Date.today %>
+        <div class="flex-1 flex flex-col items-center justify-end h-full group relative">
+          <% if d[:count] > 0 %>
+            <div class="w-full rounded-t
+                        <%= is_today ? 'bg-primary' : 'bg-blue-300 dark:bg-blue-500' %>
+                        hover:bg-blue-500 dark:hover:bg-blue-400 transition-colors cursor-default"
+                 style="height: <%= bar_h %>%;"
+                 title="<%= d[:date].strftime('%m/%d') %>: <%= d[:count] %>건"></div>
+          <% else %>
+            <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-t" style="height: 4%;"></div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+    <div class="flex justify-between mt-2">
+      <span class="text-xs text-gray-400 dark:text-gray-600"><%= @daily_activity.first[:date].strftime('%m/%d') %></span>
+      <span class="text-xs text-gray-400 dark:text-gray-600">오늘</span>
+    </div>
+  </div>
+
   <%# 상태별 통계 배지 %>
   <% if @status_counts.any? %>
     <div class="flex flex-wrap gap-2">

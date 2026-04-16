@@ -23,12 +23,23 @@ class TeamController < ApplicationController
       }
     end
 
+    total_active  = @workloads.sum { |w| w[:active_orders] }
+    total_overdue = @workloads.sum { |w| w[:overdue_orders] }
+    member_count  = @members.count
+
     @summary = {
-      total_members: @members.count,
-      total_active:  @workloads.sum { |w| w[:active_orders] },
-      total_overdue: @workloads.sum { |w| w[:overdue_orders] },
-      overloaded:    @workloads.count { |w| w[:active_orders] >= 8 }
+      total_members: member_count,
+      total_active:  total_active,
+      total_overdue: total_overdue,
+      overloaded:    @workloads.count { |w| w[:active_orders] >= 8 },
+      avg_per_member: member_count > 0 ? (total_active.to_f / member_count).round(1) : 0,
+      overdue_rate:   total_active > 0 ? (total_overdue.to_f / total_active * 100).round(1) : 0
     }
+
+    # 담당자별 활성 주문 분포 (bar chart 데이터)
+    @member_order_dist = @workloads
+      .sort_by { |w| -w[:active_orders] }
+      .map { |w| { name: w[:user].display_name, active: w[:active_orders], overdue: w[:overdue_orders] } }
   end
 
   def show
@@ -39,6 +50,21 @@ class TeamController < ApplicationController
                              .by_due_date.limit(20)
                              .includes(:client, :project)
     @status_counts  = @member.assigned_orders.group(:status).count
+
+    # 최근 30일 일별 처리 건수 (status_changed 활동)
+    thirty_days_ago = 30.days.ago.beginning_of_day
+    daily_raw = Activity.where(user_id: @member.id)
+                        .where(action: "status_changed")
+                        .where("created_at >= ?", thirty_days_ago)
+                        .group("date(created_at)")
+                        .count
+
+    @daily_activity = (0..29).map do |i|
+      day = (Date.today - (29 - i))
+      { date: day, count: daily_raw[day.to_s] || 0 }
+    end
+    @activity_max = [@daily_activity.map { |d| d[:count] }.max || 1, 1].max
+    @activity_total = @daily_activity.sum { |d| d[:count] }
   end
 
   def update_role
