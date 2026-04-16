@@ -74,9 +74,9 @@
               <div class="flex items-center justify-center gap-1">
                 <%# 블럭 관리 %>
                 <%= link_to settings_card_statuses_path(board_id: board.id),
-                    class: "p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-500 hover:text-[#00A1E0]",
-                    title: "블럭 관리" do %>
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                    class: "px-2 py-1 text-xs font-medium border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-[#00A1E0] hover:text-[#00A1E0] transition-colors",
+                    title: "칼럼(블럭) 편집" do %>
+                  블럭 편집
                 <% end %>
                 <%# 수정 %>
                 <button type="button"
