@@ -150,7 +150,15 @@ export default class extends Controller {
       project:  "bg-orange-50 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400"
     }
 
-    this.resultsTarget.innerHTML = items.map((item, i) => {
+    // ISS-227: 타입별 그룹핑 — 렌더 전 items를 type으로 묶음
+    const typeOrder = [ "order", "client", "supplier", "employee", "project" ]
+    const groups = {}
+    items.forEach(item => {
+      (groups[item.type] = groups[item.type] || []).push(item)
+    })
+
+    let globalIndex = 0
+    const renderItem = (item) => {
       const label = this.highlight(item.label || "", q)
       const sub   = item.sub ? this.highlight(item.sub, q) : ""
       const badge = `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium min-w-[40px] justify-center ${typeColor[item.type] || "bg-gray-100 text-gray-500"}">${typeLabel[item.type] || item.type}</span>`
@@ -164,24 +172,35 @@ export default class extends Controller {
         ${chevron}
       `
       const baseClass = `flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer group transition-colors result-item`
+      const idx = globalIndex++
 
       if (item.type === "order") {
-        // Order → openOrderDrawer (페이지 이동 없음)
         return `<div data-result-item
                      data-order-id="${item.id}"
                      data-order-title="${(item.label || "").replace(/"/g, "&quot;")}"
                      data-order-url="${item.url}"
                      class="${baseClass}"
-                     data-index="${i}">${content}</div>`
+                     data-index="${idx}">${content}</div>`
       } else {
-        // 기타 → 기존 링크
         return `<a href="${item.url}"
                    data-result-item
                    class="${baseClass}"
-                   data-index="${i}">${content}</a>`
+                   data-index="${idx}">${content}</a>`
       }
-    }).join("")
+    }
 
+    const sections = typeOrder
+      .filter(t => groups[t] && groups[t].length > 0)
+      .map(t => `
+        <div class="px-4 pt-3 pb-1 bg-gray-50/50 dark:bg-gray-900/30">
+          <p class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">
+            ${typeLabel[t] || t} <span class="text-gray-300 dark:text-gray-600">(${groups[t].length})</span>
+          </p>
+        </div>
+        ${groups[t].map(renderItem).join("")}
+      `).join("")
+
+    this.resultsTarget.innerHTML = sections
     this.selectedIndex = -1
   }
 

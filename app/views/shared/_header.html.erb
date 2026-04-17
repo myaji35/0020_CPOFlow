@@ -6,12 +6,19 @@
 
   <!-- Right: Search + Alerts + User -->
   <div class="flex items-center gap-4">
-    <!-- Search (Cmd+K 힌트 버튼) -->
+    <!-- Search (Cmd+K 힌트 버튼, 데스크톱) -->
     <button onclick="document.dispatchEvent(new CustomEvent('open-command-palette'))"
+            title="⌘K 또는 Ctrl+K 로 전역 검색"
             class="hidden sm:flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-500 hover:border-gray-300 dark:hover:border-gray-500 transition-colors w-48">
       <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <span class="flex-1 text-left text-xs">검색...</span>
+      <span class="flex-1 text-left text-xs">주문/발주처/거래처/직원/현장...</span>
       <kbd class="text-xs border border-gray-200 dark:border-gray-600 rounded px-1">⌘K</kbd>
+    </button>
+    <!-- Search (모바일 아이콘) -->
+    <button onclick="document.dispatchEvent(new CustomEvent('open-command-palette'))"
+            title="전역 검색"
+            class="sm:hidden flex items-center justify-center w-9 h-9 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     </button>
 
     <!-- 알림 드롭다운 (긴급 카운트 통합) -->

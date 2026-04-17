@@ -7,35 +7,46 @@ class SearchController < ApplicationController
 
     results = []
 
-    results += Order.where("title LIKE ? OR customer_name LIKE ? OR original_email_subject LIKE ? OR original_email_from LIKE ?",
-                       "%#{q}%", "%#{q}%", "%#{q}%", "%#{q}%")
-                    .limit(5).map do |o|
-                      { type: "order", id: o.id, icon: "clipboard", label: o.title.presence || o.original_email_subject,
-                        sub: Order::STATUS_LABELS[o.status], url: order_path(o) }
-                    end
+    like = "%#{q}%"
 
-    results += Client.where("name LIKE ?", "%#{q}%")
+    # ISS-227: 검색 대상 확장 — reference_no/rfq_no/po_no 포함
+    results += Order.where(
+      "title LIKE ? OR customer_name LIKE ? OR original_email_subject LIKE ? OR " \
+      "original_email_from LIKE ? OR reference_no LIKE ? OR rfq_no LIKE ? OR po_no LIKE ?",
+      like, like, like, like, like, like, like
+    ).limit(5).map do |o|
+      sub_parts = [ Order::STATUS_LABELS[o.status] ]
+      sub_parts << "RFQ##{o.reference_no}" if o.reference_no.present?
+      { type: "order", id: o.id, icon: "clipboard", label: o.title.presence || o.original_email_subject,
+        sub: sub_parts.compact.join(" · "), url: order_path(o) }
+    end
+
+    results += Client.where("name LIKE ? OR code LIKE ? OR ecount_code LIKE ?", like, like, like)
                      .limit(3).map do |c|
                        { type: "client", icon: "building", label: c.name,
-                         sub: "발주처", url: client_path(c) }
+                         sub: [ "발주처", c.country, c.ecount_code ].compact.reject(&:blank?).join(" · "),
+                         url: client_path(c) }
                      end
 
-    results += Supplier.where("name LIKE ?", "%#{q}%")
+    results += Supplier.where("name LIKE ? OR code LIKE ? OR ecount_code LIKE ?", like, like, like)
                        .limit(3).map do |s|
                          { type: "supplier", icon: "truck", label: s.name,
-                           sub: "거래처", url: supplier_path(s) }
+                           sub: [ "거래처", s.country, s.ecount_code ].compact.reject(&:blank?).join(" · "),
+                           url: supplier_path(s) }
                        end
 
-    results += Employee.where("name LIKE ? OR name_en LIKE ?", "%#{q}%", "%#{q}%")
+    results += Employee.where("name LIKE ? OR name_en LIKE ? OR passport_number LIKE ?", like, like, like)
                        .limit(3).map do |e|
                          { type: "employee", icon: "user", label: e.name,
-                           sub: e.job_title, url: employee_path(e) }
+                           sub: [ e.job_title, e.nationality ].compact.reject(&:blank?).join(" · "),
+                           url: employee_path(e) }
                        end
 
-    results += Project.where("name LIKE ?", "%#{q}%")
+    results += Project.where("name LIKE ? OR code LIKE ? OR location LIKE ?", like, like, like)
                       .limit(3).map do |p|
                         { type: "project", icon: "map-pin", label: p.name,
-                          sub: "현장", url: project_path(p) }
+                          sub: [ "현장", p.site_category, p.location ].compact.reject(&:blank?).join(" · "),
+                          url: project_path(p) }
                       end
 
     render json: results
