@@ -123,6 +123,35 @@ class OrdersController < ApplicationController
 
   def edit; end
 
+  # ISS-224: GET /orders/price_history
+  # params: client_id, supplier_id, item_name (모두 optional, 2개 이상 있을 때만 의미 있음)
+  # 동일 조합의 최근 주문 단가/일자 반환
+  def price_history
+    scope = Order.where.not(estimated_value: [ nil, 0 ])
+    scope = scope.where(client_id: params[:client_id])   if params[:client_id].present?
+    scope = scope.where(supplier_id: params[:supplier_id]) if params[:supplier_id].present?
+    if params[:item_name].present?
+      item_like = "%#{params[:item_name].to_s.strip}%"
+      scope = scope.where("item_name LIKE ?", item_like)
+    end
+    entries = scope.order(created_at: :desc).limit(5).map do |o|
+      {
+        id:           o.id,
+        title:        o.title,
+        item_name:    o.item_name,
+        quantity:     o.quantity,
+        unit_price:   (o.quantity.to_i > 0 ? (o.estimated_value.to_f / o.quantity).round(2) : nil),
+        total:        o.estimated_value.to_f,
+        currency:     o.currency,
+        client:       o.client&.name,
+        supplier:     o.supplier&.name,
+        created_at:   o.created_at.strftime("%Y-%m-%d"),
+        path:         order_path(o)
+      }
+    end
+    render json: { count: entries.size, entries: entries }
+  end
+
   def update
     if @order.update(order_params)
       Activity.create!(order: @order, user: current_user, action: "updated")

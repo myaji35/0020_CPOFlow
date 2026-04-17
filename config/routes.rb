@@ -28,6 +28,7 @@ Rails.application.routes.draw do
   resources :orders do
     collection do
       get :preview_by_ref  # M3-4: 칸반 reference_no 호버 미니프리뷰
+      get :price_history   # ISS-224: 동일 조합 직전 단가 조회
     end
     resources :tasks, only: %i[create update destroy]
     resources :comments, only: %i[create destroy]
