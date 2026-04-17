@@ -12,6 +12,12 @@ class ReportsController < ApplicationController
     @boards        = KanbanBoard.ordered
     @selected_board = params[:board_id].present? ? KanbanBoard.find_by(id: params[:board_id]) : nil
 
+    # ISS-222: drill-down 필터
+    @available_branches = User.where.not(branch: [ nil, "" ]).distinct.pluck(:branch).sort
+    @selected_branch    = params[:branch].presence_in(@available_branches)
+    @available_users    = User.order(:name)
+    @selected_assignee_id = params[:assignee_id].presence
+
     @kpi         = build_kpi(@date_range)
     @monthly     = build_monthly_trend
     @funnel      = build_funnel
@@ -19,6 +25,8 @@ class ReportsController < ApplicationController
     @by_supplier = build_by_supplier(@date_range)
     @by_project  = build_by_project(@date_range)
     @by_assignee = build_by_assignee(@date_range)
+    # ISS-222: by_branch 추가
+    @by_branch   = build_by_branch(@date_range)
   end
 
   def export_pdf
@@ -64,7 +72,17 @@ class ReportsController < ApplicationController
   # ── 보드 스코핑 ────────────────────────────────────────────
   def report_scoped_orders
     base = scoped_orders
-    @selected_board ? base.where(kanban_board_id: @selected_board.id) : base
+    base = base.where(kanban_board_id: @selected_board.id) if @selected_board
+    # ISS-222: 지사(branch) drill-down — User를 통해 필터
+    if @selected_branch.present?
+      branch_user_ids = User.where(branch: @selected_branch).pluck(:id)
+      base = base.where(user_id: branch_user_ids).or(base.joins(:assignees).where(users: { id: branch_user_ids }))
+    end
+    # ISS-222: 담당자(assignee) drill-down
+    if @selected_assignee_id.present?
+      base = base.joins(:assignees).where(users: { id: @selected_assignee_id })
+    end
+    base
   end
 
   # ── 기간 파싱 ──────────────────────────────────────────────
@@ -186,6 +204,26 @@ class ReportsController < ApplicationController
         .select(
           "users.id, users.name,
            COUNT(created_orders.id) AS order_count,
+           SUM(CASE WHEN created_orders.status = 6 THEN 1 ELSE 0 END) AS delivered_count,
+           SUM(CASE WHEN created_orders.status = 6
+                     AND created_orders.due_date >= DATE(created_orders.updated_at)
+                    THEN 1 ELSE 0 END) AS on_time_count"
+        )
+        .order("COUNT(created_orders.id) DESC")
+        .to_a
+  end
+
+  # ISS-222: 지사별 실적
+  def build_by_branch(range)
+    scope = User.where.not(branch: [ nil, "" ])
+                .joins(:created_orders)
+                .where(created_orders: { created_at: range })
+    scope = scope.where(created_orders: { kanban_board_id: @selected_board.id }) if @selected_board
+    scope.group("users.branch")
+        .select(
+          "users.branch,
+           COUNT(created_orders.id) AS order_count,
+           COALESCE(SUM(created_orders.estimated_value), 0) AS total_value,
            SUM(CASE WHEN created_orders.status = 6 THEN 1 ELSE 0 END) AS delivered_count,
            SUM(CASE WHEN created_orders.status = 6
                      AND created_orders.due_date >= DATE(created_orders.updated_at)

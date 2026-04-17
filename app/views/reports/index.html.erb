@@ -100,6 +100,37 @@
                 class: "px-3 py-1.5 bg-primary text-white text-sm rounded-lg hover:bg-primary/90 cursor-pointer transition-colors" %>
         <% end %>
       <% end %>
+
+      <%# ISS-222: Drill-down 필터 (지사/담당자) %>
+      <% if @available_branches.any? %>
+        <div class="w-px h-6 bg-gray-200 dark:bg-gray-700"></div>
+        <%= form_with url: reports_path, method: :get, class: "flex items-center gap-2" do |f| %>
+          <%= f.hidden_field :period, value: @period %>
+          <%= f.hidden_field :board_id, value: @selected_board&.id %>
+          <%= f.hidden_field :from, value: params[:from] if @period == "custom" %>
+          <%= f.hidden_field :to,   value: params[:to]   if @period == "custom" %>
+          <select name="branch" onchange="this.form.submit()"
+                  class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]">
+            <option value="">전체 지사</option>
+            <% @available_branches.each do |br| %>
+              <option value="<%= br %>" <%= 'selected' if @selected_branch == br %>><%= br %></option>
+            <% end %>
+          </select>
+          <select name="assignee_id" onchange="this.form.submit()"
+                  class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]">
+            <option value="">전체 담당자</option>
+            <% @available_users.each do |u| %>
+              <option value="<%= u.id %>" <%= 'selected' if @selected_assignee_id.to_i == u.id %>>
+                <%= u.display_name %><%= " (#{u.branch})" if u.branch.present? %>
+              </option>
+            <% end %>
+          </select>
+          <% if @selected_branch || @selected_assignee_id %>
+            <%= link_to "필터 초기화", reports_path(period: @period, board_id: @selected_board&.id),
+                  class: "text-xs text-gray-500 hover:text-[#D93025] underline" %>
+          <% end %>
+        <% end %>
+      <% end %>
     </div>
   </div>
 
@@ -318,6 +349,53 @@
       <% end %>
     </div>
   </div>
+
+  <%# ISS-222: 지사별 성과 %>
+  <% if @by_branch.any? %>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">지사별 성과</h2>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 dark:bg-gray-700/50">
+            <tr>
+              <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-500">지사</th>
+              <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-500">수주 건수</th>
+              <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-500">수주액</th>
+              <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-500">납품</th>
+              <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-500">납기 준수율</th>
+              <th class="px-5 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-500">드릴다운</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+            <% @by_branch.each do |b| %>
+              <% on_time_pct = b.delivered_count.to_i > 0 ? (b.on_time_count.to_f / b.delivered_count * 100).round(1) : nil %>
+              <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                <td class="px-5 py-3 font-medium text-gray-900 dark:text-white"><%= b.branch %></td>
+                <td class="px-5 py-3 text-right tabular-nums"><%= b.order_count %></td>
+                <td class="px-5 py-3 text-right tabular-nums text-[#00A1E0] font-semibold">$<%= number_with_delimiter((b.total_value.to_f / 1000).round) %>K</td>
+                <td class="px-5 py-3 text-right tabular-nums text-green-600 dark:text-green-400"><%= b.delivered_count %></td>
+                <td class="px-5 py-3 text-right tabular-nums">
+                  <% if on_time_pct %>
+                    <span class="<%= on_time_pct >= 90 ? 'text-green-600 dark:text-green-400' : (on_time_pct >= 75 ? 'text-yellow-600' : 'text-red-600') %> font-semibold"><%= on_time_pct %>%</span>
+                  <% else %>
+                    <span class="text-gray-300">—</span>
+                  <% end %>
+                </td>
+                <td class="px-5 py-3 text-center">
+                  <%= link_to "이 지사만 보기",
+                        reports_path(period: @period, from: params[:from], to: params[:to],
+                                     board_id: @selected_board&.id, branch: b.branch),
+                        class: "text-xs text-[#00A1E0] hover:underline" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% end %>
 
   <%# ── 담당자별 성과 ── %>
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden print-break">
