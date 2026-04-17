@@ -123,6 +123,29 @@ class OrdersController < ApplicationController
 
   def edit; end
 
+  # ISS-229: POST /orders/save_filter
+  # 현재 쿼리 파라미터를 User.saved_filters[:orders]에 저장
+  def save_filter
+    name = params[:filter_name].to_s.strip
+    if name.blank?
+      return redirect_back fallback_location: orders_path, alert: "필터 이름을 입력하세요"
+    end
+    filter_params = params.except(:controller, :action, :filter_name, :authenticity_token, :commit, :_method)
+                          .permit!.to_h.reject { |_, v| v.blank? }
+    if filter_params.empty?
+      return redirect_back fallback_location: orders_path, alert: "저장할 필터 조건이 없습니다"
+    end
+    current_user.add_saved_filter("orders", name, filter_params)
+    redirect_to orders_path(filter_params), notice: "필터 '#{name}' 저장되었습니다"
+  end
+
+  # ISS-229: DELETE /orders/saved_filter?name=...
+  def delete_saved_filter
+    name = params[:name].to_s
+    current_user.remove_saved_filter("orders", name)
+    redirect_back fallback_location: orders_path, notice: "필터 '#{name}' 삭제되었습니다"
+  end
+
   # ISS-224: GET /orders/price_history
   # params: client_id, supplier_id, item_name (모두 optional, 2개 이상 있을 때만 의미 있음)
   # 동일 조합의 최근 주문 단가/일자 반환

@@ -92,4 +92,28 @@ class User < ApplicationRecord
     # 미설정 시 default 반환 (채널은 in_app만 기본 true, 나머지는 false)
     channel.to_s == "in_app" && (NOTIFICATION_TYPES.dig(type.to_s, :default) || false)
   end
+
+  # ISS-229: 저장된 필터 (scope별 쿼리 파라미터 hash)
+  # 구조: { "orders" => [ { name: "...", params: { status: "...", period: "..." } }, ... ] }
+  def saved_filters_for(scope)
+    (saved_filters || {})[scope.to_s] || []
+  end
+
+  def add_saved_filter(scope, name, params_hash)
+    current = saved_filters || {}
+    list = current[scope.to_s] || []
+    # 같은 이름 덮어쓰기
+    list = list.reject { |f| f["name"] == name }
+    list << { "name" => name, "params" => params_hash.to_h, "created_at" => Time.current.iso8601 }
+    list = list.last(10)  # 최대 10개
+    current[scope.to_s] = list
+    update!(saved_filters: current)
+  end
+
+  def remove_saved_filter(scope, name)
+    current = saved_filters || {}
+    list = (current[scope.to_s] || []).reject { |f| f["name"] == name }
+    current[scope.to_s] = list
+    update!(saved_filters: current)
+  end
 end
