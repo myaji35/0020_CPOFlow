@@ -138,6 +138,29 @@
                  class="hidden absolute z-50 left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-52 overflow-y-auto">
             </div>
           </div>
+          <%# ISS-211: 선택된 프로젝트 예산 미리보기 + 초과 경고 (서버사이드 렌더, edit/re-render 시에만 표시) %>
+          <% if order.project&.budget.to_f > 0 %>
+            <% proj = order.project %>
+            <% util = proj.utilization_rate %>
+            <% current_val = order.estimated_value.to_f %>
+            <% projected_util = proj.budget.to_f.zero? ? 0 : ((proj.budget_utilized + current_val) / proj.budget.to_f * 100).round(1) %>
+            <% over_after = projected_util > 100 %>
+            <div class="mt-2 px-3 py-2 rounded-lg border <%= over_after ? 'bg-red-50 border-red-300 dark:bg-red-900/20 dark:border-red-900/50' : 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-900/50' %> text-xs">
+              <div class="flex items-center justify-between">
+                <span class="<%= over_after ? 'text-red-800 dark:text-red-300 font-semibold' : 'text-blue-800 dark:text-blue-300' %>">
+                  <%= proj.name %> 예산: <%= util %>% 집행 (잔여 <%= number_with_delimiter(proj.budget_remaining.round.to_i) %>)
+                </span>
+                <% if current_val > 0 %>
+                  <span class="<%= over_after ? 'text-red-700 dark:text-red-400 font-bold' : 'text-blue-700 dark:text-blue-400' %>">
+                    이 주문 포함 시 → <%= projected_util %>%
+                  </span>
+                <% end %>
+              </div>
+              <% if over_after %>
+                <p class="mt-1 text-red-700 dark:text-red-400">⚠ 예산 초과 가능성. 저장 전 금액/현장 재검토 필요.</p>
+              <% end %>
+            </div>
+          <% end %>
         </div>
       </div>
       <%# 납기일 + 퀵픽 버튼 %>
