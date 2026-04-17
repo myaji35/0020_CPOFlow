@@ -70,6 +70,35 @@
     </div>
   </div>
 
+  <%# ISS-208: 이벤트 소스 토글 + 타입별 레전드 %>
+  <% event_types = [
+       { key: "orders",    label: "주문 납기",  color: "#00A1E0", icon: "📦" },
+       { key: "visas",     label: "비자 만료",  color: "#D93025", icon: "🛂" },
+       { key: "contracts", label: "계약 만료",  color: "#F4A83A", icon: "📝" }
+     ] %>
+  <div class="flex flex-wrap items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
+    <span class="text-xs font-semibold text-gray-600 dark:text-gray-400 mr-1">이벤트 소스:</span>
+    <% event_types.each do |et| %>
+      <% active = @event_sources.include?(et[:key]) %>
+      <% count  = @type_counts[et[:key] == "orders" ? "order" : et[:key].sub(/s$/, "")].to_i %>
+      <% # sources 파라미터 토글 계산
+         new_sources = active ? (@event_sources - [ et[:key] ]) : (@event_sources + [ et[:key] ]).uniq %>
+      <%= link_to calendar_path(view: @view,
+                                 month: @view == "monthly" ? @month.strftime("%Y-%m-%d") : nil,
+                                 date:  @view == "weekly"  ? @week_start.strftime("%Y-%m-%d") : nil,
+                                 sources: new_sources.sort.join(",")),
+            class: "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors
+                    #{active ? 'bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600' : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-700 line-through opacity-60'}" do %>
+        <span class="inline-block w-2.5 h-2.5 rounded-full" style="background-color: <%= et[:color] %>;"></span>
+        <span><%= et[:label] %></span>
+        <% if count > 0 %>
+          <span class="text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full px-1.5 tabular-nums"><%= count %></span>
+        <% end %>
+      <% end %>
+    <% end %>
+    <span class="text-[10px] text-gray-400 dark:text-gray-500 ml-auto">클릭하여 소스 on/off</span>
+  </div>
+
   <% if @view == "monthly" %>
     <%# =========== 월간 뷰 =========== %>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -155,6 +184,19 @@
             <% end %>
             <% if day_orders.size > 3 %>
               <span class="text-[10px] text-gray-500 dark:text-gray-500">+<%= day_orders.size - 3 %> more</span>
+            <% end %>
+            <%# ISS-208: 비자/계약 이벤트 (날짜 단위) %>
+            <% day_other_events = (@events_by_date[date] || []).reject { |e| e[:type] == "order" } %>
+            <% day_other_events.first(2).each do |ev| %>
+              <% ev_color = ev[:type] == "visa" ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300" : "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300" %>
+              <a href="<%= ev[:path] %>" onclick="event.stopPropagation()"
+                 class="block text-xs truncate px-1.5 py-0.5 rounded mb-0.5 <%= ev_color %>"
+                 title="<%= ev[:title] %>">
+                <span class="inline-block w-1.5 h-1.5 rounded-full mr-1" style="background: <%= ev[:type] == 'visa' ? '#D93025' : '#F4A83A' %>;"></span><%= ev[:title] %>
+              </a>
+            <% end %>
+            <% if day_other_events.size > 2 %>
+              <span class="text-[10px] text-gray-500 dark:text-gray-500">+<%= day_other_events.size - 2 %> more</span>
             <% end %>
           </div>
         <% end %>
