@@ -62,6 +62,15 @@ class SuppliersController < ApplicationController
     overdue              = @supplier.orders.where("due_date < ? AND status NOT IN (?, ?)", Date.today, Order.statuses[:get_grn], Order.statuses[:give_up]).count
     @on_time_rate        = total > 0 ? ((total - overdue).to_f / total * 100).round(1) : nil
     @performance_grade   = calculate_supplier_performance(@on_time_rate, total)
+    # ISS-214: 등급 산정 근거 (뷰 tooltip용)
+    @grade_basis = {
+      total_orders: total,
+      overdue:      overdue,
+      on_time_rate: @on_time_rate,
+      computed_at:  Time.current,
+      min_sample:   5, # 이하면 "데이터 부족" 표시
+      sufficient:   total >= 5
+    }
 
     # FR-05: 월별 납품 추이 (최근 12개월)
     @monthly_supply = (11.downto(0)).map do |i|

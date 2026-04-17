@@ -109,11 +109,28 @@
       <% end %>
     </div>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-      <p class="text-xs text-gray-500 dark:text-gray-500">성과 등급</p>
-      <% if @performance_grade && @performance_grade != "N/A" %>
+      <div class="flex items-center justify-between">
+        <p class="text-xs text-gray-500 dark:text-gray-500">성과 등급</p>
+        <%# ISS-214: 실시간 집계 표시 + 계산 근거 tooltip %>
+        <span class="inline-flex items-center gap-1 text-[10px] text-gray-400 dark:text-gray-500"
+              title="매 조회 시 실시간 계산됨&#10;총 <%= @grade_basis[:total_orders] %>건 중 연체 <%= @grade_basis[:overdue] %>건&#10;납기준수율 <%= @grade_basis[:on_time_rate] || '-' %>%&#10;조회 시각: <%= @grade_basis[:computed_at].strftime('%Y-%m-%d %H:%M') %>">
+          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          실시간
+        </span>
+      </div>
+      <% if @performance_grade && @performance_grade != "N/A" && @grade_basis[:sufficient] %>
         <p class="mt-1"><span class="inline-flex px-3 py-1 text-xl font-bold rounded-lg <%= perf_color[@performance_grade] %>"><%= @performance_grade %></span></p>
+        <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-1.5">
+          총 <%= @grade_basis[:total_orders] %>건 · 연체 <%= @grade_basis[:overdue] %>건
+        </p>
+      <% elsif !@grade_basis[:sufficient] && @grade_basis[:total_orders] > 0 %>
+        <p class="mt-1"><span class="inline-flex px-2 py-1 text-xs font-medium rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">데이터 부족</span></p>
+        <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-1.5">
+          <%= @grade_basis[:min_sample] %>건 이상 필요 (현재 <%= @grade_basis[:total_orders] %>건)
+        </p>
       <% else %>
         <p class="text-2xl font-bold text-gray-300 dark:text-gray-600 mt-1">-</p>
+        <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-1.5">거래 이력 없음</p>
       <% end %>
     </div>
   </div>
