@@ -198,12 +198,28 @@
     <% prev_stat = col_idx > 0 ? @kanban_column_keys[col_idx - 1] : nil %>
     <% next_stat = col_idx < @kanban_column_keys.length - 1 ? @kanban_column_keys[col_idx + 1] : nil %>
 
-    <div class="kanban-column flex flex-col w-72 shrink-0" data-status="<%= status %>">
+    <% wip_limit = @wip_limits[status] %>
+    <% current_count = (status == "inbox") ? @inbox_grouped.size : (@column_totals && @column_totals[status] || orders.count) %>
+    <% wip_over = wip_limit && current_count > wip_limit %>
+    <% wip_near = wip_limit && !wip_over && current_count >= (wip_limit * 0.8).ceil %>
+
+    <div class="kanban-column flex flex-col w-72 shrink-0 <%= 'ring-2 ring-red-400 dark:ring-red-500 rounded-xl' if wip_over %>" data-status="<%= status %>" data-wip-limit="<%= wip_limit %>">
       <!-- Column Header -->
       <div class="flex items-center justify-between mb-3 px-1">
         <div class="flex items-center gap-2">
           <span class="column-name text-sm font-semibold text-gray-700 dark:text-gray-300"><%= label %></span>
-          <span class="column-count text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-500 rounded-full px-2 py-0.5"><%= status == "inbox" ? @inbox_grouped.size : orders.count %></span>
+          <% if wip_limit %>
+            <span class="column-count text-xs font-medium rounded-full px-2 py-0.5 inline-flex items-center gap-1
+                         <%= wip_over ? 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300' : (wip_near ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-500') %>"
+                  title="WIP 제한: <%= current_count %>/<%= wip_limit %><%= wip_over ? ' (초과)' : '' %>">
+              <% if wip_over %>
+                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <% end %>
+              <span class="wip-count"><%= current_count %></span>/<span class="wip-limit"><%= wip_limit %></span>
+            </span>
+          <% else %>
+            <span class="column-count text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-500 rounded-full px-2 py-0.5"><%= current_count %></span>
+          <% end %>
         </div>
         <% if status == "new_rfq" %>
           <%= link_to inbox_path, class: "text-xs text-accent hover:underline" do %>
@@ -617,11 +633,35 @@ function initKanban() {
     document.querySelectorAll('.kanban-column').forEach(function(col) {
       const status = col.dataset.status;
       const badge = col.querySelector('.column-count');
+      const wipLimitAttr = col.dataset.wipLimit;
+      const wipLimit = wipLimitAttr ? parseInt(wipLimitAttr, 10) : null;
+      const count = (serverCounts && serverCounts[status] !== undefined)
+        ? serverCounts[status]
+        : col.querySelectorAll('[data-order-id]:not(.hidden)').length;
+
       if (badge) {
-        if (serverCounts && serverCounts[status] !== undefined) {
-          badge.textContent = serverCounts[status];
+        if (wipLimit) {
+          // WIP 제한 있음: "N/M" 형식 + 색상 클래스 토글
+          const countEl = badge.querySelector('.wip-count');
+          if (countEl) countEl.textContent = count;
+          const over = count > wipLimit;
+          const near = !over && count >= Math.ceil(wipLimit * 0.8);
+          badge.classList.remove('bg-gray-100','dark:bg-gray-700','text-gray-600','dark:text-gray-500',
+                                  'bg-amber-100','dark:bg-amber-900/40','text-amber-700','dark:text-amber-300',
+                                  'bg-red-100','dark:bg-red-900/40','text-red-700','dark:text-red-300');
+          if (over) {
+            badge.classList.add('bg-red-100','dark:bg-red-900/40','text-red-700','dark:text-red-300');
+            col.classList.add('ring-2','ring-red-400','dark:ring-red-500','rounded-xl');
+          } else if (near) {
+            badge.classList.add('bg-amber-100','dark:bg-amber-900/40','text-amber-700','dark:text-amber-300');
+            col.classList.remove('ring-2','ring-red-400','dark:ring-red-500','rounded-xl');
+          } else {
+            badge.classList.add('bg-gray-100','dark:bg-gray-700','text-gray-600','dark:text-gray-500');
+            col.classList.remove('ring-2','ring-red-400','dark:ring-red-500','rounded-xl');
+          }
         } else {
-          badge.textContent = col.querySelectorAll('[data-order-id]:not(.hidden)').length;
+          // WIP 제한 없음: 기존대로 숫자만
+          badge.textContent = count;
         }
       }
 

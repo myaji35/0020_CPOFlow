@@ -18,7 +18,7 @@ class InboxController < ApplicationController
                       .where.not(original_email_from: [ nil, "" ])
                       .includes(:user, :assignees, :client, :supplier)
 
-    # Filter support: all (default), rfq (inbox only), converted (non-inbox)
+    # Filter support: all (default), rfq (inbox only), converted (non-inbox), unread (ISS-202)
     @current_filter = params[:filter].presence || "all"
     case @current_filter
     when "rfq"
@@ -27,6 +27,8 @@ class InboxController < ApplicationController
       base_scope = base_scope.where(status: :new_rfq, rfq_status: Order.rfq_statuses[:rfq_pending])
     when "converted"
       base_scope = base_scope.where.not(status: :new_rfq)
+    when "unread"
+      base_scope = base_scope.where(status: :new_rfq, viewed_at: nil)
     end
 
     # Search support
@@ -80,9 +82,11 @@ class InboxController < ApplicationController
       Arel.sql("COUNT(*)"),
       Arel.sql(ActiveRecord::Base.sanitize_sql([ "SUM(CASE WHEN status = ? THEN 1 ELSE 0 END)", inbox_val ])),
       Arel.sql(ActiveRecord::Base.sanitize_sql([ "SUM(CASE WHEN status = ? AND rfq_status = ? THEN 1 ELSE 0 END)", inbox_val, uncertain_val ])),
-      Arel.sql(ActiveRecord::Base.sanitize_sql([ "SUM(CASE WHEN status != ? THEN 1 ELSE 0 END)", inbox_val ]))
+      Arel.sql(ActiveRecord::Base.sanitize_sql([ "SUM(CASE WHEN status != ? THEN 1 ELSE 0 END)", inbox_val ])),
+      # ISS-202: 읽지 않음 카운트 (viewed_at IS NULL & new_rfq status)
+      Arel.sql(ActiveRecord::Base.sanitize_sql([ "SUM(CASE WHEN status = ? AND viewed_at IS NULL THEN 1 ELSE 0 END)", inbox_val ]))
     )
-    @count_all, @count_rfq, @count_uncertain, @count_converted = counts.map(&:to_i)
+    @count_all, @count_rfq, @count_uncertain, @count_converted, @count_unread = counts.map(&:to_i)
 
     # 견적성 메일 (rfq_triage) — 우측 패널용
     # ISS-046 후속: 100 → 20건 + prefetch/2페이지에서는 스킵 + count 5분 캐시
@@ -128,6 +132,8 @@ class InboxController < ApplicationController
                   .find_by(source_email_id: params[:id]) ||
              Order.includes(attachments_attachments: :blob)
                   .find(params[:id])
+    # ISS-202: 읽음 표시 (처음 열람 시만)
+    @order.update_column(:viewed_at, Time.current) if @order && @order.viewed_at.nil?
   rescue ActiveRecord::RecordNotFound
     redirect_to inbox_path, alert: "해당 이메일을 찾을 수 없습니다."
   end

@@ -67,6 +67,19 @@
           </span>
         </a>
 
+        <%# ISS-202: Unread (읽지 않음) %>
+        <a href="<%= inbox_path(filter: 'unread') %>"
+           class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                  <%= @current_filter == 'unread' ? 'text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30' : 'text-gray-600 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700' %>">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"/><path d="M2 12c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12z" fill="none"/></svg>
+          읽지 않음
+          <% if @count_unread.to_i > 0 %>
+            <span class="ml-auto text-xs bg-[#00A1E0] text-white rounded-full px-2 py-0.5 font-bold">
+              <%= @count_unread %>
+            </span>
+          <% end %>
+        </a>
+
         <%# RFQ Only (inbox status) %>
         <a href="<%= inbox_path(filter: 'rfq') %>"
            class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors
@@ -369,12 +382,17 @@
               <% else %>
                 <%# ===== 단건 메일 (기존 방식) ===== %>
                 <% order = group_orders.first %>
-                <li class="email-item cursor-pointer px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors flex items-start gap-2"
+                <% is_unread = order.status.to_s == "new_rfq" && order.viewed_at.nil? %>
+                <li class="email-item cursor-pointer px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors flex items-start gap-2 <%= is_unread ? 'bg-[#00A1E0]/5' : '' %>"
                     data-order-id="<%= order.id %>"
+                    data-unread="<%= is_unread %>"
                     id="email-item-<%= order.id %>">
                   <% if order.status.to_s == "new_rfq" %>
                     <input type="checkbox" class="bulk-cb mt-1 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
                            data-order-id="<%= order.id %>" onclick="event.stopPropagation(); updateBulkBar()" />
+                  <% end %>
+                  <% if is_unread %>
+                    <span class="w-2 h-2 rounded-full bg-[#00A1E0] flex-shrink-0 mt-2" title="읽지 않음"></span>
                   <% end %>
                   <div class="flex-1 min-w-0" onclick="showEmail(<%= order.id %>)">
                   <div class="flex items-center gap-2 mb-1">

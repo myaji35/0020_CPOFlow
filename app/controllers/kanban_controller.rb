@@ -42,6 +42,14 @@ class KanbanController < ApplicationController
       @current_board.kanban_columns.ordered.pluck(:key, :name).to_h
     end
 
+    # WIP 제한 맵 (ISS-201): 커스텀 보드의 KanbanColumn.wip_limit 사용
+    # 기본 보드는 status 기반이라 wip_limit 없음 → 빈 해시
+    @wip_limits = if @current_board.is_default?
+      {}
+    else
+      @current_board.kanban_columns.ordered.pluck(:key, :wip_limit).to_h.compact
+    end
+
     # 정상 로드: 모든 컬럼 첫 INITIAL_LIMIT건만
     @column_totals = {}
     @columns = @kanban_column_keys.map do |col_key|

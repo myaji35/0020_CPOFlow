@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_16_064344) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_17_011830) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -541,6 +541,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_16_064344) do
     t.text "translated_subject"
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
+    t.datetime "viewed_at"
     t.index ["archived_at", "email_received_at"], name: "index_orders_on_archived_received"
     t.index ["archived_at"], name: "index_orders_on_archived_at"
     t.index ["ariba_event_id"], name: "index_orders_on_ariba_event_id"
@@ -564,6 +565,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_16_064344) do
     t.index ["status"], name: "index_orders_on_status"
     t.index ["supplier_id"], name: "index_orders_on_supplier_id"
     t.index ["user_id"], name: "index_orders_on_user_id"
+    t.index ["viewed_at"], name: "index_orders_on_viewed_at"
   end
 
   create_table "products", force: :cascade do |t|
