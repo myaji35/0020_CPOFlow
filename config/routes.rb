@@ -90,7 +90,7 @@ Rails.application.routes.draw do
   # Admin namespace
   namespace :admin do
     resources :imports, only: %i[index new create show] do
-      member { get :download_errors }
+      member { get :download_errors; post :retry_errors }
     end
     patch "sheets_config",       to: "sheets_config#update", as: :sheets_config
     delete "sheets_config/clear", to: "sheets_config#clear",  as: :sheets_config_clear

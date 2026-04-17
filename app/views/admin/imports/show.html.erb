@@ -32,13 +32,25 @@
           <% end %>
         </p>
       </div>
-      <% if @import.result_file_path.present? %>
-        <%= link_to download_errors_admin_import_path(@import),
-              class: "flex items-center gap-2 px-3 py-2 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm rounded-lg transition-colors" do %>
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          오류 리포트 CSV
+      <div class="flex items-center gap-2">
+        <% if @import.result_file_path.present? %>
+          <%= link_to download_errors_admin_import_path(@import),
+                class: "flex items-center gap-2 px-3 py-2 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm rounded-lg transition-colors" do %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            오류 리포트 CSV
+          <% end %>
         <% end %>
-      <% end %>
+        <%# ISS-219: 실패 행 재처리 버튼 %>
+        <% if @import.error_rows.to_i > 0 && @import.import_file.attached? %>
+          <%= button_to retry_errors_admin_import_path(@import),
+                method: :post,
+                data: { turbo_confirm: "실패한 #{@import.error_rows}건을 새 작업으로 재처리합니다. 계속하시겠습니까?" },
+                class: "flex items-center gap-2 px-3 py-2 bg-[#F4A83A] hover:bg-orange-500 text-white text-sm font-medium rounded-lg transition-colors" do %>
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            실패 <%= @import.error_rows %>건 재처리
+          <% end %>
+        <% end %>
+      </div>
     </div>
 
     <%# 진행률 바 %>
