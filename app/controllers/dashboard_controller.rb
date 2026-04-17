@@ -15,6 +15,19 @@ class DashboardController < ApplicationController
     @recent_orders  = orders.order(created_at: :desc).limit(8).includes(:assignees, :tasks)
     @kanban_counts  = orders.group(:status).count
 
+    # ISS-216: 이번 주/다음 주 예정 납기 위젯
+    today             = Date.today
+    week_end          = today.end_of_week          # 일요일
+    next_week_start   = (today + 1.week).beginning_of_week
+    next_week_end     = (today + 1.week).end_of_week
+    active_scope      = orders.where.not(status: [ :get_grn, :give_up ])
+    @due_this_week    = active_scope.where(due_date: today..week_end)
+                                    .by_due_date.limit(8).includes(:assignees, :client)
+    @due_this_week_count = active_scope.where(due_date: today..week_end).count
+    @due_next_week    = active_scope.where(due_date: next_week_start..next_week_end)
+                                    .by_due_date.limit(8).includes(:assignees, :client)
+    @due_next_week_count = active_scope.where(due_date: next_week_start..next_week_end).count
+
     # ── 기간별 분석 데이터 ────────────────────────────────────
     @weekly_data    = build_weekly_data(8)
     @monthly_data   = build_monthly_data(12)
