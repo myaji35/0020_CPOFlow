@@ -87,16 +87,22 @@ class ReportsController < ApplicationController
   def build_kpi(range)
     curr = order_stats(range)
     prev = order_stats(calc_prev_range(range))
+    # ISS-206: 전년 동기 (YoY) 범위 — 같은 기간을 1년 전 시점으로
+    yoy  = order_stats(calc_yoy_range(range))
 
     {
       new_orders:     curr[:count],
       prev_orders:    prev[:count],
+      yoy_orders:     yoy[:count],
       delivered:      curr[:delivered],
       prev_delivered: prev[:delivered],
+      yoy_delivered:  yoy[:delivered],
       total_value:    curr[:value],
       prev_value:     prev[:value],
+      yoy_value:      yoy[:value],
       on_time_rate:   curr[:on_time_rate],
       prev_on_time:   prev[:on_time_rate],
+      yoy_on_time:    yoy[:on_time_rate],
       overdue:        report_scoped_orders.where("due_date < ?", Date.today).where.not(status: [ :get_grn, :give_up ]).count,
       urgent:         report_scoped_orders.joins(:card_status).where(card_statuses: { key: %w[urgent high overdue] }).where.not(status: [ :get_grn, :give_up ]).count,
       avg_lead_days:  calc_avg_lead_days(range)
@@ -118,6 +124,11 @@ class ReportsController < ApplicationController
   def calc_prev_range(range)
     duration = (range.last - range.first).to_i
     (range.first - duration - 1)..(range.first - 1)
+  end
+
+  # ISS-206: 전년 동기 (Year-over-Year)
+  def calc_yoy_range(range)
+    (range.first - 1.year)..(range.last - 1.year)
   end
 
   def calc_avg_lead_days(range)
