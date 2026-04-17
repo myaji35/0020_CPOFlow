@@ -153,8 +153,14 @@ class OrdersController < ApplicationController
   end
 
   def update
+    # ISS-203: 감사 대상 필드 before-값 캡처
+    audit_before = audited_snapshot(@order)
+
     if @order.update(order_params)
-      Activity.create!(order: @order, user: current_user, action: "updated")
+      # ISS-203: 실제 변경된 필드만 activity로 기록
+      log_field_changes(@order, audit_before)
+      # 필드 변경이 없었다면 generic "updated" activity는 기록하지 않음 (노이즈 방지)
+      Activity.create!(order: @order, user: current_user, action: "updated") if audit_before.empty?
       redirect_to @order, notice: t("orders.update_success")
     else
       render :edit, status: :unprocessable_entity
@@ -380,6 +386,31 @@ class OrdersController < ApplicationController
 
   def set_order
     @order = Order.find(params[:id])
+  end
+
+  # ISS-203: 감사 대상 필드 (조달 컴플라이언스 관점)
+  AUDITED_FIELDS = %w[
+    estimated_value quantity currency due_date supplier_id client_id project_id
+    po_no rfq_no quo_no payment_terms delivery_location item_name title
+  ].freeze
+
+  def audited_snapshot(order)
+    AUDITED_FIELDS.each_with_object({}) { |f, h| h[f] = order.read_attribute(f) }
+  end
+
+  def log_field_changes(order, before)
+    before.each do |field, old_val|
+      new_val = order.read_attribute(field)
+      next if old_val.to_s == new_val.to_s
+      Activity.create!(
+        order:      order,
+        user:       current_user,
+        action:     "field_changed",
+        field:      field,
+        old_value:  old_val.to_s,
+        new_value:  new_val.to_s
+      )
+    end
   end
 
   def render_attach_error(msg)
