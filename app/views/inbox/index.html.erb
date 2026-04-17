@@ -701,6 +701,14 @@
                     RFQ 아님
                   </button>
                 <% end %>
+                <%# ISS-213: AI 재판독 버튼 %>
+                <button onclick="reclassifyEmail(<%= order.id %>, '<%= inbox_reclassify_path(order.id) %>', this)"
+                        id="reclassify-<%= order.id %>"
+                        title="AI 재판독 실행 (Stage1/Haiku/Sonnet)"
+                        class="flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-lg transition-colors">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                  AI 재판독
+                </button>
               </div>
             </div>
             <div id="feedback-done-<%= order.id %>" class="hidden mx-6 mb-0 mt-3 px-4 py-2.5 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
@@ -1531,6 +1539,36 @@
       btn.disabled = false;
       btn.innerHTML = 'AI 분석';
     });
+  }
+
+  // --- ISS-213: AI 재판독 (Gemma/Haiku/Sonnet 파이프라인 재실행) ---
+  function reclassifyEmail(orderId, url, btn) {
+    if (btn) { btn.disabled = true; btn.innerHTML = '<svg class="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> 판독 중...'; }
+    const csrf = document.querySelector('meta[name=csrf-token]')?.content;
+    fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf } })
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'ok') {
+          const msg = '재판독 완료\n\n이전: ' + (data.prev_rfq_status || '-') + '\n현재: ' + (data.new_rfq_status || '-') +
+                      '\n판정: ' + (data.verdict || '-') + ' (conf: ' + (data.confidence || '-') + ', stage ' + (data.stage_reached ?? '-') + ')' +
+                      '\n사유: ' + (data.reason || '-');
+          alert(msg);
+          // 결과가 변경됐으면 페이지 리로드
+          if (data.prev_rfq_status !== data.new_rfq_status) {
+            window.location.reload();
+          } else if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> AI 재판독';
+          }
+        } else {
+          alert('재판독 실패: ' + (data.error || 'unknown'));
+          if (btn) { btn.disabled = false; btn.innerHTML = 'AI 재판독'; }
+        }
+      })
+      .catch(err => {
+        alert('네트워크 오류: ' + err.message);
+        if (btn) { btn.disabled = false; btn.innerHTML = 'AI 재판독'; }
+      });
   }
 
   // --- RFQ 피드백 (맞음/아님) ---

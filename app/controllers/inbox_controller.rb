@@ -273,6 +273,64 @@ class InboxController < ApplicationController
     end
   end
 
+  # ISS-213: AI 재판독 트리거
+  # 원본 이메일 필드로 parsed hash 재구성 → ClassificationOrchestrator 재실행
+  # 결과: rfq_status 업데이트 + rfq_feedback 로그에 "reclassified" 기록
+  def reclassify
+    order = Order.find(params[:id])
+
+    unless order.original_email_from.present? && order.original_email_subject.present?
+      return render json: { error: "원본 이메일 데이터가 없어 재판독 불가" }, status: :unprocessable_entity
+    end
+
+    parsed = {
+      id:        order.source_email_id || "reclassify-#{order.id}",
+      thread_id: order.gmail_thread_id.to_s,
+      subject:   order.original_email_subject.to_s,
+      from:      order.original_email_from.to_s,
+      to:        "",
+      date:      order.email_received_at,
+      snippet:   order.original_email_body.to_s.truncate(200),
+      body:      order.original_email_body.to_s,
+      html_body: order.original_email_html_body.to_s,
+      labels:    [],
+      unread:    false
+    }
+
+    prev_rfq_status = order.rfq_status
+
+    result = Gmail::ClassificationOrchestrator.new(parsed, order: order).classify
+
+    # verdict → rfq_status 매핑 (기존 orchestrator 규칙 따름)
+    new_rfq_status = case result.verdict.to_sym
+                     when :confirmed then :rfq_triage
+                     when :excluded  then :rfq_excluded
+                     else                 :rfq_pending
+                     end
+
+    order.update!(rfq_status: new_rfq_status)
+    Gmail::RfqFeedbackService.record!(order, current_user,
+                                      verdict: "reclassified",
+                                      note: "v=#{result.classifier_version} s=#{result.stage_reached} conf=#{result.confidence} prev=#{prev_rfq_status}") rescue nil
+
+    render json: {
+      status: "ok",
+      prev_rfq_status: prev_rfq_status,
+      new_rfq_status: order.reload.rfq_status,
+      verdict: result.verdict,
+      confidence: result.confidence,
+      stage_reached: result.stage_reached,
+      classifier_version: result.classifier_version,
+      reason: result.reason,
+      message: "재판독 완료: #{prev_rfq_status} → #{order.rfq_status}"
+    }
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: "not found" }, status: :not_found
+  rescue => e
+    Rails.logger.error "[inbox#reclassify] #{e.class}: #{e.message}"
+    render json: { error: "재판독 실패: #{e.message.truncate(150)}" }, status: :internal_server_error
+  end
+
   # AJAX: 사용자 RFQ 피드백 (맞음/아님)
   def feedback
     order = Order.find(params[:id])

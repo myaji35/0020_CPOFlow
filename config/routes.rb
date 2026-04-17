@@ -70,6 +70,7 @@ Rails.application.routes.draw do
   get  "inbox/:id/attachment_preview/:blob_id", to: "inbox#preview_attachment", as: :inbox_attachment_preview
   post "inbox/analyze_link", to: "inbox#analyze_link", as: :inbox_analyze_link
   post "inbox/:id/feedback",      to: "inbox#feedback",       as: :inbox_feedback
+  post "inbox/:id/reclassify",    to: "inbox#reclassify",     as: :inbox_reclassify
   post "inbox/:id/generate_reply", to: "inbox#generate_reply", as: :inbox_generate_reply
   post "inbox/bulk_delete",    to: "inbox#bulk_delete",    as: :inbox_bulk_delete
   post "inbox/bulk_trash",     to: "inbox#bulk_trash",     as: :inbox_bulk_trash
