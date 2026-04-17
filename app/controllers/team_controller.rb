@@ -40,6 +40,35 @@ class TeamController < ApplicationController
     @member_order_dist = @workloads
       .sort_by { |w| -w[:active_orders] }
       .map { |w| { name: w[:user].display_name, active: w[:active_orders], overdue: w[:overdue_orders] } }
+
+    # ISS-218: 최근 8주 × 팀원별 작업 부하 히트맵
+    # 셀 값: 해당 주에 생성/배정된 활성 주문 수 (처리량 프록시)
+    weeks = (7.downto(0)).map do |i|
+      ws = (i.weeks.ago.to_date.beginning_of_week(:monday))
+      { start: ws, end: ws.end_of_week(:monday), label: ws.strftime("%m/%d") }
+    end
+    @heatmap_weeks = weeks
+
+    # Activity 기반: status_changed 발생 = 해당 주 처리량
+    @heatmap_data = @members.map do |u|
+      activity_raw = Activity.where(user_id: u.id, action: %w[status_changed updated created])
+                             .where("created_at >= ?", weeks.first[:start].beginning_of_day)
+                             .group("date(created_at)").count
+      row = weeks.map do |w|
+        count = 0
+        (w[:start]..w[:end]).each { |d| count += activity_raw[d.to_s].to_i }
+        count
+      end
+      {
+        user: u,
+        weekly_counts: row,
+        total: row.sum,
+        avg:   row.any? ? (row.sum.to_f / row.size).round(1) : 0
+      }
+    end.sort_by { |r| -r[:total] }
+
+    # 히트맵 max (색상 스케일 정규화)
+    @heatmap_max = [ @heatmap_data.flat_map { |r| r[:weekly_counts] }.max || 1, 1 ].max
   end
 
   def show
