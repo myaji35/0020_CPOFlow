@@ -4,6 +4,7 @@ class ProjectsController < ApplicationController
   before_action :require_manager!, only: %i[destroy]
 
   def index
+    @view = params[:view].presence_in(%w[list gantt]) || "list"
     @projects = Project.includes(:client, :orders).by_name
     @projects = @projects.where(site_category: params[:category]) if params[:category].present?
     @projects = @projects.where(status: params[:status]) if params[:status].present?
@@ -24,6 +25,19 @@ class ProjectsController < ApplicationController
     @active_count      = Project.active.count
     @active_order_count = Order.joins(:project).where(projects: { status: :active }).count
     @avg_orders_per_project = @total_count > 0 ? (Order.where.not(project_id: nil).count.to_f / @total_count).round(1) : 0
+
+    # ISS-226: Gantt 뷰 데이터
+    if @view == "gantt"
+      dated = @projects.to_a.select { |p| p.start_date && p.end_date }
+      @gantt_range = if dated.any?
+        { start: dated.map(&:start_date).min, end: dated.map(&:end_date).max }
+      else
+        { start: Date.today.beginning_of_year, end: Date.today.end_of_year }
+      end
+      @gantt_total_days = [ (@gantt_range[:end] - @gantt_range[:start]).to_i, 1 ].max
+      @gantt_projects = dated.sort_by(&:start_date)
+      @gantt_today = Date.today
+    end
   end
 
   def show
