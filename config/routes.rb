@@ -114,7 +114,9 @@ Rails.application.routes.draw do
     end
 
     # Phase E: RFQ AI 학습 통계
-    resources :rfq_stats, only: [ :index ]
+    resources :rfq_stats, only: [ :index ] do
+      collection { post :reclassify_mismatches }
+    end
   end
 
   # Gmail OAuth2

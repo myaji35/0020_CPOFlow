@@ -106,4 +106,80 @@
       </div>
     </div>
   </div>
+
+  <%# ISS-209: 최근 AI 오판 사례 + 일괄 재판독 %>
+  <div class="mt-8 bg-white border border-gray-200 rounded-xl p-6">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h2 class="text-lg font-semibold text-[#16325C]">최근 AI 오판 사례 (<%= @window_days %>일)</h2>
+        <p class="text-xs text-gray-500 mt-1">AI 점수와 사용자 verdict가 불일치한 피드백</p>
+      </div>
+      <% if @mismatch_count.to_i > 0 %>
+        <%= button_to reclassify_mismatches_admin_rfq_stats_path(window: @window_days),
+              method: :post,
+              data: { turbo_confirm: "#{@mismatch_count}건 오판 사례를 재판독합니다. 계속하시겠습니까?" },
+              class: "inline-flex items-center gap-2 px-4 py-2 bg-[#F4A83A] hover:bg-orange-500 text-white text-sm font-semibold rounded-lg transition-colors" do %>
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          <%= @mismatch_count %>건 일괄 재판독
+        <% end %>
+      <% end %>
+    </div>
+
+    <% if @mismatches.any? %>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-200 text-left">
+              <th class="py-2 px-2 text-xs font-semibold text-gray-600">일자</th>
+              <th class="py-2 px-2 text-xs font-semibold text-gray-600">제목</th>
+              <th class="py-2 px-2 text-xs font-semibold text-gray-600">AI Score</th>
+              <th class="py-2 px-2 text-xs font-semibold text-gray-600">AI 판정</th>
+              <th class="py-2 px-2 text-xs font-semibold text-gray-600">사용자</th>
+              <th class="py-2 px-2 text-xs font-semibold text-gray-600">피드백자</th>
+              <th class="py-2 px-2 text-xs font-semibold text-gray-600">액션</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <% @mismatches.first(20).each do |fb| %>
+              <% ai_rfq = fb.ai_score.to_f >= 0.5 %>
+              <tr class="hover:bg-gray-50">
+                <td class="py-2 px-2 text-xs text-gray-500"><%= fb.created_at.strftime("%m/%d %H:%M") %></td>
+                <td class="py-2 px-2 text-sm text-gray-900 truncate max-w-[240px]">
+                  <%= link_to (fb.order&.original_email_subject.presence || fb.order&.title || "-"),
+                        fb.order ? inbox_email_path(fb.order.id) : "#",
+                        class: "text-[#00A1E0] hover:underline" %>
+                </td>
+                <td class="py-2 px-2 text-xs tabular-nums"><%= fb.ai_score&.round(2) || "-" %></td>
+                <td class="py-2 px-2">
+                  <span class="text-xs px-1.5 py-0.5 rounded font-medium <%= ai_rfq ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600' %>">
+                    <%= ai_rfq ? "RFQ" : "일반" %>
+                  </span>
+                </td>
+                <td class="py-2 px-2">
+                  <span class="text-xs px-1.5 py-0.5 rounded font-medium <%= fb.verdict == 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' %>">
+                    <%= fb.verdict == "confirmed" ? "RFQ 맞음" : (fb.verdict == "rejected" ? "RFQ 아님" : fb.verdict) %>
+                  </span>
+                </td>
+                <td class="py-2 px-2 text-xs text-gray-600"><%= fb.user&.display_name || "-" %></td>
+                <td class="py-2 px-2">
+                  <% if fb.order %>
+                    <%= link_to "열기", inbox_email_path(fb.order.id),
+                          class: "text-xs text-[#00A1E0] hover:underline" %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+      <% if @mismatches.size > 20 %>
+        <p class="text-xs text-gray-500 mt-3">외 <%= @mismatches.size - 20 %>건 — 재판독 버튼은 전체 <%= @mismatch_count %>건에 적용됩니다</p>
+      <% end %>
+    <% else %>
+      <div class="text-center py-8 text-gray-500">
+        <svg class="w-10 h-10 mx-auto text-green-400 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        <p class="text-sm">최근 <%= @window_days %>일 오판 사례 없음 — AI 정확도 양호</p>
+      </div>
+    <% end %>
+  </div>
 </div>
