@@ -145,7 +145,10 @@
             </div>
             <% day_orders.first(3).each do |order| %>
               <% order_color = calendar_order_color(order, today) %>
-              <div class="block text-xs truncate px-1.5 py-0.5 rounded mb-0.5 cursor-pointer <%= order_color %>"
+              <%# ISS-217: draggable 주문 카드 %>
+              <div class="calendar-order-item block text-xs truncate px-1.5 py-0.5 rounded mb-0.5 cursor-move <%= order_color %>"
+                   draggable="true"
+                   data-order-id="<%= order.id %>"
                    onclick="event.stopPropagation(); openOrderDrawer(<%= order.id %>, <%= order.title.to_json %>, '<%= order_path(order) %>')">
                 <span class="inline-block w-1.5 h-1.5 rounded-full mr-1 <%= calendar_dot_color(order, today) %>"></span><%= order.title %>
               </div>
@@ -181,12 +184,16 @@
         <% (@week_start..@week_end).each_with_index do |date, i| %>
           <% is_today = date == today %>
           <% day_orders = orders_by_date[date] || [] %>
-          <div class="border-r border-gray-100 dark:border-gray-700 p-2
+          <div class="calendar-day-cell border-r border-gray-100 dark:border-gray-700 p-2
                       <%= is_today ? 'bg-blue-50/50 dark:bg-blue-900/10' : '' %>
-                      <%= i == 6 ? 'border-r-0' : '' %>">
+                      <%= i == 6 ? 'border-r-0' : '' %>"
+               data-calendar-date="<%= date.strftime('%Y-%m-%d') %>">
             <% day_orders.each do |order| %>
               <% order_color = calendar_order_color(order, today) %>
-              <div class="text-xs p-2 rounded-lg mb-2 cursor-pointer hover:shadow-md transition-shadow border border-gray-100 dark:border-gray-600 <%= order_color %>"
+              <%# ISS-217: draggable 주문 카드 (주간 뷰) %>
+              <div class="calendar-order-item text-xs p-2 rounded-lg mb-2 cursor-move hover:shadow-md transition-shadow border border-gray-100 dark:border-gray-600 <%= order_color %>"
+                   draggable="true"
+                   data-order-id="<%= order.id %>"
                    onclick="openOrderDrawer(<%= order.id %>, <%= order.title.to_json %>, '<%= order_path(order) %>')">
                 <div class="flex items-start gap-1.5 mb-1">
                   <span class="inline-block w-2 h-2 rounded-full mt-0.5 shrink-0 <%= calendar_dot_color(order, today) %>"></span>
@@ -347,6 +354,77 @@ document.addEventListener('turbo:load', function() {
   if (overlay) overlay.addEventListener('click', closeDatePanel);
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeDatePanel();
+  });
+
+  // ════════════════════════════════════════════════════════════
+  // ISS-217: Drag-to-reschedule
+  // ════════════════════════════════════════════════════════════
+  var CSRF = document.querySelector('meta[name="csrf-token"]')?.content;
+  var dragOrderId = null;
+  var dragFromCell = null;
+
+  document.querySelectorAll('.calendar-order-item').forEach(function(item) {
+    item.addEventListener('dragstart', function(e) {
+      e.stopPropagation();
+      dragOrderId = item.dataset.orderId;
+      dragFromCell = item.closest('[data-calendar-date]');
+      item.classList.add('opacity-50');
+      try { e.dataTransfer.setData('text/plain', dragOrderId); } catch (_) {}
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    item.addEventListener('dragend', function() {
+      item.classList.remove('opacity-50');
+      dragOrderId = null;
+      dragFromCell = null;
+      document.querySelectorAll('.calendar-drop-active').forEach(function(c) {
+        c.classList.remove('calendar-drop-active','ring-2','ring-[#00A1E0]','ring-inset');
+      });
+    });
+  });
+
+  // 월간/주간 모든 날짜 셀
+  var dropTargets = document.querySelectorAll('[data-calendar-date], .calendar-day-cell');
+  dropTargets.forEach(function(cell) {
+    cell.addEventListener('dragover', function(e) {
+      if (!dragOrderId) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      if (!cell.classList.contains('calendar-drop-active')) {
+        cell.classList.add('calendar-drop-active','ring-2','ring-[#00A1E0]','ring-inset');
+      }
+    });
+    cell.addEventListener('dragleave', function() {
+      cell.classList.remove('calendar-drop-active','ring-2','ring-[#00A1E0]','ring-inset');
+    });
+    cell.addEventListener('drop', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      cell.classList.remove('calendar-drop-active','ring-2','ring-[#00A1E0]','ring-inset');
+      if (!dragOrderId) return;
+      var newDate = cell.dataset.calendarDate;
+      if (!newDate) return;
+      var fromDate = dragFromCell && dragFromCell.dataset.calendarDate;
+      if (fromDate === newDate) return; // 같은 날짜 → 무시
+
+      // 낙관적 UI: 즉시 셀 이동
+      var draggedEl = document.querySelector('.calendar-order-item[data-order-id="' + dragOrderId + '"].opacity-50');
+
+      // 서버 PATCH
+      fetch('/orders/' + dragOrderId, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF, 'Accept': 'application/json' },
+        body: JSON.stringify({ order: { due_date: newDate } })
+      }).then(function(r) {
+        if (r.ok) {
+          // 성공 → 페이지 reload로 정확한 상태 반영
+          window.location.reload();
+        } else {
+          alert('납기 변경 실패 (HTTP ' + r.status + ')');
+        }
+      }).catch(function(err) {
+        alert('네트워크 오류: ' + err.message);
+      });
+    });
   });
 });
 </script>
