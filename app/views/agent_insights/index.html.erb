@@ -1,0 +1,132 @@
+<% content_for :title, "AI 인사이트 타임라인" %>
+
+<div class="max-w-6xl mx-auto px-4 py-6">
+  <%# Header %>
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+        <svg class="w-6 h-6 text-[#00A1E0]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M12 8v4l3 3"/></svg>
+        AI 인사이트 타임라인
+      </h1>
+      <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">CPO Agent가 감지한 패턴·리스크·기회 — 검토 및 디버그 인터페이스</p>
+    </div>
+    <div class="text-xs text-gray-500 dark:text-gray-500">
+      전체 <strong class="text-gray-900 dark:text-white"><%= @total_counts[:all] %></strong>건
+    </div>
+  </div>
+
+  <%# 요약 카드 %>
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5">
+    <% [
+      { key: "active",     label: "활성",    color: "text-[#00A1E0]" },
+      { key: "dismissed",  label: "Dismissed", color: "text-gray-500" },
+      { key: "useful",     label: "유용함 👍", color: "text-green-600 dark:text-green-400" },
+      { key: "not_useful", label: "유용하지 않음 👎", color: "text-[#D93025]" },
+      { key: "all",        label: "전체",    color: "text-gray-900 dark:text-white" }
+    ].each do |m| %>
+      <%= link_to agent_insights_path(filter: m[:key], type: @current_type),
+            class: "p-3 bg-white dark:bg-gray-800 rounded-lg border transition-all #{@current_filter == m[:key] ? 'border-[#00A1E0] ring-2 ring-[#00A1E0]/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'}" do %>
+        <p class="text-[11px] text-gray-500 dark:text-gray-500"><%= m[:label] %></p>
+        <p class="text-2xl font-bold mt-0.5 <%= m[:color] %>"><%= @total_counts[m[:key].to_sym] %></p>
+      <% end %>
+    <% end %>
+  </div>
+
+  <%# 타입 필터 %>
+  <% if @by_type.any? %>
+    <div class="flex flex-wrap items-center gap-2 mb-5 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
+      <span class="text-xs font-semibold text-gray-600 dark:text-gray-400 mr-1">타입:</span>
+      <%= link_to agent_insights_path(filter: @current_filter),
+            class: "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border #{@current_type.nil? ? 'bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 border-gray-200 dark:border-gray-700 opacity-60'}" do %>
+        전체
+      <% end %>
+      <% @by_type.each do |type, cnt| %>
+        <% active = @current_type == type %>
+        <%= link_to agent_insights_path(filter: @current_filter, type: type),
+              class: "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border #{active ? 'bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 border-gray-200 dark:border-gray-700 opacity-60'}" do %>
+          <%= type.humanize %>
+          <span class="text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full px-1.5 tabular-nums"><%= cnt %></span>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <%# 타임라인 리스트 %>
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <% if @insights.any? %>
+      <ul class="divide-y divide-gray-100 dark:divide-gray-700">
+        <% @insights.each do |insight| %>
+          <% severity_color = { "info" => "bg-blue-100 text-blue-700", "warning" => "bg-amber-100 text-amber-700", "alert" => "bg-red-100 text-red-700" }[insight.severity] || "bg-gray-100 text-gray-600" %>
+          <li id="agent-insight-<%= insight.id %>" class="p-4 hover:bg-gray-50 dark:hover:bg-gray-700/30 <%= 'opacity-60' if insight.dismissed %>">
+            <div class="flex items-start gap-3">
+              <%# severity pin %>
+              <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg flex-shrink-0 <%= severity_color %>">
+                <% case insight.severity
+                   when "alert" %>
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <% when "warning" %>
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <% else %>
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                <% end %>
+              </span>
+
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap mb-1">
+                  <span class="text-xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded font-mono"><%= insight.insight_type %></span>
+                  <% if insight.dismissed %>
+                    <span class="text-xs px-1.5 py-0.5 bg-gray-200 dark:bg-gray-600 text-gray-500 rounded">Dismissed</span>
+                  <% end %>
+                  <% case insight.useful
+                     when true %><span class="text-xs px-1.5 py-0.5 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 rounded">👍 유용함</span>
+                  <% when false %><span class="text-xs px-1.5 py-0.5 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 rounded">👎 유용하지 않음</span>
+                  <% end %>
+                  <span class="text-xs text-gray-400 dark:text-gray-500 ml-auto tabular-nums"><%= insight.created_at.strftime("%Y-%m-%d %H:%M") %></span>
+                </div>
+                <p class="text-sm font-semibold text-gray-900 dark:text-white mb-1 truncate"><%= insight.title %></p>
+                <% if insight.body.present? %>
+                  <p class="text-xs text-gray-600 dark:text-gray-400 whitespace-pre-wrap line-clamp-2"><%= insight.body %></p>
+                <% end %>
+                <div class="flex items-center gap-3 mt-2 text-xs">
+                  <% if insight.order %>
+                    <%= link_to "주문 ##{insight.order_id}", order_path(insight.order),
+                          class: "text-[#00A1E0] hover:underline" %>
+                  <% end %>
+                  <% if insight.supplier %>
+                    <%= link_to insight.supplier.name, supplier_path(insight.supplier),
+                          class: "text-[#00A1E0] hover:underline" %>
+                  <% end %>
+                  <% if insight.expires_at %>
+                    <span class="text-gray-400">만료: <%= insight.expires_at.strftime("%Y-%m-%d %H:%M") %></span>
+                  <% end %>
+                  <% if insight.metadata.present? && insight.metadata.any? %>
+                    <details class="text-gray-500">
+                      <summary class="cursor-pointer hover:text-gray-700">메타데이터</summary>
+                      <pre class="mt-1 p-2 bg-gray-50 dark:bg-gray-900 rounded text-[10px] overflow-x-auto"><%= JSON.pretty_generate(insight.metadata) rescue insight.metadata.inspect %></pre>
+                    </details>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+      <% if @insights.size >= 200 %>
+        <div class="text-center py-3 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+          <p class="text-xs text-gray-500">최근 200건만 표시</p>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="p-16 text-center">
+        <svg class="w-12 h-12 mx-auto text-gray-200 dark:text-gray-600 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">
+          <% if @current_filter == "active" %>활성 인사이트가 없습니다<% else %>조건에 맞는 인사이트 없음<% end %>
+        </p>
+        <% if @current_filter != "active" || @current_type.present? %>
+          <%= link_to "활성 전체 보기", agent_insights_path,
+                class: "inline-block mt-2 text-xs text-[#00A1E0] hover:underline" %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

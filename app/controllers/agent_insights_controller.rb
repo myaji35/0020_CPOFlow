@@ -1,6 +1,35 @@
 # frozen_string_literal: true
 
 class AgentInsightsController < ApplicationController
+  # ISS-223: 전체 인사이트 타임라인
+  # filter: active(default) / dismissed / all / useful / not_useful
+  # type: insight_type 필터
+  def index
+    @current_filter = params[:filter].presence_in(%w[active dismissed all useful not_useful]) || "active"
+    @current_type   = params[:type].presence
+
+    base = AgentInsight.includes(:order, :supplier).order(created_at: :desc)
+    scoped = case @current_filter
+             when "active"     then base.where(dismissed: false).where("expires_at IS NULL OR expires_at > ?", Time.current)
+             when "dismissed"  then base.where(dismissed: true)
+             when "useful"     then base.where(useful: true)
+             when "not_useful" then base.where(useful: false)
+             else                   base
+             end
+    scoped = scoped.where(insight_type: @current_type) if @current_type.present?
+    @insights = scoped.limit(200)
+
+    @total_counts = {
+      active:     AgentInsight.where(dismissed: false).where("expires_at IS NULL OR expires_at > ?", Time.current).count,
+      dismissed:  AgentInsight.where(dismissed: true).count,
+      all:        AgentInsight.count,
+      useful:     AgentInsight.where(useful: true).count,
+      not_useful: AgentInsight.where(useful: false).count
+    }
+    @by_type = AgentInsight.group(:insight_type).count.sort_by { |_, c| -c }
+    @by_severity = AgentInsight.group(:severity).count
+  end
+
   def dismiss
     insight = AgentInsight.find(params[:id])
     insight.update!(dismissed: true)

@@ -188,8 +188,8 @@ Rails.application.routes.draw do
   get "/reports/export_csv", to: "reports#export_csv", as: :reports_export_csv
   get "/reports/export_pdf", to: "reports#export_pdf", as: :reports_export_pdf
 
-  # CPO Agent Insights (dismiss/feedback)
-  resources :agent_insights, only: [] do
+  # CPO Agent Insights (목록 + dismiss/feedback)
+  resources :agent_insights, only: %i[index] do
     member do
       patch :dismiss
       patch :feedback
