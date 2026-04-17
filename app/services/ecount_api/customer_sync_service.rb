@@ -80,7 +80,7 @@ module EcountApi
     end
 
     def build_attrs(cust)
-      {
+      attrs = {
         name:             cust["AR_NM"].to_s.strip,
         country:          cust["NAT_CD"].to_s.strip,
         contact_email:    cust["EMAIL"].to_s.strip,
@@ -88,6 +88,11 @@ module EcountApi
         notes:            cust["REMARK"].to_s.strip,
         ecount_synced_at: Time.current
       }
+      # ISS-204: eCount 원본 snapshot 저장 (diff 비교용)
+      attrs[:ecount_snapshot] = attrs.except(:ecount_synced_at).merge(
+        synced_at: Time.current.iso8601
+      )
+      attrs
     end
 
     def save_record(klass, ecount_code, attrs)

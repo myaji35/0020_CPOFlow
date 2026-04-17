@@ -23,4 +23,20 @@ class Client < ApplicationRecord
     { "nuclear" => "원전", "hydro" => "수력", "tunnel" => "터널",
       "gtx" => "GTX", "construction" => "건설", "general" => "일반" }[industry] || industry
   end
+
+  # ISS-204: eCount snapshot과 현재 DB 값의 차이 반환
+  def ecount_diff
+    return [] if ecount_snapshot.blank?
+    snap = ecount_snapshot.is_a?(String) ? (JSON.parse(ecount_snapshot) rescue {}) : ecount_snapshot
+    labels = { "name" => "이름", "country" => "국가", "contact_email" => "이메일",
+               "contact_phone" => "전화번호", "notes" => "메모" }
+    diffs = []
+    %w[name country contact_email contact_phone notes].each do |field|
+      local_val = self[field].to_s.strip
+      ecount_val = snap[field].to_s.strip
+      next if local_val == ecount_val
+      diffs << { field: field, label: labels[field] || field, local: local_val, ecount: ecount_val }
+    end
+    diffs
+  end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_17_011830) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_17_012101) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -179,6 +179,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_17_011830) do
     t.string "credit_grade"
     t.string "currency", default: "USD"
     t.string "ecount_code"
+    t.json "ecount_snapshot"
     t.datetime "ecount_synced_at"
     t.string "industry"
     t.string "name", null: false
@@ -671,6 +672,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_17_011830) do
     t.string "credit_grade"
     t.string "currency", default: "USD"
     t.string "ecount_code"
+    t.json "ecount_snapshot"
     t.datetime "ecount_synced_at"
     t.string "industry"
     t.integer "lead_time_days"
