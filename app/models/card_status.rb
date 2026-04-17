@@ -45,6 +45,10 @@ class CardStatus < ApplicationRecord
       when "gte" then days >= rule["value"].to_i
       else false
       end
+    when "status"
+      # ISS-225: Order.status 기반 자동 전환 (예: GRN 수신 시 done)
+      target_statuses = Array(rule["value"]).map(&:to_s)
+      target_statuses.include?(order.status.to_s)
     else
       false
     end
