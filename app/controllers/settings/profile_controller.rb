@@ -25,6 +25,14 @@ module Settings
       redirect_back fallback_location: root_path
     end
 
+    # ISS-230: PATCH /settings/notification_preferences
+    # 사용자별 알림 타입 × 채널 on/off 설정
+    def update_notification_preferences
+      prefs = params[:preferences]&.permit!&.to_h || {}
+      current_user.update!(notification_preferences: prefs)
+      redirect_to settings_root_path, notice: "알림 설정이 저장되었습니다."
+    end
+
     private
 
     def profile_params

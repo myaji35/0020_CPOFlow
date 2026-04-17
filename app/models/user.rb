@@ -65,4 +65,31 @@ class User < ApplicationRecord
   def dark_mode?
     preferred_theme == "dark"
   end
+
+  # ISS-230: 알림 타입 × 채널 매트릭스
+  NOTIFICATION_TYPES = {
+    "rfq_new"         => { label: "신규 RFQ 수신", default: true  },
+    "order_overdue"   => { label: "주문 연체",       default: true  },
+    "order_assigned"  => { label: "담당 배정",       default: true  },
+    "visa_expiring"   => { label: "비자 만료 임박", default: true  },
+    "ecount_conflict" => { label: "eCount 불일치",  default: false },
+    "kpi_weekly"      => { label: "주간 KPI 요약",  default: false }
+  }.freeze
+
+  NOTIFICATION_CHANNELS = {
+    "in_app" => "앱 알림",
+    "email"  => "이메일",
+    "slack"  => "Slack",
+    "kakao"  => "KakaoTalk"
+  }.freeze
+
+  # 특정 타입×채널 조합이 활성화됐는지
+  def notify_on?(type, channel)
+    prefs = notification_preferences || {}
+    row = prefs[type.to_s] || {}
+    val = row[channel.to_s]
+    return val if val.is_a?(TrueClass) || val.is_a?(FalseClass)
+    # 미설정 시 default 반환 (채널은 in_app만 기본 true, 나머지는 false)
+    channel.to_s == "in_app" && (NOTIFICATION_TYPES.dig(type.to_s, :default) || false)
+  end
 end
