@@ -83,6 +83,76 @@
     </div>
   </div>
 
+  <%# ISS-215: Customer Intelligence — 거래 품질 프로파일 %>
+  <% ci = @customer_intel %>
+  <% if ci[:total_orders].to_i > 0 %>
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-white">거래 품질 프로파일</h3>
+          <p class="text-xs text-gray-500 dark:text-gray-500">리스크 발주처 식별을 위한 추가 지표</p>
+        </div>
+        <span class="inline-flex items-center gap-1 text-[10px] text-gray-400 dark:text-gray-500"
+              title="조회 시각: <%= ci[:computed_at].strftime('%Y-%m-%d %H:%M') %>">
+          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          실시간
+        </span>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <%# 평균 리드타임 %>
+        <div class="p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+          <p class="text-[11px] text-gray-500 dark:text-gray-400">평균 리드타임</p>
+          <p class="text-xl font-bold text-gray-900 dark:text-white mt-0.5">
+            <% if ci[:avg_lead_days] %>
+              <%= ci[:avg_lead_days] %><span class="text-xs font-normal ml-0.5">일</span>
+            <% else %><span class="text-gray-300">—</span><% end %>
+          </p>
+          <p class="text-[10px] text-gray-400 mt-1">생성 → 납품</p>
+        </div>
+        <%# 평균 견적 갯수 (까다로움 지수) %>
+        <div class="p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+          <p class="text-[11px] text-gray-500 dark:text-gray-400">건당 견적 수</p>
+          <p class="text-xl font-bold <%= ci[:avg_quotes] >= 3.0 ? 'text-[#F4A83A]' : 'text-gray-900 dark:text-white' %> mt-0.5">
+            <%= ci[:avg_quotes] %><span class="text-xs font-normal ml-0.5">개</span>
+          </p>
+          <p class="text-[10px] text-gray-400 mt-1"><%= ci[:avg_quotes] >= 3.0 ? "까다로움" : "일반" %></p>
+        </div>
+        <%# 취소/포기율 %>
+        <div class="p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+          <p class="text-[11px] text-gray-500 dark:text-gray-400">취소/포기율</p>
+          <p class="text-xl font-bold <%= ci[:cancellation_rate] >= 10 ? 'text-[#D93025]' : (ci[:cancellation_rate] >= 5 ? 'text-[#F4A83A]' : 'text-gray-900 dark:text-white') %> mt-0.5">
+            <%= ci[:cancellation_rate] %>%
+          </p>
+          <p class="text-[10px] text-gray-400 mt-1"><%= ci[:give_up_count] %>건 / 전체 <%= ci[:total_orders] %>건</p>
+        </div>
+        <%# 최근 30일 연체 트렌드 %>
+        <div class="p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+          <p class="text-[11px] text-gray-500 dark:text-gray-400">연체 트렌드 (30일)</p>
+          <p class="text-xl font-bold mt-0.5 flex items-center gap-1
+                    <%= ci[:trend] == :increasing ? 'text-[#D93025]' : (ci[:trend] == :decreasing ? 'text-green-600' : 'text-gray-900 dark:text-white') %>">
+            <%= ci[:recent_overdue] %>
+            <% if ci[:trend] == :increasing %>
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            <% elsif ci[:trend] == :decreasing %>
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+            <% else %>
+              <span class="text-xs">→</span>
+            <% end %>
+          </p>
+          <p class="text-[10px] text-gray-400 mt-1">전월 <%= ci[:prev_overdue] %>건</p>
+        </div>
+        <%# 평균 발주 금액 %>
+        <div class="p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+          <p class="text-[11px] text-gray-500 dark:text-gray-400">평균 발주액</p>
+          <p class="text-xl font-bold text-gray-900 dark:text-white mt-0.5">
+            $<%= number_with_delimiter(ci[:avg_value]) %>
+          </p>
+          <p class="text-[10px] text-gray-400 mt-1"><%= ci[:delivered_count] %>건 납품</p>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
   <!-- 탭 -->
   <div x-data="{ tab: '<%= params[:tab].presence&.then { |t| %w[contacts projects orders].include?(t) ? t : 'contacts' } || 'contacts' %>' }" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
     <div class="border-b border-gray-200 dark:border-gray-700 px-4">

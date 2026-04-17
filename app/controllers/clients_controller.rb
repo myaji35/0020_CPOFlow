@@ -72,6 +72,9 @@ class ClientsController < ApplicationController
     @on_time_rate     = total > 0 ? ((total - overdue).to_f / total * 100).round(1) : nil
     @risk_grade       = calculate_client_risk(@client, @on_time_rate, overdue)
 
+    # ISS-215: Customer Intelligence — 추가 거래 품질 지표
+    @customer_intel = build_customer_intel(@client)
+
     # FR-03: 월별 거래 추이 (최근 12개월)
     @monthly_trend = (11.downto(0)).map do |i|
       m = i.months.ago.to_date.beginning_of_month
@@ -142,6 +145,54 @@ class ClientsController < ApplicationController
     elsif on_time_rate >= 60 || overdue <= 3 then "C"
     else "D"
     end
+  end
+
+  # ISS-215: 발주처 거래 품질 프로파일
+  def build_customer_intel(client)
+    all_orders = client.orders
+    delivered  = all_orders.where(status: :get_grn)
+
+    # 평균 리드타임 (생성 → 최종 납품)
+    lead_days_arr = delivered.map { |o| (o.updated_at.to_date - o.created_at.to_date).to_i }
+    avg_lead_days = lead_days_arr.any? ? (lead_days_arr.sum.to_f / lead_days_arr.size).round(1) : nil
+
+    # 견적 갯수 평균 (까다로움 지수) — Order의 order_quotes 평균
+    quote_counts = all_orders.joins("LEFT JOIN order_quotes ON order_quotes.order_id = orders.id")
+                             .group("orders.id").count("order_quotes.id").values
+    avg_quotes = quote_counts.any? ? (quote_counts.sum.to_f / quote_counts.size).round(1) : 0.0
+
+    # 취소/포기(give_up) 비율
+    give_up_count = all_orders.where(status: :give_up).count
+    cancellation_rate = all_orders.count > 0 ? (give_up_count.to_f / all_orders.count * 100).round(1) : 0.0
+
+    # 최근 30일 연체 트렌드 (30일 전 vs 현재)
+    recent_overdue = all_orders.where("due_date < ? AND due_date >= ? AND status NOT IN (?, ?)",
+                                       Date.today, 30.days.ago, Order.statuses[:get_grn], Order.statuses[:give_up]).count
+    prev_overdue = all_orders.where("due_date < ? AND due_date >= ? AND status NOT IN (?, ?)",
+                                     30.days.ago, 60.days.ago, Order.statuses[:get_grn], Order.statuses[:give_up]).count
+    trend = if prev_overdue == 0
+              recent_overdue > 0 ? :increasing : :stable
+            else
+              change = ((recent_overdue - prev_overdue).to_f / prev_overdue * 100)
+              change > 20 ? :increasing : (change < -20 ? :decreasing : :stable)
+            end
+
+    # 평균 발주 금액
+    avg_value = all_orders.average(:estimated_value).to_f.round(0)
+
+    {
+      avg_lead_days:     avg_lead_days,
+      avg_quotes:        avg_quotes,
+      give_up_count:     give_up_count,
+      cancellation_rate: cancellation_rate,
+      recent_overdue:    recent_overdue,
+      prev_overdue:      prev_overdue,
+      trend:             trend,
+      avg_value:         avg_value,
+      total_orders:      all_orders.count,
+      delivered_count:   delivered.count,
+      computed_at:       Time.current
+    }
   end
 
   def client_orders_to_csv(orders)
