@@ -16,6 +16,14 @@ module Admin
       @total_products_db     = Product.count
       @products_with_ecount  = Product.where.not(ecount_code: nil).count
 
+      # ISS-220: eCount ↔ CPOFlow 값 불일치(conflict) 현황
+      # 스냅샷이 있는 레코드 중 diff가 1개 이상인 것만 카운트
+      @supplier_conflicts = Supplier.where.not(ecount_snapshot: nil)
+                                    .select { |s| s.ecount_diff.any? }
+      @client_conflicts   = Client.where.not(ecount_snapshot: nil)
+                                  .select { |c| c.ecount_diff.any? }
+      @conflict_total     = @supplier_conflicts.size + @client_conflicts.size
+
       # 연결 상태 + 일일 규정 (캐시에 있는 세션 정보만 — 새 호출 없음)
       @session_cached    = Rails.cache.read(:ecount_session_id).present?
       @daily_quota_info  = Rails.cache.read(:ecount_daily_quota)  # 최근 호출의 QUANTITY_INFO

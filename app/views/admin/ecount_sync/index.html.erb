@@ -57,6 +57,72 @@
   <% end %>
 
 
+  <%# ISS-220: eCount ↔ CPOFlow 값 불일치 대시보드 %>
+  <% if @conflict_total.to_i > 0 %>
+    <div class="rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/10 p-4 mb-6">
+      <div class="flex items-start gap-3">
+        <svg class="w-5 h-5 text-[#D93025] flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div class="flex-1">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-sm font-bold text-red-900 dark:text-red-200">
+              eCount ↔ CPOFlow 불일치 <%= @conflict_total %>건 발견
+            </h3>
+            <div class="flex gap-2">
+              <%= button_to admin_ecount_sync_trigger_path(sync_type: "customers"),
+                    method: :post,
+                    data: { turbo_confirm: "거래처 재동기화를 시작합니다. eCount의 최신 값으로 덮어쓰게 됩니다. 계속하시겠습니까?" },
+                    class: "inline-flex items-center gap-1 px-2.5 py-1 text-xs bg-[#D93025] hover:bg-red-700 text-white rounded-lg font-medium transition-colors" do %>
+                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                eCount 값으로 재동기화
+              <% end %>
+            </div>
+          </div>
+          <p class="text-xs text-red-700 dark:text-red-300 mb-3">
+            동기화 이후 CPOFlow 또는 eCount 한쪽에서 값이 변경되어 불일치가 발생했습니다. 재동기화는 <strong>eCount 값을 우선</strong>으로 덮어씁니다. CPOFlow의 수정을 보존하려면 각 레코드 상세에서 개별 확인하세요.
+          </p>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border border-red-200 dark:border-red-900/30">
+              <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">거래처(Supplier) 불일치</p>
+              <p class="text-xl font-bold text-red-700 dark:text-red-400"><%= @supplier_conflicts.size %>건</p>
+              <% if @supplier_conflicts.any? %>
+                <ul class="mt-2 text-xs space-y-1 max-h-32 overflow-y-auto">
+                  <% @supplier_conflicts.first(5).each do |s| %>
+                    <li>
+                      <%= link_to s.name, supplier_path(s),
+                            class: "text-[#00A1E0] hover:underline" %>
+                      <span class="text-gray-500">(<%= s.ecount_diff.size %>개 필드)</span>
+                    </li>
+                  <% end %>
+                  <% if @supplier_conflicts.size > 5 %>
+                    <li class="text-gray-400">외 <%= @supplier_conflicts.size - 5 %>건</li>
+                  <% end %>
+                </ul>
+              <% end %>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border border-red-200 dark:border-red-900/30">
+              <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">발주처(Client) 불일치</p>
+              <p class="text-xl font-bold text-red-700 dark:text-red-400"><%= @client_conflicts.size %>건</p>
+              <% if @client_conflicts.any? %>
+                <ul class="mt-2 text-xs space-y-1 max-h-32 overflow-y-auto">
+                  <% @client_conflicts.first(5).each do |c| %>
+                    <li>
+                      <%= link_to c.name, client_path(c),
+                            class: "text-[#00A1E0] hover:underline" %>
+                      <span class="text-gray-500">(<%= c.ecount_diff.size %>개 필드)</span>
+                    </li>
+                  <% end %>
+                  <% if @client_conflicts.size > 5 %>
+                    <li class="text-gray-400">외 <%= @client_conflicts.size - 5 %>건</li>
+                  <% end %>
+                </ul>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
   <%# 동기화 상태 카드 %>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
 
