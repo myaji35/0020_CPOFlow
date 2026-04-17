@@ -22,6 +22,17 @@ class HrExpiryNotificationJob < ApplicationJob
       visas.each do |visa|
         Rails.logger.warn "[HrExpiry] 비자 만료 D-#{days_ahead}: #{visa.employee.name} " \
                           "(#{visa.visa_type}/#{visa.issuing_country})"
+
+        # ISS-221: D-60 도달 시 renewal 자동 시작 (미시작 상태인 경우만)
+        if days_ahead == 60 && visa.renewal_started_at.nil?
+          visa.update_columns(
+            renewal_started_at: Time.current,
+            renewal_status:     "in_progress",
+            renewal_note:       "D-60 자동 시작 (HrExpiryNotificationJob)"
+          )
+          Rails.logger.info "[HrExpiry] 비자 ##{visa.id} 갱신 자동 시작 (D-60)"
+        end
+
         key = "visa_#{visa.id}_d#{days_ahead}"
         managers.each do |manager|
           unless Notification.where(user: manager, notification_type: key).exists?
@@ -30,7 +41,8 @@ class HrExpiryNotificationJob < ApplicationJob
               notifiable:        visa.employee,
               notification_type: key,
               title:             "비자 만료 D-#{days_ahead}: #{visa.employee.name}",
-              body:              "#{visa.visa_type} (#{visa.issuing_country}) — #{visa.expiry_date&.strftime('%Y-%m-%d')} 만료"
+              body:              "#{visa.visa_type} (#{visa.issuing_country}) — #{visa.expiry_date&.strftime('%Y-%m-%d')} 만료" +
+                                 (days_ahead == 60 ? " · 갱신 프로세스 자동 시작됨" : "")
             )
           end
         end
