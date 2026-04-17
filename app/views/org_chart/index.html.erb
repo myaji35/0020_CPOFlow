@@ -139,14 +139,19 @@
                 <svg class="w-4 h-4 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                 <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400">부서 미배정 (<%= unassigned.count %>명)</h3>
               </div>
-              <div class="px-5 py-4">
+              <div class="px-5 py-4 org-dept-dropzone" data-dept-id="" data-dept-name="부서 미배정">
                 <div class="flex flex-wrap gap-2">
                   <% unassigned.each do |emp| %>
-                    <%= link_to employee_path(emp), class: "flex items-center gap-2 px-3 py-1.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:border-primary/50 hover:shadow-sm transition-all" do %>
+                    <div class="org-employee-chip flex items-center gap-2 px-3 py-1.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:border-primary/50 hover:shadow-sm transition-all <%= (current_user.manager? || current_user.admin?) ? 'cursor-move' : 'cursor-pointer' %>"
+                         <%= 'draggable="true"'.html_safe if current_user.manager? || current_user.admin? %>
+                         data-employee-id="<%= emp.id %>"
+                         data-employee-path="<%= employee_path(emp) %>"
+                         data-update-url="<%= employee_path(emp, format: :json) %>"
+                         onclick="if(!window._orgDragging) window.location.href=this.dataset.employeePath">
                       <div class="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-300 text-xs font-bold flex-shrink-0">
                         <%= emp.name.first.upcase %>
                       </div>
-                      <div>
+                      <div class="pointer-events-none">
                         <p class="text-xs font-medium text-gray-900 dark:text-white"><%= emp.name %></p>
                         <% if emp.job_title.present? %>
                           <p class="text-xs text-gray-500 dark:text-gray-400"><%= emp.job_title %></p>
@@ -155,7 +160,7 @@
                       <% if emp.active_visa %>
                         <span class="w-2 h-2 rounded-full flex-shrink-0 <%= emp.visa_expiring_soon? ? 'bg-red-400' : 'bg-green-400' %>"></span>
                       <% end %>
-                    <% end %>
+                    </div>
                   <% end %>
                 </div>
               </div>
@@ -253,18 +258,25 @@
                           </div>
                         </div>
 
-                        <%# 직원 목록 %>
-                        <div x-show="deptOpen" x-collapse class="bg-gray-50/50 dark:bg-gray-700/20 px-5 py-3 pl-16">
+                        <%# 직원 목록 (ISS-228: DnD drop target) %>
+                        <div x-show="deptOpen" x-collapse class="bg-gray-50/50 dark:bg-gray-700/20 px-5 py-3 pl-16 org-dept-dropzone"
+                             data-dept-id="<%= dept.id %>"
+                             data-dept-name="<%= dept.name %>">
                           <% if dept_employees.empty? %>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">배속된 직원이 없습니다.</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">배속된 직원이 없습니다. <span class="text-[10px] text-primary">(드래그로 추가 가능)</span></p>
                           <% else %>
                             <div class="flex flex-wrap gap-2">
                               <% dept_employees.each do |emp| %>
-                                <%= link_to employee_path(emp), class: "flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary/50 hover:shadow-sm transition-all" do %>
+                                <div class="org-employee-chip flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary/50 hover:shadow-sm transition-all <%= (current_user.manager? || current_user.admin?) ? 'cursor-move' : 'cursor-pointer' %>"
+                                     <%= 'draggable="true"'.html_safe if current_user.manager? || current_user.admin? %>
+                                     data-employee-id="<%= emp.id %>"
+                                     data-employee-path="<%= employee_path(emp) %>"
+                                     data-update-url="<%= employee_path(emp, format: :json) %>"
+                                     onclick="if(!window._orgDragging) window.location.href=this.dataset.employeePath">
                                   <div class="w-6 h-6 rounded-full <%= Employee::AVATAR_COLORS[emp.nationality] || 'bg-primary' %> flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                                     <%= emp.name.first.upcase %>
                                   </div>
-                                  <div>
+                                  <div class="pointer-events-none">
                                     <p class="text-xs font-medium text-gray-900 dark:text-white"><%= emp.name %></p>
                                     <% if emp.job_title.present? %>
                                       <p class="text-xs text-gray-500 dark:text-gray-400"><%= emp.job_title %></p>
@@ -274,7 +286,7 @@
                                   <% if emp.active_visa %>
                                     <span class="w-2 h-2 rounded-full flex-shrink-0 <%= emp.visa_expiring_soon? ? 'bg-red-400' : 'bg-green-400' %>"></span>
                                   <% end %>
-                                <% end %>
+                                </div>
                               <% end %>
                             </div>
                           <% end %>
@@ -343,3 +355,74 @@
     </div>
   <% end %>
 </div>
+
+<%# ISS-228: Org Chart DnD 재배치 (manager/admin만) %>
+<% if current_user.manager? || current_user.admin? %>
+  <script>
+  (function() {
+    var CSRF = document.querySelector('meta[name="csrf-token"]')?.content;
+    var dragEl = null;
+    window._orgDragging = false;
+
+    function attachDragHandlers() {
+      document.querySelectorAll('.org-employee-chip[draggable="true"]').forEach(function(chip) {
+        chip.addEventListener('dragstart', function(e) {
+          dragEl = chip;
+          window._orgDragging = true;
+          chip.classList.add('opacity-50');
+          try { e.dataTransfer.setData('text/plain', chip.dataset.employeeId); } catch(_) {}
+          e.dataTransfer.effectAllowed = 'move';
+        });
+        chip.addEventListener('dragend', function() {
+          if (dragEl) dragEl.classList.remove('opacity-50');
+          setTimeout(function() { window._orgDragging = false; }, 100);
+          dragEl = null;
+          document.querySelectorAll('.org-dept-dropzone').forEach(function(z) {
+            z.classList.remove('ring-2','ring-primary','ring-inset','bg-primary/5');
+          });
+        });
+      });
+      document.querySelectorAll('.org-dept-dropzone').forEach(function(zone) {
+        zone.addEventListener('dragover', function(e) {
+          if (!dragEl) return;
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          zone.classList.add('ring-2','ring-primary','ring-inset','bg-primary/5');
+        });
+        zone.addEventListener('dragleave', function() {
+          zone.classList.remove('ring-2','ring-primary','ring-inset','bg-primary/5');
+        });
+        zone.addEventListener('drop', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          zone.classList.remove('ring-2','ring-primary','ring-inset','bg-primary/5');
+          if (!dragEl) return;
+          var newDeptId = zone.dataset.deptId || '';
+          var newDeptName = zone.dataset.deptName || '부서 없음';
+          var url = dragEl.dataset.updateUrl;
+          // 낙관적 UI: 즉시 이동 (success 여부는 서버 응답으로 확정)
+          fetch(url, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF, 'Accept': 'application/json' },
+            body: JSON.stringify({ employee: { department_id: newDeptId || null } })
+          }).then(function(r) {
+            if (r.ok) {
+              window.location.reload();
+            } else {
+              alert('부서 이동 실패 (HTTP ' + r.status + ')');
+            }
+          }).catch(function(err) {
+            alert('네트워크 오류: ' + err.message);
+          });
+        });
+      });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', attachDragHandlers);
+    } else {
+      attachDragHandlers();
+    }
+  })();
+  </script>
+<% end %>

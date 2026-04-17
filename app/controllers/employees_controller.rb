@@ -62,9 +62,15 @@ class EmployeesController < ApplicationController
 
   def update
     if @employee.update(employee_params)
-      redirect_to @employee, notice: t("employees.update_success")
+      respond_to do |format|
+        format.html { redirect_to @employee, notice: t("employees.update_success") }
+        format.json { render json: { ok: true, id: @employee.id, department_id: @employee.department_id } }
+      end
     else
-      render :edit, status: :unprocessable_entity
+      respond_to do |format|
+        format.html { render :edit, status: :unprocessable_entity }
+        format.json { render json: { ok: false, errors: @employee.errors.full_messages }, status: :unprocessable_entity }
+      end
     end
   end
 
