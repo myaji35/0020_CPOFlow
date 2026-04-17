@@ -209,7 +209,9 @@
       </div>
       <div class="space-y-3">
         <% @visas.each do |visa| %>
-          <div class="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary/30 transition-colors">
+          <% needs_renewal = visa.days_until_expiry <= 60 && visa.renewal_started_at.nil? %>
+          <% in_renewal = visa.renewal_started_at.present? %>
+          <div class="flex items-center justify-between p-3 border <%= needs_renewal ? 'border-yellow-300 dark:border-yellow-700 bg-yellow-50/50 dark:bg-yellow-900/10' : (in_renewal ? 'border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-900/10' : 'border-gray-200 dark:border-gray-700') %> rounded-lg hover:border-primary/30 transition-colors">
             <div class="flex items-center gap-4">
               <div>
                 <div class="flex items-center gap-2">
@@ -219,11 +221,29 @@
                     <%= visa.expiry_date.strftime("%Y-%m-%d") %>
                     (<%= visa.days_until_expiry >= 0 ? "D-#{visa.days_until_expiry}" : "만료" %>)
                   </span>
+                  <% if in_renewal %>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-[#00A1E0] text-white" title="갱신 시작: <%= visa.renewal_started_at.strftime('%Y-%m-%d') %>">
+                      <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                      갱신 진행중
+                    </span>
+                  <% end %>
                 </div>
-                <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">번호: <%= visa.visa_number.presence || "-" %> | 발급: <%= visa.issue_date&.strftime("%Y-%m-%d") || "-" %></p>
+                <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">번호: <%= visa.visa_number.presence || "-" %> | 발급: <%= visa.issue_date&.strftime("%Y-%m-%d") || "-" %><% if in_renewal %> | 갱신 시작: <%= visa.renewal_started_at.strftime("%Y-%m-%d") %><% end %></p>
+                <% if in_renewal && visa.renewal_note.present? %>
+                  <p class="text-xs text-blue-700 dark:text-blue-300 mt-1">📝 <%= visa.renewal_note %></p>
+                <% end %>
               </div>
             </div>
-            <div class="flex gap-2">
+            <div class="flex gap-2 items-center">
+              <% if needs_renewal %>
+                <%= button_to start_renewal_employee_visa_path(@employee, visa),
+                    method: :post,
+                    data: { turbo_confirm: "비자 갱신 프로세스를 시작하시겠습니까?" },
+                    class: "inline-flex items-center gap-1 text-xs bg-[#F4A83A] text-white px-2.5 py-1 rounded-lg hover:bg-orange-500 transition-colors font-medium" do %>
+                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                  갱신 시작
+                <% end %>
+              <% end %>
               <%= link_to edit_employee_visa_path(@employee, visa), class: "text-xs text-gray-500 dark:text-gray-500 hover:text-primary" do %>수정<% end %>
               <%= link_to employee_visa_path(@employee, visa), data: { turbo_method: :delete, turbo_confirm: "비자를 삭제하시겠습니까?" },
                   class: "text-xs text-gray-500 dark:text-gray-500 hover:text-red-500" do %>삭제<% end %>

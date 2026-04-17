@@ -158,7 +158,9 @@ Rails.application.routes.draw do
 
   # 직원 관리 (HR System)
   resources :employees do
-    resources :visas,                only: %i[new create edit update destroy]
+    resources :visas,                only: %i[new create edit update destroy] do
+      member { post :start_renewal }
+    end
     resources :employment_contracts, only: %i[new create edit update destroy]
     resources :employee_assignments, only: %i[new create edit update destroy]
     resources :certifications,       only: %i[new create edit update destroy]

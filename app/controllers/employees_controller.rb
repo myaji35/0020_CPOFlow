@@ -24,6 +24,13 @@ class EmployeesController < ApplicationController
       total:             Employee.active.count,
       dispatched:        Employee.active.dispatched.count,
       visa_expiring:     Employee.active.joins(:visas).merge(Visa.expiring_within(60)).distinct.count,
+      # ISS-205: 갱신 미시작 카운트
+      visa_renewal_needed: Employee.active.joins(:visas)
+                                   .merge(Visa.expiring_within(60).where(renewal_started_at: nil))
+                                   .distinct.count,
+      visa_in_renewal:   Employee.active.joins(:visas)
+                                 .where(visas: { renewal_status: "in_progress" })
+                                 .distinct.count,
       contract_expiring: Employee.active.joins(:employment_contracts)
                                  .merge(EmploymentContract.expiring_within(30)).distinct.count
     }
