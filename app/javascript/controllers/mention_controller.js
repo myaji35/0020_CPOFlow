@@ -90,13 +90,33 @@ export default class extends Controller {
   async _fetchSuggestions(q) {
     const url = `${this.urlValue}?q=${encodeURIComponent(q)}`
     try {
-      const res   = await fetch(url, { headers: { "Accept": "application/json", "X-CSRF-Token": this._csrfToken() } })
+      const res = await fetch(url, {
+        headers: { "Accept": "application/json", "X-CSRF-Token": this._csrfToken() },
+        credentials: "same-origin",
+        redirect: "manual"
+      })
+      // 세션 만료 등으로 redirect / 비-JSON 응답 처리
+      if (!res.ok || res.type === "opaqueredirect" || !(res.headers.get("content-type") || "").includes("json")) {
+        this._items = []
+        this._renderError("직원 목록을 불러올 수 없습니다 (재로그인 필요)")
+        return
+      }
       const items = await res.json()
-      this._items = items
-      this._renderDropdown(items)
-    } catch (_) {
-      this._closeDropdown()
+      this._items = Array.isArray(items) ? items : []
+      this._renderDropdown(this._items)
+    } catch (err) {
+      console.error("[mention] fetch error", err)
+      this._items = []
+      this._renderError("멘션 목록 로딩 실패")
     }
+  }
+
+  _renderError(msg) {
+    const rect = this.inputTarget.getBoundingClientRect()
+    const dd   = this.dropdownTarget
+    dd.innerHTML = `<div class="px-3 py-2 text-sm text-red-500">${this._escape(msg)}</div>`
+    dd.style.cssText = `position:fixed; top:${rect.bottom + 4}px; left:${rect.left}px; width:${Math.max(rect.width, 220)}px; z-index:9999; display:block;`
+    this._open = true
   }
 
   _renderDropdown(items) {

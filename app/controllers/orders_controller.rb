@@ -260,18 +260,32 @@ class OrdersController < ApplicationController
 
     @order.attachments.attach(file_list)
     Activity.create!(order: @order, user: current_user, action: "attachment_added")
+    @order.reload
 
     respond_to do |format|
-      format.turbo_stream {
-        render turbo_stream: turbo_stream.replace(
-          "drawer-panel-#{@order.id}-attachments",
-          partial: "orders/drawer_attachments", locals: { order: @order.reload, initial_render: false }
-        )
-      }
+      format.turbo_stream { render turbo_stream: attachments_turbo_streams }
       format.html { redirect_back fallback_location: @order, notice: "#{file_list.size}개 파일이 첨부되었습니다." }
       format.json { render json: { success: true, count: file_list.size, message: "#{file_list.size}개 파일 첨부 완료" } }
     end
   end
+
+  # 첨부파일 panel + 탭 배지 동시 업데이트용 turbo_stream 배열
+  def attachments_turbo_streams
+    new_count = @order.attachments.size
+    hidden_cls = new_count.zero? ? " hidden" : ""
+    [
+      turbo_stream.replace(
+        "drawer-panel-#{@order.id}-attachments",
+        partial: "orders/drawer_attachments", locals: { order: @order, initial_render: false }
+      ),
+      turbo_stream.replace(
+        "drawer-tab-badge-#{@order.id}-attachments",
+        %(<span id="drawer-tab-badge-#{@order.id}-attachments" class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-500 px-1.5 py-0.5 rounded-full#{hidden_cls}">#{new_count}</span>).html_safe
+      )
+    ]
+  end
+  private :attachments_turbo_streams
+  helper_method :attachments_turbo_streams
 
   # POST /orders/:id/attach_from_url — URL에서 파일 다운로드 후 첨부
   def attach_from_url
@@ -331,14 +345,10 @@ class OrdersController < ApplicationController
         content_type: content_type
       )
       Activity.create!(order: @order, user: current_user, action: "attachment_added")
+      @order.reload
 
       respond_to do |format|
-        format.turbo_stream {
-          render turbo_stream: turbo_stream.replace(
-            "drawer-panel-#{@order.id}-attachments",
-            partial: "orders/drawer_attachments", locals: { order: @order.reload, initial_render: false }
-          )
-        }
+        format.turbo_stream { render turbo_stream: attachments_turbo_streams }
         format.json { render json: { success: true, filename: filename } }
       end
     rescue => e
@@ -355,13 +365,9 @@ class OrdersController < ApplicationController
     if attachment
       attachment.purge
       Activity.create!(order: @order, user: current_user, action: "attachment_removed")
+      @order.reload
       respond_to do |format|
-        format.turbo_stream {
-          render turbo_stream: turbo_stream.replace(
-            "drawer-panel-#{@order.id}-attachments",
-            partial: "orders/drawer_attachments", locals: { order: @order.reload, initial_render: false }
-          )
-        }
+        format.turbo_stream { render turbo_stream: attachments_turbo_streams }
         format.html { redirect_to @order, notice: "첨부파일이 삭제되었습니다." }
         format.json { render json: { success: true } }
       end
@@ -498,12 +504,21 @@ class OrdersController < ApplicationController
     msg = "Google Drive 폴더에서 #{attached}개 파일 첨부 완료"
     msg += " (#{errors.size}건 실패)" if errors.any?
 
+    @order.reload
     respond_to do |format|
       format.turbo_stream {
-        render turbo_stream: turbo_stream.replace(
-          "drawer-panel-#{@order.id}-attachments",
-          partial: "orders/drawer_attachments", locals: { order: @order.reload, initial_render: false, flash_error: errors.any? ? msg : nil }
-        )
+        new_count = @order.attachments.size
+        hidden_cls = new_count.zero? ? " hidden" : ""
+        render turbo_stream: [
+          turbo_stream.replace(
+            "drawer-panel-#{@order.id}-attachments",
+            partial: "orders/drawer_attachments", locals: { order: @order, initial_render: false, flash_error: errors.any? ? msg : nil }
+          ),
+          turbo_stream.replace(
+            "drawer-tab-badge-#{@order.id}-attachments",
+            %(<span id="drawer-tab-badge-#{@order.id}-attachments" class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-500 px-1.5 py-0.5 rounded-full#{hidden_cls}">#{new_count}</span>).html_safe
+          )
+        ]
       }
       format.json { render json: { success: true, attached: attached, errors: errors } }
       format.html { redirect_back fallback_location: @order, notice: msg }

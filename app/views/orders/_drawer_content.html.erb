@@ -27,8 +27,9 @@
         <% if tab_id == 'comments' && comments.any? %>
           <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-500 px-1.5 py-0.5 rounded-full"><%= comments.count %></span>
         <% end %>
-        <% if tab_id == 'attachments' && att_count > 0 %>
-          <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-500 px-1.5 py-0.5 rounded-full"><%= att_count %></span>
+        <% if tab_id == 'attachments' %>
+          <span id="drawer-tab-badge-<%= order.id %>-attachments"
+                class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-500 px-1.5 py-0.5 rounded-full<%= ' hidden' if att_count.zero? %>"><%= att_count %></span>
         <% end %>
       </button>
     <% end %>
