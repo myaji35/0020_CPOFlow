@@ -10,7 +10,7 @@
     <% end %>
     <div class="flex-1 min-w-0">
       <p class="text-sm <%= task.completed ? 'line-through text-gray-500 dark:text-gray-500' : 'text-gray-900 dark:text-white' %>">
-        <%= task.title %>
+        <%= highlight_mentions(task.title) %>
       </p>
       <% if task.assignee || task.due_date %>
         <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">

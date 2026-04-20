@@ -16,27 +16,38 @@ export default class extends Controller {
     this._items      = []
     this._bound      = {
       keydown:   this._onKeydown.bind(this),
-      clickOut:  this._onClickOut.bind(this)
+      clickOut:  this._onClickOut.bind(this),
+      keyup:     this._onKeyup.bind(this)
     }
     this.inputTarget.addEventListener("keydown", this._bound.keydown)
+    this.inputTarget.addEventListener("keyup", this._bound.keyup)
     document.addEventListener("click", this._bound.clickOut)
   }
 
   disconnect() {
     this.inputTarget.removeEventListener("keydown", this._bound.keydown)
+    this.inputTarget.removeEventListener("keyup", this._bound.keyup)
     document.removeEventListener("click", this._bound.clickOut)
     this._closeDropdown()
   }
 
   // 입력 이벤트 (data-action="input->mention#onInput")
   onInput(event) {
-    const input = event.target
-    const val   = input.value
-    const pos   = input.selectionStart
+    this._detectAtMention(event.target)
+  }
 
-    // 커서 앞 텍스트에서 @ 탐색
+  // 화살표/엔터/선택 이후 커서 이동 감지용
+  _onKeyup(event) {
+    if (["ArrowDown", "ArrowUp", "Enter", "Escape"].includes(event.key)) return
+    this._detectAtMention(event.target)
+  }
+
+  _detectAtMention(input) {
+    const val = input.value
+    const pos = input.selectionStart
     const before = val.slice(0, pos)
-    const match  = before.match(/(?:^|[\s\n])@([\w가-힣]*)$/)
+    // 커서 앞에서 가장 가까운 @를 찾되, 문자열 시작 또는 공백 직후의 @만 유효
+    const match = before.match(/(?:^|\s)@([\w가-힣]*)$/)
 
     if (match) {
       this._atIndex = before.lastIndexOf("@")
@@ -89,21 +100,27 @@ export default class extends Controller {
   }
 
   _renderDropdown(items) {
-    if (!items.length) { this._closeDropdown(); return }
-
     const rect = this.inputTarget.getBoundingClientRect()
     const dd   = this.dropdownTarget
 
-    dd.innerHTML = items.map((item, idx) => `
-      <div class="mention-item flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 text-sm"
-           data-idx="${idx}" data-mention-target="item">
-        <span class="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold shrink-0">
-          ${item.initials}
-        </span>
-        <span class="flex-1 text-gray-800 dark:text-gray-200">${item.display_name}</span>
-        ${item.job_title ? `<span class="text-xs text-gray-400">${item.job_title}</span>` : (item.branch ? `<span class="text-xs text-gray-400">${item.branch}</span>` : "")}
-      </div>
-    `).join("")
+    if (!items.length) {
+      dd.innerHTML = `
+        <div class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
+          검색 결과가 없습니다
+        </div>
+      `
+    } else {
+      dd.innerHTML = items.map((item, idx) => `
+        <div class="mention-item flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 text-sm"
+             data-idx="${idx}" data-mention-target="item">
+          <span class="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold shrink-0">
+            ${this._escape(item.initials)}
+          </span>
+          <span class="flex-1 text-gray-800 dark:text-gray-200">${this._escape(item.display_name)}</span>
+          ${item.job_title ? `<span class="text-xs text-gray-400">${this._escape(item.job_title)}</span>` : (item.branch ? `<span class="text-xs text-gray-400">${this._escape(item.branch)}</span>` : "")}
+        </div>
+      `).join("")
+    }
 
     // 클릭 이벤트
     dd.querySelectorAll(".mention-item").forEach(el => {
@@ -175,5 +192,11 @@ export default class extends Controller {
 
   _csrfToken() {
     return document.querySelector("meta[name='csrf-token']")?.content || ""
+  }
+
+  _escape(str) {
+    return String(str ?? "").replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
+    }[c]))
   }
 }

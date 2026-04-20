@@ -68,4 +68,42 @@ class MentionParserServiceTest < ActiveSupport::TestCase
     end
     no_user_emp.destroy
   end
+
+  test "코멘트 복수 @멘션 시 각 유저에게 1건씩 Notification 생성" do
+    other_user = User.find_or_create_by(email: "mention_target2@example.com") do |u|
+      u.name = "Mention Target 2"; u.password = "password123"; u.role = :member
+    end
+    other_emp = Employee.find_or_create_by(name: "김철수멘션테스트") do |e|
+      e.nationality = "KR"; e.employment_type = "regular"
+    end
+    other_emp.update!(user_id: other_user.id)
+
+    @comment.update!(body: "@홍길동멘션테스트 그리고 @김철수멘션테스트 둘 다 확인해줘")
+    assert_difference("Notification.count", 2) do
+      MentionParserService.new(@comment, @mentioner).call
+    end
+    Notification.where(user: [@mentioned_user, other_user]).destroy_all
+    other_emp.destroy
+  end
+
+  test "같은 사람 @멘션 중복이면 Notification 1건만 생성" do
+    @comment.update!(body: "@홍길동멘션테스트 확인, @홍길동멘션테스트 다시 확인")
+    assert_difference("Notification.count", 1) do
+      MentionParserService.new(@comment, @mentioner).call
+    end
+    Notification.where(user: @mentioned_user).destroy_all
+  end
+
+  test "태스크 title의 @멘션도 Notification 생성" do
+    task = Task.create!(order: @order, title: "@홍길동멘션테스트 재확인 부탁")
+    assert_difference("Notification.count", 1) do
+      MentionParserService.new(task, @mentioner).call
+    end
+    notif = Notification.order(created_at: :desc).first
+    assert_equal @mentioned_user, notif.user
+    assert_equal "mentioned", notif.notification_type
+    assert_includes notif.body, "태스크"
+    notif.destroy
+    task.destroy
+  end
 end

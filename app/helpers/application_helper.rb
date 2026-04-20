@@ -75,28 +75,51 @@ module ApplicationHelper
     end
   end
 
-  # @이름 멘션 파란색 하이라이트 (FR-08)
+  # @이름 멘션 파란색 하이라이트 + URL 링크화 + 자동 줄바꿈
+  # - "1. ... 2. ... 3. ..." 같이 복수 번호가 한 줄에 붙어 있으면 줄바꿈 강제
+  # - "Website:", "Contact:", "Note:" 등 라벨 앞에서도 줄바꿈(1건 이상 탐지 시)
   def highlight_mentions(text)
     return "" if text.blank?
     html = ERB::Util.html_escape(text)
-    html.gsub(/@([\w가-힣]+(?:\s[\w가-힣]+)?)/) do |match|
-      "<span class=\"text-blue-600 dark:text-blue-400 font-medium\">#{ERB::Util.html_escape(match)}</span>"
-    end.html_safe
+
+    # 1. 두 개 이상의 번호 매김(1., 2., ...)이 한 줄에 있으면 각 번호 앞에 줄바꿈
+    if html.scan(/(?<=\s)\d{1,2}\.\s/).size >= 2
+      html = html.gsub(/(?<=\s)(\d{1,2}\.\s)/, "\n\\1")
+    end
+
+    # 2. 라벨 패턴(Website:/Contact:/Note:/Email: 등) 앞에 줄바꿈
+    #    단, 같은 문장에 2개 이상 나타날 때만 적용 (과도한 줄바꿈 방지)
+    labels = %w[Website Contact Note Email Phone Address Tel Fax Manufacturer Brand Distributor]
+    label_pattern = /(?<=[\s.)])((?:#{labels.join("|")}):\s)/
+    if html.scan(label_pattern).size >= 2
+      html = html.gsub(label_pattern, "\n\\1")
+    end
+
+    # 3. URL → 파란 링크 (new tab)
+    html = html.gsub(%r{(https?://[^\s<]+)}) do |url|
+      safe = ERB::Util.html_escape(url)
+      "<a href=\"#{safe}\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 dark:text-blue-400 underline break-all\">#{safe}</a>"
+    end
+
+    # 4. @멘션 → 파란 굵은 글씨
+    #    한글은 단일 토큰, 영문은 "Title Case 두 단어"까지 허용 (John Doe)
+    html = html.gsub(/@([A-Z][a-zA-Z]+(?:[ \t][A-Z][a-zA-Z]+)?|[\w가-힣]+)/) do |match|
+      "<span class=\"text-blue-600 dark:text-blue-400 font-bold\">#{ERB::Util.html_escape(match)}</span>"
+    end
+
+    # 5. 개행을 <br>로 명시 변환
+    html = html.gsub(/\n/, "<br>")
+
+    html.html_safe
   end
 
-  # Task progress bar
+  # Task progress (count only)
   def task_progress_bar(order)
     prog = order.task_progress
     return "" if prog[:total].zero?
-    pct = (prog[:done].to_f / prog[:total] * 100).round
-    content_tag(:div, class: "w-full") do
-      concat content_tag(:div, class: "flex justify-between text-xs text-gray-500 mb-1") {
-        concat content_tag(:span, "Tasks")
-        concat content_tag(:span, "#{prog[:done]}/#{prog[:total]}")
-      }
-      concat content_tag(:div, class: "w-full bg-gray-200 rounded-full h-1.5") {
-        content_tag(:div, "", class: "bg-accent h-1.5 rounded-full", style: "width: #{pct}%")
-      }
+    content_tag(:div, class: "flex justify-between text-xs text-gray-500") do
+      concat content_tag(:span, "Tasks")
+      concat content_tag(:span, "#{prog[:done]}/#{prog[:total]}")
     end
   end
 end

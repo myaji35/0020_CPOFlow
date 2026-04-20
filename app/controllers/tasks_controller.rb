@@ -3,7 +3,9 @@ class TasksController < ApplicationController
 
   def create
     @task = @order.tasks.build(task_params)
-    @task.save
+    if @task.save
+      MentionParserService.new(@task, current_user).call
+    end
     respond_to do |format|
       format.turbo_stream do
         render turbo_stream: [
@@ -21,7 +23,11 @@ class TasksController < ApplicationController
 
   def update
     @task = @order.tasks.find(params[:id])
+    title_changed = task_params[:title].present? && task_params[:title] != @task.title
     @task.update(task_params)
+    if title_changed
+      MentionParserService.new(@task, current_user).call
+    end
     respond_to do |format|
       format.turbo_stream do
         render turbo_stream: [

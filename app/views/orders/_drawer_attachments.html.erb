@@ -5,19 +5,29 @@
   <% active_storage_attachments = order.respond_to?(:attachments) ? (order.attachments.includes(:blob) rescue []) : [] %>
   <% links = order.respond_to?(:extracted_links) && order.extracted_links.present? ? (JSON.parse(order.extracted_links) rescue []) : [] %>
 
-  <%# 파일 업로드 영역 %>
+  <%# 파일 업로드 영역 — drag & drop 지원 %>
   <div class="mb-3">
     <%= form_with url: attach_order_path(order), method: :post, multipart: true,
-        data: { turbo: true },
+        data: {
+          turbo: true,
+          controller: "file-dropzone",
+          file_dropzone_max_size_value: 25 * 1024 * 1024,
+          file_dropzone_auto_submit_value: true,
+          file_dropzone_idle_label_value: "파일 선택 또는 드래그"
+        },
         class: "flex items-center gap-2" do |f| %>
-      <label class="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-[#00A1E0] hover:bg-blue-50/30 transition-colors group">
-        <svg class="w-5 h-5 text-gray-500 group-hover:text-[#00A1E0] transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <span class="text-sm text-gray-500 group-hover:text-[#00A1E0] transition-colors" id="upload-label-<%= order.id %>">파일 선택 또는 드래그</span>
+      <label class="relative flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-[#00A1E0] hover:bg-blue-50/30 transition-colors group"
+             data-file-dropzone-target="zone">
+        <svg class="w-5 h-5 text-gray-500 group-hover:text-[#00A1E0] transition-colors pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span class="text-sm text-gray-500 group-hover:text-[#00A1E0] transition-colors pointer-events-none"
+              data-file-dropzone-target="label"
+              id="upload-label-<%= order.id %>">파일 선택 또는 드래그</span>
         <%= f.file_field :files, multiple: true, class: "hidden",
-            onchange: "updateUploadLabel(this, #{order.id})" %>
+            data: { file_dropzone_target: "input" } %>
       </label>
       <%= f.submit "업로드",
-          class: "px-4 py-2.5 text-sm font-medium text-white bg-[#1E3A5F] rounded-lg hover:bg-[#1E3A5F]/90 cursor-pointer transition-colors shrink-0" %>
+          class: "px-4 py-2.5 text-sm font-medium text-white bg-[#1E3A5F] rounded-lg hover:bg-[#1E3A5F]/90 cursor-pointer transition-colors shrink-0",
+          data: { file_dropzone_target: "submit" } %>
     <% end %>
   </div>
 
