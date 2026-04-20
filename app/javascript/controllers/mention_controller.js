@@ -9,6 +9,7 @@ export default class extends Controller {
   static targets = ["input", "dropdown", "employeeId"]
 
   connect() {
+    console.log("[mention] controller connected", this.element)
     this._query      = ""
     this._atIndex    = -1
     this._activeIdx  = -1
@@ -17,18 +18,31 @@ export default class extends Controller {
     this._bound      = {
       keydown:   this._onKeydown.bind(this),
       clickOut:  this._onClickOut.bind(this),
-      keyup:     this._onKeyup.bind(this)
+      keyup:     this._onKeyup.bind(this),
+      input:     this._onInputEvent.bind(this)
     }
-    this.inputTarget.addEventListener("keydown", this._bound.keydown)
-    this.inputTarget.addEventListener("keyup", this._bound.keyup)
+    if (this.hasInputTarget) {
+      this.inputTarget.addEventListener("keydown", this._bound.keydown)
+      this.inputTarget.addEventListener("keyup", this._bound.keyup)
+      this.inputTarget.addEventListener("input", this._bound.input)  // 안전장치: data-action 없이도 동작
+    } else {
+      console.warn("[mention] inputTarget not found — data-mention-target=\"input\" 확인 필요")
+    }
     document.addEventListener("click", this._bound.clickOut)
   }
 
   disconnect() {
-    this.inputTarget.removeEventListener("keydown", this._bound.keydown)
-    this.inputTarget.removeEventListener("keyup", this._bound.keyup)
+    if (this.hasInputTarget) {
+      this.inputTarget.removeEventListener("keydown", this._bound.keydown)
+      this.inputTarget.removeEventListener("keyup", this._bound.keyup)
+      this.inputTarget.removeEventListener("input", this._bound.input)
+    }
     document.removeEventListener("click", this._bound.clickOut)
     this._closeDropdown()
+  }
+
+  _onInputEvent(event) {
+    this._detectAtMention(event.target)
   }
 
   // 입력 이벤트 (data-action="input->mention#onInput")
