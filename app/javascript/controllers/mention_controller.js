@@ -45,9 +45,9 @@ export default class extends Controller {
     this._detectAtMention(event.target)
   }
 
-  // 입력 이벤트 (data-action="input->mention#onInput")
-  onInput(event) {
-    this._detectAtMention(event.target)
+  // 입력 이벤트 — 중복 방지를 위해 이제 no-op (connect()의 addEventListener가 처리)
+  onInput(_event) {
+    // intentionally empty — _onInputEvent 가 실제 처리
   }
 
   // 화살표/엔터/선택 이후 커서 이동 감지용
@@ -132,6 +132,7 @@ export default class extends Controller {
         return
       }
       const items = await res.json()
+      console.log("[mention] response", { count: items?.length, sample: items?.[0] })
       this._items = Array.isArray(items) ? items : []
       this._renderDropdown(this._items)
     } catch (err) {
