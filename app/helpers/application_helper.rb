@@ -83,15 +83,18 @@ module ApplicationHelper
     html = ERB::Util.html_escape(text)
 
     # 1. 두 개 이상의 번호 매김(1., 2., ...)이 한 줄에 있으면 각 번호 앞에 줄바꿈
+    #    앞쪽 공백을 함께 소비하여 시각적 이중 간격 방지
     if html.scan(/(?<=\s)\d{1,2}\.\s/).size >= 2
-      html = html.gsub(/(?<=\s)(\d{1,2}\.\s)/, "\n\\1")
+      html = html.gsub(/\s+(\d{1,2}\.\s)/, "\n\\1")
     end
 
     # 2. 라벨 패턴(Website:/Contact:/Note:/Email: 등) 앞에 줄바꿈
-    #    단, 같은 문장에 2개 이상 나타날 때만 적용 (과도한 줄바꿈 방지)
+    #    동일하게 앞 공백을 소비
     labels = %w[Website Contact Note Email Phone Address Tel Fax Manufacturer Brand Distributor]
-    label_pattern = /(?<=[\s.)])((?:#{labels.join("|")}):\s)/
-    if html.scan(label_pattern).size >= 2
+    label_pattern = /[\s]+((?:#{labels.join("|")}):\s)/
+    # 문자열 시작에서는 매칭되지 않도록 개별 카운트는 기존 방식 유지
+    label_count_pattern = /(?<=[\s.)])((?:#{labels.join("|")}):\s)/
+    if html.scan(label_count_pattern).size >= 2
       html = html.gsub(label_pattern, "\n\\1")
     end
 
