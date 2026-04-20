@@ -39,6 +39,10 @@ export default class extends Controller {
     }
     document.removeEventListener("click", this._bound.clickOut)
     this._closeDropdown()
+    // body에 포털링된 드롭다운도 정리
+    if (this.hasDropdownTarget && this.dropdownTarget.parentElement === document.body) {
+      this.dropdownTarget.remove()
+    }
   }
 
   _onInputEvent(event) {
@@ -145,8 +149,9 @@ export default class extends Controller {
   _renderError(msg) {
     const rect = this.inputTarget.getBoundingClientRect()
     const dd   = this.dropdownTarget
+    if (dd.parentElement !== document.body) document.body.appendChild(dd)
     dd.innerHTML = `<div class="px-3 py-2 text-sm text-red-500">${this._escape(msg)}</div>`
-    dd.style.cssText = `position:fixed; top:${rect.bottom + 4}px; left:${rect.left}px; width:${Math.max(rect.width, 220)}px; z-index:9999; display:block;`
+    dd.style.cssText = `position:fixed; top:${rect.bottom + 4}px; left:${rect.left}px; width:${Math.max(rect.width, 260)}px; z-index:2147483647; display:block; background:white; border:1px solid #fca5a5; border-radius:8px; box-shadow:0 10px 25px -5px rgba(0,0,0,0.15);`
     this._open = true
   }
 
@@ -185,15 +190,30 @@ export default class extends Controller {
       })
     })
 
-    // 위치 지정 (fixed — 드로어 z-index 위)
+    // 드롭다운을 body로 포털링 — 드로어의 overflow/transform에 잘리지 않도록
+    if (dd.parentElement !== document.body) {
+      document.body.appendChild(dd)
+    }
+    // 뷰포트 우측 경계 보정 (좁은 화면 / DevTools 열려있을 때)
+    const ddWidth = Math.max(rect.width, 260)
+    let   left    = rect.left
+    if (left + ddWidth > window.innerWidth - 8) {
+      left = Math.max(8, window.innerWidth - ddWidth - 8)
+    }
     dd.style.cssText = `
       position: fixed;
       top: ${rect.bottom + 4}px;
-      left: ${rect.left}px;
-      width: ${Math.max(rect.width, 220)}px;
-      z-index: 9999;
+      left: ${left}px;
+      width: ${ddWidth}px;
+      z-index: 2147483647;
       display: block;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15);
+      overflow: hidden;
     `
+    console.log("[mention] dropdown positioned", { top: rect.bottom + 4, left, width: ddWidth, parentIsBody: dd.parentElement === document.body })
     this._open      = true
     this._activeIdx = 0
     this._highlightActive()
