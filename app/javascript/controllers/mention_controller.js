@@ -249,8 +249,11 @@ export default class extends Controller {
       this.employeeIdTarget.value = item.id
     }
 
+    this._atIndex = -1
+    this._query   = ""
     this._closeDropdown()
-    input.focus()
+    // focus() 가 input 이벤트를 재발화시키지 않도록 microtask 이후 복귀
+    queueMicrotask(() => input.focus())
   }
 
   _moveActive(dir) {
@@ -266,11 +269,17 @@ export default class extends Controller {
   }
 
   _closeDropdown() {
-    this.dropdownTarget.style.display = "none"
-    this.dropdownTarget.innerHTML     = ""
-    this._open     = false
+    // pending fetch/debounce 취소 — 닫은 직후 지연된 응답이 다시 여는 것 방지
+    if (this._abortCtrl) { this._abortCtrl.abort(); this._abortCtrl = null }
+    clearTimeout(this._debounceTimer)
+
+    if (this.hasDropdownTarget) {
+      this.dropdownTarget.style.cssText = "display:none"
+      this.dropdownTarget.innerHTML     = ""
+    }
+    this._open      = false
     this._activeIdx = -1
-    this._items    = []
+    this._items     = []
   }
 
   _csrfToken() {
