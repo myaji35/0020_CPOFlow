@@ -18,6 +18,10 @@ Rails.application.configure do
   # Cache assets for far-future expiry since they are all digest stamped.
   config.public_file_server.headers = { "cache-control" => "public, max-age=#{1.year.to_i}" }
 
+  # TailwindCSS CDN을 사용해 application.css는 비어있음. Link preload 헤더 비활성화로
+  # "preloaded but not used" 경고 제거.
+  config.action_view.preload_links_header = false
+
   # GZip compression — 응답 크기 50~70% 감소 (UAE 등 느린 네트워크에서 효과 큼)
   config.middleware.insert_after ActionDispatch::Static, Rack::Deflater
 
