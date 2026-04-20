@@ -122,12 +122,23 @@ export default class extends Controller {
   }
 
   async _fetchSuggestions(q) {
+    // 이전 요청 취소 (race condition 방지)
+    if (this._abortCtrl) this._abortCtrl.abort()
+    this._abortCtrl = new AbortController()
+
+    // 디바운스 120ms — 연속 입력 시 마지막 요청만 실행
+    clearTimeout(this._debounceTimer)
+    this._debounceTimer = setTimeout(() => this._doFetch(q, this._abortCtrl.signal), 120)
+  }
+
+  async _doFetch(q, signal) {
     const url = `${this.urlValue}?q=${encodeURIComponent(q)}`
     try {
       const res = await fetch(url, {
         headers: { "Accept": "application/json", "X-CSRF-Token": this._csrfToken() },
         credentials: "same-origin",
-        redirect: "manual"
+        redirect: "manual",
+        signal
       })
       // 세션 만료 등으로 redirect / 비-JSON 응답 처리
       if (!res.ok || res.type === "opaqueredirect" || !(res.headers.get("content-type") || "").includes("json")) {
@@ -136,10 +147,11 @@ export default class extends Controller {
         return
       }
       const items = await res.json()
-      console.log("[mention] response", { count: items?.length, sample: items?.[0] })
+      console.log("[mention] response", { q, count: items?.length })
       this._items = Array.isArray(items) ? items : []
       this._renderDropdown(this._items)
     } catch (err) {
+      if (err.name === "AbortError") return  // 정상 취소
       console.error("[mention] fetch error", err)
       this._items = []
       this._renderError("멘션 목록 로딩 실패")
