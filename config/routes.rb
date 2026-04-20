@@ -119,6 +119,11 @@ Rails.application.routes.draw do
     resources :rfq_stats, only: [ :index ] do
       collection { post :reclassify_mismatches }
     end
+
+    # ISS-231: 사용자 피드백 리뷰 관리
+    resources :reviews, only: %i[index] do
+      member { patch :transition }
+    end
   end
 
   # Gmail OAuth2
@@ -189,6 +194,17 @@ Rails.application.routes.draw do
   get "/reports",            to: "reports#index",      as: :reports
   get "/reports/export_csv", to: "reports#export_csv", as: :reports_export_csv
   get "/reports/export_pdf", to: "reports#export_pdf", as: :reports_export_pdf
+
+  # 사용자 피드백 리뷰 (공개 접근)
+  resources :reviews, only: %i[new create]
+
+  # Admin namespace에 reviews 추가
+  # (admin namespace 블록 바깥에 별도 선언)
+
+  # API namespace (Command Center 폴링용)
+  namespace :api do
+    get "reviews", to: "reviews#index"
+  end
 
   # CPO Agent Insights (목록 + dismiss/feedback)
   resources :agent_insights, only: %i[index] do

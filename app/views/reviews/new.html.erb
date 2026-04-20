@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <title>피드백 남기기 — CPOFlow</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: { DEFAULT: '#1E3A5F', light: '#2D5282' },
+            accent:  { DEFAULT: '#00A1E0' },
+            warning: '#F4A83A',
+          }
+        }
+      }
+    }
+  </script>
+  <%= javascript_importmap_tags %>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-6">
+
+<div id="review-form" class="w-full max-w-lg">
+  <%= render "form", review: @review %>
+</div>
+
+</body>
+</html>

@@ -86,6 +86,7 @@
     <% end %>
     <% if current_user.admin? %>
       <%= nav_link_to settings_menu_permissions_path, icon: "lni lni-shield", label: "메뉴 권한" %>
+      <%= nav_link_to admin_reviews_path, icon: "lni lni-comments-alt", label: "피드백 관리" %>
     <% end %>
   </div>
 

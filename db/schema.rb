@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_17_021239) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_20_015958) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -616,6 +616,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_17_021239) do
     t.index ["code"], name: "index_projects_on_code"
     t.index ["site_category"], name: "index_projects_on_site_category"
     t.index ["status"], name: "index_projects_on_status"
+  end
+
+  create_table "reviews", force: :cascade do |t|
+    t.text "body", null: false
+    t.string "channel", default: "in_app", null: false
+    t.datetime "created_at", null: false
+    t.string "email"
+    t.string "email_hash"
+    t.string "ip_address"
+    t.integer "rating", null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.string "user_agent"
+    t.index ["created_at"], name: "index_reviews_on_created_at"
+    t.index ["status"], name: "index_reviews_on_status"
   end
 
   create_table "rfq_feedbacks", force: :cascade do |t|

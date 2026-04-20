@@ -1,0 +1,128 @@
+<%# ISS-231: 관리자 피드백 리뷰 목록 — SLDS 준수 %>
+<% content_for :title, "피드백 관리 — CPOFlow" %>
+
+<div class="max-w-5xl mx-auto">
+  <!-- 페이지 헤더 -->
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-xl font-bold text-[#1E3A5F]">피드백 관리</h1>
+      <p class="text-sm text-gray-500 mt-0.5">사용자 피드백 검토 및 상태 관리</p>
+    </div>
+    <a href="<%= new_review_path %>" target="_blank"
+       class="inline-flex items-center gap-2 bg-[#00A1E0] hover:bg-[#33b5e8] text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors">
+      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+        <polyline points="15 3 21 3 21 9"/>
+        <line x1="10" y1="14" x2="21" y2="3"/>
+      </svg>
+      피드백 폼 보기
+    </a>
+  </div>
+
+  <!-- 상태 필터 탭 -->
+  <% statuses = [
+    { key: nil,          label: "전체",      color: "#6b7280" },
+    { key: "new",        label: "신규",      color: "#6b7280" },
+    { key: "triaged",    label: "검토중",    color: "#00A1E0" },
+    { key: "responded",  label: "응답완료",  color: "#1E8E3E" },
+    { key: "archived",   label: "보관",      color: "#9ca3af" }
+  ] %>
+
+  <div class="flex items-center gap-2 mb-6 flex-wrap">
+    <% statuses.each do |s| %>
+      <% is_active = params[:status] == s[:key].to_s && !(s[:key].nil? && params[:status].blank?) %>
+      <% is_active = params[:status].blank? if s[:key].nil? %>
+      <a href="<%= admin_reviews_path(s[:key] ? { status: s[:key] } : {}) %>"
+         class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all <%= is_active ? 'ring-2 ring-offset-1' : 'opacity-70 hover:opacity-100' %>"
+         style="background-color: <%= s[:color] %>; color: white; <%= is_active ? "ring-color: #{s[:color]};" : "" %>">
+        <%= s[:label] %>
+        <% if s[:key] %>
+          <% mapped = s[:key] == "new" ? "new_review" : s[:key] %>
+          <% count = (@status_counts[Review.statuses[mapped]] || 0) %>
+          <span class="bg-white/30 px-1.5 py-0.5 rounded-full text-xs"><%= count %></span>
+        <% else %>
+          <span class="bg-white/30 px-1.5 py-0.5 rounded-full text-xs"><%= @status_counts.values.sum %></span>
+        <% end %>
+      </a>
+    <% end %>
+  </div>
+
+  <!-- 리뷰 목록 -->
+  <% if @reviews.empty? %>
+    <div class="bg-white border border-gray-200 rounded-xl p-12 text-center">
+      <svg class="w-10 h-10 text-gray-300 mx-auto mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      <p class="text-sm text-gray-400">피드백이 없습니다.</p>
+    </div>
+  <% else %>
+    <div class="space-y-3">
+      <% @reviews.each do |review| %>
+        <%
+          status_label = { "new_review" => "신규", "triaged" => "검토중", "responded" => "응답완료", "archived" => "보관" }[review.status] || review.status
+          status_color = { "new_review" => "#6b7280", "triaged" => "#00A1E0", "responded" => "#1E8E3E", "archived" => "#9ca3af" }[review.status] || "#6b7280"
+          ch_label = review.in_app? ? "인앱" : "이메일"
+        %>
+        <div class="bg-white border border-gray-200 rounded-xl p-5">
+          <div class="flex items-start gap-4">
+            <!-- 별점 -->
+            <div class="shrink-0 flex gap-0.5 mt-0.5">
+              <% (1..5).each do |i| %>
+                <svg class="w-4 h-4 <%= i <= review.rating ? 'text-[#F4A83A]' : 'text-gray-200' %>"
+                     viewBox="0 0 24 24"
+                     fill="<%= i <= review.rating ? '#F4A83A' : 'none' %>"
+                     stroke="<%= i <= review.rating ? '#F4A83A' : 'currentColor' %>"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+              <% end %>
+            </div>
+
+            <!-- 본문 -->
+            <div class="flex-1 min-w-0">
+              <p class="text-sm text-gray-900 leading-relaxed"><%= review.body %></p>
+              <div class="flex items-center gap-3 mt-2">
+                <span class="text-xs text-gray-400"><%= review.created_at.strftime("%Y.%m.%d %H:%M") %></span>
+                <span class="text-xs text-gray-400">·</span>
+                <span class="text-xs text-gray-400"><%= ch_label %></span>
+                <% if review.email_hash.present? %>
+                  <span class="text-xs text-gray-400">·</span>
+                  <span class="text-xs text-gray-400 font-mono" title="이메일 해시">
+                    <%= review.email_hash.first(12) %>...
+                  </span>
+                <% end %>
+              </div>
+            </div>
+
+            <!-- 상태 배지 + 전환 -->
+            <div class="shrink-0 flex flex-col items-end gap-2">
+              <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold text-white"
+                    style="background-color: <%= status_color %>">
+                <%= status_label %>
+              </span>
+
+              <!-- 상태 전환 버튼 -->
+              <div class="flex gap-1 flex-wrap justify-end">
+                <% [
+                  { to: "new",       label: "신규",    color: "#6b7280" },
+                  { to: "triaged",   label: "검토중",  color: "#00A1E0" },
+                  { to: "responded", label: "응답",    color: "#1E8E3E" },
+                  { to: "archived",  label: "보관",    color: "#9ca3af" }
+                ].each do |s| %>
+                  <% next if s[:to] == review.status_public %>
+                  <%= button_to transition_admin_review_path(review, to: s[:to]),
+                        method: :patch,
+                        class: "text-xs px-2 py-1 rounded-md font-medium text-white transition-opacity hover:opacity-80 cursor-pointer",
+                        style: "background-color: #{s[:color]}",
+                        data: { turbo_confirm: nil } do %>
+                    <%= s[:label] %>
+                  <% end %>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>
