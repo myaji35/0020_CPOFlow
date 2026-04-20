@@ -61,12 +61,28 @@ export default class extends Controller {
     const pos = input.selectionStart
     const before = val.slice(0, pos)
     // 커서 앞에서 가장 가까운 @를 찾되, 문자열 시작 또는 공백 직후의 @만 유효
+    // 디버그: 값/위치/매칭 여부 로그
     const match = before.match(/(?:^|\s)@([\w가-힣]*)$/)
+    console.log("[mention] detect", { val: JSON.stringify(val), pos, hasAt: before.includes("@"), match: match?.[1] })
 
     if (match) {
       this._atIndex = before.lastIndexOf("@")
       this._query   = match[1]
+      console.log("[mention] -> fetch", this._query)
       this._fetchSuggestions(this._query)
+    } else if (before.includes("@")) {
+      // fallback: @ 뒤 단어 추출 (보이지 않는 문자나 특이 패턴 대응)
+      const lastAt = before.lastIndexOf("@")
+      const afterAt = before.slice(lastAt + 1)
+      // @ 뒤에 공백/개행이 없으면 멘션 후보로 간주
+      if (!/\s/.test(afterAt)) {
+        this._atIndex = lastAt
+        this._query = afterAt.replace(/[^\w가-힣]/g, "")
+        console.log("[mention] fallback fetch", this._query)
+        this._fetchSuggestions(this._query)
+        return
+      }
+      this._closeDropdown()
     } else {
       this._closeDropdown()
     }
