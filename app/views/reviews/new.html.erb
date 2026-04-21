@@ -14,6 +14,7 @@
             primary: { DEFAULT: '#1E3A5F', light: '#2D5282' },
             accent:  { DEFAULT: '#00A1E0' },
             warning: '#F4A83A',
+            brand:   { 500: '#1f8389', 600: '#166c72', 700: '#11555a' }
           }
         }
       }
@@ -24,6 +25,19 @@
 <body class="bg-gray-50 min-h-screen flex items-center justify-center p-6">
 
 <div id="review-form" class="w-full max-w-lg">
+  <% if flash[:notice] %>
+    <div class="mb-4 px-4 py-3 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center gap-2">
+      <svg class="w-5 h-5 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+      <span class="text-sm font-semibold text-emerald-700"><%= flash[:notice] %></span>
+    </div>
+  <% end %>
+  <% if flash[:alert] %>
+    <div class="mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+      <%= flash[:alert] %>
+    </div>
+  <% end %>
   <%= render "form", review: @review %>
 </div>
 

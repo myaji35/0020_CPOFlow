@@ -72,17 +72,13 @@
             placeholder: "example@company.com",
             class: "w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]" %>
 
-      <!-- 이메일 해시 옵션 -->
-      <div class="mt-2 flex items-start gap-2">
-        <input type="checkbox"
-               id="hash_email"
-               name="hash_email"
-               value="1"
-               class="mt-0.5 w-4 h-4 rounded border-gray-300 text-[#00A1E0] focus:ring-[#00A1E0]">
-        <label for="hash_email" class="text-xs text-gray-500 leading-relaxed">
-          이메일을 해시로만 저장 (원문 미저장, 익명성 보호)
-        </label>
-      </div>
+      <!-- 개인정보 안내 — email은 항상 해시로만 저장됨 -->
+      <p class="mt-2 text-xs text-gray-500 leading-relaxed flex items-start gap-1.5">
+        <svg class="w-3.5 h-3.5 text-emerald-600 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        이메일은 <strong class="text-gray-700">항상 해시로만 저장</strong>됩니다 (원문 미저장, 익명성 보호)
+      </p>
     </div>
 
     <!-- 제출 버튼 -->

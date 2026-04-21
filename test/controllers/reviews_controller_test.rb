@@ -45,21 +45,22 @@ class ReviewsControllerTest < ActionDispatch::IntegrationTest
     assert_includes after_ids, new_id, "reviews.json에 새 리뷰 ID가 없습니다"
   end
 
-  test "POST /reviews — email 해시 옵션 1이면 email nil + email_hash 저장" do
+  test "POST /reviews — email 입력 시 항상 해시로만 저장 (원문 금지)" do
+    # P0 보안: 개인정보 보호 — hash_email 옵션과 무관하게 원문 저장 차단
     params = valid_params.merge(
-      review: valid_params[:review].merge(email: "cpo@lawfirm.co.kr"),
-      hash_email: "1"
+      review: valid_params[:review].merge(email: "cpo@lawfirm.co.kr")
     )
     post reviews_path, params: params
     assert_response :redirect
 
     review = Review.last
-    assert_nil review.email, "email이 nil이어야 합니다"
+    assert_nil review.email, "원문 email이 DB에 저장되면 안 됩니다"
     expected_hash = Digest::SHA256.hexdigest("cpo@lawfirm.co.kr")
     assert_equal expected_hash, review.email_hash
   end
 
-  test "POST /reviews — email 해시 옵션 없으면 email 원문 저장" do
+  test "POST /reviews — hash_email 파라미터 누락해도 원문 저장 금지" do
+    # hash_email 파라미터가 없어도 원문은 저장되면 안 됨 (모델 before_save 강제)
     params = valid_params.merge(
       review: valid_params[:review].merge(email: "open@example.com")
     )
@@ -67,7 +68,15 @@ class ReviewsControllerTest < ActionDispatch::IntegrationTest
     assert_response :redirect
 
     review = Review.last
-    assert_equal "open@example.com", review.email
+    assert_nil review.email, "hash_email 누락 시에도 원문 저장 금지"
+    refute_nil review.email_hash
+  end
+
+  test "POST /reviews — channel 파라미터 조작 시도해도 서버가 in_app 강제" do
+    params = valid_params.merge(review: valid_params[:review].merge(channel: "email"))
+    post reviews_path, params: params
+    assert_response :redirect
+    assert_equal "in_app", Review.last.channel
   end
 
   # --- POST /reviews (검증 실패) ---

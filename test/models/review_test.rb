@@ -114,16 +114,29 @@ class ReviewTest < ActiveSupport::TestCase
 
   # --- Email hash 로직 ---
 
-  test "email_hash 저장 가능" do
-    hash = Digest::SHA256.hexdigest("test@example.com")
-    review = Review.create!(valid_attrs.merge(email_hash: hash, email: nil))
-    assert_equal hash, review.email_hash
-    assert_nil review.email
+  test "email 입력 시 before_save가 해시로 변환하고 원문을 nil로" do
+    # P0 보안: 개인정보 보호 — 원문은 DB에 절대 저장되지 않음
+    review = Review.create!(valid_attrs.merge(email: "test@example.com"))
+    expected_hash = Digest::SHA256.hexdigest("test@example.com")
+    assert_nil review.email, "email 원문이 nil이어야 함"
+    assert_equal expected_hash, review.email_hash
   end
 
-  test "email 원문 저장 가능 (해시 선택 안 한 경우)" do
-    review = Review.create!(valid_attrs.merge(email: "test@example.com"))
-    assert_equal "test@example.com", review.email
+  test "email 대소문자/공백 정규화 후 해시" do
+    review = Review.create!(valid_attrs.merge(email: "  TEST@Example.com  "))
+    expected_hash = Digest::SHA256.hexdigest("test@example.com")
+    assert_equal expected_hash, review.email_hash
+  end
+
+  test "email 형식 오류 시 invalid" do
+    review = Review.new(valid_attrs.merge(email: "not-an-email"))
+    assert_not review.valid?
+    assert review.errors[:email].any?
+  end
+
+  test "email blank은 허용 (선택 필드)" do
+    review = Review.new(valid_attrs.merge(email: ""))
+    assert review.valid?
   end
 
   # --- to_review_json ---
