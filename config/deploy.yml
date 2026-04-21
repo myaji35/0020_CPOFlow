@@ -28,6 +28,7 @@ env:
     - ECOUNT_API_CERT_KEY
     - ECOUNT_ZONE
     - ECOUNT_ENV
+    - CPOFLOW_API_KEY
   clear:
     SOLID_QUEUE_IN_PUMA: true
 
