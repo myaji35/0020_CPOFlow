@@ -13,7 +13,7 @@
                  ""
                end
 %>
-<div class="relative rounded-md border pl-[14px] pr-3 py-2.5 shadow-sh-1 hover:shadow-sh-2 hover:border-ink-300 transition-all group cursor-pointer<%= ' ring-2 ring-red-500 ring-offset-1' if order.critical? %>"
+<div class="relative rounded-md border pl-[14px] pr-3 py-2.5 shadow-sh-1 hover:shadow-sh-2 hover:border-ink-300 transition-all group cursor-pointer hover:cursor-grab active:cursor-grabbing<%= ' ring-2 ring-red-500 ring-offset-1' if order.critical? %>"
      style="<%= card_bg_style %> <%= card_border_style %>"
      data-order-id="<%= order.id %>"
      data-card-status-key="<%= order.card_status&.key %>"
@@ -25,7 +25,7 @@
      data-refno="<%= order.reference_no %>"
      data-thread-id="<%= order.gmail_thread_id %>"
      title="클릭하여 상세 보기"
-     onclick="if(!window._selectMode && !event.target.closest('button,a,input,select,textarea,.drag-handle,[data-prevent-card-open]')){openOrderDrawer(<%= order.id %>, <%= order.display_subject.to_json %>, '<%= order_path(order) %>', '<%= order.reference_no %>');}"
+     onclick="if(!this._justDragged && !window._selectMode && !event.target.closest('button,a,input,select,textarea,.drag-handle,[data-prevent-card-open]')){openOrderDrawer(<%= order.id %>, <%= order.display_subject.to_json %>, '<%= order_path(order) %>', '<%= order.reference_no %>');}"
      >
 
   <%# SLA 리본 (좌측 4px rounded) — redesign Phase 3

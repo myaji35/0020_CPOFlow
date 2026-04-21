@@ -906,7 +906,11 @@ function initKanban() {
       group:       'kanban',
       animation:   180,
       easing:      'cubic-bezier(0.25, 1, 0.5, 1)',
-      handle:      '.drag-handle',   // 핸들 아이콘으로만 드래그
+      // 카드 전체를 드래그 가능 — 3px 이상 움직여야 drag 시작 (클릭과 구분)
+      touchStartThreshold: 3,
+      // 버튼/링크/폼 요소는 드래그 제외 — 클릭 동작 보존
+      filter:      'button, a, input, select, textarea, .quick-actions, [data-prevent-card-open]',
+      preventOnFilter: false,
       ghostClass:  'kanban-ghost',
       dragClass:   'kanban-dragging',
       chosenClass: 'kanban-chosen',
@@ -922,6 +926,11 @@ function initKanban() {
         document.querySelectorAll('.kanban-cards').forEach(function(c) {
           highlightColumn(c, false);
         });
+
+        // 드래그 직후 발생하는 click 이벤트를 억제 — 드로어 자동 열림 방지
+        const cardForClick = evt.item;
+        cardForClick._justDragged = true;
+        setTimeout(function(){ cardForClick._justDragged = false; }, 250);
 
         const cardEl   = evt.item;
         const orderId  = cardEl.dataset.orderId;
