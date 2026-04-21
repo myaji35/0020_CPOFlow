@@ -39,10 +39,6 @@ export default class extends Controller {
     }
     document.removeEventListener("click", this._bound.clickOut)
     this._closeDropdown()
-    // body에 포털링된 드롭다운도 정리
-    if (this.hasDropdownTarget && this.dropdownTarget.parentElement === document.body) {
-      this.dropdownTarget.remove()
-    }
   }
 
   _onInputEvent(event) {
@@ -147,9 +143,20 @@ export default class extends Controller {
         return
       }
       const items = await res.json()
-      console.log("[mention] response", { q, count: items?.length })
-      this._items = Array.isArray(items) ? items : []
-      this._renderDropdown(this._items)
+      // 클라이언트 측 방어적 재필터링 — 서버가 어떤 이유로 느슨하게 반환해도 정확히 일치만 표시
+      let filtered = Array.isArray(items) ? items : []
+      const qLower = (q || "").toLowerCase().trim()
+      if (qLower.length > 0) {
+        filtered = filtered.filter(it => (it.display_name || "").toLowerCase().includes(qLower))
+      }
+      // 현재 쿼리와 응답이 일치하지 않으면 무시 (stale 응답 방지)
+      if (q !== this._query) {
+        console.log("[mention] stale response discarded", { requested: q, current: this._query })
+        return
+      }
+      console.log("[mention] response", { q, total: items?.length, filtered: filtered.length })
+      this._items = filtered
+      this._renderDropdown(filtered)
     } catch (err) {
       if (err.name === "AbortError") return  // 정상 취소
       console.error("[mention] fetch error", err)
@@ -159,15 +166,16 @@ export default class extends Controller {
   }
 
   _renderError(msg) {
+    if (!this.hasDropdownTarget) return
     const rect = this.inputTarget.getBoundingClientRect()
     const dd   = this.dropdownTarget
-    if (dd.parentElement !== document.body) document.body.appendChild(dd)
     dd.innerHTML = `<div class="px-3 py-2 text-sm text-red-500">${this._escape(msg)}</div>`
     dd.style.cssText = `position:fixed; top:${rect.bottom + 4}px; left:${rect.left}px; width:${Math.max(rect.width, 260)}px; z-index:2147483647; display:block; background:white; border:1px solid #fca5a5; border-radius:8px; box-shadow:0 10px 25px -5px rgba(0,0,0,0.15);`
     this._open = true
   }
 
   _renderDropdown(items) {
+    if (!this.hasDropdownTarget || !this.hasInputTarget) return
     const rect = this.inputTarget.getBoundingClientRect()
     const dd   = this.dropdownTarget
 
@@ -202,16 +210,13 @@ export default class extends Controller {
       })
     })
 
-    // 드롭다운을 body로 포털링 — 드로어의 overflow/transform에 잘리지 않도록
-    if (dd.parentElement !== document.body) {
-      document.body.appendChild(dd)
-    }
     // 뷰포트 우측 경계 보정 (좁은 화면 / DevTools 열려있을 때)
     const ddWidth = Math.max(rect.width, 260)
     let   left    = rect.left
     if (left + ddWidth > window.innerWidth - 8) {
       left = Math.max(8, window.innerWidth - ddWidth - 8)
     }
+    // position:fixed로 viewport 기준 렌더링 (Stimulus target은 DOM 구조상 원래 위치 유지 — 포털링 금지)
     dd.style.cssText = `
       position: fixed;
       top: ${rect.bottom + 4}px;
@@ -225,7 +230,6 @@ export default class extends Controller {
       box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15);
       overflow: hidden;
     `
-    console.log("[mention] dropdown positioned", { top: rect.bottom + 4, left, width: ddWidth, parentIsBody: dd.parentElement === document.body })
     this._open      = true
     this._activeIdx = 0
     this._highlightActive()
