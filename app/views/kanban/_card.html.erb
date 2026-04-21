@@ -13,7 +13,7 @@
                  ""
                end
 %>
-<div class="relative rounded-md border pl-4 pr-3 py-2.5 shadow-sh-1 hover:shadow-sh-2 hover:border-ink-300 transition-all group cursor-pointer overflow-hidden<%= ' ring-2 ring-red-500 ring-offset-1' if order.critical? %>"
+<div class="relative rounded-md border pl-[14px] pr-3 py-2.5 shadow-sh-1 hover:shadow-sh-2 hover:border-ink-300 transition-all group cursor-pointer<%= ' ring-2 ring-red-500 ring-offset-1' if order.critical? %>"
      style="<%= card_bg_style %> <%= card_border_style %>"
      data-order-id="<%= order.id %>"
      data-card-status-key="<%= order.card_status&.key %>"
@@ -28,9 +28,10 @@
      onclick="if(!window._selectMode && !event.target.closest('button,a,input,select,textarea,.drag-handle,[data-prevent-card-open]')){openOrderDrawer(<%= order.id %>, <%= order.display_subject.to_json %>, '<%= order_path(order) %>', '<%= order.reference_no %>');}"
      >
 
-  <%# SLA 리본 (좌측 3px) — redesign Phase 3 %>
+  <%# SLA 리본 (좌측 4px rounded) — redesign Phase 3
+      pointer-events: none 으로 카드 클릭 영역 보존 %>
   <% if sla_ribbon.present? %>
-    <span class="absolute left-0 top-0 bottom-0 w-[3px] <%= sla_ribbon %>"></span>
+    <span class="absolute left-0 top-0 bottom-0 w-[4px] <%= sla_ribbon %> rounded-l-md shadow-[1px_0_3px_rgba(0,0,0,0.1)] pointer-events-none z-10"></span>
   <% end %>
 
   <%# 퀵액션 버튼 (FR-02) — hover 시 노출 %>
