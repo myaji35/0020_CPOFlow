@@ -113,10 +113,11 @@ module ApplicationHelper
       "<a href=\"#{safe}\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-blue-600 dark:text-blue-400 underline break-all\">#{safe}</a>"
     end
 
-    # 4. @멘션 → 파란 굵은 글씨
+    # 4. @멘션 → bolder 군청색 (primary navy #1E3A5F)
+    #    지시사항 텍스트(회색)와 명확히 구분되도록 더 진하게
     #    한글은 단일 토큰, 영문은 "Title Case 두 단어"까지 허용 (John Doe)
     html = html.gsub(/@([A-Z][a-zA-Z]+(?:[ \t][A-Z][a-zA-Z]+)?|[\w가-힣]+)/) do |match|
-      "<span class=\"text-blue-600 dark:text-blue-400 font-bold\">#{ERB::Util.html_escape(match)}</span>"
+      "<span class=\"text-primary dark:text-blue-300 font-bold\" style=\"color:#142844;\">#{ERB::Util.html_escape(match)}</span>"
     end
 
     # 5. 개행을 <br>로 명시 변환

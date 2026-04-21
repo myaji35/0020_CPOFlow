@@ -5,10 +5,11 @@ require "test_helper"
 class ApplicationHelperTest < ActionView::TestCase
   include ApplicationHelper
 
-  test "@멘션은 파란색 굵은 글씨 span으로 감싼다" do
+  test "@멘션은 군청색(primary navy) 굵은 글씨 span으로 감싼다" do
     out = highlight_mentions("@홍길동 확인 부탁")
-    assert_includes out, "text-blue-600"
+    assert_includes out, "text-primary"
     assert_includes out, "font-bold"
+    assert_includes out, "#142844"  # bolder navy inline style
     assert_includes out, ">@홍길동</span>"
   end
 
