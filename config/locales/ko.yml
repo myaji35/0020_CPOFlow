@@ -304,3 +304,15 @@ ko:
       not_saved:
         one: "1개의 오류로 저장할 수 없습니다:"
         other: "%{count}개의 오류로 저장할 수 없습니다:"
+      blank: "은(는) 필수입니다"
+      inclusion: "은(는) 유효한 값이 아닙니다"
+      too_short: "은(는) 너무 짧습니다 (최소 %{count}자)"
+      too_long: "은(는) 너무 깁니다 (최대 %{count}자)"
+
+  activerecord:
+    attributes:
+      review:
+        rating: "만족도"
+        body:   "의견"
+        email:  "이메일"
+        channel: "채널"

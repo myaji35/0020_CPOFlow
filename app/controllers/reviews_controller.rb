@@ -2,6 +2,7 @@
 
 class ReviewsController < ApplicationController
   skip_before_action :authenticate_user!, only: %i[new create]
+  before_action :force_ko_locale, only: %i[new create]
 
   # Rate limiting: IP당 1분에 3건 (세션 기반)
   RATE_LIMIT_COUNT = 3
@@ -68,6 +69,10 @@ class ReviewsController < ApplicationController
   end
 
   private
+
+  def force_ko_locale
+    I18n.locale = :ko
+  end
 
   def review_params
     params.require(:review).permit(:rating, :body, :email, :channel)

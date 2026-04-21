@@ -15,7 +15,10 @@ class Review < ApplicationRecord
   }, prefix: false
 
   # Validations
-  validates :rating, presence: true, inclusion: { in: 1..5 }
+  validates :rating, inclusion: {
+    in: 1..5,
+    message: "을(를) 1~5 사이로 선택해 주세요."
+  }
   validates :body,   presence: true, length: { minimum: 5, maximum: 4000 }
 
   # 공개 노출용 status 문자열 ("new_review" → "new", 나머지는 그대로)

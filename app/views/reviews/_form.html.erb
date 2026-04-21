@@ -13,7 +13,9 @@
     <p class="text-sm text-gray-500">CPOFlow 서비스 개선을 위한 소중한 의견을 남겨주세요.</p>
   </div>
 
-  <%= form_with model: review, url: reviews_path, local: true, html: { id: "review-form-inner" } do |f| %>
+  <%= form_with model: review, url: reviews_path, local: true,
+                html: { id: "review-form-inner",
+                        onsubmit: "var r=this.querySelector('input[name=\"review[rating]\"]'); if(!r||parseInt(r.value)<1){ alert('만족도를 별점으로 선택해주세요.'); return false; }" } do |f| %>
     <!-- Errors -->
     <% if review.errors.any? %>
       <div class="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg">
@@ -29,7 +31,7 @@
     <!-- 별점 -->
     <div class="mb-5" data-controller="star-rating">
       <label class="block text-xs font-semibold text-gray-600 mb-1.5">만족도 <span class="text-red-500">*</span></label>
-      <%= f.hidden_field :rating, value: review.rating.to_i, "data-star-rating-target": "input" %>
+      <%= f.hidden_field :rating, value: (review.rating.to_i > 0 ? review.rating : ""), "data-star-rating-target": "input" %>
 
       <div class="flex items-center gap-2">
         <% (1..5).each do |i| %>

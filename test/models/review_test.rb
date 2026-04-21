@@ -18,7 +18,7 @@ class ReviewTest < ActiveSupport::TestCase
   test "rating 없으면 invalid" do
     review = Review.new(valid_attrs.merge(rating: nil))
     assert_not review.valid?
-    assert_includes review.errors[:rating], "can't be blank"
+    assert review.errors[:rating].any?
   end
 
   test "rating 0이면 invalid (1~5만 허용)" do
