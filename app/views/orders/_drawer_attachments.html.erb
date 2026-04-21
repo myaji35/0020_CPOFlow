@@ -41,16 +41,27 @@
     <div x-show="open" x-cloak class="mt-2">
       <%= form_with url: attach_from_url_order_path(order), method: :post,
           data: { turbo: true },
-          class: "flex items-center gap-2" do |f| %>
-        <input type="url" name="url" placeholder="https://example.com/file.pdf"
-               class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]" required />
-        <button type="submit" @click="loading = true"
-                class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 cursor-pointer transition-colors shrink-0 flex items-center gap-1.5">
-          <template x-if="loading">
-            <svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-          </template>
-          다운로드
-        </button>
+          class: "space-y-2" do |f| %>
+        <div class="flex items-center gap-2">
+          <input type="text" name="url" placeholder="https://example.com/file.pdf · Google Drive · Dropbox · OneDrive · 웹 페이지..."
+                 class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500" required />
+          <button type="submit" @click="loading = true"
+                  class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 cursor-pointer transition-colors shrink-0 flex items-center gap-1.5">
+            <template x-if="loading">
+              <svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+            </template>
+            첨부
+          </button>
+        </div>
+        <label class="flex items-center gap-2 text-xs text-gray-600 cursor-pointer select-none">
+          <input type="checkbox" name="save_as_link" value="1"
+                 class="rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
+          <span>링크로만 저장 (다운로드 시도 안 함)</span>
+        </label>
+        <p class="text-[11px] text-gray-500 leading-relaxed">
+          지원: 직접 파일 URL · Google Drive / Docs / Sheets / Slides · Dropbox · OneDrive ·
+          <span class="text-gray-600">다운로드 실패 시 자동으로 링크로 저장됩니다.</span>
+        </p>
       <% end %>
     </div>
   </div>

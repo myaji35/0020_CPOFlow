@@ -287,11 +287,22 @@ class OrdersController < ApplicationController
   private :attachments_turbo_streams
   helper_method :attachments_turbo_streams
 
-  # POST /orders/:id/attach_from_url — URL에서 파일 다운로드 후 첨부
+  # POST /orders/:id/attach_from_url — URL에서 파일 다운로드 후 첨부.
+  # 다운로드가 불가능한 URL(로그인 필요 / 웹페이지 / 인증 등)은 자동으로 **링크로 저장**.
+  # params:
+  #   url           : 필수, http(s)://...
+  #   save_as_link  : "1" 이면 다운로드 시도 건너뛰고 바로 링크로만 저장
   def attach_from_url
     url = params[:url].to_s.strip
-    if url.blank? || !url.match?(/\Ahttps?:\/\//i)
-      return render_attach_error("유효하지 않은 URL입니다.")
+    if url.blank?
+      return render_attach_error("URL을 입력하세요.")
+    end
+    # 프로토콜 보완: example.com/file.pdf → https://example.com/file.pdf
+    url = "https://#{url}" unless url.match?(/\Ahttps?:\/\//i)
+
+    # 사용자가 "링크로만 저장" 선택
+    if params[:save_as_link] == "1"
+      return save_as_link!(url)
     end
 
     # Google Drive 폴더 → 폴더 내 파일 전부 다운로드
@@ -300,30 +311,30 @@ class OrdersController < ApplicationController
       return attach_gdrive_folder(folder_id)
     end
 
-    # Google Drive 파일 URL 자동 변환
-    gdrive_file_id = extract_gdrive_file_id(url)
-    if gdrive_file_id
-      url = "https://drive.google.com/uc?export=download&confirm=t&id=#{gdrive_file_id}"
-    end
+    # Cloud 서비스 URL 정규화 (Google Drive / Dropbox / OneDrive)
+    download_url    = normalize_cloud_url(url)
+    gdrive_file_id  = extract_gdrive_file_id(download_url)
 
     begin
-      response = fetch_url_with_redirect(url)
+      response = fetch_url_with_redirect(download_url)
 
       unless response.is_a?(Net::HTTPSuccess)
-        return render_attach_error("다운로드 실패 (HTTP #{response.code})")
+        # 다운로드 실패 시 링크로 fallback (4xx/5xx 모두)
+        return save_as_link!(url, note: "HTTP #{response.code} — 링크로 저장됨")
       end
 
       content_type = response["Content-Type"]&.split(";")&.first || "application/octet-stream"
       # Google Drive 바이러스 스캔 confirm 페이지 대응
       if content_type.include?("text/html") && gdrive_file_id && response.body.include?("download_warning")
         confirm_token = response.body.match(/confirm=([^&"]+)/)[1] rescue "t"
-        url = "https://drive.google.com/uc?export=download&confirm=#{confirm_token}&id=#{gdrive_file_id}"
-        response = fetch_url_with_redirect(url)
+        download_url = "https://drive.google.com/uc?export=download&confirm=#{confirm_token}&id=#{gdrive_file_id}"
+        response = fetch_url_with_redirect(download_url)
         content_type = response["Content-Type"]&.split(";")&.first || "application/octet-stream"
       end
-      # HTML 반환 = 파일이 아닌 웹페이지 (로그인 필요, 비공개 등)
-      if content_type.include?("text/html") && !url.match?(/\.html?\z/i)
-        return render_attach_error("파일을 다운로드할 수 없습니다. 파일이 '링크가 있는 모든 사용자' 공유인지 확인하세요.")
+
+      # HTML 반환 = 파일이 아닌 웹페이지 → 링크로 fallback
+      if content_type.include?("text/html") && !download_url.match?(/\.html?\z/i)
+        return save_as_link!(url, note: "파일 다운로드 불가 — 링크로 저장됨")
       end
 
       # 파일명 결정: Content-Disposition > URL 경로 > fallback
@@ -332,12 +343,10 @@ class OrdersController < ApplicationController
         match = response["Content-Disposition"].match(/filename[*]?=(?:UTF-8''|"?)([^";]+)/i)
         filename = match[1].strip if match
       end
-      uri = URI.parse(url) rescue nil
+      uri = URI.parse(download_url) rescue nil
       filename ||= uri ? File.basename(uri.path).presence : nil
       filename = "download_#{Time.current.to_i}" if filename.blank? || filename == "/"
       filename = URI.decode_www_form_component(filename) rescue filename
-
-      content_type = response["Content-Type"]&.split(";")&.first || "application/octet-stream"
 
       @order.attachments.attach(
         io: StringIO.new(response.body),
@@ -352,10 +361,9 @@ class OrdersController < ApplicationController
         format.json { render json: { success: true, filename: filename } }
       end
     rescue => e
-      respond_to do |format|
-        format.turbo_stream { head :unprocessable_entity }
-        format.json { render json: { error: e.message }, status: :internal_server_error }
-      end
+      # 네트워크 오류/타임아웃 → 링크로 fallback (워닝 표시)
+      Rails.logger.warn("[attach_from_url] #{e.class}: #{e.message}")
+      save_as_link!(url, note: "다운로드 오류 — 링크로 저장됨 (#{e.class.name.split("::").last})")
     end
   end
 
@@ -526,6 +534,61 @@ class OrdersController < ApplicationController
   end
 
   # Google Drive 파일 ID 추출 (다양한 URL 패턴 대응)
+  # Dropbox / OneDrive / Google Drive URL을 직접 다운로드 가능한 URL로 변환
+  def normalize_cloud_url(url)
+    # Dropbox: dl=0 → dl=1 (직접 다운로드)
+    if url.match?(%r{dropbox\.com/s/}) || url.match?(%r{dropbox\.com/scl/})
+      return url.include?("dl=") ? url.sub(/\bdl=0\b/, "dl=1") : "#{url}#{url.include?("?") ? "&" : "?"}dl=1"
+    end
+    # OneDrive / SharePoint: &download=1 추가
+    if url.match?(%r{1drv\.ms}) || url.match?(%r{onedrive\.live\.com/redir}) || url.match?(%r{sharepoint\.com/.*:[wxpb]:/})
+      return url.include?("download=") ? url : "#{url}#{url.include?("?") ? "&" : "?"}download=1"
+    end
+    # Google Drive 파일 URL 자동 변환 (기존)
+    gdrive_file_id = extract_gdrive_file_id(url)
+    if gdrive_file_id
+      return "https://drive.google.com/uc?export=download&confirm=t&id=#{gdrive_file_id}"
+    end
+    url
+  end
+
+  # 다운로드 실패 시 또는 사용자가 원할 때 — URL 자체를 링크로만 저장
+  def save_as_link!(url, note: nil)
+    current_links = JSON.parse(@order.extracted_links.presence || "[]") rescue []
+    unless current_links.include?(url)
+      current_links << url
+      @order.update_column(:extracted_links, current_links.to_json)
+    end
+    Activity.create!(order: @order, user: current_user, action: "attachment_added",
+                     details: note.presence) rescue nil
+    @order.reload
+
+    msg = note.presence || "링크로 저장됨"
+    respond_to do |format|
+      format.turbo_stream {
+        render turbo_stream: attachments_turbo_streams_with_flash(msg)
+      }
+      format.json { render json: { success: true, saved_as: "link", url: url, note: msg } }
+      format.html { redirect_back fallback_location: @order, notice: msg }
+    end
+  end
+
+  # attachments_turbo_streams + flash 메시지 (사용자 알림용)
+  def attachments_turbo_streams_with_flash(msg)
+    new_count = @order.attachments.size
+    hidden_cls = new_count.zero? ? " hidden" : ""
+    [
+      turbo_stream.replace(
+        "drawer-panel-#{@order.id}-attachments",
+        partial: "orders/drawer_attachments", locals: { order: @order, initial_render: false, flash_error: msg }
+      ),
+      turbo_stream.replace(
+        "drawer-tab-badge-#{@order.id}-attachments",
+        %(<span id="drawer-tab-badge-#{@order.id}-attachments" class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-500 px-1.5 py-0.5 rounded-full#{hidden_cls}">#{new_count}</span>).html_safe
+      )
+    ]
+  end
+
   def extract_gdrive_file_id(url)
     patterns = [
       %r{drive\.google\.com/file/d/([a-zA-Z0-9_-]+)},          # /file/d/ID/view
