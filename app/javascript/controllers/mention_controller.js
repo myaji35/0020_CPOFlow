@@ -1,94 +1,81 @@
 import { Controller } from "@hotwired/stimulus"
 
-// @사용자 멘션 드롭다운 컨트롤러
+// @사용자 멘션 드롭다운 컨트롤러 (v3)
+//
+// 구조적 특성:
+// - dropdownTarget은 원래 DOM 위치에서 "proxy" 역할만 함 (Stimulus가 target 검색 실패 방지)
+// - 실제 렌더링은 별도 document.body 직속 <div>(this._panel)에 수행 → viewport fixed,
+//   drawer 의 transform/overflow 영향 없음
+// - input 이벤트는 connect에서 단일 바인딩. data-action 불필요.
+//
 // data-controller="mention"
-// data-mention-mode-value="comment" | "task"
+// data-mention-mode-value="comment" | "task" | "assign"
 // data-mention-url-value="/users/mention_suggestions"
+//
+// Targets:
+//   input      : <input/textarea>
+//   dropdown   : 원래 위치 proxy 요소 (실제 표시 X, Stimulus target 유실 방지용)
+//   employeeId : (task/assign 모드) 선택된 user_id hidden input
 export default class extends Controller {
   static values  = { mode: String, url: String }
   static targets = ["input", "dropdown", "employeeId"]
 
   connect() {
-    console.log("[mention] controller connected", this.element)
     this._query      = ""
     this._atIndex    = -1
     this._activeIdx  = -1
     this._open       = false
     this._items      = []
-    this._bound      = {
-      keydown:   this._onKeydown.bind(this),
-      clickOut:  this._onClickOut.bind(this),
-      keyup:     this._onKeyup.bind(this),
-      input:     this._onInputEvent.bind(this)
-    }
+    this._abortCtrl  = null
+    this._debounceTimer = null
+
+    // ── body 직속 panel 생성 (실제 렌더링 대상) ────────────
+    this._panel = document.createElement("div")
+    this._panel.className = "cpoflow-mention-panel"
+    this._panel.style.display = "none"
+    document.body.appendChild(this._panel)
+
+    // ── 단일 이벤트 바인딩 ────────────
+    this._onInput    = this._onInputEvent.bind(this)
+    this._onKeydown  = this._onKeydownEvent.bind(this)
+    this._onClickOut = this._onClickOutEvent.bind(this)
+    this._onScroll   = this._reposition.bind(this)
+    this._onResize   = this._reposition.bind(this)
+
     if (this.hasInputTarget) {
-      this.inputTarget.addEventListener("keydown", this._bound.keydown)
-      this.inputTarget.addEventListener("keyup", this._bound.keyup)
-      this.inputTarget.addEventListener("input", this._bound.input)  // 안전장치: data-action 없이도 동작
+      this.inputTarget.addEventListener("input",   this._onInput)
+      this.inputTarget.addEventListener("keydown", this._onKeydown)
     } else {
-      console.warn("[mention] inputTarget not found — data-mention-target=\"input\" 확인 필요")
+      console.warn("[mention] inputTarget 없음 — data-mention-target=\"input\" 확인")
     }
-    document.addEventListener("click", this._bound.clickOut)
+    document.addEventListener("click", this._onClickOut, true)
+    window.addEventListener("scroll", this._onScroll, true)
+    window.addEventListener("resize", this._onResize)
   }
 
   disconnect() {
     if (this.hasInputTarget) {
-      this.inputTarget.removeEventListener("keydown", this._bound.keydown)
-      this.inputTarget.removeEventListener("keyup", this._bound.keyup)
-      this.inputTarget.removeEventListener("input", this._bound.input)
+      this.inputTarget.removeEventListener("input",   this._onInput)
+      this.inputTarget.removeEventListener("keydown", this._onKeydown)
     }
-    document.removeEventListener("click", this._bound.clickOut)
-    this._closeDropdown()
+    document.removeEventListener("click", this._onClickOut, true)
+    window.removeEventListener("scroll", this._onScroll, true)
+    window.removeEventListener("resize", this._onResize)
+    this._cancelPending()
+    if (this._panel && this._panel.parentElement === document.body) {
+      this._panel.remove()
+    }
+    this._panel = null
   }
+
+  // data-action="input->mention#onInput" 유지 시에도 호출되지만 _onInput과 동일 경로 → no-op
+  onInput(_event) { /* 단일 바인딩으로 대체됨 */ }
 
   _onInputEvent(event) {
     this._detectAtMention(event.target)
   }
 
-  // 입력 이벤트 — 중복 방지를 위해 이제 no-op (connect()의 addEventListener가 처리)
-  onInput(_event) {
-    // intentionally empty — _onInputEvent 가 실제 처리
-  }
-
-  // 화살표/엔터/선택 이후 커서 이동 감지용
-  _onKeyup(event) {
-    if (["ArrowDown", "ArrowUp", "Enter", "Escape"].includes(event.key)) return
-    this._detectAtMention(event.target)
-  }
-
-  _detectAtMention(input) {
-    const val = input.value
-    const pos = input.selectionStart
-    const before = val.slice(0, pos)
-    // 커서 앞에서 가장 가까운 @를 찾되, 문자열 시작 또는 공백 직후의 @만 유효
-    // 디버그: 값/위치/매칭 여부 로그
-    const match = before.match(/(?:^|\s)@([\w가-힣]*)$/)
-    console.log("[mention] detect", { val: JSON.stringify(val), pos, hasAt: before.includes("@"), match: match?.[1] })
-
-    if (match) {
-      this._atIndex = before.lastIndexOf("@")
-      this._query   = match[1]
-      console.log("[mention] -> fetch", this._query)
-      this._fetchSuggestions(this._query)
-    } else if (before.includes("@")) {
-      // fallback: @ 뒤 단어 추출 (보이지 않는 문자나 특이 패턴 대응)
-      const lastAt = before.lastIndexOf("@")
-      const afterAt = before.slice(lastAt + 1)
-      // @ 뒤에 공백/개행이 없으면 멘션 후보로 간주
-      if (!/\s/.test(afterAt)) {
-        this._atIndex = lastAt
-        this._query = afterAt.replace(/[^\w가-힣]/g, "")
-        console.log("[mention] fallback fetch", this._query)
-        this._fetchSuggestions(this._query)
-        return
-      }
-      this._closeDropdown()
-    } else {
-      this._closeDropdown()
-    }
-  }
-
-  _onKeydown(event) {
+  _onKeydownEvent(event) {
     if (!this._open) return
     switch (event.key) {
       case "ArrowDown":
@@ -100,31 +87,51 @@ export default class extends Controller {
         this._moveActive(-1)
         break
       case "Enter":
-        if (this._activeIdx >= 0) {
+        if (this._activeIdx >= 0 && this._items[this._activeIdx]) {
           event.preventDefault()
           this._selectItem(this._items[this._activeIdx])
         }
         break
       case "Escape":
-        this._closeDropdown()
+        event.preventDefault()
+        this._close()
         break
     }
   }
 
-  _onClickOut(event) {
-    if (!this.dropdownTarget.contains(event.target) && event.target !== this.inputTarget) {
-      this._closeDropdown()
+  _onClickOutEvent(event) {
+    if (!this._open) return
+    if (event.target === this.inputTarget) return
+    if (this._panel && this._panel.contains(event.target)) return
+    this._close()
+  }
+
+  _detectAtMention(input) {
+    const val    = input.value
+    const pos    = input.selectionStart
+    const before = val.slice(0, pos)
+    // 문자열 시작 또는 공백 직후의 @(선택적 단어)까지 매칭
+    const match  = before.match(/(?:^|\s)@([\w가-힣]*)$/)
+
+    if (match) {
+      this._atIndex = before.lastIndexOf("@")
+      this._query   = match[1]
+      this._fetch(this._query)
+    } else {
+      this._close()
     }
   }
 
-  async _fetchSuggestions(q) {
-    // 이전 요청 취소 (race condition 방지)
-    if (this._abortCtrl) this._abortCtrl.abort()
-    this._abortCtrl = new AbortController()
+  _cancelPending() {
+    if (this._abortCtrl) { this._abortCtrl.abort(); this._abortCtrl = null }
+    clearTimeout(this._debounceTimer); this._debounceTimer = null
+  }
 
-    // 디바운스 120ms — 연속 입력 시 마지막 요청만 실행
-    clearTimeout(this._debounceTimer)
-    this._debounceTimer = setTimeout(() => this._doFetch(q, this._abortCtrl.signal), 120)
+  _fetch(q) {
+    this._cancelPending()
+    this._abortCtrl = new AbortController()
+    const signal = this._abortCtrl.signal
+    this._debounceTimer = setTimeout(() => this._doFetch(q, signal), 120)
   }
 
   async _doFetch(q, signal) {
@@ -136,162 +143,168 @@ export default class extends Controller {
         redirect: "manual",
         signal
       })
-      // 세션 만료 등으로 redirect / 비-JSON 응답 처리
       if (!res.ok || res.type === "opaqueredirect" || !(res.headers.get("content-type") || "").includes("json")) {
-        this._items = []
-        this._renderError("직원 목록을 불러올 수 없습니다 (재로그인 필요)")
+        this._renderError("멘션 목록을 불러올 수 없습니다 (재로그인 필요)")
         return
       }
       const items = await res.json()
-      // 클라이언트 측 방어적 재필터링 — 서버가 어떤 이유로 느슨하게 반환해도 정확히 일치만 표시
-      let filtered = Array.isArray(items) ? items : []
+      // stale 응답 차단 — 현재 쿼리와 다르면 폐기
+      if (q !== this._query) return
+
       const qLower = (q || "").toLowerCase().trim()
+      let list = Array.isArray(items) ? items : []
       if (qLower.length > 0) {
-        filtered = filtered.filter(it => (it.display_name || "").toLowerCase().includes(qLower))
+        list = list.filter(it => (it.display_name || "").toLowerCase().includes(qLower))
       }
-      // 현재 쿼리와 응답이 일치하지 않으면 무시 (stale 응답 방지)
-      if (q !== this._query) {
-        console.log("[mention] stale response discarded", { requested: q, current: this._query })
-        return
-      }
-      console.log("[mention] response", { q, total: items?.length, filtered: filtered.length })
-      this._items = filtered
-      this._renderDropdown(filtered)
+      this._items = list
+      this._render(list)
     } catch (err) {
-      if (err.name === "AbortError") return  // 정상 취소
+      if (err.name === "AbortError") return
       console.error("[mention] fetch error", err)
-      this._items = []
       this._renderError("멘션 목록 로딩 실패")
     }
   }
 
-  _renderError(msg) {
-    if (!this.hasDropdownTarget) return
-    const rect = this.inputTarget.getBoundingClientRect()
-    const dd   = this.dropdownTarget
-    dd.innerHTML = `<div class="px-3 py-2 text-sm text-red-500">${this._escape(msg)}</div>`
-    dd.style.cssText = `position:fixed; top:${rect.bottom + 4}px; left:${rect.left}px; width:${Math.max(rect.width, 260)}px; z-index:2147483647; display:block; background:white; border:1px solid #fca5a5; border-radius:8px; box-shadow:0 10px 25px -5px rgba(0,0,0,0.15);`
-    this._open = true
-  }
-
-  _renderDropdown(items) {
-    if (!this.hasDropdownTarget || !this.hasInputTarget) return
-    const rect = this.inputTarget.getBoundingClientRect()
-    const dd   = this.dropdownTarget
-
+  _render(items) {
+    if (!this._panel) return
     if (!items.length) {
-      dd.innerHTML = `
-        <div class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
-          검색 결과가 없습니다
-        </div>
-      `
+      this._panel.innerHTML = `<div style="padding:8px 12px; font-size:13px; color:#6b7585;">검색 결과가 없습니다</div>`
     } else {
-      dd.innerHTML = items.map((item, idx) => `
-        <div class="mention-item flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 text-sm"
-             data-idx="${idx}" data-mention-target="item">
-          <span class="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold shrink-0">
+      this._panel.innerHTML = items.map((item, idx) => `
+        <div class="cpoflow-mention-item" data-idx="${idx}"
+             style="display:flex; align-items:center; gap:8px; padding:8px 12px; cursor:pointer; font-size:13px;">
+          <span style="width:22px; height:22px; border-radius:50%; background:#166c72; color:white;
+                       display:grid; place-items:center; font-size:10px; font-weight:700; flex-shrink:0;">
             ${this._escape(item.initials)}
           </span>
-          <span class="flex-1 text-gray-800 dark:text-gray-200">${this._escape(item.display_name)}</span>
-          ${item.job_title ? `<span class="text-xs text-gray-400">${this._escape(item.job_title)}</span>` : (item.branch ? `<span class="text-xs text-gray-400">${this._escape(item.branch)}</span>` : "")}
+          <span style="flex:1; color:#151a21; font-weight:500; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+            ${this._escape(item.display_name)}
+          </span>
+          ${item.job_title
+            ? `<span style="font-size:11px; color:#97a0ad; flex-shrink:0;">${this._escape(item.job_title)}</span>`
+            : (item.branch ? `<span style="font-size:11px; color:#97a0ad; flex-shrink:0;">${this._escape(item.branch)}</span>` : "")}
         </div>
       `).join("")
-    }
 
-    // 클릭 이벤트
-    dd.querySelectorAll(".mention-item").forEach(el => {
-      el.addEventListener("mousedown", (e) => {
-        e.preventDefault()
-        this._selectItem(items[parseInt(el.dataset.idx)])
+      // 이벤트 바인딩
+      this._panel.querySelectorAll(".cpoflow-mention-item").forEach(el => {
+        el.addEventListener("mousedown", (e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          const idx = parseInt(el.dataset.idx, 10)
+          this._selectItem(items[idx])
+        })
+        el.addEventListener("mouseenter", () => {
+          this._activeIdx = parseInt(el.dataset.idx, 10)
+          this._highlightActive()
+        })
       })
-      el.addEventListener("mouseover", () => {
-        this._activeIdx = parseInt(el.dataset.idx)
-        this._highlightActive()
-      })
-    })
-
-    // 뷰포트 우측 경계 보정 (좁은 화면 / DevTools 열려있을 때)
-    const ddWidth = Math.max(rect.width, 260)
-    let   left    = rect.left
-    if (left + ddWidth > window.innerWidth - 8) {
-      left = Math.max(8, window.innerWidth - ddWidth - 8)
     }
-    // position:fixed로 viewport 기준 렌더링 (Stimulus target은 DOM 구조상 원래 위치 유지 — 포털링 금지)
-    dd.style.cssText = `
-      position: fixed;
-      top: ${rect.bottom + 4}px;
-      left: ${left}px;
-      width: ${ddWidth}px;
-      z-index: 2147483647;
-      display: block;
-      background: white;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15);
-      overflow: hidden;
-    `
-    this._open      = true
-    this._activeIdx = 0
+    this._showPanel()
+    this._activeIdx = items.length ? 0 : -1
     this._highlightActive()
   }
 
+  _renderError(msg) {
+    if (!this._panel) return
+    this._panel.innerHTML = `<div style="padding:8px 12px; font-size:13px; color:#c84431;">${this._escape(msg)}</div>`
+    this._showPanel()
+  }
+
+  _showPanel() {
+    if (!this._panel || !this.hasInputTarget) return
+    const rect  = this.inputTarget.getBoundingClientRect()
+    const width = Math.max(rect.width, 260)
+    let   left  = rect.left
+    if (left + width > window.innerWidth - 8) {
+      left = Math.max(8, window.innerWidth - width - 8)
+    }
+    const top = rect.bottom + 4
+    Object.assign(this._panel.style, {
+      position:   "fixed",
+      top:        `${top}px`,
+      left:       `${left}px`,
+      width:      `${width}px`,
+      maxHeight:  "320px",
+      overflowY:  "auto",
+      background: "white",
+      border:     "1px solid #e7eaee",
+      borderRadius: "8px",
+      boxShadow:  "0 10px 25px -5px rgba(12,16,20,0.15), 0 4px 6px -2px rgba(12,16,20,0.08)",
+      zIndex:     "2147483647",
+      display:    "block"
+    })
+    this._open = true
+  }
+
+  _reposition() {
+    if (this._open) this._showPanel()
+  }
+
+  _moveActive(dir) {
+    if (!this._items.length) return
+    this._activeIdx = (this._activeIdx + dir + this._items.length) % this._items.length
+    this._highlightActive()
+  }
+
+  _highlightActive() {
+    if (!this._panel) return
+    this._panel.querySelectorAll(".cpoflow-mention-item").forEach((el, idx) => {
+      if (idx === this._activeIdx) {
+        el.style.background = "#f5f6f8"
+      } else {
+        el.style.background = ""
+      }
+    })
+    // scroll into view
+    const active = this._panel.querySelector(`.cpoflow-mention-item[data-idx="${this._activeIdx}"]`)
+    if (active && active.scrollIntoView) {
+      active.scrollIntoView({ block: "nearest" })
+    }
+  }
+
   _selectItem(item) {
-    if (!item) return
+    if (!item || !this.hasInputTarget) return
     const input  = this.inputTarget
     const val    = input.value
     const before = val.slice(0, this._atIndex)
     const after  = val.slice(input.selectionStart)
+    const mention = `@${item.display_name} `
 
-    input.value = `${before}@${item.display_name} ${after}`
-    input.setSelectionRange(
-      before.length + item.display_name.length + 2,
-      before.length + item.display_name.length + 2
-    )
+    input.value = before + mention + after
+    const cursor = (before + mention).length
+    input.setSelectionRange(cursor, cursor)
 
-    // task/assign 모드: hidden input에 user_id 또는 employee_id 설정
     if ((this.modeValue === "task" || this.modeValue === "assign") && this.hasEmployeeIdTarget) {
       this.employeeIdTarget.value = item.id
     }
 
     this._atIndex = -1
     this._query   = ""
-    this._closeDropdown()
-    // focus() 가 input 이벤트를 재발화시키지 않도록 microtask 이후 복귀
+    this._close()
     queueMicrotask(() => input.focus())
   }
 
-  _moveActive(dir) {
-    this._activeIdx = Math.max(0, Math.min(this._items.length - 1, this._activeIdx + dir))
-    this._highlightActive()
-  }
-
-  _highlightActive() {
-    this.dropdownTarget.querySelectorAll(".mention-item").forEach((el, idx) => {
-      el.classList.toggle("bg-gray-100", idx === this._activeIdx)
-      el.classList.toggle("dark:bg-gray-700", idx === this._activeIdx)
-    })
-  }
-
-  _closeDropdown() {
-    // pending fetch/debounce 취소 — 닫은 직후 지연된 응답이 다시 여는 것 방지
-    if (this._abortCtrl) { this._abortCtrl.abort(); this._abortCtrl = null }
-    clearTimeout(this._debounceTimer)
-
-    if (this.hasDropdownTarget) {
-      this.dropdownTarget.style.cssText = "display:none"
-      this.dropdownTarget.innerHTML     = ""
+  _close() {
+    this._cancelPending()
+    if (this._panel) {
+      this._panel.style.display = "none"
+      this._panel.innerHTML     = ""
     }
     this._open      = false
     this._activeIdx = -1
     this._items     = []
   }
 
+  // 하위 호환 — 기존 _closeDropdown 호출 대응 (현재 내부에서만 사용)
+  _closeDropdown() { this._close() }
+
   _csrfToken() {
     return document.querySelector("meta[name='csrf-token']")?.content || ""
   }
 
   _escape(str) {
-    return String(str ?? "").replace(/[&<>"']/g, (c) => ({
+    return String(str ?? "").replace(/[&<>"']/g, c => ({
       "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
     }[c]))
   }
