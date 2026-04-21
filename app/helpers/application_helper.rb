@@ -1,12 +1,12 @@
 module ApplicationHelper
-  # Sidebar nav link helper (Redesign Phase 1 — dark shell, 232px)
+  # Sidebar nav link helper (Redesign Phase 1 — navy shell, 232px)
   def nav_link_to(path, icon:, label:, &block)
     active = current_page?(path) || (path != "/" && request.path.start_with?(path))
     wrapper_class = active ? "active" : ""
     row_class = if active
-                  "relative flex items-center gap-3 px-3 py-2 rounded-sm text-[13px] font-medium bg-ink-800 text-white"
+                  "relative flex items-center gap-3 px-3 py-2 rounded-sm text-[13px] font-medium bg-white/10 text-white"
                 else
-                  "relative flex items-center gap-3 px-3 py-2 rounded-sm text-[13px] font-medium text-ink-300 hover:bg-ink-800 hover:text-white transition-colors"
+                  "relative flex items-center gap-3 px-3 py-2 rounded-sm text-[13px] font-medium text-blue-100 hover:bg-white/10 hover:text-white transition-colors"
                 end
 
     content_tag(:div, class: "group #{wrapper_class}".strip) do
@@ -15,7 +15,7 @@ module ApplicationHelper
         if active
           parts << content_tag(:span, "", class: "absolute -left-2 top-1.5 bottom-1.5 w-[2px] bg-brand-400 rounded-r")
         end
-        icon_class = active ? "text-white" : "text-ink-400 group-hover:text-white"
+        icon_class = active ? "text-white" : "text-blue-200 group-hover:text-white"
         parts << content_tag(:i, "", class: "#{icon} text-base shrink-0 w-4 text-center #{icon_class} transition-colors")
         parts << content_tag(:span, label,
                               class: "whitespace-nowrap transition-opacity duration-200 truncate",

@@ -1,19 +1,19 @@
-<%# Redesign Phase 1 — 232px dark shell sidebar (ink-950 + brand-600 CF mark + brand-400 active bar) %>
-<nav class="flex flex-col bg-ink-950 text-ink-300 h-full shrink-0 z-20 transition-[width] duration-200 border-r border-ink-800"
+<%# Redesign Phase 1 — 232px navy sidebar (primary #1E3A5F + brand-600 CF mark + brand-400 active bar) %>
+<nav class="flex flex-col bg-primary text-blue-100 h-full shrink-0 z-20 transition-[width] duration-200 border-r border-white/10"
      x-data="{ collapsed: (typeof localStorage !== 'undefined' && localStorage.getItem('sidebar_collapsed') === 'true') }"
      x-init="$watch('collapsed', v => localStorage.setItem('sidebar_collapsed', v))"
      :class="collapsed ? 'w-14' : 'w-[232px]'">
 
   <!-- Brand row (52px) -->
-  <div class="flex items-center gap-3 h-[52px] px-4 border-b border-ink-800 overflow-hidden">
+  <div class="flex items-center gap-3 h-[52px] px-4 border-b border-white/10 overflow-hidden">
     <div class="w-7 h-7 rounded-sm bg-brand-600 grid place-items-center text-white font-bold text-sm tracking-tight shrink-0">CF</div>
     <div class="flex-1 min-w-0 transition-opacity duration-200"
          :class="collapsed ? 'opacity-0 w-0 pointer-events-none' : 'opacity-100'">
       <div class="text-white font-semibold text-sm leading-none tracking-tight">CPOFlow</div>
-      <div class="text-[11px] text-ink-500 mt-1 truncate">AtoZ2010 Inc.</div>
+      <div class="text-[11px] text-blue-200/70 mt-1 truncate">AtoZ2010 Inc.</div>
     </div>
     <button @click="collapsed = !collapsed"
-            class="shrink-0 w-6 h-6 grid place-items-center rounded-sm hover:bg-ink-800 text-ink-400 hover:text-white transition-colors"
+            class="shrink-0 w-6 h-6 grid place-items-center rounded-sm hover:bg-white/10 text-blue-200 hover:text-white transition-colors"
             :title="collapsed ? '메뉴 펼치기' : '메뉴 접기'">
       <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="collapsed ? 'rotate-180' : ''"
            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -26,7 +26,7 @@
   <div class="flex-1 overflow-y-auto overflow-x-hidden py-2">
 
     <!-- Group: 운영 -->
-    <div class="px-3 pt-3 pb-1 text-[10px] font-semibold tracking-[1.2px] uppercase text-ink-500 transition-opacity"
+    <div class="px-3 pt-3 pb-1 text-[10px] font-semibold tracking-[1.2px] uppercase text-blue-200/60 transition-opacity"
          :class="collapsed ? 'opacity-0 h-0 pt-0 pb-0 overflow-hidden' : 'opacity-100'">
       운영
     </div>
@@ -35,7 +35,7 @@
       <%= nav_link_to inbox_path, icon: "lni lni-envelope", label: t("nav.inbox") do %>
         <% rfq_count = Order.new_rfq.count %>
         <% if rfq_count > 0 %>
-          <span class="ml-auto text-[10px] font-semibold tabular-nums bg-ink-800 text-ink-300 px-1.5 py-px rounded-full transition-opacity group-[.active]:bg-brand-600 group-[.active]:text-white"
+          <span class="ml-auto text-[10px] font-semibold tabular-nums bg-white/10 text-blue-100 px-1.5 py-px rounded-full transition-opacity group-[.active]:bg-brand-600 group-[.active]:text-white"
                 :class="collapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'"><%= rfq_count %></span>
         <% end %>
       <% end %>
@@ -46,7 +46,7 @@
     </div>
 
     <!-- Group: 마스터 -->
-    <div class="px-3 pt-4 pb-1 text-[10px] font-semibold tracking-[1.2px] uppercase text-ink-500 transition-opacity"
+    <div class="px-3 pt-4 pb-1 text-[10px] font-semibold tracking-[1.2px] uppercase text-blue-200/60 transition-opacity"
          :class="collapsed ? 'opacity-0 h-0 pt-0 pb-0 overflow-hidden' : 'opacity-100'">
       마스터
     </div>
@@ -61,7 +61,7 @@
 
     <% if current_user.manager? || current_user.admin? %>
       <!-- Group: 관리 -->
-      <div class="px-3 pt-4 pb-1 text-[10px] font-semibold tracking-[1.2px] uppercase text-ink-500 transition-opacity"
+      <div class="px-3 pt-4 pb-1 text-[10px] font-semibold tracking-[1.2px] uppercase text-blue-200/60 transition-opacity"
            :class="collapsed ? 'opacity-0 h-0 pt-0 pb-0 overflow-hidden' : 'opacity-100'">
         관리
       </div>
@@ -73,11 +73,11 @@
         <div x-data="{ open: <%= ecount_active ? 'true' : 'false' %> }">
           <button type="button"
                   @click="open = !open"
-                  class="w-full relative flex items-center gap-3 px-3 py-2 rounded-sm text-[13px] font-medium transition-colors overflow-hidden <%= ecount_active ? 'bg-ink-800 text-white' : 'text-ink-300 hover:bg-ink-800 hover:text-white' %>">
+                  class="w-full relative flex items-center gap-3 px-3 py-2 rounded-sm text-[13px] font-medium transition-colors overflow-hidden <%= ecount_active ? 'bg-white/10 text-white' : 'text-blue-100 hover:bg-white/10 hover:text-white' %>">
             <% if ecount_active %>
               <span class="absolute -left-2 top-1.5 bottom-1.5 w-[2px] bg-brand-400 rounded-r"></span>
             <% end %>
-            <i class="lni lni-network text-base shrink-0 w-4 text-center <%= ecount_active ? 'text-white' : 'text-ink-400' %>"></i>
+            <i class="lni lni-network text-base shrink-0 w-4 text-center <%= ecount_active ? 'text-white' : 'text-blue-200' %>"></i>
             <span class="whitespace-nowrap transition-opacity duration-200 truncate flex-1 text-left"
                   x-bind:class="collapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'">eCount</span>
             <i class="lni lni-chevron-down text-[10px] transition-transform duration-200"
@@ -86,7 +86,7 @@
           </button>
           <div x-show="open" x-transition x-cloak
                x-bind:class="collapsed ? 'hidden' : ''"
-               class="mt-1 ml-4 pl-2 border-l border-ink-800 space-y-px">
+               class="mt-1 ml-4 pl-2 border-l border-white/10 space-y-px">
             <% ecount_children = [
               { path: admin_ecount_sync_index_path,    icon: "lni lni-reload",  label: "API 동기화" },
               { path: admin_ecount_products_path,      icon: "lni lni-package", label: "품목" },
@@ -95,7 +95,7 @@
             ] %>
             <% ecount_children.each do |item| %>
               <% is_active = current_page?(item[:path]) || request.path.start_with?(item[:path]) %>
-              <%= link_to item[:path], class: "flex items-center gap-2 px-2.5 py-1.5 rounded-sm text-[12.5px] #{ is_active ? 'bg-ink-800 text-white font-medium' : 'text-ink-400 hover:bg-ink-800 hover:text-white' }" do %>
+              <%= link_to item[:path], class: "flex items-center gap-2 px-2.5 py-1.5 rounded-sm text-[12.5px] #{ is_active ? 'bg-white/10 text-white font-medium' : 'text-blue-200 hover:bg-white/10 hover:text-white' }" do %>
                 <i class="<%= item[:icon] %> text-sm w-3.5 text-center"></i>
                 <span class="truncate"><%= item[:label] %></span>
               <% end %>
@@ -113,20 +113,20 @@
   </div>
 
   <!-- Foot: settings + user (sticky) -->
-  <div class="border-t border-ink-800 overflow-hidden">
+  <div class="border-t border-white/10 overflow-hidden">
     <div class="flex flex-col px-2 py-1 gap-px">
       <%= nav_link_to settings_root_path, icon: "lni lni-cog", label: t("nav.settings") %>
     </div>
-    <div class="flex items-center gap-3 px-4 py-3 border-t border-ink-800">
+    <div class="flex items-center gap-3 px-4 py-3 border-t border-white/10">
       <div class="w-7 h-7 rounded-full bg-brand-600 grid place-items-center text-[11px] font-bold text-white tracking-wider shrink-0">
         <%= current_user.initials %>
       </div>
       <div class="flex-1 min-w-0 transition-opacity" :class="collapsed ? 'opacity-0 w-0' : 'opacity-100'">
         <p class="text-[12px] font-medium text-white truncate"><%= current_user.display_name %></p>
-        <p class="text-[11px] text-ink-500 truncate"><%= current_user.role.capitalize %></p>
+        <p class="text-[11px] text-blue-200/70 truncate"><%= current_user.role.capitalize %></p>
       </div>
       <%= link_to destroy_user_session_path, data: { turbo_method: :delete },
-          class: "shrink-0 text-ink-500 hover:text-white transition-colors",
+          class: "shrink-0 text-blue-200 hover:text-white transition-colors",
           title: "로그아웃" do %>
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       <% end %>
