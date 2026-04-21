@@ -199,7 +199,7 @@
 </div>
 
 <!-- 발주 보드 -->
-<div class="flex gap-4 overflow-x-auto pb-4 min-h-[calc(100vh-200px)]" id="kanban-board">
+<div class="flex gap-3 overflow-x-auto pb-4 min-h-[calc(100vh-200px)]" id="kanban-board">
   <% @kanban_column_keys.each_with_index do |status, col_idx| %>
     <% orders = @columns[status] || [] %>
     <% label = @kanban_column_labels[status] || status.humanize %>
@@ -211,7 +211,7 @@
     <% wip_over = wip_limit && current_count > wip_limit %>
     <% wip_near = wip_limit && !wip_over && current_count >= (wip_limit * 0.8).ceil %>
 
-    <div class="kanban-column flex flex-col w-72 shrink-0 <%= 'ring-2 ring-red-400 dark:ring-red-500 rounded-xl' if wip_over %>" data-status="<%= status %>" data-wip-limit="<%= wip_limit %>">
+    <div class="kanban-column flex flex-col w-[288px] shrink-0 <%= 'ring-2 ring-red-400 dark:ring-red-500 rounded-lg' if wip_over %>" data-status="<%= status %>" data-wip-limit="<%= wip_limit %>">
       <!-- Column Header -->
       <div class="flex items-center justify-between mb-3 px-1">
         <div class="flex items-center gap-2">
@@ -237,7 +237,7 @@
       </div>
 
       <!-- Cards Container -->
-      <div class="kanban-cards flex flex-col gap-3 flex-1 min-h-[60px] p-2 bg-gray-100 dark:bg-gray-700/50 rounded-xl"
+      <div class="kanban-cards flex flex-col gap-2 flex-1 min-h-[60px] p-2 bg-ink-100 dark:bg-ink-800/60 rounded-lg"
            data-status="<%= status %>"
            id="column-<%= status %>">
         <% if status == "inbox" %>

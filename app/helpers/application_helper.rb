@@ -1,19 +1,28 @@
 module ApplicationHelper
-  # Sidebar nav link helper
+  # Sidebar nav link helper (Redesign Phase 1 — dark shell, 232px)
   def nav_link_to(path, icon:, label:, &block)
-    active = current_page?(path) || request.path.start_with?(path) && path != "/"
-    base_class = "flex items-center gap-3 px-3 py-2.5 mx-1 rounded-lg text-sm font-medium transition-colors overflow-hidden"
-    active_class = "#{base_class} bg-white/20 text-white"
-    inactive_class = "#{base_class} text-blue-100 hover:bg-white/10 hover:text-white"
+    active = current_page?(path) || (path != "/" && request.path.start_with?(path))
+    wrapper_class = active ? "active" : ""
+    row_class = if active
+                  "relative flex items-center gap-3 px-3 py-2 rounded-sm text-[13px] font-medium bg-ink-800 text-white"
+                else
+                  "relative flex items-center gap-3 px-3 py-2 rounded-sm text-[13px] font-medium text-ink-300 hover:bg-ink-800 hover:text-white transition-colors"
+                end
 
-    content_tag(:div, class: active ? active_class : inactive_class) do
-      concat link_to(path, class: "flex items-center gap-3 flex-1 overflow-hidden") {
-        concat content_tag(:i, "", class: "#{icon} text-xl shrink-0 w-5 text-center")
-        concat content_tag(:span, label,
-                           class: "whitespace-nowrap transition-opacity duration-200 truncate",
-                           "x-bind:class" => "collapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'")
-        capture(&block) if block
-      }
+    content_tag(:div, class: "group #{wrapper_class}".strip) do
+      link_to(path, class: row_class) do
+        parts = []
+        if active
+          parts << content_tag(:span, "", class: "absolute -left-2 top-1.5 bottom-1.5 w-[2px] bg-brand-400 rounded-r")
+        end
+        icon_class = active ? "text-white" : "text-ink-400 group-hover:text-white"
+        parts << content_tag(:i, "", class: "#{icon} text-base shrink-0 w-4 text-center #{icon_class} transition-colors")
+        parts << content_tag(:span, label,
+                              class: "whitespace-nowrap transition-opacity duration-200 truncate",
+                              "x-bind:class" => "collapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'")
+        parts << capture(&block) if block
+        safe_join(parts)
+      end
     end
   end
 

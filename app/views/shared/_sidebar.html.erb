@@ -1,108 +1,135 @@
-<%# ISS-042: 사이드바 기본 expanded (아이콘+라벨) — Alpine.js collapse 토글 %>
-<nav class="flex flex-col bg-primary text-white h-full shrink-0 z-20 transition-all duration-200"
+<%# Redesign Phase 1 — 232px dark shell sidebar (ink-950 + brand-600 CF mark + brand-400 active bar) %>
+<nav class="flex flex-col bg-ink-950 text-ink-300 h-full shrink-0 z-20 transition-[width] duration-200 border-r border-ink-800"
      x-data="{ collapsed: (typeof localStorage !== 'undefined' && localStorage.getItem('sidebar_collapsed') === 'true') }"
      x-init="$watch('collapsed', v => localStorage.setItem('sidebar_collapsed', v))"
-     :class="collapsed ? 'w-16 group' : 'w-56'">
-  <!-- Logo + Collapse Toggle -->
-  <div class="flex items-center h-16 px-3 border-b border-primary-light overflow-hidden">
-    <div class="w-8 h-8 bg-accent rounded-lg flex items-center justify-center shrink-0">
-      <span class="text-white font-bold text-sm">CF</span>
+     :class="collapsed ? 'w-14' : 'w-[232px]'">
+
+  <!-- Brand row (52px) -->
+  <div class="flex items-center gap-3 h-[52px] px-4 border-b border-ink-800 overflow-hidden">
+    <div class="w-7 h-7 rounded-sm bg-brand-600 grid place-items-center text-white font-bold text-sm tracking-tight shrink-0">CF</div>
+    <div class="flex-1 min-w-0 transition-opacity duration-200"
+         :class="collapsed ? 'opacity-0 w-0 pointer-events-none' : 'opacity-100'">
+      <div class="text-white font-semibold text-sm leading-none tracking-tight">CPOFlow</div>
+      <div class="text-[11px] text-ink-500 mt-1 truncate">AtoZ2010 Inc.</div>
     </div>
-    <span class="ml-3 font-bold text-sm whitespace-nowrap flex-1 truncate transition-opacity duration-200"
-          :class="collapsed ? 'opacity-0 pointer-events-none w-0 ml-0' : 'opacity-100'">CPOFlow</span>
     <button @click="collapsed = !collapsed"
-            class="ml-auto shrink-0 w-6 h-6 flex items-center justify-center rounded-md hover:bg-white/20 text-blue-200 hover:text-white transition-colors"
+            class="shrink-0 w-6 h-6 grid place-items-center rounded-sm hover:bg-ink-800 text-ink-400 hover:text-white transition-colors"
             :title="collapsed ? '메뉴 펼치기' : '메뉴 접기'">
-      <svg class="w-4 h-4 transition-transform duration-200" :class="collapsed ? 'rotate-180' : ''"
+      <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="collapsed ? 'rotate-180' : ''"
            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="15 18 9 12 15 6"/>
       </svg>
     </button>
   </div>
 
-  <!-- Nav Items -->
-  <div class="flex flex-col flex-1 py-4 gap-1 overflow-hidden">
-    <%= nav_link_to dashboard_path, icon: "lni lni-grid-alt", label: t("nav.dashboard") %>
-    <%= nav_link_to inbox_path, icon: "lni lni-envelope", label: t("nav.inbox") do %>
-      <% rfq_count = Order.new_rfq.count %>
-      <% if rfq_count > 0 %>
-        <span class="ml-auto bg-accent text-white text-xs rounded-full px-1.5 py-0.5 transition-opacity"
-              :class="collapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'"><%= rfq_count %></span>
-      <% end %>
-    <% end %>
-    <%= nav_link_to kanban_path, icon: "lni lni-layout", label: t("nav.kanban") %>
-    <%= nav_link_to orders_path, icon: "lni lni-clipboard", label: t("nav.orders") %>
-    <%= nav_link_to calendar_path, icon: "lni lni-calendar", label: t("nav.calendar") %>
-    <%= nav_link_to team_index_path, icon: "lni lni-users", label: t("nav.team") %>
+  <!-- Scrollable groups -->
+  <div class="flex-1 overflow-y-auto overflow-x-hidden py-2">
 
-    <!-- 거래처 섹션 구분선 -->
-    <div class="my-2 mx-3 border-t border-white/20"></div>
-    <%= nav_link_to clients_path, icon: "lni lni-briefcase", label: "발주처" %>
-    <%= nav_link_to suppliers_path, icon: "lni lni-delivery", label: "거래처" %>
-    <%= nav_link_to contact_persons_path, icon: "lni lni-users", label: "외부 담당자" %>
-    <%= nav_link_to projects_path, icon: "lni lni-map-marker", label: "현장" %>
-    <%= nav_link_to employees_path, icon: "lni lni-user", label: "직원 관리" %>
-    <%= nav_link_to org_chart_path, icon: "lni lni-graph", label: "조직도" %>
+    <!-- Group: 운영 -->
+    <div class="px-3 pt-3 pb-1 text-[10px] font-semibold tracking-[1.2px] uppercase text-ink-500 transition-opacity"
+         :class="collapsed ? 'opacity-0 h-0 pt-0 pb-0 overflow-hidden' : 'opacity-100'">
+      운영
+    </div>
+    <div class="flex flex-col px-2 gap-px">
+      <%= nav_link_to dashboard_path, icon: "lni lni-grid-alt", label: t("nav.dashboard") %>
+      <%= nav_link_to inbox_path, icon: "lni lni-envelope", label: t("nav.inbox") do %>
+        <% rfq_count = Order.new_rfq.count %>
+        <% if rfq_count > 0 %>
+          <span class="ml-auto text-[10px] font-semibold tabular-nums bg-ink-800 text-ink-300 px-1.5 py-px rounded-full transition-opacity group-[.active]:bg-brand-600 group-[.active]:text-white"
+                :class="collapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'"><%= rfq_count %></span>
+        <% end %>
+      <% end %>
+      <%= nav_link_to kanban_path, icon: "lni lni-layout", label: t("nav.kanban") %>
+      <%= nav_link_to orders_path, icon: "lni lni-clipboard", label: t("nav.orders") %>
+      <%= nav_link_to calendar_path, icon: "lni lni-calendar", label: t("nav.calendar") %>
+      <%= nav_link_to team_index_path, icon: "lni lni-users", label: t("nav.team") %>
+    </div>
+
+    <!-- Group: 마스터 -->
+    <div class="px-3 pt-4 pb-1 text-[10px] font-semibold tracking-[1.2px] uppercase text-ink-500 transition-opacity"
+         :class="collapsed ? 'opacity-0 h-0 pt-0 pb-0 overflow-hidden' : 'opacity-100'">
+      마스터
+    </div>
+    <div class="flex flex-col px-2 gap-px">
+      <%= nav_link_to clients_path, icon: "lni lni-briefcase", label: "발주처" %>
+      <%= nav_link_to suppliers_path, icon: "lni lni-delivery", label: "거래처" %>
+      <%= nav_link_to contact_persons_path, icon: "lni lni-users", label: "외부 담당자" %>
+      <%= nav_link_to projects_path, icon: "lni lni-map-marker", label: "현장" %>
+      <%= nav_link_to employees_path, icon: "lni lni-user", label: "직원 관리" %>
+      <%= nav_link_to org_chart_path, icon: "lni lni-graph", label: "조직도" %>
+    </div>
 
     <% if current_user.manager? || current_user.admin? %>
-      <!-- Admin 섹션 구분선 -->
-      <div class="my-2 mx-3 border-t border-white/20"></div>
-      <%= nav_link_to reports_path, icon: "lni lni-bar-chart", label: "경영 리포트" %>
+      <!-- Group: 관리 -->
+      <div class="px-3 pt-4 pb-1 text-[10px] font-semibold tracking-[1.2px] uppercase text-ink-500 transition-opacity"
+           :class="collapsed ? 'opacity-0 h-0 pt-0 pb-0 overflow-hidden' : 'opacity-100'">
+        관리
+      </div>
+      <div class="flex flex-col px-2 gap-px">
+        <%= nav_link_to reports_path, icon: "lni lni-bar-chart", label: "경영 리포트" %>
 
-      <%# eCount 그룹 — 5개 하위 메뉴를 접힘/펼침으로 묶음 %>
-      <% ecount_active = request.path.start_with?("/admin/ecount") || request.path.start_with?("/admin/imports") %>
-      <div x-data="{ open: <%= ecount_active ? 'true' : 'false' %> }" class="mx-1">
-        <%# 부모 항목: eCount %>
-        <button type="button"
-                @click="open = !open"
-                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors overflow-hidden <%= ecount_active ? 'bg-white/20 text-white' : 'text-blue-100 hover:bg-white/10 hover:text-white' %>">
-          <i class="lni lni-network text-xl shrink-0 w-5 text-center"></i>
-          <span class="whitespace-nowrap transition-opacity duration-200 truncate flex-1 text-left"
-                x-bind:class="collapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'">eCount</span>
-          <i class="lni lni-chevron-down text-sm transition-transform duration-200"
-             :class="{ 'rotate-180': open }"
-             x-bind:style="collapsed ? 'display:none' : ''"></i>
-        </button>
-
-        <%# 하위 메뉴 — open일 때만 표시 + collapsed면 전체 숨김 %>
-        <div x-show="open" x-transition x-cloak
-             x-bind:class="collapsed ? 'hidden' : ''"
-             class="mt-1 ml-3 pl-3 border-l border-white/20 space-y-0.5">
-          <% ecount_children = [
-            { path: admin_ecount_sync_index_path,    icon: "lni lni-reload",  label: "API 동기화" },
-            { path: admin_ecount_products_path,      icon: "lni lni-package", label: "품목" },
-            { path: admin_ecount_transactions_path,  icon: "lni lni-files",   label: "거래내역" },
-            { path: admin_imports_path,              icon: "lni lni-upload",  label: "Import (CSV)" }
-          ] %>
-          <% ecount_children.each do |item| %>
-            <% is_active = current_page?(item[:path]) || request.path.start_with?(item[:path]) %>
-            <%= link_to item[:path], class: "flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] #{ is_active ? 'bg-white/15 text-white font-medium' : 'text-blue-100/80 hover:bg-white/10 hover:text-white' }" do %>
-              <i class="<%= item[:icon] %> text-base w-4 text-center"></i>
-              <span class="truncate"><%= item[:label] %></span>
+        <%# eCount 그룹 %>
+        <% ecount_active = request.path.start_with?("/admin/ecount") || request.path.start_with?("/admin/imports") %>
+        <div x-data="{ open: <%= ecount_active ? 'true' : 'false' %> }">
+          <button type="button"
+                  @click="open = !open"
+                  class="w-full relative flex items-center gap-3 px-3 py-2 rounded-sm text-[13px] font-medium transition-colors overflow-hidden <%= ecount_active ? 'bg-ink-800 text-white' : 'text-ink-300 hover:bg-ink-800 hover:text-white' %>">
+            <% if ecount_active %>
+              <span class="absolute -left-2 top-1.5 bottom-1.5 w-[2px] bg-brand-400 rounded-r"></span>
             <% end %>
-          <% end %>
+            <i class="lni lni-network text-base shrink-0 w-4 text-center <%= ecount_active ? 'text-white' : 'text-ink-400' %>"></i>
+            <span class="whitespace-nowrap transition-opacity duration-200 truncate flex-1 text-left"
+                  x-bind:class="collapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'">eCount</span>
+            <i class="lni lni-chevron-down text-[10px] transition-transform duration-200"
+               :class="{ 'rotate-180': open }"
+               x-bind:style="collapsed ? 'display:none' : ''"></i>
+          </button>
+          <div x-show="open" x-transition x-cloak
+               x-bind:class="collapsed ? 'hidden' : ''"
+               class="mt-1 ml-4 pl-2 border-l border-ink-800 space-y-px">
+            <% ecount_children = [
+              { path: admin_ecount_sync_index_path,    icon: "lni lni-reload",  label: "API 동기화" },
+              { path: admin_ecount_products_path,      icon: "lni lni-package", label: "품목" },
+              { path: admin_ecount_transactions_path,  icon: "lni lni-files",   label: "거래내역" },
+              { path: admin_imports_path,              icon: "lni lni-upload",  label: "Import (CSV)" }
+            ] %>
+            <% ecount_children.each do |item| %>
+              <% is_active = current_page?(item[:path]) || request.path.start_with?(item[:path]) %>
+              <%= link_to item[:path], class: "flex items-center gap-2 px-2.5 py-1.5 rounded-sm text-[12.5px] #{ is_active ? 'bg-ink-800 text-white font-medium' : 'text-ink-400 hover:bg-ink-800 hover:text-white' }" do %>
+                <i class="<%= item[:icon] %> text-sm w-3.5 text-center"></i>
+                <span class="truncate"><%= item[:label] %></span>
+              <% end %>
+            <% end %>
+          </div>
         </div>
       </div>
     <% end %>
     <% if current_user.admin? %>
-      <%= nav_link_to settings_menu_permissions_path, icon: "lni lni-shield", label: "메뉴 권한" %>
-      <%= nav_link_to admin_reviews_path, icon: "lni lni-comments-alt", label: "피드백 관리" %>
+      <div class="flex flex-col px-2 gap-px mt-px">
+        <%= nav_link_to settings_menu_permissions_path, icon: "lni lni-shield", label: "메뉴 권한" %>
+        <%= nav_link_to admin_reviews_path, icon: "lni lni-comments-alt", label: "피드백 관리" %>
+      </div>
     <% end %>
   </div>
 
-  <!-- Bottom: Settings + User -->
-  <div class="py-4 border-t border-primary-light overflow-hidden">
-    <%= nav_link_to settings_root_path, icon: "lni lni-cog", label: t("nav.settings") %>
-
-    <!-- User avatar -->
-    <div class="flex items-center px-3 py-2 mt-2 gap-3 overflow-hidden">
-      <div class="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-xs font-bold shrink-0">
+  <!-- Foot: settings + user (sticky) -->
+  <div class="border-t border-ink-800 overflow-hidden">
+    <div class="flex flex-col px-2 py-1 gap-px">
+      <%= nav_link_to settings_root_path, icon: "lni lni-cog", label: t("nav.settings") %>
+    </div>
+    <div class="flex items-center gap-3 px-4 py-3 border-t border-ink-800">
+      <div class="w-7 h-7 rounded-full bg-brand-600 grid place-items-center text-[11px] font-bold text-white tracking-wider shrink-0">
         <%= current_user.initials %>
       </div>
-      <div class="transition-opacity overflow-hidden" :class="collapsed ? 'opacity-0 w-0' : 'opacity-100'">
-        <p class="text-xs font-medium truncate"><%= current_user.display_name %></p>
-        <p class="text-xs text-blue-200 truncate"><%= current_user.role.capitalize %></p>
+      <div class="flex-1 min-w-0 transition-opacity" :class="collapsed ? 'opacity-0 w-0' : 'opacity-100'">
+        <p class="text-[12px] font-medium text-white truncate"><%= current_user.display_name %></p>
+        <p class="text-[11px] text-ink-500 truncate"><%= current_user.role.capitalize %></p>
       </div>
+      <%= link_to destroy_user_session_path, data: { turbo_method: :delete },
+          class: "shrink-0 text-ink-500 hover:text-white transition-colors",
+          title: "로그아웃" do %>
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      <% end %>
     </div>
   </div>
 </nav>

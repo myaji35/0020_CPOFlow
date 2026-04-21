@@ -2,12 +2,15 @@
     주문 상세 Drawer 콘텐츠 — Drawer / Full page 공용
 ============================================================ %>
 <% thread_orders ||= Order.none %>
-<div id="order-drawer-content-<%= order.id %>">
+<div id="order-drawer-content-<%= order.id %>" data-order-id="<%= order.id %>" data-drawer-shortcuts="true">
+
+  <%# ── Action Bar (Redesign Phase 2) ───────────────────────── %>
+  <%= render "orders/drawer_action_bar", order: order %>
 
   <%# ── 탭 바 ─────────────────────────────────────────────── %>
   <% board = order.kanban_board %>
   <% is_purchase = board&.is_default? || board&.board_type == "purchase" %>
-  <div class="flex border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 sticky top-0 z-10"
+  <div class="flex border-b border-ink-150 dark:border-ink-800 bg-white dark:bg-ink-900 sticky top-0 z-10"
        id="drawer-tabs-<%= order.id %>">
     <% att_count = order.respond_to?(:attachments) ? (order.attachments.size rescue 0) : 0 %>
     <% tabs = if is_purchase
@@ -18,8 +21,8 @@
     <% tabs.each_with_index do |(tab_id, label), i| %>
       <button onclick="switchDrawerTab('<%= order.id %>', '<%= tab_id %>')"
               id="drawer-tab-<%= order.id %>-<%= tab_id %>"
-              class="flex items-center gap-1.5 px-4 py-3 text-sm font-medium transition-colors border-b-2
-                     <%= i == 0 ? 'border-primary text-primary' : 'border-transparent text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300' %>">
+              class="flex items-center gap-1.5 px-4 py-3 text-[13px] font-medium transition-colors border-b-2
+                     <%= i == 0 ? 'border-brand-600 text-brand-700' : 'border-transparent text-ink-500 hover:text-ink-800 dark:text-ink-400 dark:hover:text-ink-200' %>">
         <%= label %>
         <% if tab_id == 'tasks' && tasks.any? %>
           <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-500 px-1.5 py-0.5 rounded-full"><%= tasks.count %></span>

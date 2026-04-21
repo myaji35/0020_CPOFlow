@@ -1,0 +1,75 @@
+<%# Redesign Phase 2 — Action Bar (검은 바 + AI 요약 + Primary CTA + 단축키)
+    Requires: order
+%>
+<% next_status_map = {
+  "new_rfq" => ["make_quo", "Make QUO"],
+  "make_quo" => ["pending_po", "Pending PO"],
+  "pending_po" => ["new_po", "New PO"],
+  "new_po" => ["delivery_items", "Delivery"],
+  "delivery_items" => ["get_grn", "Get GRN"],
+  "problem" => ["new_po", "Resume PO"],
+  "get_grn" => ["done", "Done"]
+} %>
+<% next_status = next_status_map[order.status] %>
+<% ai_summary = order.respond_to?(:ai_summary) && order.ai_summary.present? ? order.ai_summary : nil %>
+
+<div id="drawer-action-bar-<%= order.id %>" class="bg-ink-900 text-white px-4 py-3 border-b border-ink-800">
+  <%# AI 1줄 요약 %>
+  <% if ai_summary %>
+    <div class="flex gap-3 p-3 mb-3 rounded-md border border-white/10 bg-white/[0.04]">
+      <div class="w-[22px] h-[22px] rounded-sm bg-accentx-500 grid place-items-center text-white text-[12px] shrink-0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" class="w-3.5 h-3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="text-[10.5px] font-semibold text-ink-300 uppercase tracking-[0.3px]">AI Summary</div>
+        <p class="text-[12px] leading-[1.5] text-white/[0.92] mt-[3px]"><%= ai_summary %></p>
+      </div>
+    </div>
+  <% end %>
+
+  <%# Action row %>
+  <div class="flex items-center gap-2">
+    <% if next_status %>
+      <%= form_with url: move_status_order_path(order), method: :patch, data: { turbo: true }, class: "inline-flex" do %>
+        <input type="hidden" name="status" value="<%= next_status[0] %>">
+        <button type="submit" class="inline-flex items-center gap-2 h-8 px-3 rounded-md text-[13px] font-medium bg-brand-500 text-white hover:bg-brand-600 transition-colors">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          <span>다음 → <%= next_status[1] %></span>
+        </button>
+      <% end %>
+    <% end %>
+    <button type="button"
+            onclick="switchDrawerTab('<%= order.id %>', 'comments')"
+            class="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md text-[12px] bg-white/[0.06] border border-white/[0.12] text-white hover:bg-white/[0.12] transition-colors">
+      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>답장</span>
+    </button>
+    <button type="button"
+            onclick="switchDrawerTab('<%= order.id %>', 'tasks')"
+            class="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md text-[12px] bg-white/[0.06] border border-white/[0.12] text-white hover:bg-white/[0.12] transition-colors">
+      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <span>태스크</span>
+    </button>
+    <div class="ml-auto flex items-center">
+      <a href="<%= order_path(order) %>" target="_blank" rel="noopener"
+         class="inline-flex items-center gap-1 h-8 px-2 rounded-md text-[11.5px] text-ink-300 hover:bg-white/[0.06] hover:text-white transition-colors"
+         title="펼침 화면">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <%# 단축키 힌트 %>
+  <div class="mt-3 flex items-center gap-1 flex-wrap text-[10.5px] text-ink-400">
+    <span class="font-mono text-[10px] bg-white/[0.08] border border-white/[0.14] text-ink-300 px-1.5 py-px rounded-xs">J/K</span>
+    <span class="mr-2">이동</span>
+    <span class="font-mono text-[10px] bg-white/[0.08] border border-white/[0.14] text-ink-300 px-1.5 py-px rounded-xs">Enter</span>
+    <span class="mr-2">다음</span>
+    <span class="font-mono text-[10px] bg-white/[0.08] border border-white/[0.14] text-ink-300 px-1.5 py-px rounded-xs">R</span>
+    <span class="mr-2">답장</span>
+    <span class="font-mono text-[10px] bg-white/[0.08] border border-white/[0.14] text-ink-300 px-1.5 py-px rounded-xs">T</span>
+    <span class="mr-2">태스크</span>
+    <span class="font-mono text-[10px] bg-white/[0.08] border border-white/[0.14] text-ink-300 px-1.5 py-px rounded-xs">C</span>
+    <span>코멘트</span>
+  </div>
+</div>

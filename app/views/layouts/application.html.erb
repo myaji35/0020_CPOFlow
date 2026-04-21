@@ -4,7 +4,7 @@
   <head>
     <title><%= content_for(:title) || "CPOFlow" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%2300A1E0'/><text x='16' y='22' font-family='Arial,sans-serif' font-size='16' font-weight='bold' fill='white' text-anchor='middle'>CF</text></svg>" type="image/svg+xml">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23166c72'/><text x='16' y='22' font-family='Arial,sans-serif' font-size='16' font-weight='bold' fill='white' text-anchor='middle'>CF</text></svg>" type="image/svg+xml">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
@@ -16,16 +16,80 @@
         theme: {
           extend: {
             colors: {
+              // Legacy 토큰 — 기존 클래스 호환 유지 (점진 마이그레이션)
               primary:   { DEFAULT: '#1E3A5F', light: '#2D5282', dark: '#142844' },
               accent:    { DEFAULT: '#00A1E0', light: '#33b5e8' },
               danger:    '#D93025',
               warning:   '#F4A83A',
               success:   '#1E8E3E',
-            }
+              // ── Redesign 토큰 (Phase 1) ──
+              // Neutrals — cool gray, procurement shell 용
+              ink: {
+                50:  '#fafbfc',
+                75:  '#f5f6f8',
+                100: '#eff1f4',
+                150: '#e7eaee',
+                200: '#dde1e6',
+                300: '#c1c7d0',
+                400: '#97a0ad',
+                500: '#6b7585',
+                600: '#4a5361',
+                700: '#2b323d',
+                800: '#1e242d',
+                900: '#151a21',
+                950: '#0c1014',
+              },
+              // Deep Teal brand (OKLCH 195 equivalent hex)
+              brand: {
+                50:  '#e6f4f4',
+                100: '#c7e7e8',
+                200: '#99d2d4',
+                400: '#3f9ba1',
+                500: '#1f8389',
+                600: '#166c72',
+                700: '#11555a',
+                900: '#072d31',
+              },
+              ok:     { 50: '#e9f6ed', 100: '#c6e7d0', 500: '#2e9856', 700: '#1f6f3f' },
+              warn:   { 50: '#fdf2dc', 100: '#fbdea1', 500: '#d99a2a', 700: '#9a6a17' },
+              dangerx:{ 50: '#fbe6e3', 100: '#f5c1b8', 500: '#c84431', 700: '#933123' },
+              info:   { 50: '#e8edfb', 100: '#c3cef1', 500: '#3d5cc9', 700: '#293f93' },
+              accentx:{ 50: '#f1e5fb', 500: '#8348c5' },
+              // Stage-specific (9 procurement stages)
+              stage: {
+                new:     '#4a64d6',   // indigo
+                quo:     '#894fc4',   // violet
+                pending: '#d0962e',   // amber
+                po:      '#1a7079',   // teal (brand 계열)
+                deliver: '#2d8a4e',   // green
+                problem: '#c54431',   // red
+                grn:     '#2c7040',   // green-dark
+                giveup:  '#7a7b82',   // gray
+                done:    '#2b3e42',   // deep slate
+              },
+            },
+            fontFamily: {
+              sans: ['Inter Tight', 'Pretendard Variable', 'Pretendard', '-apple-system', 'Segoe UI', 'sans-serif'],
+              mono: ['JetBrains Mono', 'SF Mono', 'ui-monospace', 'Menlo', 'monospace'],
+            },
+            borderRadius: {
+              xs: '3px', sm: '5px', md: '7px', lg: '10px',
+            },
+            boxShadow: {
+              'sh-1': '0 1px 2px rgba(12,16,20,.06), 0 1px 1px rgba(12,16,20,.04)',
+              'sh-2': '0 2px 6px rgba(12,16,20,.06), 0 1px 2px rgba(12,16,20,.08)',
+              'sh-3': '0 8px 24px rgba(12,16,20,.08), 0 2px 6px rgba(12,16,20,.06)',
+              'sh-4': '0 24px 48px rgba(12,16,20,.14), 0 8px 16px rgba(12,16,20,.08)',
+            },
           }
         }
       }
     </script>
+    <!-- Inter Tight + Pretendard (디자인 타이포그래피) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
     <!-- Dark mode initializer (prevent flash) -->
     <script>
       (function() {
@@ -57,7 +121,8 @@
     <%= yield :head %>
   </head>
 
-  <body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 antialiased transition-colors duration-200">
+  <body class="bg-ink-75 dark:bg-ink-950 text-ink-900 dark:text-ink-100 antialiased transition-colors duration-200 font-sans"
+        style="font-feature-settings: 'cv11','ss01';">
     <% if user_signed_in? %>
       <div class="flex h-screen overflow-hidden">
         <!-- Sidebar Navigation -->
@@ -83,7 +148,7 @@
           <% end %>
 
           <!-- Page Content -->
-          <main class="flex-1 overflow-y-auto p-6 bg-gray-50 dark:bg-gray-950">
+          <main class="flex-1 overflow-y-auto p-6 bg-ink-75 dark:bg-ink-950">
             <%= yield %>
           </main>
         </div>
@@ -392,21 +457,42 @@
         // 드로어 탭 전환 — innerHTML 삽입 시 <script> 미실행 문제로 전역 정의
         function switchDrawerTab(orderId, tabId) {
           var panels = ['detail', 'tasks', 'comments', 'attachments', 'history', 'flow'];
+          var ACTIVE = ['border-brand-600', 'text-brand-700'];
+          var INACT  = ['border-transparent', 'text-ink-500', 'dark:text-ink-400'];
           panels.forEach(function(p) {
             var panel = document.getElementById('drawer-panel-' + orderId + '-' + p);
             var tab   = document.getElementById('drawer-tab-'   + orderId + '-' + p);
             if (!panel || !tab) return;
             if (p === tabId) {
               panel.classList.remove('hidden');
-              tab.classList.add('border-primary', 'text-primary');
-              tab.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-500');
+              tab.classList.add.apply(tab.classList, ACTIVE);
+              tab.classList.remove.apply(tab.classList, INACT);
             } else {
               panel.classList.add('hidden');
-              tab.classList.remove('border-primary', 'text-primary');
-              tab.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-500');
+              tab.classList.remove.apply(tab.classList, ACTIVE);
+              tab.classList.add.apply(tab.classList, INACT);
             }
           });
         }
+
+        // 드로어 단축키 — J/K 이동, R 답장(코멘트 탭), T 태스크 탭, C 코멘트 탭, Enter 다음 스테이지
+        document.addEventListener('keydown', function(e) {
+          // 입력 중이면 무시
+          var t = e.target;
+          if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+          var drawer = document.getElementById('order-drawer');
+          if (!drawer || drawer.classList.contains('translate-x-full')) return;
+          var content = drawer.querySelector('[data-order-id]');
+          if (!content) return;
+          var orderId = content.dataset.orderId;
+          if (e.key === 'r' || e.key === 'R') { switchDrawerTab(orderId, 'comments'); e.preventDefault(); }
+          else if (e.key === 't' || e.key === 'T') { switchDrawerTab(orderId, 'tasks'); e.preventDefault(); }
+          else if (e.key === 'c' || e.key === 'C') { switchDrawerTab(orderId, 'comments'); e.preventDefault(); }
+          else if (e.key === 'Enter') {
+            var btn = document.querySelector('#drawer-action-bar-' + orderId + ' button[type=submit]');
+            if (btn) { btn.click(); e.preventDefault(); }
+          }
+        });
 
         // 히스토리 메일 스레드 아코디언 토글
         function toggleThreadEmail(orderId, threadOrderId) {

@@ -1,0 +1,73 @@
+{
+  "_comment": "CPOFlow Redesign Phase 1 — Deep Teal (OKLCH 195) 브랜드로 전환. 2026-04-21.",
+  "project": "CPOFlow",
+  "agenda": "조달/발주 9단계 워크플로를 빠르게 처리 — 정보 밀도 · SLA 신호 · 반복 업무 제거",
+  "brand_voice": "procurement-focused, calm, status-first signal layer",
+  "emotional_tone": ["Trustworthy", "Efficient", "Composed", "Enterprise-grade"],
+  "design_metaphors": ["Ops cockpit", "Status rail", "Signal over decoration"],
+
+  "design_tokens": {
+    "colors": {
+      "hero": "#166c72",
+      "hero_hover": "#11555a",
+      "surface": "#ffffff",
+      "surface_alt": "#f5f6f8",
+      "shell_bg": "#0c1014",
+      "text_primary": "#151a21",
+      "text_secondary": "#6b7585",
+      "accent": "#166c72",
+      "border": "#e7eaee",
+      "ok": "#2e9856",
+      "warn": "#d99a2a",
+      "danger": "#c84431",
+      "info": "#3d5cc9"
+    },
+    "typography": {
+      "font_heading": "Inter Tight",
+      "font_body": "Inter Tight, Pretendard Variable",
+      "font_mono": "JetBrains Mono",
+      "scale": "dense",
+      "base_size": "13px"
+    },
+    "shape": {
+      "radius": "tight",
+      "card_shadow": "sh-1",
+      "border_width": "1px",
+      "radii": {"xs": "3px", "sm": "5px", "md": "7px", "lg": "10px", "pill": "999px"}
+    },
+    "motion": {
+      "style": "subtle",
+      "easing": "cubic-bezier(.2,.7,.3,1)",
+      "durations": {"fast": "120ms", "base": "180ms", "slow": "280ms"},
+      "page_transition": "fade",
+      "hover_effect": "lift",
+      "loading_animation": "skeleton",
+      "entrance_style": "fade-in"
+    },
+    "layout": {
+      "density": "high",
+      "max_width": "1440px",
+      "grid": "full",
+      "sidebar_width": "232px",
+      "topbar_height": "52px"
+    },
+    "personality": {
+      "mood": "composed, high-density, enterprise",
+      "icon_style": "feather-outline",
+      "illustration_style": "none"
+    }
+  },
+
+  "hero_color": "#166c72",
+  "anti_patterns": [
+    "화려한 그라데이션",
+    "큰 라운드(radius > 12px)",
+    "투명/연한 배지 (solid background + white text 필수)",
+    "장식성 아이콘 (Feather outline만)",
+    "SLDS navy(#1E3A5F) — Deep Teal로 전환"
+  ],
+  "primary_action_per_screen": "MUST_EXIST",
+  "user_decision_clarity": "0.5초 룰 — 첫 시선 0.5초 안에 다음 행동 식별 가능해야 함",
+  "_status": "active",
+  "_updated_at": "2026-04-21"
+}
