@@ -61,7 +61,9 @@ class KanbanController < ApplicationController
       relation = if @current_board.is_default? || @current_board.board_type == "purchase"
         # 구매보드: 기존 status 기반
         if col_key == "new_rfq"
+          # new_rfq(접수함): 방금 등록한 발주가 맨 위로 — 최근 생성 우선
           base.where(status: :new_rfq, rfq_status: Order::KANBAN_VISIBLE_RFQ_STATUSES)
+              .reorder(created_at: :desc)
         else
           base.where(status: col_key)
         end
@@ -120,7 +122,9 @@ class KanbanController < ApplicationController
 
     relation = if @current_board.is_default? || @current_board.board_type == "purchase"
       if status == "new_rfq"
+        # new_rfq(접수함): 최근 생성 우선 — index와 동일 정렬
         base.where(status: :new_rfq, rfq_status: Order::KANBAN_VISIBLE_RFQ_STATUSES)
+            .reorder(created_at: :desc)
       else
         base.where(status: status)
       end
