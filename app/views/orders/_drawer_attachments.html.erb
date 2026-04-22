@@ -22,7 +22,7 @@
         <span class="text-sm text-gray-500 group-hover:text-[#00A1E0] transition-colors pointer-events-none"
               data-file-dropzone-target="label"
               id="upload-label-<%= order.id %>">파일 선택 또는 드래그</span>
-        <%= f.file_field :files, multiple: true, class: "hidden",
+        <%= f.file_field :files, multiple: true, class: "sr-only",
             data: { file_dropzone_target: "input" } %>
       </label>
       <%= f.submit "업로드",
