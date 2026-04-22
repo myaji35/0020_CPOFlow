@@ -137,7 +137,7 @@ class KanbanController < ApplicationController
   end
 
   def move
-    @order = Order.find(params[:id])
+    @order = scoped_orders.find(params[:id])
     board = @order.kanban_board
 
     if board.nil? || board.is_default? || board.board_type == "purchase"
@@ -169,7 +169,7 @@ class KanbanController < ApplicationController
 
   # PATCH /kanban/split/:id — 서브 주문을 다시 독립 카드로 분리
   def split
-    order = Order.find(params[:id])
+    order = scoped_orders.find(params[:id])
     parent = order.parent_order
 
     if order.parent_order_id.nil?
@@ -244,11 +244,11 @@ class KanbanController < ApplicationController
       return
     end
 
-    main_order = Order.find(main_id)
+    main_order = scoped_orders.find(main_id)
     merged = []
 
     merge_ids.each do |oid|
-      order = Order.find_by(id: oid)
+      order = scoped_orders.find_by(id: oid)
       next unless order
       next if order.parent_order_id.present?
 

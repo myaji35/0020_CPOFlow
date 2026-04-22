@@ -32,6 +32,15 @@ class ApplicationController < ActionController::Base
     end
   end
 
+  # viewer를 제외한 member 이상만 허용 (AI API 호출 비용 방지)
+  def require_member!
+    return if current_user&.admin? || current_user&.manager? || current_user&.member?
+    respond_to do |format|
+      format.html { redirect_to root_path, alert: "이 작업은 멤버 이상만 사용할 수 있습니다." }
+      format.json { render json: { error: "Insufficient role" }, status: :forbidden }
+    end
+  end
+
   def require_admin!
     unless current_user&.admin?
       redirect_to root_path, alert: "관리자만 접근 가능합니다."

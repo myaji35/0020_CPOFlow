@@ -3,6 +3,7 @@ class InboxController < ApplicationController
   RATE_LIMIT_WINDOW = 60   # 초
   RATE_LIMIT_MAX    = 10   # 최대 호출 수
 
+  before_action :require_member!, only: %i[translate analyze_link generate_reply]
   before_action :check_rate_limit!, only: %i[translate analyze_link generate_reply]
 
   PER_PAGE = 30

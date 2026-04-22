@@ -2,9 +2,10 @@ class OrdersController < ApplicationController
   include AttachmentPreviewable
 
   before_action :set_order, only: %i[show edit update destroy move_status quick_update preview_attachment attach attach_from_url detach]
+  before_action :require_manager!, only: %i[destroy]
 
   def index
-    @orders = Order.all.includes(:assignees, :tasks, :user, :client, :project, :supplier, :card_status).by_due_date
+    @orders = scoped_orders.includes(:assignees, :tasks, :user, :client, :project, :supplier, :card_status).by_due_date
 
     # 기존 필터
     @orders = @orders.where(status: params[:status]) if params[:status].present?
@@ -422,7 +423,7 @@ class OrdersController < ApplicationController
   private
 
   def set_order
-    @order = Order.find(params[:id])
+    @order = scoped_orders.find(params[:id])
   end
 
   # ISS-203: 감사 대상 필드 (조달 컴플라이언스 관점)
