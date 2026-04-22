@@ -5,31 +5,34 @@
   <% active_storage_attachments = order.respond_to?(:attachments) ? (order.attachments.includes(:blob) rescue []) : [] %>
   <% links = order.respond_to?(:extracted_links) && order.extracted_links.present? ? (JSON.parse(order.extracted_links) rescue []) : [] %>
 
-  <%# 파일 업로드 영역 — 네이티브 HTML, Turbo/Stimulus 의존 없음 (확실한 동작 보장) %>
+  <%# 파일 업로드 영역 — 드래그앤드롭 + 클릭 선택 (네이티브 form + file_dropzone Stimulus) %>
   <div class="mb-3">
     <form action="<%= attach_order_path(order) %>" method="post" enctype="multipart/form-data"
           data-turbo="false"
-          class="flex flex-col gap-2">
+          data-controller="file-dropzone"
+          data-file-dropzone-max-size-value="26214400"
+          data-file-dropzone-auto-submit-value="false"
+          data-file-dropzone-idle-label-value="파일 선택 또는 드래그"
+          class="flex items-center gap-2">
       <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
 
-      <%# file input 직접 표시 — 브라우저 기본 UI 사용 %>
+      <label for="drawer-file-input-<%= order.id %>"
+             data-file-dropzone-target="zone"
+             class="relative flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-[#00A1E0] hover:bg-blue-50/30 transition-colors group">
+        <svg class="w-5 h-5 text-gray-500 group-hover:text-[#00A1E0] transition-colors pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span data-file-dropzone-target="label"
+              class="text-sm text-gray-500 group-hover:text-[#00A1E0] transition-colors pointer-events-none">
+          파일 선택 또는 드래그
+        </span>
+      </label>
       <input type="file" name="files[]" multiple
-             class="block w-full text-sm text-gray-700
-                    file:mr-3 file:py-2 file:px-4
-                    file:rounded-lg file:border-0
-                    file:text-sm file:font-medium
-                    file:bg-[#1E3A5F] file:text-white
-                    hover:file:bg-[#1E3A5F]/90
-                    file:cursor-pointer cursor-pointer
-                    border border-gray-300 rounded-lg p-2">
-
-      <div class="flex items-center justify-between">
-        <p class="text-xs text-gray-500">여러 파일 선택 가능 · 파일당 최대 25MB</p>
-        <button type="submit"
-                class="px-4 py-2 text-sm font-medium text-white bg-[#1E3A5F] rounded-lg hover:bg-[#1E3A5F]/90 cursor-pointer transition-colors">
-          업로드
-        </button>
-      </div>
+             id="drawer-file-input-<%= order.id %>"
+             data-file-dropzone-target="input"
+             style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
+      <button type="submit" data-file-dropzone-target="submit"
+              class="px-4 py-2.5 text-sm font-medium text-white bg-[#1E3A5F] rounded-lg hover:bg-[#1E3A5F]/90 cursor-pointer transition-colors shrink-0">
+        업로드
+      </button>
     </form>
   </div>
 
