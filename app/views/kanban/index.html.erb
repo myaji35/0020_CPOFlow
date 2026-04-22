@@ -264,12 +264,35 @@
                        class="contents"></turbo-frame>
         <% end %>
 
-        <!-- Empty state -->
+        <!-- Empty state (ISS-240) -->
         <% empty_check = status == "inbox" ? @inbox_grouped.empty? : orders.empty? %>
-        <div class="empty-state flex-1 flex items-center justify-center text-xs text-gray-500 dark:text-gray-500 py-8<%= empty_check ? '' : ' hidden' %>">
-          <div class="text-center">
-            <i class="lni lni-inbox text-2xl block mb-1 opacity-50"></i>
-            No orders
+        <div class="empty-state flex-1 flex items-center justify-center py-8<%= empty_check ? '' : ' hidden' %>">
+          <div class="text-center px-3">
+            <% if status == "new_rfq" || status == "inbox" %>
+              <div class="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center mx-auto mb-2">
+                <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+              </div>
+              <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5">RFQ 메일 대기 중</p>
+              <p class="text-[10px] text-gray-400 dark:text-gray-500 mb-3 leading-relaxed">수신된 메일이 자동으로<br>카드로 변환됩니다</p>
+              <%= link_to new_order_path,
+                    class: "inline-flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-white rounded-lg transition-opacity hover:opacity-90",
+                    style: "background:#166c72;" do %>
+                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                수동 발주 만들기
+              <% end %>
+            <% else %>
+              <div class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center mx-auto mb-2">
+                <svg class="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+                </svg>
+              </div>
+              <p class="text-[11px] text-gray-400 dark:text-gray-500">비어있음</p>
+            <% end %>
           </div>
         </div>
       </div>

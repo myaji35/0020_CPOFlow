@@ -116,4 +116,35 @@ class User < ApplicationRecord
     current[scope.to_s] = list
     update!(saved_filters: current)
   end
+
+  # ── 온보딩 헬퍼 (ISS-240) ──────────────────────────────────
+
+  # Gmail(email_account) 연결 여부
+  def gmail_connected?
+    email_accounts.exists?
+  end
+
+  # 본인이 생성한 발주 1건 이상
+  def has_created_order?
+    created_orders.exists?
+  end
+
+  # 본인이 배정받은 order 1건 이상
+  def has_assignment?
+    assignments.exists?
+  end
+
+  # 3단계 모두 완료 시 온보딩 완료
+  def onboarded?
+    gmail_connected? && has_created_order? && has_assignment?
+  end
+
+  # 각 단계별 완료 여부 반환 (뷰 체크리스트용)
+  def onboarding_steps
+    [
+      { key: :gmail,      done: gmail_connected?,   label: "Gmail 연결",      cta_label: "Gmail 연결하기",    cta_path: nil },
+      { key: :order,      done: has_created_order?, label: "첫 발주 만들기",  cta_label: "발주 만들기",        cta_path: nil },
+      { key: :assignment, done: has_assignment?,    label: "담당자 배정 받기", cta_label: "칸반에서 배정받기", cta_path: nil }
+    ]
+  end
 end
