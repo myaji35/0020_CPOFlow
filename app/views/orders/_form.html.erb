@@ -306,16 +306,21 @@
     <% end %>
 
     <%# 새 파일 업로드 영역 %>
-    <label data-file-dropzone-target="zone"
+    <% form_file_input_id = "order-form-file-input-#{order.id || 'new'}" %>
+    <label for="<%= form_file_input_id %>"
+           data-file-dropzone-target="zone"
            class="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-[#00A1E0] hover:bg-blue-50/30 transition-colors group">
       <svg class="w-5 h-5 text-gray-400 group-hover:text-[#00A1E0]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       <span data-file-dropzone-target="label"
             class="text-sm text-gray-400 group-hover:text-[#00A1E0]">
         <%= order.persisted? && order.attachments.any? ? "파일 추가 또는 드래그" : "파일 선택 또는 드래그" %>
       </span>
-      <%= f.file_field :files, multiple: true, data: { file_dropzone_target: "input" },
-            class: "sr-only", direct_upload: false %>
     </label>
+    <%= f.file_field :files, multiple: true,
+          id: form_file_input_id,
+          style: "position:absolute;left:-9999px;width:1px;height:1px;opacity:0;",
+          data: { file_dropzone_target: "input" },
+          direct_upload: false %>
   </div>
 
   <%# ===== 섹션 4: 추가 정보 ===== %>
