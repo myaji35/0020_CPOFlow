@@ -93,7 +93,7 @@
         <% end %>
         <!-- 기간 필터 -->
         <%= form_with url: project_path(@project), method: :get, local: true, class: "flex flex-wrap gap-2 items-center" do |f| %>
-          <select name="period" onchange="this.form.submit()" class="text-xs border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none">
+          <select name="period" onchange="this.form.submit()" class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none">
             <option value="" <%= params[:period].blank? ? 'selected' : '' %>>전체 기간</option>
             <option value="this_month" <%= params[:period]=="this_month" ? 'selected' : '' %>>이번 달</option>
             <option value="3months"    <%= params[:period]=="3months"    ? 'selected' : '' %>>최근 3개월</option>

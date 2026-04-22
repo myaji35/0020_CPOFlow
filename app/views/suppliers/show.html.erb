@@ -257,19 +257,19 @@
 
       <!-- 기간/정렬/상태 필터 -->
       <%= form_with url: supplier_path(@supplier), method: :get, local: true, class: "flex flex-wrap gap-2 mb-4 items-center" do |f| %>
-        <select name="period" onchange="this.form.submit()" class="text-xs border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none">
+        <select name="period" onchange="this.form.submit()" class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none">
           <option value="" <%= params[:period].blank? ? 'selected' : '' %>>전체 기간</option>
           <option value="this_month" <%= params[:period]=="this_month" ? 'selected' : '' %>>이번 달</option>
           <option value="3months"    <%= params[:period]=="3months"    ? 'selected' : '' %>>최근 3개월</option>
           <option value="this_year"  <%= params[:period]=="this_year"  ? 'selected' : '' %>>올해</option>
         </select>
-        <select name="order_status" onchange="this.form.submit()" class="text-xs border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none">
+        <select name="order_status" onchange="this.form.submit()" class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none">
           <option value="" <%= params[:order_status].blank? ? 'selected' : '' %>>전체 상태</option>
           <% Order::STATUS_LABELS.each do |k, v| %>
             <option value="<%= k %>" <%= params[:order_status]==k ? 'selected' : '' %>><%= v %></option>
           <% end %>
         </select>
-        <select name="sort" onchange="this.form.submit()" class="text-xs border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none">
+        <select name="sort" onchange="this.form.submit()" class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none">
           <option value="due_date" <%= (params[:sort].blank? || params[:sort]=="due_date") ? 'selected' : '' %>>납기일순</option>
           <option value="value"    <%= params[:sort]=="value"    ? 'selected' : '' %>>금액순</option>
           <option value="recent"   <%= params[:sort]=="recent"   ? 'selected' : '' %>>최신순</option>

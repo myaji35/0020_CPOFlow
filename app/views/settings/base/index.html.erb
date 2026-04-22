@@ -1,6 +1,21 @@
 <%# Settings — main page with Gmail connection management %>
 <div class="max-w-4xl mx-auto py-8 px-4">
 
+  <%# ISS-240: 신규 사용자 Gmail 연결 안내 (onboarded? false일 때만) %>
+  <% unless current_user.onboarded? %>
+    <div class="mb-6 rounded-xl border p-4 flex items-start gap-3" style="border-color:rgba(22,108,114,0.3); background:rgba(22,108,114,0.06);">
+      <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style="background:#166c72;">
+        <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-semibold text-gray-900 dark:text-white mb-0.5">시작 전 Gmail을 먼저 연결하세요</p>
+        <p class="text-xs text-gray-600 dark:text-gray-400">Gmail을 연결하면 RFQ 메일이 자동으로 칸반 카드로 변환됩니다. 아래 <strong>Connect Gmail</strong> 버튼을 눌러 연결을 시작하세요.</p>
+      </div>
+    </div>
+  <% end %>
+
   <%# Page header %>
   <div class="mb-8">
     <h1 class="text-[22px] font-semibold tracking-tight text-ink-900 dark:text-white">Settings</h1>
@@ -212,16 +227,16 @@
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1">Name</label>
-          <%= f.text_field :name, value: current_user.name, class: "w-full border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+          <%= f.text_field :name, value: current_user.name, class: "w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" %>
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1">Email</label>
-          <input type="text" value="<%= current_user.email %>" disabled class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm bg-gray-50 dark:bg-gray-900 text-gray-500 cursor-not-allowed" />
+          <input type="text" value="<%= current_user.email %>" disabled class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm bg-gray-50 dark:bg-gray-900 text-gray-500 cursor-not-allowed" />
         </div>
       </div>
       <div>
         <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1">Branch</label>
-        <input type="text" value="<%= current_user.branch.to_s.humanize %>" disabled class="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm bg-gray-50 dark:bg-gray-900 text-gray-500 cursor-not-allowed" />
+        <input type="text" value="<%= current_user.branch.to_s.humanize %>" disabled class="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm bg-gray-50 dark:bg-gray-900 text-gray-500 cursor-not-allowed" />
       </div>
       <div class="flex justify-end">
         <%= f.submit "Save Changes", class: "px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer" %>

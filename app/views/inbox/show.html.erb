@@ -47,7 +47,7 @@
           <%= status_badge(@order) %>
           <% if @order.status.to_s == "new_rfq" %>
             <%= form_with url: convert_email_to_order_path(@order), method: :post, class: "flex items-center gap-1.5", data: { turbo_confirm: "칸반 보드로 이동하시겠습니까?" } do %>
-              <select name="board_id" class="px-2 py-1.5 border border-gray-300 rounded-lg text-xs bg-white focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]">
+              <select name="board_id" class="px-2 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]">
                 <% KanbanBoard.ordered.each do |board| %>
                   <option value="<%= board.id %>" <%= "selected" if board.is_default? %>><%= board.name %></option>
                 <% end %>
@@ -469,7 +469,7 @@
     <div class="flex flex-wrap gap-3">
       <% if @order.status.to_s == "new_rfq" %>
         <%= form_with url: convert_email_to_order_path(@order), method: :post, class: "flex items-center gap-2", data: { turbo_confirm: "칸반 보드로 이동하시겠습니까?" } do %>
-          <select name="board_id" class="px-2 py-1.5 border border-gray-300 rounded-lg text-xs bg-white focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]">
+          <select name="board_id" class="px-2 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]">
             <% KanbanBoard.ordered.each do |board| %>
               <option value="<%= board.id %>" <%= "selected" if board.is_default? %>><%= board.name %></option>
             <% end %>
