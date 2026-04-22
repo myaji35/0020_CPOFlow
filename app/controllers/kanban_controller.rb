@@ -50,6 +50,10 @@ class KanbanController < ApplicationController
       @current_board.kanban_columns.ordered.pluck(:key, :wip_limit).to_h.compact
     end
 
+    # 서버 사이드 키워드 검색: params[:q] 있으면 전체 컬럼에 LIKE 필터 적용 + limit 해제
+    @search_query = params[:q].to_s.strip
+    search_active = @search_query.present?
+
     # 정상 로드: 모든 컬럼 첫 INITIAL_LIMIT건만
     @column_totals = {}
     @columns = @kanban_column_keys.map do |col_key|
@@ -73,9 +77,21 @@ class KanbanController < ApplicationController
         column ? base.where(kanban_column_id: column.id) : base.none
       end
 
+      # 검색어 필터 (title / customer_name / reference_no / rfq_no / po_no)
+      if search_active
+        like = "%#{@search_query}%"
+        relation = relation.where(
+          "orders.title LIKE ? OR orders.customer_name LIKE ? OR " \
+          "orders.reference_no LIKE ? OR orders.rfq_no LIKE ? OR orders.po_no LIKE ?",
+          like, like, like, like, like
+        )
+      end
+
       total = relation.count
       @column_totals[col_key] = total
-      [ col_key, relation.limit(INITIAL_LIMIT).to_a ]
+      # 검색 중에는 전건 표시 (매칭 결과는 대체로 소수이므로 안전)
+      col_limit = search_active ? 200 : INITIAL_LIMIT
+      [ col_key, relation.limit(col_limit).to_a ]
     end.to_h
     @filter_employees = Employee.active.by_name
     @card_statuses = @current_board.card_statuses.order(:position)

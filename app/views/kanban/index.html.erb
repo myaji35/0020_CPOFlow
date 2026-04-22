@@ -68,13 +68,25 @@
     <% end %>
   </div>
 
-  <%# 키워드 검색 %>
-  <div class="flex items-center gap-1.5 flex-1 min-w-[140px] max-w-[220px] border border-gray-200 dark:border-gray-600 rounded-lg px-2.5 py-1.5 bg-white dark:bg-gray-700">
+  <%# 키워드 검색 — 서버 사이드 (전체 발주 대상, 300ms debounce) %>
+  <form id="kanban-search-form" action="<%= kanban_path %>" method="get"
+        class="flex items-center gap-1.5 flex-1 min-w-[140px] max-w-[260px] border border-gray-200 dark:border-gray-600 rounded-lg px-2.5 py-1.5 bg-white dark:bg-gray-700">
+    <% if params[:board_id].present? %>
+      <input type="hidden" name="board_id" value="<%= params[:board_id] %>">
+    <% end %>
     <svg class="w-3.5 h-3.5 text-gray-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input id="filter-keyword" type="text" placeholder="검색..."
-           class="text-xs bg-transparent text-gray-700 dark:text-gray-200 focus:outline-none w-full placeholder-gray-400 dark:placeholder-gray-500"
-           onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();this.focus();if(typeof applyFilters==='function')applyFilters()}">
-  </div>
+    <input id="filter-keyword" name="q" type="text"
+           value="<%= @search_query %>"
+           placeholder="전체 발주 검색 (제목·고객·RFQ/PO번호)..."
+           autocomplete="off"
+           class="text-xs bg-transparent text-gray-700 dark:text-gray-200 focus:outline-none w-full placeholder-gray-400 dark:placeholder-gray-500">
+    <% if @search_query.present? %>
+      <a href="<%= kanban_path(board_id: params[:board_id]) %>"
+         class="text-gray-500 hover:text-red-600 shrink-0" title="검색 지우기">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </a>
+    <% end %>
+  </form>
 
   <%# 병합대상 버튼 — 중복 스레드가 있을 때만 카운트 표시 %>
   <button id="merge-mode-btn"
@@ -751,9 +763,10 @@ function initKanban() {
   }
 
   function applyFilters() {
+    // 키워드 검색은 서버 사이드(form submit)이므로 여기서는 클라이언트 필터만 적용
     const assigneeVal = filterAssignee.value;
-    const keyword     = filterKeyword.value.toLowerCase().trim();
-    const anyActive   = assigneeVal || activePriority || activeDue || keyword;
+    const serverKeyword = filterKeyword.value.trim();  // 표시용 (reset 버튼 활성화 판정)
+    const anyActive   = assigneeVal || activePriority || activeDue || serverKeyword;
 
     document.querySelectorAll('[data-order-id]').forEach(function(card) {
       const assigneeIds = (card.dataset.assigneeIds || '').split(',').filter(Boolean);
@@ -767,10 +780,7 @@ function initKanban() {
         : activeDue === 'urgent'  ? (dueDays >= 0 && dueDays <= 7)
         : true;
 
-      const text      = (card.dataset.title || '') + ' ' + (card.dataset.customer || '') + ' ' + (card.dataset.refno || '');
-      const keywordOk = !keyword || text.toLowerCase().includes(keyword);
-
-      card.classList.toggle('hidden', !(assigneeOk && priorityOk && dueOk && keywordOk));
+      card.classList.toggle('hidden', !(assigneeOk && priorityOk && dueOk));
     });
 
     filterReset.classList.toggle('hidden', !anyActive);
@@ -794,18 +804,37 @@ function initKanban() {
   });
 
   filterAssignee.addEventListener('change', applyFilters);
-  filterKeyword.addEventListener('input', applyFilters);
-  filterKeyword.addEventListener('keyup', applyFilters);
-  filterKeyword.addEventListener('compositionend', applyFilters);
+
+  // 키워드 검색: 서버 사이드 (300ms debounce 후 form submit)
+  const searchForm = document.getElementById('kanban-search-form');
+  let searchDebounce = null;
+  function submitSearch() {
+    if (!searchForm) return;
+    searchForm.submit();
+  }
+  filterKeyword.addEventListener('input', function() {
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(submitSearch, 350);
+  });
+  filterKeyword.addEventListener('compositionend', function() {
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(submitSearch, 350);
+  });
+  // Enter 키는 즉시 제출 (form 기본 동작) — 별도 처리 불필요
 
   filterReset.addEventListener('click', function() {
     filterAssignee.value = '';
-    filterKeyword.value  = '';
     activePriority = '';
     activeDue      = '';
     setActiveToggle('filter-priority-btn', '');
     setActiveToggle('filter-due-btn', '');
-    applyFilters();
+    // 검색어가 있으면 서버 재요청으로 초기화, 없으면 클라이언트 필터만 리셋
+    if (filterKeyword.value.trim()) {
+      filterKeyword.value = '';
+      submitSearch();
+    } else {
+      applyFilters();
+    }
   });
 
   setActiveToggle('filter-priority-btn', '');
