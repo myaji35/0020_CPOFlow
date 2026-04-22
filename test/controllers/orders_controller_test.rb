@@ -83,11 +83,22 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
 
   # ─── destroy ─────────────────────────────
 
-  test "orders destroy — 삭제 성공" do
+  test "orders destroy — 삭제 성공 (manager)" do
+    @user.update!(role: :manager)
     order = Order.create!(title: "Delete Test Order", customer_name: "Cust", user: @user, status: :new_rfq)
     assert_difference("Order.count", -1) do
       delete order_path(order)
     end
+    @user.update!(role: :member)
+  end
+
+  test "orders destroy — member는 차단됨 (require_manager!)" do
+    order = Order.create!(title: "Delete Blocked", customer_name: "Cust", user: @user, status: :new_rfq)
+    assert_no_difference("Order.count") do
+      delete order_path(order)
+    end
+    assert_response :redirect
+    order.destroy
   end
 
   # ─── quick_update ─────────────────────────
@@ -148,19 +159,23 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
   end
 
   # ─── destroy ─────────────────────────────
-  test "orders destroy — 삭제 성공 후 kanban redirect" do
+  test "orders destroy — 삭제 성공 후 kanban redirect (manager)" do
+    @user.update!(role: :manager)
     order = Order.create!(title: "Destroy Test", customer_name: "Cust", user: @user, status: :new_rfq)
     delete order_path(order)
     assert_response :redirect
     assert_not Order.exists?(order.id)
+    @user.update!(role: :member)
   end
 
-  test "orders destroy — JSON 요청 시 success:true" do
+  test "orders destroy — JSON 요청 시 success:true (manager)" do
+    @user.update!(role: :manager)
     order = Order.create!(title: "Destroy JSON Test", customer_name: "Cust", user: @user, status: :new_rfq)
     delete order_path(order), as: :json
     assert_response :success
     body = JSON.parse(response.body)
     assert_equal true, body["success"]
+    @user.update!(role: :member)
   end
 
   # ─── detach ──────────────────────────────

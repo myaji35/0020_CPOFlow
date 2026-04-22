@@ -5,34 +5,35 @@ class OrdersController < ApplicationController
   before_action :require_manager!, only: %i[destroy]
 
   def index
-    @orders = scoped_orders.includes(:assignees, :tasks, :user, :client, :project, :supplier, :card_status).by_due_date
+    @orders = scoped_orders.includes(:assignees, :tasks, :user, :client, :project, :supplier, :card_status)
+                           .order("orders.due_date ASC")
 
     # 기존 필터
-    @orders = @orders.where(status: params[:status]) if params[:status].present?
+    @orders = @orders.where(orders: { status: params[:status] }) if params[:status].present?
     @orders = @orders.where("orders.title LIKE ? OR orders.customer_name LIKE ?",
                             "%#{params[:q]}%", "%#{params[:q]}%") if params[:q].present?
 
     # 거래내역 추적 필터 (FR-01)
-    @orders = @orders.where(client_id: params[:client_id])     if params[:client_id].present?
-    @orders = @orders.where(supplier_id: params[:supplier_id]) if params[:supplier_id].present?
-    @orders = @orders.where(project_id: params[:project_id])   if params[:project_id].present?
+    @orders = @orders.where(orders: { client_id: params[:client_id] })     if params[:client_id].present?
+    @orders = @orders.where(orders: { supplier_id: params[:supplier_id] }) if params[:supplier_id].present?
+    @orders = @orders.where(orders: { project_id: params[:project_id] })   if params[:project_id].present?
     @orders = @orders.joins(:assignments).where(assignments: { employee_id: params[:employee_id] }) if params[:employee_id].present?
 
     # 납기일 범위 필터
-    @orders = @orders.where(due_date: params[:due_from]..) if params[:due_from].present?
-    @orders = @orders.where(due_date: ..params[:due_to])   if params[:due_to].present?
+    @orders = @orders.where("orders.due_date >= ?", params[:due_from]) if params[:due_from].present?
+    @orders = @orders.where("orders.due_date <= ?", params[:due_to])   if params[:due_to].present?
 
     # 기간 필터
     case params[:period]
     when "this_month"
-      @orders = @orders.where(created_at: Time.current.beginning_of_month..)
+      @orders = @orders.where("orders.created_at >= ?", Time.current.beginning_of_month)
     when "3months"
-      @orders = @orders.where(created_at: 3.months.ago..)
+      @orders = @orders.where("orders.created_at >= ?", 3.months.ago)
     when "this_year"
-      @orders = @orders.where(created_at: Time.current.beginning_of_year..)
+      @orders = @orders.where("orders.created_at >= ?", Time.current.beginning_of_year)
     when "custom"
-      @orders = @orders.where(created_at: params[:date_from]..) if params[:date_from].present?
-      @orders = @orders.where(created_at: ..Date.parse(params[:date_to]).end_of_day) if params[:date_to].present?
+      @orders = @orders.where("orders.created_at >= ?", params[:date_from]) if params[:date_from].present?
+      @orders = @orders.where("orders.created_at <= ?", Date.parse(params[:date_to]).end_of_day) if params[:date_to].present?
     end
 
     # 필터 드롭다운용 데이터 (5분 캐시)
@@ -44,9 +45,9 @@ class OrdersController < ApplicationController
     @total_count = @orders.count
 
     # KPI 카드용 집계
-    @kpi_in_progress = @orders.where.not(status: [:get_grn, :give_up, :done]).count
-    @kpi_completed   = @orders.where(status: [:get_grn, :done]).count
-    @kpi_overdue     = @orders.where("due_date < ? AND status NOT IN (?, ?, ?)", Date.today, Order.statuses[:get_grn], Order.statuses[:give_up], Order.statuses[:done]).count
+    @kpi_in_progress = @orders.where.not(orders: { status: [:get_grn, :give_up, :done] }).count
+    @kpi_completed   = @orders.where(orders: { status: [:get_grn, :done] }).count
+    @kpi_overdue     = @orders.where("orders.due_date < ? AND orders.status NOT IN (?, ?, ?)", Date.today, Order.statuses[:get_grn], Order.statuses[:give_up], Order.statuses[:done]).count
 
     @orders = @orders.limit(50).offset((params[:page].to_i > 0 ? params[:page].to_i - 1 : 0) * 50)
     @current_page = [ params[:page].to_i, 1 ].max
