@@ -5,8 +5,9 @@
   <%# ============================================================
       DRAWER MODE: id="order-drawer-content" 감싸서 반환
       layout 없이 이 div만 fetch로 추출
+      ISS-263: data-order-status → 드로어 "다음 단계" 버튼 계산에 사용
   ============================================================ %>
-  <div id="order-drawer-content">
+  <div id="order-drawer-content" data-order-status="<%= @order.status %>">
     <%= render "orders/drawer_content", order: @order, tasks: @tasks, comments: @comments, activities: @activities, team_members: @team_members, thread_orders: @thread_orders %>
   </div>
 <% else %>
