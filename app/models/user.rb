@@ -10,9 +10,23 @@ class User < ApplicationRecord
       user.password = Devise.friendly_token[0, 20]
       user.provider = auth.provider
       user.uid      = auth.uid
+      # ISS-268: 이메일 도메인 기반 branch 자동 분기 — 모호 시 enum default(:abu_dhabi) 유지
+      #   seoul 단서: .kr TLD, seoul/korea 서브도메인, 한국어 이름 힌트
+      #   그 외: default(:abu_dhabi) — admin이 필요 시 수동 재배정
+      inferred_branch = infer_branch_from_email(auth.info.email)
+      user.branch = inferred_branch if inferred_branch
       # 비밀번호 검증 스킵 (OmniAuth 유저)
       user.skip_confirmation! if user.respond_to?(:skip_confirmation!)
     end
+  end
+
+  # ISS-268: 이메일 도메인 분석 → 추정 branch 반환 (확신 없으면 nil)
+  def self.infer_branch_from_email(email)
+    return nil if email.blank?
+    domain = email.to_s.split("@").last.to_s.downcase
+    return :seoul if domain.end_with?(".kr") || domain.include?("seoul") || domain.include?("korea")
+    return :abu_dhabi if domain.include?("abudhabi") || domain.include?("uae") || domain.end_with?(".ae")
+    nil
   end
 
   # ISS-259: 신규 가입자 default role을 :viewer로 하향 (외부인 가입 시 발주 데이터 노출 차단).
