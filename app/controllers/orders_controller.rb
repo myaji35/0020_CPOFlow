@@ -68,12 +68,13 @@ class OrdersController < ApplicationController
     @thread_orders = if @order.sub_orders.exists?
       @order.sub_orders.order(created_at: :asc)
     elsif @order.parent_order_id.present?
-      Order.where(parent_order_id: @order.parent_order_id)
-           .or(Order.where(id: @order.parent_order_id))
+      # ISS-256: Branch 격리
+      scoped_orders.where(parent_order_id: @order.parent_order_id)
+           .or(scoped_orders.where(id: @order.parent_order_id))
            .where.not(id: @order.id)
            .order(created_at: :asc)
     elsif @order.reference_no.present?
-      Order.where(reference_no: @order.reference_no)
+      scoped_orders.where(reference_no: @order.reference_no)
            .where.not(id: @order.id)
            .order(created_at: :asc)
     else
@@ -152,7 +153,8 @@ class OrdersController < ApplicationController
   # params: client_id, supplier_id, item_name (모두 optional, 2개 이상 있을 때만 의미 있음)
   # 동일 조합의 최근 주문 단가/일자 반환
   def price_history
-    scope = Order.where.not(estimated_value: [ nil, 0 ])
+    # ISS-256: Branch 격리
+    scope = scoped_orders.where.not(estimated_value: [ nil, 0 ])
     scope = scope.where(client_id: params[:client_id])   if params[:client_id].present?
     scope = scope.where(supplier_id: params[:supplier_id]) if params[:supplier_id].present?
     if params[:item_name].present?
@@ -402,8 +404,10 @@ class OrdersController < ApplicationController
   def preview_by_ref
     ref = params[:ref].to_s.strip
     return head(:bad_request) if ref.blank?
-    data = Rails.cache.fetch("refno_preview/#{ref}", expires_in: 5.minutes) do
-      orders = Order.where(reference_no: ref).order(:created_at).limit(5).to_a
+    # ISS-256: Branch 격리 — 캐시 키에 user branch 포함해야 cross-branch 캐시 leak 방지
+    cache_branch = current_user.admin? ? "admin" : current_user.branch.to_s
+    data = Rails.cache.fetch("refno_preview/#{cache_branch}/#{ref}", expires_in: 5.minutes) do
+      orders = scoped_orders.where(reference_no: ref).order(:created_at).limit(5).to_a
       if orders.any?
         g = OrderGraphBuilder.new(orders.first, depth: 1, include_suggested: false).call
         {
@@ -638,7 +642,8 @@ class OrdersController < ApplicationController
 
   # gmail_thread_id 또는 제목의 이벤트 번호로 연관 inbox 건 탐색
   def find_thread_siblings
-    base = Order.where(status: :new_rfq).where.not(id: @order.id)
+    # ISS-256: Branch 격리
+    base = scoped_orders.where(status: :new_rfq).where.not(id: @order.id)
 
     # 1순위: 동일 gmail_thread_id
     by_thread = base.where(gmail_thread_id: @order.gmail_thread_id) if @order.gmail_thread_id.present?
