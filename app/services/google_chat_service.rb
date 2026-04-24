@@ -15,6 +15,19 @@ class GoogleChatService
     new.notify(message, order: order, title: title, days_ahead: days_ahead)
   end
 
+  # ISS-278: 비동기 재시도 버전 — Solid Queue에 enqueue.
+  # 일반 이벤트(오더 상태 변경/납기 알림)는 notify_later 권장.
+  # notify(동기)는 cronjob처럼 실패해도 영향이 적은 일괄 알림 경로에서만 사용.
+  def self.notify_later(message, order: nil, title: nil, days_ahead: nil)
+    webhook_url = AppSetting.google_chat_webhook_url ||
+                  Rails.application.credentials.dig(:google_chat, :webhook_url)
+    return false if webhook_url.blank?
+
+    payload = new.send(:build_payload, message, order: order, title: title, days_ahead: days_ahead)
+    GoogleChatNotifyJob.perform_later(payload, webhook_url)
+    true
+  end
+
   def notify(message, order: nil, title: nil, days_ahead: nil)
     webhook_url = AppSetting.google_chat_webhook_url ||
                   Rails.application.credentials.dig(:google_chat, :webhook_url)
@@ -26,9 +39,25 @@ class GoogleChatService
       req.body = payload.to_json
     end
 
-    response.success?
+    if response.success?
+      true
+    else
+      # ISS-278: 동기 전송 실패 시 Job으로 enqueue하여 재시도
+      Rails.logger.warn "[GoogleChatService] sync 실패 status=#{response.status} → Job enqueue로 재시도"
+      GoogleChatNotifyJob.perform_later(payload, webhook_url)
+      false
+    end
   rescue => e
-    Rails.logger.error "[GoogleChatService] #{e.class}: #{e.message}"
+    Rails.logger.error "[GoogleChatService] #{e.class}: #{e.message} → Job enqueue로 재시도"
+    # ISS-278: 네트워크 예외 발생 시에도 Job으로 enqueue
+    begin
+      payload ||= build_payload(message, order: order, title: title, days_ahead: days_ahead)
+      webhook_url ||= AppSetting.google_chat_webhook_url ||
+                      Rails.application.credentials.dig(:google_chat, :webhook_url)
+      GoogleChatNotifyJob.perform_later(payload, webhook_url) if webhook_url.present?
+    rescue => enqueue_err
+      Rails.logger.error "[GoogleChatService] Job enqueue도 실패: #{enqueue_err.class}: #{enqueue_err.message}"
+    end
     false
   end
 
