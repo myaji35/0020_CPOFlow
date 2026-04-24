@@ -100,7 +100,16 @@
         </p>
         <p class="text-xs text-gray-500 dark:text-gray-500"><%= visa.expiry_date.strftime("%Y.%m.%d") %></p>
       <% else %>
-        <p class="text-xl font-bold text-gray-500 dark:text-gray-500 mt-1">-</p>
+        <%# ISS-272: 비자 미등록 시 명시적 CTA — member 이상만 %>
+        <% if current_user.admin? || current_user.manager? || current_user.member? %>
+          <%= link_to new_employee_visa_path(@employee),
+                      class: "mt-2 inline-flex items-center gap-1.5 bg-[#166c72] hover:bg-[#11555a] text-white px-3 py-1.5 rounded-md text-xs font-semibold transition-colors" do %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            비자 등록
+          <% end %>
+        <% else %>
+          <p class="text-xl font-bold text-gray-500 dark:text-gray-500 mt-1">-</p>
+        <% end %>
       <% end %>
     </div>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
@@ -113,7 +122,16 @@
         </p>
         <p class="text-xs text-gray-500 dark:text-gray-500"><%= contract.end_date.strftime("%Y.%m.%d") %></p>
       <% else %>
-        <p class="text-xl font-bold text-gray-500 dark:text-gray-500 mt-1">-</p>
+        <%# ISS-272: 계약 미등록 시 명시적 CTA — member 이상만 %>
+        <% if current_user.admin? || current_user.manager? || current_user.member? %>
+          <%= link_to new_employee_employment_contract_path(@employee),
+                      class: "mt-2 inline-flex items-center gap-1.5 bg-[#166c72] hover:bg-[#11555a] text-white px-3 py-1.5 rounded-md text-xs font-semibold transition-colors" do %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            계약 등록
+          <% end %>
+        <% else %>
+          <p class="text-xl font-bold text-gray-500 dark:text-gray-500 mt-1">-</p>
+        <% end %>
       <% end %>
     </div>
   </div>
