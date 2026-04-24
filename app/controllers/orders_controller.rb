@@ -209,6 +209,9 @@ class OrdersController < ApplicationController
     old_status = @order.status
     new_status = params[:status]
 
+    # ISS-265: admin은 상태 전이 규칙 우회 (데이터 정정 목적)
+    @order.force_transition = true if current_user.admin?
+
     if @order.update(status: new_status)
       Activity.create!(
         order: @order,
@@ -225,7 +228,9 @@ class OrdersController < ApplicationController
       notice_msg += " (연관 #{synced_count}건도 함께 변경됨)" if synced_count > 0
       redirect_back fallback_location: kanban_path, notice: notice_msg
     else
-      redirect_back fallback_location: kanban_path, alert: "Failed to update status."
+      # ISS-265: 전이 실패 시 상세 사유 노출 (건너뛰기/역행 등)
+      alert_msg = @order.errors[:status].first || "Failed to update status."
+      redirect_back fallback_location: kanban_path, alert: alert_msg
     end
   end
 

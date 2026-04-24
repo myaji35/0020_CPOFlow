@@ -125,10 +125,28 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "move_status — 다른 유효 status로 변경" do
-    order = Order.create!(title: "Move Status Bad Test", customer_name: "Cust", user: @user, status: :new_rfq)
+    # ISS-265: new_rfq → make_quo는 허용된 전이 (건너뛰기 금지)
+    order = Order.create!(title: "Move Status Valid Test", customer_name: "Cust", user: @user, status: :new_rfq)
+    patch move_status_order_path(order), params: { status: "make_quo" }
+    order.reload
+    assert_equal "make_quo", order.status
+    order.destroy
+  end
+
+  test "move_status — 상태 건너뛰기 차단 (ISS-265)" do
+    # new_rfq → pending_po는 중간 단계 건너뛰기 → 규칙 위반으로 차단
+    order = Order.create!(title: "Skip Block Test", customer_name: "Cust", user: @user, status: :new_rfq)
     patch move_status_order_path(order), params: { status: "pending_po" }
     order.reload
-    assert_equal "pending_po", order.status
+    assert_equal "new_rfq", order.status, "건너뛰기는 차단되어야 함"
+    order.destroy
+  end
+
+  test "move_status — done 역행 차단 (ISS-265)" do
+    order = Order.create!(title: "Done Revert Block", customer_name: "Cust", user: @user, status: :done)
+    patch move_status_order_path(order), params: { status: "new_rfq" }
+    order.reload
+    assert_equal "done", order.status, "done 상태는 재오픈 금지"
     order.destroy
   end
 
@@ -204,7 +222,8 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
 
   # ─── move_status 추가 케이스 ─────────────
   test "move_status — done 상태로 변경" do
-    order = Order.create!(title: "Move Done Test", customer_name: "Cust", user: @user, status: :new_rfq)
+    # ISS-265: done은 get_grn에서만 진입 가능 (정상 플로우 끝)
+    order = Order.create!(title: "Move Done Test", customer_name: "Cust", user: @user, status: :get_grn)
     patch move_status_order_path(order), params: { status: "done" }
     assert_response :redirect
     order.reload

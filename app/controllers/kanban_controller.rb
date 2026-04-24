@@ -166,6 +166,8 @@ class KanbanController < ApplicationController
     if board.nil? || board.is_default? || board.board_type == "purchase"
       # 구매보드(기본): 기존 status enum 이동
       old_status = @order.status
+      # ISS-265: admin은 상태 전이 규칙 우회 (데이터 정정 목적)
+      @order.force_transition = true if current_user.admin?
       if @order.update(status: params[:status])
         Activity.create!(
           order: @order,

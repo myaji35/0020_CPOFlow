@@ -44,6 +44,34 @@ class Order < ApplicationRecord
   ATTACHMENT_MAX_SIZE = 50.megabytes
 
   validate :validate_attachment_safety
+  validate :validate_status_transition, on: :update, if: :will_save_change_to_status?
+
+  # ISS-265: 관리자가 의도적으로 규칙을 우회해야 할 때 사용 (예: 데이터 정정)
+  # ex) order.force_transition = true; order.update(status: :new_rfq)
+  attr_accessor :force_transition
+
+  # ISS-265: 칸반 상태 전이 규칙 — 건너뛰기/역행 차단
+  # 허용 전이 매트릭스:
+  #   new_rfq        → make_quo, give_up
+  #   make_quo       → pending_po, give_up, new_rfq(견적 취소)
+  #   pending_po     → new_po, give_up, make_quo(견적 수정 복귀)
+  #   new_po         → delivery_items, problem, give_up
+  #   delivery_items → get_grn, problem, give_up
+  #   problem        → delivery_items, get_grn, give_up, new_po(재발주)
+  #   get_grn        → done, problem(수령 문제)
+  #   give_up        → new_rfq(재개)
+  #   done           → (terminal, 재오픈 금지)
+  STATUS_TRANSITIONS = {
+    "new_rfq"        => %w[make_quo give_up],
+    "make_quo"       => %w[pending_po give_up new_rfq],
+    "pending_po"     => %w[new_po give_up make_quo],
+    "new_po"         => %w[delivery_items problem give_up],
+    "delivery_items" => %w[get_grn problem give_up],
+    "problem"        => %w[delivery_items get_grn give_up new_po],
+    "get_grn"        => %w[done problem],
+    "give_up"        => %w[new_rfq],
+    "done"           => []
+  }.freeze
 
   private
 
@@ -75,6 +103,18 @@ class Order < ApplicationRecord
         errors.add(:attachments, "파일이 너무 큽니다: #{mb}MB (최대 #{ATTACHMENT_MAX_SIZE / 1.megabyte}MB, #{blob.filename})")
         att.purge_later
       end
+    end
+  end
+
+  # ISS-265: 칸반 상태 전이 guard — STATUS_TRANSITIONS에 없는 전이는 차단
+  def validate_status_transition
+    return if force_transition  # admin 수동 정정 우회
+    from = status_was.to_s
+    to   = status.to_s
+    return if from.blank? || from == to
+    allowed = STATUS_TRANSITIONS[from] || []
+    unless allowed.include?(to)
+      errors.add(:status, "허용되지 않은 상태 전이입니다: #{from} → #{to} (허용: #{allowed.join(', ').presence || '없음'})")
     end
   end
 
