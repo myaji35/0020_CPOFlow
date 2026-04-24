@@ -20,6 +20,26 @@ class ApplicationController < ActionController::Base
     end
   end
 
+  # ISS-271: Gmail 토큰 만료/연결 끊김 감지 — 전역 배너용
+  # 반환값: { needs_action: bool, disconnected_count: int, reauth_count: int, total: int }
+  def gmail_connection_health
+    return @_gmail_connection_health if defined?(@_gmail_connection_health)
+    return @_gmail_connection_health = { needs_action: false } unless user_signed_in?
+    accounts = current_user.email_accounts.to_a
+    return @_gmail_connection_health = { needs_action: false, total: 0 } if accounts.empty?
+    disconnected = accounts.count { |a| !a.connected? }
+    reauth       = accounts.count { |a| a.connected? && a.gmail_refresh_token.blank? }
+    needs_action = disconnected.positive? || reauth.positive?
+    @_gmail_connection_health = {
+      needs_action: needs_action,
+      disconnected_count: disconnected,
+      reauth_count: reauth,
+      total: accounts.size,
+      primary_account: accounts.first
+    }
+  end
+  helper_method :gmail_connection_health
+
   # Branch 데이터 격리: current_user의 branch에 속한 Order만 반환
   # admin은 전체 접근 가능
   def scoped_orders
