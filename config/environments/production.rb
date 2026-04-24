@@ -61,21 +61,43 @@ Rails.application.configure do
   config.active_job.queue_adapter = :solid_queue
   config.solid_queue.connects_to = { database: { writing: :queue } }
 
-  # Ignore bad email addresses and do not raise email delivery errors.
-  # Set this to true and configure the email server for immediate delivery to raise delivery errors.
-  # config.action_mailer.raise_delivery_errors = false
+  # ISS-260: Mailer 설정 — Devise 비밀번호 재설정 메일 발송 가능하도록 활성화
+  # host는 운영 도메인으로 고정 (Devise reset 링크가 example.com으로 안 가도록)
+  mailer_host = ENV.fetch("MAILER_HOST", "cpoflow.ddtl.co.kr")
+  config.action_mailer.default_url_options = { host: mailer_host, protocol: "https" }
+  config.action_mailer.asset_host = "https://#{mailer_host}"
 
-  # Set host to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: "example.com" }
+  # SMTP 자격정보 우선순위: ENV → Rails credentials.smtp → fallback
+  smtp_user     = ENV["SMTP_USER_NAME"] || Rails.application.credentials.dig(:smtp, :user_name)
+  smtp_password = ENV["SMTP_PASSWORD"]  || Rails.application.credentials.dig(:smtp, :password)
+  smtp_address  = ENV["SMTP_ADDRESS"]   || Rails.application.credentials.dig(:smtp, :address) || "smtp.gmail.com"
+  smtp_port     = (ENV["SMTP_PORT"]     || Rails.application.credentials.dig(:smtp, :port) || 587).to_i
+  smtp_domain   = ENV["SMTP_DOMAIN"]    || Rails.application.credentials.dig(:smtp, :domain) || mailer_host
 
-  # Specify outgoing SMTP server. Remember to add smtp/* credentials via bin/rails credentials:edit.
-  # config.action_mailer.smtp_settings = {
-  #   user_name: Rails.application.credentials.dig(:smtp, :user_name),
-  #   password: Rails.application.credentials.dig(:smtp, :password),
-  #   address: "smtp.example.com",
-  #   port: 587,
-  #   authentication: :plain
-  # }
+  if smtp_user.present? && smtp_password.present?
+    config.action_mailer.delivery_method = :smtp
+    config.action_mailer.perform_deliveries = true
+    config.action_mailer.raise_delivery_errors = true
+    config.action_mailer.smtp_settings = {
+      user_name:      smtp_user,
+      password:       smtp_password,
+      address:        smtp_address,
+      port:           smtp_port,
+      domain:         smtp_domain,
+      authentication: :plain,
+      enable_starttls_auto: true
+    }
+  else
+    # 자격정보 미설정 시: 앱이 크래시하지 않도록 :test delivery_method로 fallback + 로그 경고
+    # → 대표님이 bin/rails credentials:edit 또는 ENV(SMTP_USER_NAME/SMTP_PASSWORD 등)에 값을 주입해야 실제 발송됨.
+    config.action_mailer.delivery_method = :test
+    config.action_mailer.perform_deliveries = true
+    config.action_mailer.raise_delivery_errors = false
+    # 초기화 시점에는 Rails.logger 아직 없음 → $stderr로 경고 출력
+    $stderr.puts "[ISS-260] SMTP credentials 미설정 — delivery_method=:test 로 fallback. " \
+                 "비밀번호 재설정/알림 메일이 실제 발송되지 않습니다. " \
+                 "자세한 설정 방법: docs/smtp-setup.md"
+  end
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).

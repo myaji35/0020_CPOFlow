@@ -29,8 +29,15 @@ env:
     - ECOUNT_ZONE
     - ECOUNT_ENV
     - CPOFLOW_API_KEY
+    # ISS-260: SMTP — .kamal/secrets에 값 채우면 자동 활성화 (미설정 시 :test fallback)
+    - SMTP_USER_NAME
+    - SMTP_PASSWORD
+    - SMTP_ADDRESS
+    - SMTP_PORT
+    - SMTP_DOMAIN
   clear:
     SOLID_QUEUE_IN_PUMA: true
+    MAILER_HOST: cpoflow.ddtl.co.kr
 
 # Aliases
 aliases:
