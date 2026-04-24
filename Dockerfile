@@ -15,12 +15,19 @@ FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
 WORKDIR /rails
 
 # Install base packages + Node.js + Chromium deps for Playwright (SAP Ariba PDF scraping)
+# ISS-277: 한글 + CJK + 아랍어 폰트 추가 — PDF(quote/PO) + 인박스 번역본 깨짐 방지.
+# fonts-nanum          : Nanum Gothic/Myeongjo (한글 기본)
+# fonts-noto-cjk       : Noto Sans/Serif CJK (한/중/일 fallback)
+# fonts-noto-core      : Noto Sans 라틴/키릴 등 커버
+# fonts-naskh-arabic   : UAE 지사 업무용 아랍어 (Naskh)
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y curl libjemalloc2 libvips sqlite3 \
       nodejs npm \
       libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 \
       libxcomposite1 libxdamage1 libxrandr2 libgbm1 libpango-1.0-0 \
-      libcairo2 libasound2 libxshmfence1 fonts-liberation && \
+      libcairo2 libasound2 libxshmfence1 \
+      fonts-liberation fonts-nanum fonts-noto-cjk fonts-noto-core fonts-naskh-arabic && \
+    fc-cache -f && \
     ln -s /usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2 /usr/local/lib/libjemalloc.so && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
