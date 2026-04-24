@@ -49,7 +49,8 @@ class TasksController < ApplicationController
   private
 
   def set_order
-    @order = Order.find(params[:order_id])
+    # ISS-257: Branch 격리
+    @order = scoped_orders.find(params[:order_id])
   end
 
   def task_params

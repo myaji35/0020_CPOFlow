@@ -22,6 +22,7 @@ class Orders::PdfController < ApplicationController
   private
 
   def set_order
-    @order = Order.find(params[:order_id] || params[:id])
+    # ISS-257: Branch 격리
+    @order = scoped_orders.find(params[:order_id] || params[:id])
   end
 end

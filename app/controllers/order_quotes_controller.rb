@@ -34,11 +34,13 @@ class OrderQuotesController < ApplicationController
   private
 
   def set_order
-    @order = Order.find(params[:order_id])
+    # ISS-257: Branch 격리
+    @order = scoped_orders.find(params[:order_id])
   end
 
   def set_quote
-    @quote = OrderQuote.find(params[:id])
+    # ISS-257: Branch 격리 — quote가 속한 order가 현재 branch 범위인지 검증
+    @quote = OrderQuote.where(order_id: scoped_orders.select(:id)).find(params[:id])
   end
 
   def quote_params

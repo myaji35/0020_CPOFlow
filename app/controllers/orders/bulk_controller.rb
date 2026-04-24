@@ -4,7 +4,8 @@ class Orders::BulkController < ApplicationController
   before_action :require_manager_or_admin!
 
   def update
-    orders = Order.where(id: params[:order_ids])
+    # ISS-257: Branch 격리 — manager가 타 branch 오더를 일괄 업데이트하지 못하게 차단
+    orders = scoped_orders.where(id: params[:order_ids])
     return redirect_back(fallback_location: orders_path, alert: "선택된 주문이 없습니다.") if orders.empty?
 
     case params[:action_type]
@@ -32,8 +33,9 @@ class Orders::BulkController < ApplicationController
   end
 
   def export_csv
-    orders = Order.where(id: params[:order_ids])
-                  .includes(:client, :supplier, :project, :assignees)
+    # ISS-257: Branch 격리
+    orders = scoped_orders.where(id: params[:order_ids])
+                          .includes(:client, :supplier, :project, :assignees)
     csv_data = generate_csv(orders)
     send_data csv_data,
               filename: "orders_#{Date.today}.csv",

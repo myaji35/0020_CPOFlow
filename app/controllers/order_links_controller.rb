@@ -19,15 +19,21 @@ class OrderLinksController < ApplicationController
   end
 
   def new
-    @order = Order.find(params[:order_id])
+    # ISS-257: Branch 격리
+    @order = scoped_orders.find(params[:order_id])
     @relations = OrderLink::RELATIONS
     render layout: false
   end
 
   def create
-    source = Order.find(params[:source_id])
+    # ISS-257: Branch 격리 — source/target 모두 현재 branch 범위 내에서만 링크 생성
+    source = scoped_orders.find(params[:source_id])
     target_type = params[:target_type].presence_in(%w[Order OrderQuote]) || "Order"
-    target = target_type.constantize.find(params[:target_id])
+    target = if target_type == "Order"
+               scoped_orders.find(params[:target_id])
+             else
+               OrderQuote.where(order_id: scoped_orders.select(:id)).find(params[:target_id])
+             end
     @link = OrderLink.create!(
       source: source,
       target: target,
@@ -51,7 +57,8 @@ class OrderLinksController < ApplicationController
   def search
     q = params[:q].to_s.strip
     @results = if q.present?
-      Order.where("title LIKE ? OR reference_no LIKE ?", "%#{q}%", "%#{q}%").limit(10)
+      # ISS-257: Branch 격리
+      scoped_orders.where("title LIKE ? OR reference_no LIKE ?", "%#{q}%", "%#{q}%").limit(10)
     else
       Order.none
     end
