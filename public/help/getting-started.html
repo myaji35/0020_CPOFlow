@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CPOFlow 시작하기 — 3분 튜토리얼</title>
+<style>
+  :root { --teal: #166c72; --teal-hover: #11555a; --ink: #151a21; --ink-soft: #6b7585; --surface: #ffffff; --surface-alt: #f5f6f8; --border: #e7eaee; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter Tight', 'Pretendard Variable', -apple-system, BlinkMacSystemFont, sans-serif; color: var(--ink); background: var(--surface-alt); line-height: 1.6; font-size: 14px; }
+  .wrap { max-width: 780px; margin: 0 auto; padding: 40px 24px; }
+  .topbar { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+  .topbar .logo { width: 32px; height: 32px; border-radius: 8px; background: var(--teal); display: inline-flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; }
+  .topbar h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.2px; }
+  .topbar .sub { color: var(--ink-soft); font-size: 13px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 24px 28px; margin-bottom: 16px; }
+  .card h2 { font-size: 17px; font-weight: 700; margin-bottom: 12px; color: var(--ink); display: flex; align-items: center; gap: 8px; }
+  .card h2 .step-no { width: 22px; height: 22px; border-radius: 50%; background: var(--teal); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+  .card h3 { font-size: 14px; font-weight: 600; margin: 14px 0 6px; color: var(--ink); }
+  .card p { margin-bottom: 8px; color: var(--ink); }
+  .card ul { margin: 8px 0 8px 20px; color: var(--ink); }
+  .card li { margin-bottom: 4px; }
+  .card code { background: var(--surface-alt); padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: #c84431; }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13px; }
+  th, td { padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: left; }
+  th { font-weight: 600; background: var(--surface-alt); }
+  .pre-flow { background: var(--surface-alt); border-left: 3px solid var(--teal); padding: 14px 18px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--ink); white-space: pre-wrap; line-height: 1.7; margin: 10px 0; }
+  .cta { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: var(--teal); color: #fff; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 13px; margin-top: 8px; }
+  .cta:hover { background: var(--teal-hover); }
+  .footer { text-align: center; color: var(--ink-soft); font-size: 12px; margin-top: 28px; }
+  kbd { background: var(--surface-alt); border: 1px solid var(--border); padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 12px; box-shadow: 0 1px 0 var(--border); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <span class="logo">C</span>
+    <div>
+      <h1>CPOFlow 시작하기</h1>
+      <div class="sub">3분 안에 핵심을 이해하세요 — 조달/발주 9단계 워크플로</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step-no">1</span>첫 3단계 체크리스트</h2>
+    <p>대시보드 상단 <strong>"시작하기"</strong> 카드에서 3단계를 순차 진행합니다.</p>
+    <h3>Step 1 — Gmail 연결</h3>
+    <ul>
+      <li>설정 → 이메일 계정 → Gmail 연결하기 클릭</li>
+      <li>OAuth 동의 후 15분마다 RFQ 메일 자동 수집</li>
+      <li>토큰 만료 시 대시보드 상단에 빨간 배너 노출 → <strong>다시 연결</strong> 클릭</li>
+    </ul>
+    <h3>Step 2 — 첫 발주 만들기</h3>
+    <ul>
+      <li><strong>메일에서 자동 변환</strong>: Inbox "견적성 메일" 탭 → 후보 → "칸반으로 이동"</li>
+      <li><strong>수동 생성</strong>: 대시보드 → <code>신규 발주</code> 버튼</li>
+    </ul>
+    <h3>Step 3 — 담당자 배정 받기</h3>
+    <ul>
+      <li>칸반 카드/드로어에서 "담당자 추가" 클릭 → 직원 선택</li>
+      <li>매니저 일괄 배정: <strong>대시보드 상단 "팀 과부하 TOP 3" 카드 → 드릴다운</strong></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2><span class="step-no">2</span>9단계 칸반 이해하기</h2>
+    <div class="pre-flow">new_rfq  →  make_quo  →  pending_po  →  new_po  →  delivery_items  →  get_grn  →  done
+
+                                                         ↓ (문제 발생 시)
+                                                      problem  →  delivery_items / get_grn / new_po(재발주)
+
+ (어느 단계든) give_up  ↔  new_rfq (복구)</div>
+    <ul>
+      <li>건너뛰기 불가 (<code>new_rfq → pending_po</code> 차단)</li>
+      <li>역행 불가 (<code>done → new_rfq</code> 차단)</li>
+      <li>give_up 복구: 드로어 "재개 (New로 되돌리기)" CTA</li>
+      <li>admin은 필요 시 force_transition으로 우회 (데이터 정정용)</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2><span class="step-no">3</span>역할과 권한</h2>
+    <table>
+      <tr><th>역할</th><th>권한</th></tr>
+      <tr><td>viewer</td><td>읽기만 (Create 버튼 비노출)</td></tr>
+      <tr><td>member</td><td>CRUD + 상태 이동 + 첨부/댓글/할일/견적/담당자 배정</td></tr>
+      <tr><td>manager</td><td>member + 일괄 편집, destroy, 팀 KPI 드릴다운</td></tr>
+      <tr><td>admin</td><td>전체 + 상태 전이 우회, 브랜치 전체 접근, 중복 병합</td></tr>
+    </table>
+    <p style="color:var(--ink-soft);font-size:13px;">신규 가입자는 <code>viewer</code>로 시작 — admin이 수동 승격해야 작업 가능.</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="step-no">4</span>브랜치 격리 (Abu Dhabi / Seoul)</h2>
+    <p>오더는 생성자의 브랜치에 묶여 상호 노출되지 않습니다. 관리자만 전체 브랜치 접근.</p>
+    <h3>OAuth 가입 시 자동 분기</h3>
+    <ul>
+      <li><code>.kr</code> / seoul / korea 키워드 → seoul</li>
+      <li><code>.ae</code> / abudhabi / uae 키워드 → abu_dhabi</li>
+      <li>그 외 → abu_dhabi (기본값) + admin에게 검토 Notification</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2><span class="step-no">5</span>AI 자동화</h2>
+    <ul>
+      <li><strong>RFQ 자동 판별</strong> (Claude Haiku) — 견적 가능성 점수</li>
+      <li><strong>답변 초안 자동 생성</strong> — 확정 RFQ의 회신 초안 자동 작성</li>
+      <li><strong>중복 오더 감지</strong> — 동일 스레드 자동 그룹핑 + 병합 UI</li>
+      <li><strong>긴급 에스컬레이션</strong> — 매일 07:30 미배정 마감경과 오더 알림</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2><span class="step-no">6</span>외부 연동</h2>
+    <table>
+      <tr><th>시스템</th><th>용도</th><th>방식</th></tr>
+      <tr><td>Gmail</td><td>메일 수신/발송</td><td>OAuth2</td></tr>
+      <tr><td>eCount ERP</td><td>품목/거래처/거래내역</td><td>API 동기화 (매시 30/45분)</td></tr>
+      <tr><td>Google Chat</td><td>납기/긴급 알림</td><td>Webhook (재시도 큐)</td></tr>
+      <tr><td>SAP Ariba</td><td>포털 문서 스크래핑</td><td>Playwright Job</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2><span class="step-no">7</span>단축키</h2>
+    <p><kbd>Cmd/Ctrl</kbd> + <kbd>K</kbd> — 전역 검색 (Command Palette)</p>
+    <p><kbd>Esc</kbd> — 드로어/모달 닫기</p>
+    <a class="cta" href="/">← 대시보드로 돌아가기</a>
+  </div>
+
+  <div class="footer">지원: admin@atozone.com · 자세한 정보는 docs/ 폴더 참조</div>
+</div>
+</body>
+</html>

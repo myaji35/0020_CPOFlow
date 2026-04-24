@@ -20,7 +20,15 @@
             <p class="text-xs text-gray-500 dark:text-gray-400">3단계를 완료하면 CPOFlow를 최대로 활용할 수 있습니다</p>
           </div>
         </div>
-        <span class="text-sm font-semibold" style="color:#166c72;"><%= done_count %> / 3</span>
+        <div class="flex items-center gap-3">
+          <%# ISS-280: 3분 둘러보기 튜토리얼 — 신규 사용자 온보딩 보강 %>
+          <a href="/help/getting-started.html" target="_blank" rel="noopener"
+             class="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            3분 둘러보기
+          </a>
+          <span class="text-sm font-semibold" style="color:#166c72;"><%= done_count %> / 3</span>
+        </div>
       </div>
       <%# 진행 바 %>
       <div class="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
