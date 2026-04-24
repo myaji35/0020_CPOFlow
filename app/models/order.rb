@@ -16,6 +16,69 @@ class Order < ApplicationRecord
   has_many :order_quotes, dependent: :destroy
   has_many :notifications, as: :notifiable, dependent: :destroy
   has_many_attached :attachments
+
+  # ISS-262: 악성 첨부 차단 — MIME allowlist + 실행가능 확장자 deny + 크기 상한
+  # 검증은 attach 시점(validate) — attach 후 blob 저장 전에 탈락.
+  ATTACHMENT_ALLOWED_CONTENT_TYPES = %w[
+    application/pdf
+    application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+    application/vnd.ms-excel
+    application/vnd.ms-excel.sheet.macroEnabled.12
+    application/vnd.openxmlformats-officedocument.wordprocessingml.document
+    application/msword
+    application/vnd.openxmlformats-officedocument.presentationml.presentation
+    application/vnd.ms-powerpoint
+    image/jpeg image/pjpeg image/png image/gif image/webp image/heic image/heif image/svg+xml
+    application/zip application/x-zip-compressed application/x-7z-compressed application/x-rar-compressed
+    text/csv text/plain text/html
+    application/x-hwp application/haansofthwp application/vnd.hancom.hwp
+    application/octet-stream
+    message/rfc822
+  ].freeze
+
+  ATTACHMENT_DENY_EXTENSIONS = %w[
+    exe bat cmd com sh ps1 psm1 msi dll jar js vbs vbe wsf wsh scr cpl hta
+    reg py pyc rb pl php app deb rpm apk ipa pkg dmg iso img bin
+  ].freeze
+
+  ATTACHMENT_MAX_SIZE = 50.megabytes
+
+  validate :validate_attachment_safety
+
+  private
+
+  def validate_attachment_safety
+    return unless attachments.attached?
+
+    attachments.each do |att|
+      blob = att.blob
+      ext = File.extname(blob.filename.to_s).delete(".").downcase
+      content_type = blob.content_type.to_s.downcase
+
+      if ATTACHMENT_DENY_EXTENSIONS.include?(ext)
+        errors.add(:attachments, "허용되지 않은 파일 형식입니다: .#{ext} (#{blob.filename})")
+        att.purge_later
+        next
+      end
+
+      # octet-stream(알 수 없음)은 확장자로 보조 판단 — deny 아닌 확장자만 통과
+      if content_type == "application/octet-stream"
+        # 위 deny 검사에서 이미 걸렀으므로 여기서는 통과
+      elsif !ATTACHMENT_ALLOWED_CONTENT_TYPES.include?(content_type)
+        errors.add(:attachments, "허용되지 않은 MIME 타입입니다: #{content_type} (#{blob.filename})")
+        att.purge_later
+        next
+      end
+
+      if blob.byte_size.to_i > ATTACHMENT_MAX_SIZE
+        mb = (blob.byte_size.to_f / 1.megabyte).round(1)
+        errors.add(:attachments, "파일이 너무 큽니다: #{mb}MB (최대 #{ATTACHMENT_MAX_SIZE / 1.megabyte}MB, #{blob.filename})")
+        att.purge_later
+      end
+    end
+  end
+
+  public
   has_many :rfq_feedbacks, dependent: :destroy
   has_many :agent_insights, dependent: :destroy
 
