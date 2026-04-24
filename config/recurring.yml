@@ -26,6 +26,13 @@ production:
     queue: default
     schedule: every day at 7am
 
+  # ISS-266: 긴급·담당자 미배정 오더 에스컬레이션 (매일 07:30)
+  # Order.critical(urgent/high + 마감 경과 + 미배정) → admin/manager에 알림
+  overdue_escalation:
+    class: OverdueEscalationJob
+    queue: default
+    schedule: every day at 7:30am
+
   # HR expiry notifications (visa/contract) at 08:00 daily
   hr_expiry_notifications:
     class: HrExpiryNotificationJob
@@ -68,6 +75,12 @@ development:
     class: DueNotificationJob
     queue: default
     schedule: every day at 7am
+
+  # ISS-266: 긴급·담당자 미배정 에스컬레이션 (dev에서도 동작 확인용)
+  overdue_escalation:
+    class: OverdueEscalationJob
+    queue: default
+    schedule: every day at 7:30am
 
   # HR expiry notifications (visa/contract) at 08:00 daily
   hr_expiry_notifications:
