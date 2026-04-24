@@ -121,15 +121,17 @@ class ReportsController < ApplicationController
       on_time_rate:   curr[:on_time_rate],
       prev_on_time:   prev[:on_time_rate],
       yoy_on_time:    yoy[:on_time_rate],
-      overdue:        report_scoped_orders.where("due_date < ?", Date.today).where.not(status: [ :get_grn, :give_up ]).count,
-      urgent:         report_scoped_orders.joins(:card_status).where(card_statuses: { key: %w[urgent high overdue] }).where.not(status: [ :get_grn, :give_up ]).count,
+      # ISS-267: done/get_grn/give_up 모두 제외 — 완료·포기·수령 건은 "지연/긴급" 집계 대상 아님
+      overdue:        report_scoped_orders.where("due_date < ?", Date.today).where.not(status: [ :get_grn, :give_up, :done ]).count,
+      urgent:         report_scoped_orders.joins(:card_status).where(card_statuses: { key: %w[urgent high overdue] }).where.not(status: [ :get_grn, :give_up, :done ]).count,
       avg_lead_days:  calc_avg_lead_days(range)
     }
   end
 
   def order_stats(range)
     base      = report_scoped_orders.where(created_at: range)
-    delivered = report_scoped_orders.get_grn.where(updated_at: range)
+    # ISS-267: 납품 완료는 get_grn + done (9단계 칸반에서 done이 최종 종료)
+    delivered = report_scoped_orders.where(status: [ :get_grn, :done ]).where(updated_at: range)
     on_time   = delivered.where("orders.due_date >= DATE(orders.updated_at)").count
     {
       count:        base.count,
@@ -150,7 +152,8 @@ class ReportsController < ApplicationController
   end
 
   def calc_avg_lead_days(range)
-    delivered = report_scoped_orders.get_grn.where(updated_at: range)
+    # ISS-267: get_grn + done 포함하여 평균 리드타임 산출
+    delivered = report_scoped_orders.where(status: [ :get_grn, :done ]).where(updated_at: range)
     cnt = delivered.count
     return 0.0 if cnt == 0
     total_days = delivered.sum("JULIANDAY(orders.updated_at) - JULIANDAY(orders.created_at)")
@@ -165,7 +168,8 @@ class ReportsController < ApplicationController
       {
         label:     m.strftime("%y.%m"),
         orders:    report_scoped_orders.where(created_at: r).count,
-        delivered: report_scoped_orders.get_grn.where(updated_at: r).count,
+        # ISS-267: 월별 trend의 delivered도 get_grn + done
+        delivered: report_scoped_orders.where(status: [ :get_grn, :done ]).where(updated_at: r).count,
         value:     (report_scoped_orders.where(created_at: r).sum(:estimated_value).to_f / 1000).round
       }
     end
@@ -200,12 +204,13 @@ class ReportsController < ApplicationController
     scope = User.joins(:created_orders)
         .where(created_orders: { created_at: range })
     scope = scope.where(created_orders: { kanban_board_id: @selected_board.id }) if @selected_board
+    # ISS-267: delivered = get_grn(6) + done(8)
     scope.group("users.id", "users.name")
         .select(
           "users.id, users.name,
            COUNT(created_orders.id) AS order_count,
-           SUM(CASE WHEN created_orders.status = 6 THEN 1 ELSE 0 END) AS delivered_count,
-           SUM(CASE WHEN created_orders.status = 6
+           SUM(CASE WHEN created_orders.status IN (6, 8) THEN 1 ELSE 0 END) AS delivered_count,
+           SUM(CASE WHEN created_orders.status IN (6, 8)
                      AND created_orders.due_date >= DATE(created_orders.updated_at)
                     THEN 1 ELSE 0 END) AS on_time_count"
         )
@@ -219,13 +224,14 @@ class ReportsController < ApplicationController
                 .joins(:created_orders)
                 .where(created_orders: { created_at: range })
     scope = scope.where(created_orders: { kanban_board_id: @selected_board.id }) if @selected_board
+    # ISS-267: delivered = get_grn(6) + done(8)
     scope.group("users.branch")
         .select(
           "users.branch,
            COUNT(created_orders.id) AS order_count,
            COALESCE(SUM(created_orders.estimated_value), 0) AS total_value,
-           SUM(CASE WHEN created_orders.status = 6 THEN 1 ELSE 0 END) AS delivered_count,
-           SUM(CASE WHEN created_orders.status = 6
+           SUM(CASE WHEN created_orders.status IN (6, 8) THEN 1 ELSE 0 END) AS delivered_count,
+           SUM(CASE WHEN created_orders.status IN (6, 8)
                      AND created_orders.due_date >= DATE(created_orders.updated_at)
                     THEN 1 ELSE 0 END) AS on_time_count"
         )
