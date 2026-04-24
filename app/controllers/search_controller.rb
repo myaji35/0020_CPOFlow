@@ -10,7 +10,8 @@ class SearchController < ApplicationController
     like = "%#{q}%"
 
     # ISS-227: 검색 대상 확장 — reference_no/rfq_no/po_no 포함
-    results += Order.where(
+    # ISS-255: Branch 격리 — Order 는 scoped_orders 로 제한 (Client/Supplier/Employee/Project 는 공유 마스터)
+    results += scoped_orders.where(
       "title LIKE ? OR customer_name LIKE ? OR original_email_subject LIKE ? OR " \
       "original_email_from LIKE ? OR reference_no LIKE ? OR rfq_no LIKE ? OR po_no LIKE ?",
       like, like, like, like, like, like, like
