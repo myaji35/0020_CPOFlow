@@ -13,9 +13,10 @@
     <p class="text-sm text-gray-500">CPOFlow 서비스 개선을 위한 소중한 의견을 남겨주세요.</p>
   </div>
 
+  <%# ISS-283: 제출 중 로딩 상태 — rating 검증 통과 시 버튼 disable + spinner 주입 %>
   <%= form_with model: review, url: reviews_path, local: true,
                 html: { id: "review-form-inner",
-                        onsubmit: "var r=this.querySelector('input[name=\"review[rating]\"]'); if(!r||parseInt(r.value)<1){ alert('만족도를 별점으로 선택해주세요.'); return false; }" } do |f| %>
+                        onsubmit: "var r=this.querySelector('input[name=\"review[rating]\"]'); if(!r||parseInt(r.value)<1){ alert('만족도를 별점으로 선택해주세요.'); return false; } var b=this.querySelector('input[type=submit]'); if(b){ b.disabled=true; b.classList.add('opacity-60','cursor-wait'); b.value='제출 중…'; } return true;" } do |f| %>
     <!-- Errors -->
     <% if review.errors.any? %>
       <div class="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg">
@@ -81,10 +82,11 @@
       </p>
     </div>
 
-    <!-- 제출 버튼 -->
+    <!-- 제출 버튼 (ISS-283: 로딩 중 disable/재클릭 방지) -->
     <div class="flex items-center gap-3">
       <%= f.submit "피드백 제출",
-            class: "flex-1 bg-[#1E3A5F] hover:bg-[#2D5282] text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition-colors cursor-pointer" %>
+            data: { disable_with: "제출 중…" },
+            class: "flex-1 bg-[#1E3A5F] hover:bg-[#2D5282] text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-wait" %>
       <a href="/" class="text-sm text-gray-500 hover:text-gray-700 px-4 py-2.5">취소</a>
     </div>
   <% end %>
