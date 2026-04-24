@@ -36,16 +36,51 @@ module Gmail
       client = ClaudeTokenResolver.create_client
       return nil unless client
 
-      client.messages.create(
-        model: ENV.fetch("RFQ_LLM_MODEL", "claude-haiku-4-5-20251001"),
-        max_tokens: 1024,
-        messages: [
-          {
-            role: "user",
-            content: build_prompt
-          }
-        ]
-      )
+      # ISS-279: 429 / 5xx / 일시적 네트워크 에러에 대해 exponential backoff + jitter 재시도 (최대 3회)
+      with_retries(max: 3, base: 1.0) do
+        client.messages.create(
+          model: ENV.fetch("RFQ_LLM_MODEL", "claude-haiku-4-5-20251001"),
+          max_tokens: 1024,
+          messages: [
+            {
+              role: "user",
+              content: build_prompt
+            }
+          ]
+        )
+      end
+    end
+
+    # ISS-279: 429/5xx/Timeout 재시도 헬퍼 — SDK/Faraday/Net::HTTP 모두 커버
+    def with_retries(max: 3, base: 1.0)
+      attempt = 0
+      begin
+        attempt += 1
+        yield
+      rescue => e
+        if retryable_api_error?(e) && attempt < max
+          sleep_for = base * (2 ** (attempt - 1)) + rand(0.0..0.5)
+          Rails.logger.warn "[LlmRfqAnalyzer] retry #{attempt}/#{max} after #{sleep_for.round(2)}s — #{e.class}: #{e.message.to_s.truncate(120)}"
+          sleep(sleep_for)
+          retry
+        else
+          raise
+        end
+      end
+    end
+
+    def retryable_api_error?(e)
+      msg = e.message.to_s
+      # Anthropic SDK 에러 클래스 존재 시 매칭 (명시 require 안 하고 defined?로 가드)
+      return true if defined?(::Anthropic::Errors::RateLimitError) && e.is_a?(::Anthropic::Errors::RateLimitError)
+      return true if defined?(::Anthropic::Errors::APIError)       && e.is_a?(::Anthropic::Errors::APIError) && msg.match?(/\b5\d\d\b/)
+      return true if defined?(::Faraday::TimeoutError)             && e.is_a?(::Faraday::TimeoutError)
+      return true if defined?(::Faraday::ConnectionFailed)         && e.is_a?(::Faraday::ConnectionFailed)
+      return true if defined?(::Faraday::ServerError)              && e.is_a?(::Faraday::ServerError)
+      return true if defined?(::Net::ReadTimeout)                  && e.is_a?(::Net::ReadTimeout)
+      return true if defined?(::Net::OpenTimeout)                  && e.is_a?(::Net::OpenTimeout)
+      # 문자열 매칭 fallback
+      msg.match?(/\b(429|502|503|504)\b|rate.?limit|too many requests|timeout/i)
     end
 
     def build_prompt
