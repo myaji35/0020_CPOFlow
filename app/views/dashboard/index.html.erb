@@ -189,6 +189,43 @@
   </div>
 </div>
 
+<%# ISS-273: manager/admin 전용 팀 요약 KPI — 상단 배치 (0.5초 룰)
+    하단 '담당자별 워크로드' 풀 테이블로 가는 점프 링크도 포함 %>
+<% if (current_user.admin? || current_user.manager?) && @assignee_workload.present? %>
+  <% team_overdue = @assignee_workload.sum { |u| u.overdue_count.to_i } %>
+  <% team_urgent  = @assignee_workload.sum { |u| u.urgent_count.to_i } %>
+  <% team_total   = @assignee_workload.sum { |u| u.total_count.to_i } %>
+  <% top_overloaded = @assignee_workload.sort_by { |u| -u.total_count.to_i }.first(3) %>
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
+    <a href="#team-workload" class="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-[#166c72] hover:shadow-sm transition-all">
+      <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">팀 전체 진행</p>
+      <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><%= team_total %></p>
+      <p class="text-xs text-gray-500 mt-1">담당자 <%= @assignee_workload.size %>명</p>
+    </a>
+    <a href="#team-workload" class="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-[#c84431] hover:shadow-sm transition-all">
+      <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">팀 지연</p>
+      <p class="text-2xl font-bold <%= team_overdue.positive? ? 'text-[#c84431]' : 'text-gray-900 dark:text-white' %> mt-1"><%= team_overdue %></p>
+      <p class="text-xs text-gray-500 mt-1"><%= team_overdue.positive? ? '조치 필요' : '정상' %></p>
+    </a>
+    <a href="#team-workload" class="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-[#d99a2a] hover:shadow-sm transition-all">
+      <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">팀 긴급</p>
+      <p class="text-2xl font-bold <%= team_urgent.positive? ? 'text-[#d99a2a]' : 'text-gray-900 dark:text-white' %> mt-1"><%= team_urgent %></p>
+      <p class="text-xs text-gray-500 mt-1"><%= team_urgent.positive? ? 'SLA 주의' : '정상' %></p>
+    </a>
+    <div class="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+      <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">과부하 TOP 3</p>
+      <div class="mt-1 space-y-0.5">
+        <% top_overloaded.each do |u| %>
+          <div class="flex items-center justify-between text-xs">
+            <span class="truncate text-gray-800 dark:text-gray-200"><%= u.name.presence || u.email.split('@').first %></span>
+            <span class="font-semibold text-gray-900 dark:text-white"><%= u.total_count %></span>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% end %>
+
 <%# 보드별 요약 — admin/owner만 전체, 일반 사용자는 접근 가능한 보드만 %>
 <% if @board_summaries.size > 1 %>
   <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
@@ -983,7 +1020,7 @@
 <!-- ════════════════════════════════════════════════════════════
      ROW 6: 담당자별 워크로드
      ════════════════════════════════════════════════════════════ -->
-<div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 mb-6">
+<div id="team-workload" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 mb-6 scroll-mt-6">
   <div class="flex items-center justify-between px-5 py-3 border-b border-gray-200 dark:border-gray-700">
     <h3 class="text-sm font-semibold text-gray-900 dark:text-white">담당자별 워크로드</h3>
     <span class="text-xs text-gray-500 dark:text-gray-500">
