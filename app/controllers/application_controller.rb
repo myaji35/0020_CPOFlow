@@ -5,7 +5,20 @@ class ApplicationController < ActionController::Base
   before_action :authenticate_user!
   before_action :set_locale
 
+  # ISS-269: Optimistic locking 충돌 시 사용자 친화적 재시도 안내
+  rescue_from ActiveRecord::StaleObjectError, with: :handle_stale_object_error
+
   private
+
+  def handle_stale_object_error(exception)
+    Rails.logger.warn "[ISS-269] StaleObjectError #{exception.record&.class}##{exception.record&.id} by user=#{current_user&.id}"
+    msg = "다른 사용자가 먼저 수정했습니다. 화면을 새로고침한 뒤 다시 시도하세요."
+    respond_to do |format|
+      format.turbo_stream { render turbo_stream: turbo_stream.append("flash-container", %(<div class="flash-error">#{msg}</div>).html_safe), status: :conflict }
+      format.json         { render json: { error: msg, stale: true }, status: :conflict }
+      format.html         { redirect_back fallback_location: root_path, alert: msg }
+    end
+  end
 
   # Branch 데이터 격리: current_user의 branch에 속한 Order만 반환
   # admin은 전체 접근 가능

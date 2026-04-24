@@ -19,7 +19,7 @@ class CpoAgentServiceTest < ActiveSupport::TestCase
     AgentInsight.where(order_id: Order.where(supplier: @supplier).select(:id)).delete_all
     AgentInsight.where(order: @order).delete_all
     Order.where(supplier: @supplier).where.not(id: @order.id).destroy_all
-    @order.destroy
+    @order.reload.destroy
     @supplier.destroy
     @user.destroy
   end
@@ -45,7 +45,7 @@ class CpoAgentServiceTest < ActiveSupport::TestCase
     order = Order.create!(title: "No Supplier", customer_name: "Test", user: @user, status: :new_rfq)
     result = CpoAgent::PriceComparisonAnalyzer.new(order).call
     assert_nil result
-    order.destroy
+    order.reload.destroy
   end
 
   test "PriceComparisonAnalyzer: estimated_value 없으면 nil 반환" do
@@ -108,7 +108,7 @@ class CpoAgentServiceTest < ActiveSupport::TestCase
     order = Order.create!(title: "No Supplier", customer_name: "Test", user: @user, status: :new_rfq)
     result = CpoAgent::SupplierRiskAnalyzer.new(order).call
     assert_nil result
-    order.destroy
+    order.reload.destroy
   end
 
   test "SupplierRiskAnalyzer: get_grn 주문 3건 미만이면 nil 반환" do
@@ -168,6 +168,8 @@ class CpoAgentServiceTest < ActiveSupport::TestCase
   end
 
   test "DueDateRiskAnalyzer: get_grn 상태면 nil 반환" do
+    # ISS-265: new_rfq → get_grn은 건너뛰기 → force_transition으로 테스트 우회
+    @order.force_transition = true
     @order.update!(due_date: 1.day.from_now, status: :get_grn)
     result = CpoAgent::DueDateRiskAnalyzer.new(@order).call
     assert_nil result
@@ -209,7 +211,7 @@ class CpoAgentServiceTest < ActiveSupport::TestCase
     order = Order.create!(title: "No Supplier", customer_name: "Test", user: @user, status: :new_rfq)
     result = CpoAgent::CostSavingAnalyzer.new(order).call
     assert_nil result
-    order.destroy
+    order.reload.destroy
   end
 
   test "CostSavingAnalyzer: estimated_value 없으면 nil 반환" do

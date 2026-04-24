@@ -24,7 +24,7 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     get orders_path
     assert_response :success
     assert_match "List Test Order", response.body
-    order.destroy
+    order.reload.destroy
   end
 
   # ─── show ────────────────────────────────
@@ -33,7 +33,7 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     order = Order.create!(title: "Show Test Order", customer_name: "Cust", user: @user, status: :new_rfq)
     get order_path(order)
     assert_response :success
-    order.destroy
+    order.reload.destroy
   end
 
   # ─── new / create ─────────────────────────
@@ -70,7 +70,7 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     order = Order.create!(title: "Edit Test Order", customer_name: "Cust", user: @user, status: :new_rfq)
     get edit_order_path(order)
     assert_response :success
-    order.destroy
+    order.reload.destroy
   end
 
   test "orders update — title 변경 성공" do
@@ -78,7 +78,7 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     patch order_path(order), params: { order: { title: "Update After" } }
     order.reload
     assert_equal "Update After", order.title
-    order.destroy
+    order.reload.destroy
   end
 
   # ─── destroy ─────────────────────────────
@@ -98,7 +98,7 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
       delete order_path(order)
     end
     assert_response :redirect
-    order.destroy
+    order.reload.destroy
   end
 
   # ─── quick_update ─────────────────────────
@@ -112,7 +112,7 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     assert json["success"]
     order.reload
     assert_equal due, order.due_date
-    order.destroy
+    order.reload.destroy
   end
 
   # ─── move_status ─────────────────────────
@@ -121,7 +121,7 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     patch move_status_order_path(order), params: { status: "make_quo" }
     order.reload
     assert_equal "make_quo", order.status
-    order.destroy
+    order.reload.destroy
   end
 
   test "move_status — 다른 유효 status로 변경" do
@@ -130,7 +130,7 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     patch move_status_order_path(order), params: { status: "make_quo" }
     order.reload
     assert_equal "make_quo", order.status
-    order.destroy
+    order.reload.destroy
   end
 
   test "move_status — 상태 건너뛰기 차단 (ISS-265)" do
@@ -139,7 +139,7 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     patch move_status_order_path(order), params: { status: "pending_po" }
     order.reload
     assert_equal "new_rfq", order.status, "건너뛰기는 차단되어야 함"
-    order.destroy
+    order.reload.destroy
   end
 
   test "move_status — done 역행 차단 (ISS-265)" do
@@ -147,7 +147,7 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     patch move_status_order_path(order), params: { status: "new_rfq" }
     order.reload
     assert_equal "done", order.status, "done 상태는 재오픈 금지"
-    order.destroy
+    order.reload.destroy
   end
 
   # ─── attach — 파일 없이 호출 ──────────────
@@ -155,14 +155,14 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     order = Order.create!(title: "Attach Test", customer_name: "Cust", user: @user, status: :new_rfq)
     post attach_order_path(order), params: { files: nil }
     assert_response :redirect
-    order.destroy
+    order.reload.destroy
   end
 
   test "attach — JSON 요청 시 422 반환" do
     order = Order.create!(title: "Attach JSON Test", customer_name: "Cust", user: @user, status: :new_rfq)
     post attach_order_path(order), params: { files: nil }, as: :json
     assert_response :unprocessable_entity
-    order.destroy
+    order.reload.destroy
   end
 
   # ─── index 필터 ──────────────────────────
@@ -201,7 +201,7 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     order = Order.create!(title: "Detach Test", customer_name: "Cust", user: @user, status: :new_rfq)
     delete detach_order_path(order, blob_id: 99999999)
     assert_includes [302, 404, 422], response.status
-    order.destroy
+    order.reload.destroy
   end
 
   # ─── preview_by_ref ───────────────────────
@@ -217,7 +217,7 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     body = JSON.parse(response.body)
     assert_equal true, body["success"]
-    order.destroy
+    order.reload.destroy
   end
 
   # ─── move_status 추가 케이스 ─────────────
@@ -228,7 +228,7 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     assert_response :redirect
     order.reload
     assert_equal "done", order.status
-    order.destroy
+    order.reload.destroy
   end
 
   private

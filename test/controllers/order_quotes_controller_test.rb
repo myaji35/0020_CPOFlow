@@ -13,7 +13,7 @@ class OrderQuotesControllerTest < ActionDispatch::IntegrationTest
   end
 
   def teardown
-    @order.destroy if Order.exists?(@order.id)
+    @order.reload.destroy if Order.exists?(@order.id)
     @supplier.destroy if Supplier.exists?(@supplier.id)
   end
 

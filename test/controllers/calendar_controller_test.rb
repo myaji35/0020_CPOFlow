@@ -69,7 +69,7 @@ class CalendarControllerTest < ActionDispatch::IntegrationTest
     # 오늘 납기 주문이 캘린더에 표시됨
     assert_match "Calendar Test Order", response.body
 
-    order.destroy
+    order.reload.destroy
   end
 
   private

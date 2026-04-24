@@ -122,7 +122,7 @@ class KanbanControllerTest < ActionDispatch::IntegrationTest
     assert json["success"]
     assert_equal "make_quo", json["new_status"]
 
-    order.destroy
+    order.reload.destroy
   end
 
   test "kanban move — 존재하지 않는 주문 404" do
@@ -177,7 +177,7 @@ class KanbanControllerTest < ActionDispatch::IntegrationTest
     order = Order.create!(title: "Standalone Order", customer_name: "Cust", user: @user, status: :new_rfq)
     patch kanban_split_path(order.id), as: :json
     assert_response :unprocessable_entity
-    order.destroy
+    order.reload.destroy
   end
 
   private

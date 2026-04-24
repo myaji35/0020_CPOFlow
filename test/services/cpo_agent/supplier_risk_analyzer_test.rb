@@ -30,7 +30,7 @@ class CpoAgent::SupplierRiskAnalyzerTest < ActiveSupport::TestCase
                           supplier: supplier)
     result = CpoAgent::SupplierRiskAnalyzer.new(order).call
     assert_nil result
-    order.destroy
+    order.reload.destroy
     supplier.destroy
   end
 end

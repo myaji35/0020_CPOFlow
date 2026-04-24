@@ -38,7 +38,7 @@ class CpoAgent::PriceComparisonAnalyzerTest < ActiveSupport::TestCase
                           supplier: supplier, estimated_value: 1000)
     result = CpoAgent::PriceComparisonAnalyzer.new(order).call
     assert_nil result
-    order.destroy
+    order.reload.destroy
     supplier.destroy
   end
 end

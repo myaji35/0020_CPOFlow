@@ -63,7 +63,7 @@ class OrderTest < ActiveSupport::TestCase
                           status: :new_rfq, card_status: card_statuses(:urgent), due_date: 3.days.ago.to_date)
     assert order.critical?
   ensure
-    order.destroy
+    order.reload.destroy
   end
 
   test "critical? — 담당자 있으면 false" do
@@ -75,7 +75,7 @@ class OrderTest < ActiveSupport::TestCase
   ensure
     Assignment.where(order: order).delete_all
     Employee.where(id: emp.id).delete_all if defined?(emp)
-    order.destroy
+    order.reload.destroy
   end
 
   test "critical? — normal 우선순위면 false" do
@@ -88,7 +88,7 @@ class OrderTest < ActiveSupport::TestCase
     assert_equal "normal", order.card_status.key
     assert_not order.critical?
   ensure
-    order.destroy
+    order.reload.destroy
   end
 
   test "critical? — due_date 없으면 false" do
@@ -96,14 +96,14 @@ class OrderTest < ActiveSupport::TestCase
                           status: :new_rfq, card_status: card_statuses(:urgent))
     assert_not order.critical?
   ensure
-    order.destroy
+    order.reload.destroy
   end
 
   test "unassigned? — 담당자 없으면 true" do
     order = Order.create!(user: @owner, title: "Unassigned", customer_name: "X", status: :new_rfq)
     assert order.unassigned?
   ensure
-    order.destroy
+    order.reload.destroy
   end
 
   test "scope :critical — SQL 실행 오류 없음" do
@@ -116,7 +116,7 @@ class OrderTest < ActiveSupport::TestCase
                           status: :done, card_status: card_statuses(:urgent), due_date: 3.days.ago.to_date)
     assert_not Order.critical.exists?(order.id)
   ensure
-    order.destroy
+    order.reload.destroy
   end
 
   # M1-Task4: Order status 전환 → confirmed_to/delivered_as 자동 링크

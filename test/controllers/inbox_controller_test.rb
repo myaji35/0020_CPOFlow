@@ -68,7 +68,7 @@ class InboxControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_not_includes response.body, "Inbox Del Test"
 
-    order.destroy
+    order.reload.destroy
     client.destroy
   end
 
@@ -87,7 +87,7 @@ class InboxControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "email-item-#{order.id}"
 
-    order.destroy
+    order.reload.destroy
     client.destroy
   end
 
@@ -113,7 +113,7 @@ class InboxControllerTest < ActionDispatch::IntegrationTest
 
     orders.each { |o| assert o.reload.archived_at.present?, "ord #{o.id} should be archived" }
 
-    orders.each(&:destroy)
+    orders.each { |o| o.reload.destroy }
     client.destroy
   end
 
@@ -134,7 +134,7 @@ class InboxControllerTest < ActionDispatch::IntegrationTest
     )
     get inbox_email_path(order)
     assert_response :success
-    order.destroy; client.destroy
+    order.reload.destroy; client.destroy
   end
 
   test "show — 존재하지 않는 id면 inbox redirect" do
@@ -151,7 +151,7 @@ class InboxControllerTest < ActionDispatch::IntegrationTest
     )
     post convert_email_to_order_path(order)
     assert_response :redirect
-    order.destroy; client.destroy
+    order.reload.destroy; client.destroy
   end
 
   test "convert_to_order — rfq_excluded 상태는 차단" do
@@ -162,7 +162,7 @@ class InboxControllerTest < ActionDispatch::IntegrationTest
     )
     post convert_email_to_order_path(order)
     assert_response :redirect
-    order.destroy; client.destroy
+    order.reload.destroy; client.destroy
   end
 
   # ── bulk_delete ───────────────────────────────────────────────────────
@@ -176,7 +176,7 @@ class InboxControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     body = JSON.parse(response.body)
     assert_equal "ok", body["status"]
-    orders.each(&:destroy); client.destroy
+    orders.each { |o| o.reload.destroy }; client.destroy
   end
 
   test "bulk_delete — 빈 배열" do
@@ -197,7 +197,7 @@ class InboxControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     body = JSON.parse(response.body)
     assert_equal "ok", body["status"]
-    orders.each(&:destroy); client.destroy
+    orders.each { |o| o.reload.destroy }; client.destroy
   end
 
   test "bulk_to_kanban — 빈 배열" do
@@ -219,7 +219,7 @@ class InboxControllerTest < ActionDispatch::IntegrationTest
     body = JSON.parse(response.body)
     assert_equal "ok", body["status"]
     orders.each { |o| assert_equal "rfq_pending", o.reload.rfq_status }
-    orders.each(&:destroy); client.destroy
+    orders.each { |o| o.reload.destroy }; client.destroy
   end
 
   # ── sync ──────────────────────────────────────────────────────────────
@@ -245,7 +245,7 @@ class InboxControllerTest < ActionDispatch::IntegrationTest
     )
     get inbox_translate_path(order), as: :json
     assert_response :success
-    order.destroy; client.destroy
+    order.reload.destroy; client.destroy
   end
 
   # ── feedback ──────────────────────────────────────────────────────────
@@ -255,7 +255,7 @@ class InboxControllerTest < ActionDispatch::IntegrationTest
                           client: client, status: :new_rfq, user: @user)
     post inbox_feedback_path(order), params: { verdict: "invalid" }, as: :json
     assert_response :unprocessable_entity
-    order.destroy; client.destroy
+    order.reload.destroy; client.destroy
   end
 
   test "feedback — rejected verdict 처리" do
@@ -267,7 +267,7 @@ class InboxControllerTest < ActionDispatch::IntegrationTest
     body = JSON.parse(response.body)
     assert_equal "ok", body["status"]
     assert_equal "rejected", body["verdict"]
-    order.destroy; client.destroy
+    order.reload.destroy; client.destroy
   end
 
   test "feedback — 존재하지 않는 order면 404" do
@@ -300,7 +300,7 @@ class InboxControllerTest < ActionDispatch::IntegrationTest
                           client: client, status: :new_rfq, user: @user)
     get inbox_attachment_path(order, blob_key: "nonexistent_blob_key")
     assert_response :not_found
-    order.destroy; client.destroy
+    order.reload.destroy; client.destroy
   end
 
   private

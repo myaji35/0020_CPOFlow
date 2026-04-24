@@ -38,7 +38,7 @@ class CpoAgent::CostSavingAnalyzerTest < ActiveSupport::TestCase
                           supplier: supplier, estimated_value: 5000)
     result = CpoAgent::CostSavingAnalyzer.new(order).call
     assert_nil result
-    order.destroy
+    order.reload.destroy
     supplier.destroy
   end
 end

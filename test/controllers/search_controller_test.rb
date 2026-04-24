@@ -29,7 +29,7 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     results = JSON.parse(response.body)
     types = results.map { |r| r["type"] }
     assert_includes types, "order"
-    order.destroy
+    order.reload.destroy
   end
 
   test "search — Client 검색 결과 포함" do

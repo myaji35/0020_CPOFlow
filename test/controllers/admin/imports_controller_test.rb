@@ -31,6 +31,35 @@ class Admin::ImportsControllerTest < ActionDispatch::IntegrationTest
     assert_response :redirect
   end
 
+  test "show — 존재하는 import_log id 접근" do
+    log = ImportLog.create!(status: :pending, import_type: "products", user: @user, filename: "test.xlsx")
+    get admin_import_path(log)
+    assert_response :success
+    log.destroy
+  end
+
+  test "show — 존재하지 않는 id는 redirect 또는 404" do
+    get admin_import_path(id: 99999999)
+    assert_includes [302, 404], response.status
+  end
+
+  test "index — 검색 파라미터 적용" do
+    get admin_imports_path, params: { q: "products" }
+    assert_response :success
+  end
+
+  test "index — 페이지네이션" do
+    get admin_imports_path, params: { page: 1 }
+    assert_response :success
+  end
+
+  test "download_errors — error_details 없는 log는 redirect" do
+    log = ImportLog.create!(status: :completed, import_type: "products", user: @user, filename: "test.xlsx")
+    get download_errors_admin_import_path(log)
+    assert_response :redirect
+    log.destroy
+  end
+
   private
 
   def login_as(user)

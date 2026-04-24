@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_20_015958) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_24_014520) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -511,6 +511,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_015958) do
     t.integer "kanban_column_id"
     t.text "llm_analysis"
     t.datetime "llm_analyzed_at"
+    t.integer "lock_version", default: 0, null: false
     t.text "original_email_body"
     t.string "original_email_from"
     t.text "original_email_html_body"

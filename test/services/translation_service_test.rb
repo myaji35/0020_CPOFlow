@@ -32,6 +32,6 @@ class TranslationServiceTest < ActiveSupport::TestCase
     assert_nothing_raised do
       TranslationService.translate_order!(order)
     end
-    order.destroy
+    order.reload.destroy
   end
 end

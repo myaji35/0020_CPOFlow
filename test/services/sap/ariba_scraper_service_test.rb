@@ -32,7 +32,7 @@ class Sap::AribaScraperServiceTest < ActiveSupport::TestCase
     assert_equal [], result[:saved]
     assert_equal [], result[:errors]
 
-    order.destroy
+    order.reload.destroy
     supplier.destroy
   end
 
@@ -44,7 +44,7 @@ class Sap::AribaScraperServiceTest < ActiveSupport::TestCase
                           status: :new_rfq, user: user)
     result = Sap::AribaScraperService.extract_ariba_links(order)
     assert_equal [], result
-    order.destroy
+    order.reload.destroy
   end
 
   test "extract_ariba_links (class method) — 이메일 바디의 ariba URL 추출" do
@@ -58,7 +58,7 @@ class Sap::AribaScraperServiceTest < ActiveSupport::TestCase
     )
     result = Sap::AribaScraperService.extract_ariba_links(order)
     assert_includes result, "https://service.ariba.com/ad/supplier/rfq/9999"
-    order.destroy
+    order.reload.destroy
   end
 
   test "extract_ariba_links — itemID 포함 링크 우선 정렬" do
@@ -74,7 +74,7 @@ class Sap::AribaScraperServiceTest < ActiveSupport::TestCase
     # itemID 포함 링크가 첫 번째
     first_link = result.first
     assert first_link.include?("itemID"), "itemID 링크가 우선 정렬되어야 함 (actual: #{first_link})"
-    order.destroy
+    order.reload.destroy
   end
 
   test "AribaScraperService 인스턴스화 가능" do
