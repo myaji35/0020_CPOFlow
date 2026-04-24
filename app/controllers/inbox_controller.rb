@@ -129,10 +129,9 @@ class InboxController < ApplicationController
   end
 
   def show
-    @order = Order.includes(attachments_attachments: :blob)
-                  .find_by(source_email_id: params[:id]) ||
-             Order.includes(attachments_attachments: :blob)
-                  .find(params[:id])
+    # ISS-254: Branch 격리 — scoped_orders로 현재 사용자 branch 제한
+    scope = scoped_orders.includes(attachments_attachments: :blob)
+    @order = scope.find_by(source_email_id: params[:id]) || scope.find(params[:id])
     # ISS-202: 읽음 표시 (처음 열람 시만)
     @order.update_column(:viewed_at, Time.current) if @order && @order.viewed_at.nil?
   rescue ActiveRecord::RecordNotFound
@@ -140,7 +139,8 @@ class InboxController < ApplicationController
   end
 
   def convert_to_order
-    @order = Order.find(params[:id])
+    # ISS-254: Branch 격리
+    @order = scoped_orders.find(params[:id])
 
     # Phase F (ISS-034): rfq_status 게이트 — 제외/보관된 메일은 칸반 진입 차단
     unless @order.rfq_convertible?
@@ -250,7 +250,8 @@ class InboxController < ApplicationController
   # AJAX: 특정 Order의 번역본 반환 (없으면 번역 후 저장)
   # ?force=true 파라미터 시 기존 번역 무시하고 재번역
   def translate
-    order = Order.find(params[:id])
+    # ISS-254: Branch 격리
+    order = scoped_orders.find(params[:id])
     require "net/http"
 
     if params[:force] == "true"
@@ -278,7 +279,8 @@ class InboxController < ApplicationController
   # 원본 이메일 필드로 parsed hash 재구성 → ClassificationOrchestrator 재실행
   # 결과: rfq_status 업데이트 + rfq_feedback 로그에 "reclassified" 기록
   def reclassify
-    order = Order.find(params[:id])
+    # ISS-254: Branch 격리
+    order = scoped_orders.find(params[:id])
 
     unless order.original_email_from.present? && order.original_email_subject.present?
       return render json: { error: "원본 이메일 데이터가 없어 재판독 불가" }, status: :unprocessable_entity
@@ -334,7 +336,8 @@ class InboxController < ApplicationController
 
   # AJAX: 사용자 RFQ 피드백 (맞음/아님)
   def feedback
-    order = Order.find(params[:id])
+    # ISS-254: Branch 격리
+    order = scoped_orders.find(params[:id])
     verdict = params[:verdict].to_s  # "confirmed" or "rejected"
 
     unless %w[confirmed rejected].include?(verdict)
@@ -360,7 +363,8 @@ class InboxController < ApplicationController
 
   # AJAX: 답변 초안 직접 생성 요청
   def generate_reply
-    order = Order.find(params[:id])
+    # ISS-254: Branch 격리
+    order = scoped_orders.find(params[:id])
     order.update_column(:reply_draft, nil)  # 기존 초안 삭제 후 재생성
     draft = Gmail::RfqReplyDraftService.generate!(order)
 
