@@ -1,4 +1,7 @@
 class KanbanController < ApplicationController
+  # ISS-261: viewer read-only — 칸반 이동/병합/분리는 member 이상만
+  before_action :require_member!, only: %i[move merge split]
+
   # ISS-046 후속: 칸반 컬럼별 첫 N건만 즉시 렌더, 나머지는 turbo-frame lazy로 백그라운드.
   # 8개 컬럼 × 평균 20~50건 = 첫 페이지 ~200건 인서트 부담 → INITIAL_LIMIT로 80% 단축.
   INITIAL_LIMIT = 20  # 컬럼당 즉시 렌더 카드 수

@@ -1,4 +1,6 @@
 class TasksController < ApplicationController
+  # ISS-261: viewer read-only — 할 일 생성/변경/삭제는 member 이상만
+  before_action :require_member!
   before_action :set_order
 
   def create

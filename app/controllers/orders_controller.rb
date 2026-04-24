@@ -2,6 +2,8 @@ class OrdersController < ApplicationController
   include AttachmentPreviewable
 
   before_action :set_order, only: %i[show edit update destroy move_status quick_update preview_attachment attach attach_from_url detach]
+  # ISS-261: viewer read-only — member 이상만 쓰기 가능
+  before_action :require_member!, only: %i[create new edit update move_status quick_update attach attach_from_url detach save_filter delete_saved_filter]
   before_action :require_manager!, only: %i[destroy]
 
   def index

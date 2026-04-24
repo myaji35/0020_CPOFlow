@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class OrderQuotesController < ApplicationController
+  # ISS-261: viewer read-only — 견적 생성/삭제/선택은 member 이상만
+  before_action :require_member!
   before_action :set_order, only: %i[new create]
   before_action :set_quote, only: %i[destroy select]
 

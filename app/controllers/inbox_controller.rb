@@ -3,7 +3,11 @@ class InboxController < ApplicationController
   RATE_LIMIT_WINDOW = 60   # 초
   RATE_LIMIT_MAX    = 10   # 최대 호출 수
 
-  before_action :require_member!, only: %i[translate analyze_link generate_reply]
+  # ISS-261: viewer read-only — 쓰기/변경성 AJAX 액션은 member 이상만
+  before_action :require_member!, only: %i[translate analyze_link generate_reply
+                                           convert_to_order feedback reclassify
+                                           bulk_delete bulk_trash bulk_to_kanban bulk_restore
+                                           sync destroy]
   before_action :check_rate_limit!, only: %i[translate analyze_link generate_reply]
 
   PER_PAGE = 30

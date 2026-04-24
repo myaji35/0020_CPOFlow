@@ -1,4 +1,6 @@
 class AssignmentsController < ApplicationController
+  # ISS-261: viewer read-only — 담당자 배정/해제는 member 이상만
+  before_action :require_member!
   before_action :set_order
 
   def create

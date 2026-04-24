@@ -1,5 +1,7 @@
 class OrderLinksController < ApplicationController
   before_action :authenticate_user!
+  # ISS-261: viewer read-only — 관계 생성/승인/거절은 member 이상만 (search는 read이므로 예외)
+  before_action :require_member!, except: %i[search]
   before_action :set_link, only: %i[confirm reject]
 
   def confirm
