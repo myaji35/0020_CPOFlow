@@ -324,7 +324,16 @@
         var KANBAN_COLUMNS = ['new_rfq','make_quo','pending_po','new_po','delivery_items','problem','get_grn','give_up'];
         var STATUS_LABELS  = {
           new_rfq:'New(신규)', make_quo:'Make QUO(견적작성)', pending_po:'Pending PO(발주대기)',
-          new_po:'New PO(발주확정)', delivery_items:'Delivery Items(납품진행)', problem:'Problem(문제)', get_grn:'Get GRN(수령확인)', give_up:'Give Up(포기)'
+          new_po:'New PO(발주확정)', delivery_items:'Delivery Items(납품진행)', problem:'Problem(문제)', get_grn:'Get GRN(수령확인)', give_up:'Give Up(포기)', done:'Done(완료)'
+        };
+        // ISS-274: 상태별 "주된 다음 전이" — give_up 재개 등 복구 경로 포함
+        var STATUS_PRIMARY_NEXT = {
+          new_rfq:'make_quo', make_quo:'pending_po', pending_po:'new_po', new_po:'delivery_items',
+          delivery_items:'get_grn', problem:'delivery_items', get_grn:'done',
+          give_up:'new_rfq' // 재개(복구)
+        };
+        var STATUS_CTA_LABEL = {
+          give_up: '재개 (New로 되돌리기)' // 복구 UX 명확화
         };
 
         var _drawerOrderId = null;
@@ -358,18 +367,15 @@
 
           function _setupNextStatusButton(currentStatus) {
             if (!currentStatus) { nextForm.classList.add('hidden'); return; }
-            var currentIdx = KANBAN_COLUMNS.indexOf(currentStatus);
-            if (currentIdx >= 0 && currentIdx < KANBAN_COLUMNS.length - 1) {
-              var nextStatus = KANBAN_COLUMNS[currentIdx + 1];
-              nextLabel.textContent = STATUS_LABELS[nextStatus] || nextStatus;
-              nextInput.value = nextStatus;
-              var csrfMeta = document.querySelector('meta[name="csrf-token"]');
-              if (csrfMeta && csrfInput) csrfInput.value = csrfMeta.content;
-              nextForm.action = orderPath + '/move_status';
-              nextForm.classList.remove('hidden');
-            } else {
-              nextForm.classList.add('hidden');
-            }
+            // ISS-274: STATUS_PRIMARY_NEXT 테이블 기반 — give_up도 "재개" CTA 노출
+            var nextStatus = STATUS_PRIMARY_NEXT[currentStatus];
+            if (!nextStatus) { nextForm.classList.add('hidden'); return; }
+            nextLabel.textContent = STATUS_CTA_LABEL[currentStatus] || STATUS_LABELS[nextStatus] || nextStatus;
+            nextInput.value = nextStatus;
+            var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            if (csrfMeta && csrfInput) csrfInput.value = csrfMeta.content;
+            nextForm.action = orderPath + '/move_status';
+            nextForm.classList.remove('hidden');
           }
 
           body.innerHTML = '<div class="flex items-center justify-center h-40"><svg class="w-6 h-6 text-gray-300 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg></div>';
