@@ -15,7 +15,9 @@ class User < ApplicationRecord
     end
   end
 
-  enum :role, { viewer: 0, member: 1, manager: 2, admin: 3 }, default: :member
+  # ISS-259: 신규 가입자 default role을 :viewer로 하향 (외부인 가입 시 발주 데이터 노출 차단).
+  # 기존 저장된 사용자 role은 변경하지 않음 — admin이 수동 승격해야 member 이상 권한 부여.
+  enum :role, { viewer: 0, member: 1, manager: 2, admin: 3 }, default: :viewer
   enum :branch, { abu_dhabi: "abu_dhabi", seoul: "seoul" }, default: :abu_dhabi
 
   LOCALES = %w[en ko ar].freeze
