@@ -203,6 +203,30 @@ class KanbanController < ApplicationController
     end
 
     order.update_columns(parent_order_id: nil)
+
+    # ISS-275: split 후에도 원본↔자식 이력 추적 유지 — derived_from 링크 생성
+    # parent_order_id FK는 끊지만 OrderLink로 논리적 족보 보존 (감사/thread 추적)
+    if parent
+      begin
+        OrderLink.create!(
+          source: parent,
+          target: order,
+          relation: "derived_from",
+          status: "confirmed",
+          confidence: 1.0,
+          created_by: current_user,
+          metadata: {
+            source: "kanban_split",
+            trigger: "manual_split",
+            actor: current_user.email,
+            split_at: Time.current.iso8601
+          }
+        )
+      rescue => e
+        Rails.logger.warn "[ISS-275] split OrderLink 생성 실패 order##{order.id} parent##{parent.id}: #{e.class}: #{e.message}"
+      end
+    end
+
     Activity.create!(order: order, user: current_user, action: "order_split")
     Activity.create!(order: parent, user: current_user, action: "order_split") if parent
 
