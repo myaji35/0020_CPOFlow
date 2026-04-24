@@ -481,11 +481,25 @@
               <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">다른 키워드로 검색해보세요</p>
               <button onclick="clearSearch()" class="mt-3 text-sm text-blue-600 hover:underline">검색 초기화</button>
             <% else %>
-              <p class="text-sm text-gray-500 dark:text-gray-500 font-medium">이메일이 없습니다</p>
-              <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">Gmail 계정을 연결하면 RFQ 이메일이 자동으로 수집됩니다</p>
-              <%= link_to settings_root_path, class: "mt-4 text-sm text-blue-600 hover:underline inline-flex items-center gap-1" do %>
-                설정으로 이동
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              <%# ISS-270: Gmail 연결 상태 분기 — 미연결이면 강조된 연결 CTA, 연결됐으면 Sync 안내 %>
+              <% if current_user.gmail_connected? %>
+                <p class="text-sm text-gray-500 dark:text-gray-500 font-medium">이메일이 없습니다</p>
+                <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">아직 수집된 메일이 없습니다. Sync를 실행하면 최신 메일을 가져옵니다.</p>
+                <button onclick="triggerSync()"
+                        class="mt-4 inline-flex items-center gap-2 bg-[#166c72] hover:bg-[#11555a] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                  지금 Sync 실행
+                </button>
+              <% else %>
+                <p class="text-sm text-gray-900 dark:text-white font-semibold">Gmail 계정을 먼저 연결하세요</p>
+                <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">연결된 메일함이 없어 RFQ/발주 메일을 수집할 수 없습니다.</p>
+                <%= link_to gmail_oauth_authorize_path,
+                            class: "mt-4 inline-flex items-center gap-2 bg-[#166c72] hover:bg-[#11555a] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors" do %>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                  Gmail 연결하기
+                <% end %>
+                <%= link_to "설정에서 관리", settings_root_path,
+                            class: "mt-2 text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 inline-flex items-center gap-1" %>
               <% end %>
             <% end %>
           </div>
