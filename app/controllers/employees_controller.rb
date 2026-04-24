@@ -1,6 +1,8 @@
 class EmployeesController < ApplicationController
   before_action :authenticate_user!
   before_action :set_employee, only: %i[show edit update destroy]
+  # ISS-264: viewer read-only — CRUD는 member 이상만
+  before_action :require_member!, only: %i[new create edit update]
   before_action :require_manager!, only: %i[destroy]
 
   def index

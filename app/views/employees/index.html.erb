@@ -7,9 +7,12 @@
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white">직원 관리</h1>
       <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">비자/근무조건 선제 관리</p>
     </div>
-    <%= link_to new_employee_path, class: "inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors" do %>
-      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      직원 등록
+    <%# ISS-264: viewer는 Create 버튼 비노출 %>
+    <% if current_user.admin? || current_user.manager? || current_user.member? %>
+      <%= link_to new_employee_path, class: "inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors" do %>
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        직원 등록
+      <% end %>
     <% end %>
   </div>
 
