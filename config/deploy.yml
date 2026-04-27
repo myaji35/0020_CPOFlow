@@ -30,11 +30,13 @@ env:
     - ECOUNT_ENV
     - CPOFLOW_API_KEY
     # ISS-260: SMTP — .kamal/secrets에 값 채우면 자동 활성화 (미설정 시 :test fallback)
-    - SMTP_USER_NAME
-    - SMTP_PASSWORD
-    - SMTP_ADDRESS
-    - SMTP_PORT
-    - SMTP_DOMAIN
+    # 2026-04-27: secrets 누락으로 임시 비활성화 (메일 발송 OFF, :test fallback 동작)
+    # SMTP 자격증명 입력 후 아래 5줄 주석 해제하여 재활성화
+    # - SMTP_USER_NAME
+    # - SMTP_PASSWORD
+    # - SMTP_ADDRESS
+    # - SMTP_PORT
+    # - SMTP_DOMAIN
   clear:
     SOLID_QUEUE_IN_PUMA: true
     MAILER_HOST: cpoflow.ddtl.co.kr
