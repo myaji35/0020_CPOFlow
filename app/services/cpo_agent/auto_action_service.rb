@@ -87,7 +87,7 @@ module CpoAgent
       @order.order_quotes.create!(
         supplier: supplier,
         unit_price: metadata["best_price"],
-        currency: @order.currency || "USD",
+        currency: @order.currency || "AED",
         notes: "[CPO Agent] 자동 추가 — 비용 절감 #{metadata['saving_pct']}%"
       )
       create_auto_insight("#{supplier.name} 견적을 자동 추가했습니다 (-#{metadata['saving_pct']}%)", "quote_added")

@@ -143,7 +143,7 @@ module Sheets
 
     # ── 월별 원본 데이터 (24개월) ─────────────────────────────
     def sync_monthly_data(log)
-      headers = %w[년월 수주건수 납품건수 진행중 납기준수율 수주금액USD 평균납기일수]
+      headers = %w[년월 수주건수 납품건수 진행중 납기준수율 수주금액AED 평균납기일수]
       months  = (0..23).map { |i| (Date.today - i.months).beginning_of_month }.reverse
 
       rows = months.map do |month|
@@ -172,7 +172,7 @@ module Sheets
 
     # ── 분기 원본 데이터 ──────────────────────────────────────
     def sync_quarterly_data(log)
-      headers = %w[년도 분기 수주건수 납품건수 납기준수율 총수주금액USD 최대단건금액USD]
+      headers = %w[년도 분기 수주건수 납품건수 납기준수율 총수주금액AED 최대단건금액AED]
       rows = []
       (0..7).each do |i|
         base    = Date.today << (i * 3)
@@ -195,7 +195,7 @@ module Sheets
 
     # ── 현장별 실적 ───────────────────────────────────────────
     def sync_site_category(log)
-      headers = %w[현장분류 현장명 발주건수 납품건수 납기준수율 총수주금액USD 진행상태]
+      headers = %w[현장분류 현장명 발주건수 납품건수 납기준수율 총수주금액AED 진행상태]
       rows = []
 
       Project.includes(:client).order(:site_category, :name).each do |project|
@@ -226,7 +226,7 @@ module Sheets
 
     # ── 발주 원데이터 500건 ───────────────────────────────────
     def sync_orders_raw(log)
-      headers = %w[ID 제목 고객사 공급사 현장 상태 우선순위 납기일 품목 수량 견적가USD 담당자 생성일]
+      headers = %w[ID 제목 고객사 공급사 현장 상태 우선순위 납기일 품목 수량 견적가AED 담당자 생성일]
       rows = Order.includes(:client, :supplier, :project)
                   .order(created_at: :desc).limit(500)
                   .map do |o|
@@ -356,7 +356,7 @@ module Sheets
         [ "CPOFlow 경영 대시보드", "", "", "", "", "", "" ],
         [ "동기화: #{today.strftime('%Y년 %m월 %d일')}", "", "", "", "", "", "" ],
         [ "", "", "", "", "", "", "" ],
-        [ "진행중 발주", "지연 발주", "이달 납품", "이달 수주액(USD)", "납기준수율(이달)", "", "" ],
+        [ "진행중 발주", "지연 발주", "이달 납품", "이달 수주액(AED)", "납기준수율(이달)", "", "" ],
         [ active, overdue, del_m, val_m.round(0), "#{rate}%", "", "" ],
         [ "", "", "", "", "", "", "" ],
         [ "← 월별 수주/납품 차트", "", "", "", "현장별 파이차트 →", "", "" ]

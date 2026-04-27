@@ -96,7 +96,7 @@ en:
       due_date: "Delivery Due Date"
       item: "Product / Item"
       quantity: "Quantity"
-      value: "Estimated Value (USD)"
+      value: "Estimated Value (AED)"
       priority: "Priority"
       tags: "Tags"
       description: "Description / Notes"

@@ -30,7 +30,7 @@ module Ecount
           category:     row[:category].to_s.strip,
           brand:        row[:brand].to_s.strip,
           unit_price:   parse_decimal(row[:unit_price]),
-          currency:     row[:currency].presence || "USD",
+          currency:     row[:currency].presence || "AED",
           sika_product: sika_brand?(row[:brand]),
           active:       parse_active(row[:active])
         }

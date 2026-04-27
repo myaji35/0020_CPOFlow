@@ -58,8 +58,8 @@
     <tr>
       <th width="42%">품목명</th>
       <th width="13%" class="amount-col">수량</th>
-      <th width="22%" class="amount-col">단가 (USD)</th>
-      <th width="23%" class="amount-col">금액 (USD)</th>
+      <th width="22%" class="amount-col">단가 (AED)</th>
+      <th width="23%" class="amount-col">금액 (AED)</th>
     </tr>
   </thead>
   <tbody>
@@ -75,7 +75,7 @@
     </tr>
     <tr class="total-row">
       <td colspan="3" class="amount-col">합계 (VAT 별도)</td>
-      <td class="amount-col">USD <%= number_with_delimiter(@order.estimated_value&.round(2)) || "-" %></td>
+      <td class="amount-col">AED <%= number_with_delimiter(@order.estimated_value&.round(2)) || "-" %></td>
     </tr>
   </tbody>
 </table>
@@ -94,7 +94,7 @@
   </div>
   <div class="info-item">
     <span class="info-label">통화</span>
-    <span class="info-value"><%= @order.currency || "USD" %></span>
+    <span class="info-value"><%= @order.currency || "AED" %></span>
   </div>
 </div>
 

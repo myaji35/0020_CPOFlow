@@ -47,7 +47,7 @@ module Ecount
           due_date:               due,
           quantity:               row[:quantity].to_s.to_i,
           estimated_value:        row[:estimated_value].to_s.gsub(/[^\d.]/, "").to_f,
-          currency:               row[:currency].presence || "USD",
+          currency:               row[:currency].presence || "AED",
           item_name:              row[:name].presence || row[:ecount_code],
           tags:                   "ecount-import",
           original_email_from:    "ecount@import",

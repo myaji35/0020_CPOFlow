@@ -267,14 +267,14 @@
             <div>
               <span class="text-gray-500 dark:text-gray-500">단가</span>
               <p class="font-medium text-gray-700 dark:text-gray-200">
-                <%= quote.unit_price ? "#{quote.currency.presence || 'USD'} #{number_with_delimiter(quote.unit_price)}" : "-" %>
+                <%= quote.unit_price ? "#{quote.currency.presence || 'AED'} #{number_with_delimiter(quote.unit_price)}" : "-" %>
               </p>
             </div>
             <div>
               <span class="text-gray-500 dark:text-gray-500">총액</span>
               <p class="font-medium text-gray-700 dark:text-gray-200">
                 <% if quote.unit_price && order.quantity.to_i > 0 %>
-                  <%= "#{quote.currency.presence || 'USD'} #{number_with_delimiter((quote.unit_price * order.quantity).round(2))}" %>
+                  <%= "#{quote.currency.presence || 'AED'} #{number_with_delimiter((quote.unit_price * order.quantity).round(2))}" %>
                 <% else %>
                   -
                 <% end %>

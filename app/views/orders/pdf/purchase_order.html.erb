@@ -77,14 +77,14 @@
         <% if selected_quote %>
           <%= selected_quote.currency %> <%= number_with_delimiter(selected_quote.unit_price) %>
         <% elsif @order.estimated_value.present? && @order.quantity.to_i > 0 %>
-          USD <%= number_with_delimiter((@order.estimated_value / @order.quantity).round(2)) %>
+          AED <%= number_with_delimiter((@order.estimated_value / @order.quantity).round(2)) %>
         <% else %>-<% end %>
       </td>
       <td class="amount-col">
         <% if selected_quote %>
           <%= selected_quote.currency %> <%= number_with_delimiter(selected_quote.total_price&.round(2)) %>
         <% else %>
-          USD <%= number_with_delimiter(@order.estimated_value&.round(2)) || "-" %>
+          AED <%= number_with_delimiter(@order.estimated_value&.round(2)) || "-" %>
         <% end %>
       </td>
     </tr>
@@ -94,7 +94,7 @@
         <% if selected_quote %>
           <%= selected_quote.currency %> <%= number_with_delimiter(selected_quote.total_price&.round(2)) %>
         <% else %>
-          USD <%= number_with_delimiter(@order.estimated_value&.round(2)) || "-" %>
+          AED <%= number_with_delimiter(@order.estimated_value&.round(2)) || "-" %>
         <% end %>
       </td>
     </tr>
@@ -115,7 +115,7 @@
   </div>
   <div class="info-item">
     <span class="info-label">통화</span>
-    <span class="info-value"><%= selected_quote&.currency || @order.currency || "USD" %></span>
+    <span class="info-value"><%= selected_quote&.currency || @order.currency || "AED" %></span>
   </div>
 </div>
 

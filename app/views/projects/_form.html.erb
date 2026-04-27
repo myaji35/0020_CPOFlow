@@ -51,7 +51,7 @@
     <div>
       <%= f.label :currency, "통화", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
       <%= f.select :currency,
-          options_for_select(["USD","KRW","EUR","AED"].map { |c| [c, c] }, @project.currency || "USD"),
+          options_for_select(["AED","USD","KRW","EUR"].map { |c| [c, c] }, @project.currency || "AED"),
           {}, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
     </div>
     <div>

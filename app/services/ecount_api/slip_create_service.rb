@@ -49,7 +49,7 @@ module EcountApi
           "PROD_CD"   => resolve_product_code,
           "QTY"       => (@order.respond_to?(:quantity) ? @order.quantity : 1) || 1,
           "PRICE"     => @order.estimated_value.to_f,
-          "CURR_CD"   => @order.respond_to?(:currency) ? (@order.currency.presence || "USD") : "USD",
+          "CURR_CD"   => @order.respond_to?(:currency) ? (@order.currency.presence || "AED") : "AED",
           "REMARK"    => @order.title.to_s.truncate(100),
           "SLIP_DATE" => Date.today.strftime("%Y%m%d")
         } ]

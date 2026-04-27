@@ -84,7 +84,7 @@ module EcountApi
         unit:             item["UNIT"].to_s.strip,
         category:         item["CLASS_CD"].to_s.strip,
         unit_price:       item["IN_PRICE"].to_f,
-        currency:         item["CURR_CD"].presence || "USD",
+        currency:         item["CURR_CD"].presence || "AED",
         active:           item["USE_YN"] != "N",
         ecount_synced_at: now,
         created_at:       now,

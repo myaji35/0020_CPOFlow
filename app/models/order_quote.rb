@@ -7,7 +7,7 @@ class OrderQuote < ApplicationRecord
   belongs_to :supplier
 
   validates :unit_price, numericality: { greater_than: 0 }, allow_nil: true
-  validates :currency, inclusion: { in: %w[USD KRW AED EUR] }, allow_nil: true
+  validates :currency, inclusion: { in: %w[AED USD KRW EUR] }, allow_nil: true
 
   after_create_commit :create_quoted_link
 
@@ -21,7 +21,7 @@ class OrderQuote < ApplicationRecord
 
   def formatted_price
     return "-" if unit_price.blank?
-    "#{currency || 'USD'} #{number_with_delimiter(unit_price)}"
+    "#{currency || 'AED'} #{number_with_delimiter(unit_price)}"
   end
 
   private

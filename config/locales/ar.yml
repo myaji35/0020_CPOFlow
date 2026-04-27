@@ -91,7 +91,7 @@ ar:
       due_date: "تاريخ التسليم"
       item: "المنتج/الصنف"
       quantity: "الكمية"
-      value: "القيمة التقديرية (USD)"
+      value: "القيمة التقديرية (AED)"
       priority: "الأولوية"
       tags: "الوسوم"
       description: "الوصف/الملاحظات"

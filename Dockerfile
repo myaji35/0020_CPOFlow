@@ -19,14 +19,14 @@ WORKDIR /rails
 # fonts-nanum          : Nanum Gothic/Myeongjo (한글 기본)
 # fonts-noto-cjk       : Noto Sans/Serif CJK (한/중/일 fallback)
 # fonts-noto-core      : Noto Sans 라틴/키릴 등 커버
-# fonts-naskh-arabic   : UAE 지사 업무용 아랍어 (Naskh)
+# fonts-hosny-amiri    : UAE 지사 업무용 아랍어 (Amiri/Naskh 계열) — Debian Bookworm 기준 정상 패키지명
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y curl libjemalloc2 libvips sqlite3 \
       nodejs npm \
       libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 \
       libxcomposite1 libxdamage1 libxrandr2 libgbm1 libpango-1.0-0 \
       libcairo2 libasound2 libxshmfence1 \
-      fonts-liberation fonts-nanum fonts-noto-cjk fonts-noto-core fonts-naskh-arabic && \
+      fonts-liberation fonts-nanum fonts-noto-cjk fonts-noto-core fonts-hosny-amiri && \
     fc-cache -f && \
     ln -s /usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2 /usr/local/lib/libjemalloc.so && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
