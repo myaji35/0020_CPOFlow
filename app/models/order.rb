@@ -185,6 +185,16 @@ class Order < ApplicationRecord
     update!(archived_at: Time.current)
   end
 
+  # 휴지통에서 복원 — archived_at clear
+  def restore!
+    update!(archived_at: nil)
+  end
+
+  # 영구 삭제 — DB에서 완전히 제거 (복구 불가)
+  def destroy_permanently!
+    destroy
+  end
+
   # ISS-039: urgent/high + 마감일 경과 + 담당자 미배정 = 즉시 조치 필요
   scope :critical, -> {
     joins(:card_status)

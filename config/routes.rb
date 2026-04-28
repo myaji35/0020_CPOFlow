@@ -62,6 +62,12 @@ Rails.application.routes.draw do
     end
   end
 
+  # 휴지통 — soft-deleted Order 복원/영구삭제
+  get    "trash",                to: "trash#index",            as: :trash
+  post   "trash/:id/restore",    to: "trash#restore",          as: :restore_trash
+  delete "trash/:id",            to: "trash#destroy",          as: :destroy_trash
+  delete "trash",                to: "trash#empty",            as: :empty_trash
+
   # Inbox (email view)
   get  "inbox",             to: "inbox#index"
   get  "inbox/:id",         to: "inbox#show",               as: :inbox_email

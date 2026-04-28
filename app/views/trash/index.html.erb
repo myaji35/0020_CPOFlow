@@ -1,0 +1,94 @@
+<% content_for :title, "휴지통" %>
+
+<div class="max-w-6xl mx-auto px-6 py-6">
+  <%# Header %>
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-xl font-semibold text-gray-900 flex items-center gap-2">
+        <i class="lni lni-trash-can text-lg text-gray-500"></i>
+        휴지통
+        <span class="text-sm font-normal text-gray-500">(<%= @orders.size %>건)</span>
+      </h1>
+      <p class="text-xs text-gray-500 mt-1">
+        삭제된 발주는 여기에 보관됩니다. <strong>복원</strong>하면 칸반으로 돌아오고, <strong>영구 삭제</strong>하면 복구할 수 없습니다.
+      </p>
+    </div>
+    <% if current_user.admin? && @orders.any? %>
+      <%= button_to empty_trash_path, method: :delete,
+            data: { turbo_confirm: "휴지통의 #{@orders.size}건을 모두 영구 삭제합니다. 복구 불가능합니다. 계속할까요?" },
+            class: "inline-flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-md border border-red-300 text-red-600 hover:bg-red-50 transition-colors" do %>
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        휴지통 비우기
+      <% end %>
+    <% end %>
+  </div>
+
+  <% if @orders.empty? %>
+    <%# 빈 상태 %>
+    <div class="bg-white border border-gray-200 rounded-md p-12 text-center">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-50 mb-4">
+        <svg class="w-8 h-8 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      </div>
+      <p class="text-sm text-gray-600 font-medium">휴지통이 비어 있습니다.</p>
+      <p class="text-xs text-gray-400 mt-1">삭제된 발주가 여기에 표시됩니다.</p>
+    </div>
+  <% else %>
+    <%# 카드 그리드 %>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <% @orders.each do |order| %>
+        <div class="relative bg-white border border-gray-200 rounded-md p-3 hover:shadow-md transition-shadow">
+          <%# 상단: 상태 + 관리번호 %>
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 shrink-0">
+                <%= Order::STATUS_LABELS[order.status] || order.status %>
+              </span>
+              <% latest_no = order.po_no.presence || order.quo_no.presence || order.rfq_no.presence %>
+              <% if latest_no %>
+                <span class="text-sm font-bold text-gray-700 truncate" title="<%= latest_no %>"><%= latest_no %></span>
+              <% end %>
+            </div>
+            <span class="text-[10px] text-gray-400 shrink-0">
+              <%= order.archived_at ? "삭제: #{l(order.archived_at, format: :short)}" : "" %>
+            </span>
+          </div>
+
+          <%# 제목 %>
+          <h4 class="text-sm font-semibold text-gray-900 leading-snug mb-2 line-clamp-2">
+            <%= order.display_subject %>
+          </h4>
+
+          <%# 발주처 / 현장 %>
+          <div class="flex flex-wrap items-center gap-1.5 mb-3 text-xs text-gray-500">
+            <% if order.client %>
+              <span class="inline-flex items-center gap-1">
+                <i class="lni lni-briefcase"></i>
+                <%= order.client.name %>
+              </span>
+            <% elsif order.customer_name.present? %>
+              <span class="inline-flex items-center gap-1">
+                <i class="lni lni-user"></i>
+                <%= order.customer_name %>
+              </span>
+            <% end %>
+          </div>
+
+          <%# 액션 — 복원 / 영구삭제 %>
+          <div class="flex items-center gap-2 pt-2 border-t border-gray-100">
+            <%= button_to restore_trash_path(order), method: :post,
+                  class: "flex-1 inline-flex items-center justify-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md bg-[#166c72] text-white hover:bg-[#125a5f] transition-colors" do %>
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+              복원
+            <% end %>
+            <%= button_to destroy_trash_path(order), method: :delete,
+                  data: { turbo_confirm: "이 발주를 영구 삭제합니다. 복구 불가능합니다. 계속할까요?" },
+                  class: "inline-flex items-center justify-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md border border-red-300 text-red-600 hover:bg-red-50 transition-colors" do %>
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              영구삭제
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

@@ -197,11 +197,12 @@ class OrdersController < ApplicationController
   end
 
   def destroy
-    @order.destroy
+    # Soft delete — 휴지통으로 이동 (archived_at 세팅). 복원 가능.
+    @order.archive!
 
     respond_to do |format|
-      format.html { redirect_to kanban_path, notice: t("orders.delete_success") }
-      format.json { render json: { success: true } }
+      format.html { redirect_to kanban_path, notice: "휴지통으로 이동했습니다. (휴지통에서 복원 가능)" }
+      format.json { render json: { success: true, archived: true } }
     end
   end
 
