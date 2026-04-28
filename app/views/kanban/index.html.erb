@@ -841,6 +841,8 @@ function initKanban() {
   setActiveToggle('filter-due-btn', '');
 
   // ── FR-02: 퀵액션 ──────────────────────────────────────────
+  // capture 단계에서 받음 — _card.html.erb의 인라인 onclick stopPropagation()이
+  // bubble을 차단하므로 capture(true)로 등록해야 클릭이 도달함
   document.addEventListener('click', function(e) {
     const btn = e.target.closest('.quick-move-btn');
     if (!btn) return;
@@ -856,7 +858,7 @@ function initKanban() {
 
     fetch('/orders/' + orderId + '/move', {
       method:  'PATCH',
-      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF },
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF, 'Accept': 'application/json' },
       body:    JSON.stringify({ status: moveTo })
     })
     .then(function(r) { return r.json(); })
@@ -880,7 +882,7 @@ function initKanban() {
       btn.disabled = false;
       btn.classList.remove('opacity-50');
     });
-  });
+  }, true);
 
   // ── 삭제 기능 ──────────────────────────────────────────────
   var deleteOrderId = null;
@@ -890,6 +892,7 @@ function initKanban() {
     deleteOrderId = null;
   };
 
+  // capture 단계로 등록 — 카드 인라인 onclick stopPropagation()이 bubble을 차단하므로 필수
   document.addEventListener('click', function(e) {
     var btn = e.target.closest('.quick-delete-btn');
     if (!btn) return;
@@ -898,7 +901,7 @@ function initKanban() {
     deleteOrderId = btn.dataset.orderId;
     document.getElementById('delete-order-title').textContent = btn.dataset.orderTitle || '이 발주';
     document.getElementById('delete-confirm-modal').classList.remove('hidden');
-  });
+  }, true);
 
   document.getElementById('delete-confirm-btn').addEventListener('click', function() {
     if (!deleteOrderId) return;
