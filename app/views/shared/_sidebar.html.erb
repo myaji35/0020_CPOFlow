@@ -121,7 +121,7 @@
       <%= nav_link_to trash_path, icon: "lni lni-trash-can", label: "휴지통" do %>
         <% if trash_count > 0 %>
           <span class="ml-auto text-[10px] font-semibold bg-white/15 text-white px-1.5 py-0.5 rounded-full"
-                "x-bind:class" => "collapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'"><%= trash_count %></span>
+                x-bind:class="collapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'"><%= trash_count %></span>
         <% end %>
       <% end %>
       <%= nav_link_to settings_root_path, icon: "lni lni-cog", label: t("nav.settings") %>
