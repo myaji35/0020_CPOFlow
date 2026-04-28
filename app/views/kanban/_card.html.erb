@@ -34,8 +34,8 @@
     <span class="absolute left-0 top-0 bottom-0 w-[4px] <%= sla_ribbon %> rounded-l-md shadow-[1px_0_3px_rgba(0,0,0,0.1)] pointer-events-none z-10"></span>
   <% end %>
 
-  <%# 퀵액션 버튼 (FR-02) — hover 시 노출 %>
-  <div class="quick-actions absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+  <%# 이동 버튼 (←/→) — hover 시만 노출 (자주 안 쓰는 액션) %>
+  <div class="quick-actions absolute top-2 right-10 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
     <% if local_assigns[:prev_status] %>
       <button class="quick-move-btn w-6 h-6 flex items-center justify-center rounded-md bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-sm transition-colors"
               data-order-id="<%= order.id %>"
@@ -54,14 +54,16 @@
         <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
       </button>
     <% end %>
-    <button class="quick-delete-btn w-6 h-6 flex items-center justify-center rounded-md bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-500 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-500 hover:border-red-300 shadow-sm transition-colors"
-            data-order-id="<%= order.id %>"
-            data-order-title="<%= order.display_subject %>"
-            title="삭제"
-            onclick="event.stopPropagation()">
-      <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-    </button>
   </div>
+
+  <%# 삭제 버튼 — 항상 노출 (발견성 우선) %>
+  <button class="quick-delete-btn absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-md bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-500 hover:bg-red-500 hover:text-white hover:border-red-500 shadow-sm transition-colors z-10"
+          data-order-id="<%= order.id %>"
+          data-order-title="<%= order.display_subject %>"
+          title="삭제"
+          onclick="event.stopPropagation()">
+    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+  </button>
 
   <!-- Card Header: drag handle + Priority + Reference No + Due badge -->
   <div class="flex items-center justify-between mb-2">
