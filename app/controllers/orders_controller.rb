@@ -86,7 +86,8 @@ class OrdersController < ApplicationController
 
   def new
     @order = Order.new
-    @order.due_date = 30.days.from_now
+    # 2026-04-29 (대표님 지시): 마감일 기본값 D-30 → D-7 로 변경.
+    @order.due_date = 7.days.from_now
     @board = if params[:board_id].present?
       KanbanBoard.find_by(id: params[:board_id])
     else
