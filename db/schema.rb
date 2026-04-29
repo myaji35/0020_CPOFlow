@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_24_014520) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_29_010000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -548,6 +548,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_24_014520) do
     t.integer "user_id", null: false
     t.datetime "viewed_at"
     t.index ["archived_at", "email_received_at"], name: "index_orders_on_archived_received"
+    t.index ["archived_at", "parent_order_id", "status", "rfq_status"], name: "idx_orders_kanban_inbox_gate"
+    t.index ["archived_at", "parent_order_id", "status"], name: "idx_orders_kanban_root_status"
     t.index ["archived_at"], name: "index_orders_on_archived_at"
     t.index ["ariba_event_id"], name: "index_orders_on_ariba_event_id"
     t.index ["card_status_id"], name: "index_orders_on_card_status_id"
@@ -559,6 +561,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_24_014520) do
     t.index ["ecount_slip_no"], name: "index_orders_on_ecount_slip_no"
     t.index ["email_received_at"], name: "index_orders_on_email_received_at"
     t.index ["gmail_thread_id"], name: "index_orders_on_gmail_thread_id"
+    t.index ["kanban_board_id", "archived_at", "parent_order_id", "status"], name: "idx_orders_kanban_board_status"
     t.index ["kanban_board_id"], name: "index_orders_on_kanban_board_id"
     t.index ["kanban_column_id"], name: "index_orders_on_kanban_column_id"
     t.index ["parent_order_id"], name: "index_orders_on_parent_order_id"

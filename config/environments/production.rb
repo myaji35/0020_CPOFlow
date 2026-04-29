@@ -61,6 +61,11 @@ Rails.application.configure do
   config.active_job.queue_adapter = :solid_queue
   config.solid_queue.connects_to = { database: { writing: :queue } }
 
+  # P3: Active Record async query executor — load_async / async_count 의 실제 병렬 실행 활성화.
+  # 칸반 9컬럼 쿼리를 동시 발사 → 직렬 2.7s → 병렬 ~0.5s 목표.
+  config.active_record.async_query_executor = :global_thread_pool
+  config.active_record.global_executor_concurrency = 4
+
   # ISS-260: Mailer 설정 — Devise 비밀번호 재설정 메일 발송 가능하도록 활성화
   # host는 운영 도메인으로 고정 (Devise reset 링크가 example.com으로 안 가도록)
   mailer_host = ENV.fetch("MAILER_HOST", "cpoflow.ddtl.co.kr")

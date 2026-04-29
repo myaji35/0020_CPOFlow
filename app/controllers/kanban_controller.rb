@@ -58,12 +58,14 @@ class KanbanController < ApplicationController
     search_active = @search_query.present?
 
     # 정상 로드: 모든 컬럼 첫 INITIAL_LIMIT건만
+    # P1: eager load 슬림화 — 카드 파셜 미사용 :user 제거. tasks/comments/sub_orders 는
+    # task_progress / comments.count / sub_orders.count 호출하므로 preload 유지(메모리 카운트로 N+1 회피).
     @column_totals = {}
     @columns = @kanban_column_keys.map do |col_key|
       base = board_scoped_orders
                     .root_orders
                     .by_due_date
-                    .includes(:assignees, :tasks, :user, :sub_orders, :card_status, :client, :project, :comments)
+                    .includes(:assignees, :tasks, :sub_orders, :card_status, :client, :project, :comments)
 
       relation = if @current_board.is_default? || @current_board.board_type == "purchase"
         # 구매보드: 기존 status 기반
@@ -90,12 +92,19 @@ class KanbanController < ApplicationController
         )
       end
 
-      total = relation.count
-      @column_totals[col_key] = total
-      # 검색 중에는 전건 표시 (매칭 결과는 대체로 소수이므로 안전)
       col_limit = search_active ? 200 : INITIAL_LIMIT
-      [ col_key, relation.limit(col_limit).to_a ]
+      # P3: 병렬 쿼리 — load_async 로 컬럼 카드 fetch 와 count 를 동시 발사.
+      # SQLite WAL 환경에서도 read 동시성 OK. 9컬럼 직렬 0.3초 → 병렬 ~0.4초 단발에 수렴.
+      records_promise = relation.limit(col_limit).load_async
+      count_promise   = relation.async_count
+      @column_totals[col_key] = count_promise
+      [ col_key, records_promise ]
     end.to_h
+
+    # async 결과 수확 — to_a / value 호출 시점에 결과 대기
+    @columns = @columns.transform_values(&:to_a)
+    @column_totals = @column_totals.transform_values(&:value)
+
     @filter_employees = Employee.active.by_name
     @card_statuses = @current_board.card_statuses.order(:position)
 
@@ -103,20 +112,25 @@ class KanbanController < ApplicationController
     inbox_orders = @columns["inbox"] || []
     @inbox_grouped = build_inbox_groups(inbox_orders)
 
-    # 중복 스레드 ID 목록 (병합대상 버튼용)
-    @duplicate_thread_ids = board_scoped_orders
-                                 .where(parent_order_id: nil)
-                                 .where.not(gmail_thread_id: [ nil, "" ])
-                                 .group(:gmail_thread_id)
-                                 .having("COUNT(*) > 1")
-                                 .pluck(:gmail_thread_id)
+    # P2: 중복 스레드 / 병합 그룹은 첫 렌더에서 lazy 화 — merge=1 파라미터 또는 turbo-frame 진입 시만 fetch.
+    # 운영 분포: 중복 thread 0건 → 무조건 100ms 소비하던 부담 제거.
+    if params[:merge] == "1"
+      @duplicate_thread_ids = board_scoped_orders
+                                   .where(parent_order_id: nil)
+                                   .where.not(gmail_thread_id: [ nil, "" ])
+                                   .group(:gmail_thread_id)
+                                   .having("COUNT(*) > 1")
+                                   .pluck(:gmail_thread_id)
 
-    # 병합 모드용: 스레드별 그룹화된 주문 목록
-    @merge_groups = @duplicate_thread_ids.map do |tid|
-      orders = Order.where(gmail_thread_id: tid, parent_order_id: nil)
-                    .includes(:assignees, :client, :sub_orders)
-                    .order(created_at: :asc)
-      { thread_id: tid, orders: orders }
+      @merge_groups = @duplicate_thread_ids.map do |tid|
+        orders = Order.where(gmail_thread_id: tid, parent_order_id: nil)
+                      .includes(:assignees, :client, :sub_orders)
+                      .order(created_at: :asc)
+        { thread_id: tid, orders: orders }
+      end
+    else
+      @duplicate_thread_ids = []
+      @merge_groups = []
     end
 
     elapsed_ms = ((Time.now - perf_t0) * 1000).round(1)
@@ -137,7 +151,7 @@ class KanbanController < ApplicationController
     base = board_scoped_orders
                   .root_orders
                   .by_due_date
-                  .includes(:assignees, :tasks, :user, :sub_orders, :card_status, :client, :project, :comments)
+                  .includes(:assignees, :tasks, :sub_orders, :card_status, :client, :project, :comments)
 
     relation = if @current_board.is_default? || @current_board.board_type == "purchase"
       if status == "new_rfq"
