@@ -28,7 +28,7 @@ class AssignmentsController < ApplicationController
       format.json {
         render json: {
           status: "ok",
-          assignees: @order.assignees.map { |e| { id: e.id, name: e.display_name, email: e.email } }
+          assignees: @order.assignees.map { |e| { id: e.id, name: e.display_name } }
         }
       }
       format.turbo_stream {
