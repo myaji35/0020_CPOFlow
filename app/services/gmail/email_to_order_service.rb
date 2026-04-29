@@ -38,6 +38,12 @@ module Gmail
       )
       parent = find_parent_order(ref_no)
 
+      # 좀비 차단: 같은 reference_no 또는 gmail_thread_id 가 이미 휴지통(archived)에 있으면
+      # 새 카드도 archived 상태로 생성 → 칸반/인박스 모두에 좀비처럼 살아남지 않음.
+      # "분리 운영 원칙": 사용자가 칸반에서 삭제한 RFQ는 후속 메일이 와도 다시 등장하지 않는다.
+      # 휴지통에서 명시 복원(restore!)하면 archived_at=nil 되어 정상 노출 재개.
+      auto_archive = Order.trashed_lineage?(reference_no: ref_no, gmail_thread_id: @email[:thread_id])
+
       order = Order.new(
         title:                  build_title,
         customer_name:          @detection[:customer_name].presence || "Unknown",
@@ -81,10 +87,14 @@ module Gmail
         stage2_latency_ms:      nil,
         stage3_latency_ms:      nil,
         classification_confidence: @v2 ? confidence_to_decimal(@v2.confidence) : nil,
-        cache_hit:              @v2 ? (@v2.cache_hit || false) : false
+        cache_hit:              @v2 ? (@v2.cache_hit || false) : false,
+        archived_at:            (auto_archive ? Time.current : nil)
       )
 
       if order.save
+        if auto_archive
+          Rails.logger.info "[EmailToOrder] Zombie-block: order ##{order.id} ref=#{ref_no} thread=#{@email[:thread_id]} → 휴지통 전적 RFQ → 자동 archived"
+        end
         # ISS-053 Shadow Mode: classification_logs back-link + would_exclude 플래그
         # ISS-056: 재시도/병렬 호출 시 동일 email_message_id로 여러 log row가 생성될 수 있음.
         #          Orchestrator가 방금 만든 특정 row(@v2_log_id)만 타겟팅하여 오염 방지.
@@ -106,7 +116,12 @@ module Gmail
           end
         end
 
-        if parent
+        if auto_archive
+          # 좀비 차단된 카드: 알림/자동배정/초안 생성 모두 스킵.
+          # 카드가 archived 이므로 인박스/칸반 양쪽에 노출되지 않음.
+          # 데이터는 보존(원본 메일 추적용) → 사용자가 명시 복원 시 재개 가능.
+          Activity.create!(order: order, user: @account.user, action: "auto_archived_zombie_block")
+        elsif parent
           # 서브 카드: 메인 카드에 Activity 추가 (담당자 배정/초안 생성 스킵)
           Activity.create!(
             order:  parent,
@@ -182,10 +197,12 @@ module Gmail
 
     # 동일 건 메인 카드(parent_order_id: nil) 탐색
     # 1순위: reference_no 기반, 2순위: gmail_thread_id 기반 fallback
+    # archived(휴지통) parent 는 매칭에서 제외 — 좀비 부모에 새 자식이 붙어
+    # "부모는 휴지통, 자식은 칸반"으로 분리되는 데이터 정합성 깨짐을 차단.
     def find_parent_order(ref_no)
       # 1순위: reference_no 기반
       if ref_no.present?
-        base = Order.where(reference_no: ref_no).where(parent_order_id: nil)
+        base = Order.not_archived.where(reference_no: ref_no).where(parent_order_id: nil)
         found = base.where.not(status: :new_rfq).order(created_at: :asc).first ||
                 base.order(created_at: :asc).first
         return found if found
@@ -195,7 +212,8 @@ module Gmail
       thread_id = @email[:thread_id]
       return nil if thread_id.blank?
 
-      Order.where(gmail_thread_id: thread_id)
+      Order.not_archived
+           .where(gmail_thread_id: thread_id)
            .where(parent_order_id: nil)
            .order(created_at: :asc)
            .first

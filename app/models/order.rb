@@ -185,6 +185,27 @@ class Order < ApplicationRecord
     update!(archived_at: Time.current)
   end
 
+  # 좀비 차단 가드 — 같은 reference_no 또는 gmail_thread_id 중 하나라도
+  # archived(휴지통) 상태로 존재하는지 검사.
+  # EmailToOrderService 가 새 카드 생성 시 호출 → true 면 신규 카드도 archived 로 시작.
+  # "분리 운영 원칙": 칸반에서 삭제한 RFQ 는 거래처가 같은 건의 후속 메일을 보내도
+  # 다시 칸반/인박스에 등장하지 않는다. 명시 복원(restore!)만이 archived_at 을 푼다.
+  def self.trashed_lineage?(reference_no: nil, gmail_thread_id: nil)
+    ref = reference_no.to_s.strip
+    tid = gmail_thread_id.to_s.strip
+    return false if ref.blank? && tid.blank?
+
+    rel = archived
+    if ref.present? && tid.present?
+      rel = rel.where("reference_no = ? OR gmail_thread_id = ?", ref, tid)
+    elsif ref.present?
+      rel = rel.where(reference_no: ref)
+    else
+      rel = rel.where(gmail_thread_id: tid)
+    end
+    rel.exists?
+  end
+
   # 휴지통에서 복원 — archived_at clear
   def restore!
     update!(archived_at: nil)

@@ -1,8 +1,28 @@
 <%# Redesign Phase 1 — 232px navy sidebar (primary #1E3A5F + brand-600 CF mark + brand-400 active bar) %>
-<nav class="flex flex-col bg-primary text-blue-100 h-full shrink-0 z-20 transition-[width] duration-200 border-r border-white/10"
-     x-data="{ collapsed: (typeof localStorage !== 'undefined' && localStorage.getItem('sidebar_collapsed') === 'true') }"
-     x-init="$watch('collapsed', v => localStorage.setItem('sidebar_collapsed', v))"
-     :class="collapsed ? 'w-14' : 'w-[232px]'">
+<%# 상태 모델 (CSS-first, Alpine 최소화):
+     pinned=true  → 기본 56px, :hover 시 232px 자동 펼침 (CSS group-hover)
+     pinned=false → 항상 232px (정적) %>
+<style>
+  /* 사이드바 호버 펼침 (CSS-only, race condition 0) */
+  nav[data-sidebar][data-pinned="true"] { width: 56px; position: absolute; inset: 0 auto 0 0; box-shadow: none; }
+  nav[data-sidebar][data-pinned="true"]:hover { width: 232px; box-shadow: 0 25px 50px -12px rgba(0,0,0,.25); }
+  nav[data-sidebar][data-pinned="false"] { width: 232px; position: relative; }
+  nav[data-sidebar] { transition: width .2s ease; }
+  /* hover 펼침 시 라벨/배지 자동 표시 */
+  nav[data-sidebar][data-pinned="true"]:hover [data-collapsible-text] { opacity: 1 !important; width: auto !important; height: auto !important; pointer-events: auto !important; overflow: visible !important; padding: revert !important; }
+</style>
+<nav data-sidebar
+     :data-pinned="pinned ? 'true' : 'false'"
+     class="flex flex-col bg-primary text-blue-100 h-full shrink-0 z-30 border-r border-white/10"
+     x-data="{
+       pinned: (typeof localStorage !== 'undefined' && localStorage.getItem('sidebar_collapsed') === 'true'),
+       hovering: false,
+       get collapsed() { return this.pinned && !this.hovering; }
+     }"
+     x-init="$watch('pinned', v => { localStorage.setItem('sidebar_collapsed', v); window.dispatchEvent(new CustomEvent('sidebar-pinned-changed', { detail: v })); });
+             $el.addEventListener('mouseenter', () => { if (pinned) hovering = true; });
+             $el.addEventListener('mouseleave', () => { hovering = false; });"
+     style="will-change: width;">
 
   <!-- Brand row (52px) -->
   <div class="flex items-center gap-3 h-[52px] px-4 border-b border-white/10 overflow-hidden">
@@ -12,10 +32,10 @@
       <div class="text-white font-semibold text-sm leading-none tracking-tight">CPOFlow</div>
       <div class="text-[11px] text-blue-200/70 mt-1 truncate">AtoZ2010 Inc.</div>
     </div>
-    <button @click="collapsed = !collapsed"
+    <button @click.stop="pinned = !pinned; hovering = false"
             class="shrink-0 w-6 h-6 grid place-items-center rounded-sm hover:bg-white/10 text-blue-200 hover:text-white transition-colors"
-            :title="collapsed ? '메뉴 펼치기' : '메뉴 접기'">
-      <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="collapsed ? 'rotate-180' : ''"
+            :title="pinned ? '메뉴 고정 펼치기' : '메뉴 접기 (호버 시 자동 펼침)'">
+      <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="pinned ? 'rotate-180' : ''"
            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="15 18 9 12 15 6"/>
       </svg>

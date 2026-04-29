@@ -202,4 +202,61 @@ class Gmail::EmailToOrderServiceTest < ActiveSupport::TestCase
     assert_nil order.classification_confidence
     assert_equal false, order.cache_hit
   end
+
+  # ===== 좀비 차단: 같은 reference_no 가 archived 면 새 카드도 archived =====
+  test "zombie_block: archived ref_no 와 동일한 새 메일은 자동 archived" do
+    # 진짜 RFQ 번호 형식(10자리 숫자) — ReferenceNumberExtractor 매칭 필수
+    ref = "70000#{rand(10000..99999)}"
+    Order.create!(
+      title: "old", customer_name: "x", status: :new_rfq,
+      reference_no: ref, gmail_thread_id: "old_tid_#{ref}",
+      archived_at: Time.current, user: @user
+    )
+
+    parsed = build_parsed(id: "zombie-msg-#{ref}", subject: "RFQ #{ref} reminder",
+                          body: "Reference #{ref}, please quote ASAP")
+    detection = empty_detection.merge(rfq_verdict: :confirmed, is_rfq: true)
+
+    order = Gmail::EmailToOrderService.new(
+      @account, parsed, detection, has_rfq_number: true
+    ).create_order!
+
+    assert_not_nil order, "좀비 차단 케이스도 카드 자체는 생성되어야 함 (감사 추적용)"
+    assert_equal ref, order.reference_no, "ref_no 가 정상 추출되어야 함 (가드 전제)"
+    assert order.archived?, "동일 ref_no 가 휴지통에 있으면 새 카드도 archived 로 시작해야 함"
+    assert_nil Assignment.find_by(order: order), "auto_archived 카드는 자동배정 스킵"
+    assert_equal "auto_archived_zombie_block", order.activities.first&.action
+  end
+
+  # ===== 좀비 차단: gmail_thread_id 기반 매칭 =====
+  test "zombie_block: archived thread_id 와 동일하면 ref_no 없어도 archived" do
+    tid = "ZOMBIE_TID_#{SecureRandom.hex(3)}"
+    Order.create!(
+      title: "old", customer_name: "x", status: :new_rfq,
+      gmail_thread_id: tid, archived_at: Time.current, user: @user
+    )
+
+    parsed = build_parsed(id: "zombie-msg-tid-#{tid}", subject: "follow up", body: "any text")
+    parsed[:thread_id] = tid
+
+    order = Gmail::EmailToOrderService.new(@account, parsed, empty_detection).create_order!
+
+    assert_not_nil order
+    assert order.archived?, "동일 thread 가 휴지통에 있으면 새 카드도 archived"
+  end
+
+  # ===== 좀비 차단: archived 가 없으면 정상 칸반 진입 =====
+  test "no_zombie: archived 전적 없으면 정상 생성" do
+    ref = "70001#{rand(10000..99999)}"
+    parsed = build_parsed(id: "normal-msg-#{ref}", subject: "RFQ #{ref}", body: ref)
+    detection = empty_detection.merge(rfq_verdict: :confirmed, is_rfq: true)
+
+    order = Gmail::EmailToOrderService.new(
+      @account, parsed, detection, has_rfq_number: true
+    ).create_order!
+
+    assert_not_nil order
+    assert_not order.archived?, "전적 없으면 archived 안 됨"
+    assert_equal "rfq_triage", order.rfq_status
+  end
 end

@@ -124,7 +124,11 @@
   <body class="bg-ink-75 dark:bg-ink-950 text-ink-900 dark:text-ink-100 antialiased transition-colors duration-200 font-sans"
         style="font-feature-settings: 'cv11','ss01';">
     <% if user_signed_in? %>
-      <div class="flex h-screen overflow-hidden">
+      <div class="flex h-screen overflow-hidden relative"
+           x-data="{ sidebarPinned: (typeof localStorage !== 'undefined' && localStorage.getItem('sidebar_collapsed') === 'true') }"
+           @sidebar-pinned-changed.window="sidebarPinned = $event.detail">
+        <!-- Sidebar spacer: pinned 상태에서 호버 펼침 시 사이드바가 absolute 가 되므로 본문이 밀리지 않도록 14px 자리 유지 -->
+        <div class="shrink-0 transition-[width] duration-200" :class="sidebarPinned ? 'w-14' : 'w-0'"></div>
         <!-- Sidebar Navigation -->
         <%= render "shared/sidebar" %>
 
