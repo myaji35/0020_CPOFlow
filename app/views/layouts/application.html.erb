@@ -427,51 +427,87 @@
           }, 300);
         }
 
-        // 2026-04-29: 드로어 안에서 담당자 추가/제거 — fetch 비동기, 드로어 유지.
-        function _drawerReloadContent(orderId) {
-          var body = document.getElementById('order-drawer-body');
-          if (!body) return Promise.resolve();
-          // 같은 order 의 드로어 콘텐츠를 다시 fetch 하여 담당자 상태 동기화
-          var path = (typeof _drawerOrderPath !== 'undefined' && _drawerOrderPath) ? _drawerOrderPath : ('/orders/' + orderId);
-          return fetch(path + '?drawer=1', { headers: { 'Accept': 'text/html', 'X-Requested-With': 'XMLHttpRequest' } })
-            .then(function(r) { return r.text(); })
-            .then(function(html) {
-              var doc = new DOMParser().parseFromString(html, 'text/html');
-              var fresh = doc.getElementById('order-assignees-' + orderId);
-              var existing = document.getElementById('order-assignees-' + orderId);
-              if (fresh && existing) existing.innerHTML = fresh.innerHTML;
-            }).catch(function() {});
-        }
-        window.assignDrawerAssignee = function(orderId, employeeId, btn) {
-          if (btn) btn.disabled = true;
-          var body = new URLSearchParams();
-          body.append('employee_id', employeeId);
-          fetch('/orders/' + orderId + '/assignments', {
-            method: 'POST',
-            headers: {
-              'X-CSRF-Token': document.querySelector('meta[name=csrf-token]')?.content,
-              'Content-Type': 'application/x-www-form-urlencoded',
-              'Accept': 'application/json'
-            },
-            body: body.toString()
-          })
-          .then(function(r) { return r.json(); })
-          .then(function() { _drawerReloadContent(orderId); })
-          .catch(function() { if (btn) btn.disabled = false; });
-        };
-        window.unassignDrawerAssignee = function(orderId, assignmentId, btn) {
-          if (btn) btn.disabled = true;
-          fetch('/orders/' + orderId + '/assignments/' + assignmentId, {
-            method: 'DELETE',
-            headers: {
-              'X-CSRF-Token': document.querySelector('meta[name=csrf-token]')?.content,
-              'Accept': 'application/json'
+        // 2026-04-29: 드로어 담당자 추가/제거 — document 단일 delegation.
+        // drawer 콘텐츠가 fetch innerHTML 로 삽입되어도 document 핸들러는 그대로라 자동 동작.
+        // (innerHTML 안의 <script> 는 브라우저가 실행하지 않으므로 document 레벨 필수)
+        if (!window.__drawerAssigneesDelegationInstalled) {
+          window.__drawerAssigneesDelegationInstalled = true;
+
+          function _drawerReloadAssignees(orderId) {
+            var root = document.getElementById('order-assignees-' + orderId);
+            if (!root) return;
+            var orderPath = root.dataset.drawerOrderPath || ('/orders/' + orderId);
+            return fetch(orderPath + '?drawer=1', {
+              headers: { 'Accept': 'text/html', 'X-Requested-With': 'XMLHttpRequest' }
+            })
+              .then(function(r) { return r.text(); })
+              .then(function(html) {
+                var doc = new DOMParser().parseFromString(html, 'text/html');
+                var fresh = doc.getElementById('order-assignees-' + orderId);
+                if (fresh) root.innerHTML = fresh.innerHTML;
+              });
+          }
+
+          document.addEventListener('click', function(e) {
+            var assignBtn = e.target.closest('.js-drawer-assign');
+            var unassignBtn = e.target.closest('.js-drawer-unassign');
+            if (!assignBtn && !unassignBtn) return;
+
+            var root = (assignBtn || unassignBtn).closest('[data-drawer-order-id]');
+            if (!root) return;
+            var orderId = root.dataset.drawerOrderId;
+            var csrfToken = document.querySelector('meta[name=csrf-token]')?.content;
+
+            if (assignBtn) {
+              e.preventDefault();
+              var empId = assignBtn.dataset.actionAssignEmployee;
+              assignBtn.disabled = true;
+              var body = new URLSearchParams();
+              body.append('employee_id', empId);
+              fetch('/orders/' + orderId + '/assignments', {
+                method: 'POST',
+                headers: {
+                  'X-CSRF-Token': csrfToken,
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                  'Accept': 'application/json'
+                },
+                body: body.toString()
+              })
+                .then(function(r) {
+                  if (!r.ok) throw new Error(r.status);
+                  return r.json();
+                })
+                .then(function() { return _drawerReloadAssignees(orderId); })
+                .catch(function(err) {
+                  assignBtn.disabled = false;
+                  alert('담당자 배정 실패: ' + err.message);
+                });
+            } else if (unassignBtn) {
+              e.preventDefault();
+              var name = unassignBtn.dataset.employeeName || '담당자';
+              if (!confirm(name + '을(를) 담당자에서 제거할까요?')) return;
+              var aid = unassignBtn.dataset.actionUnassign;
+              unassignBtn.disabled = true;
+              var row = unassignBtn.closest('.flex.items-center.gap-2.group');
+              if (row) row.style.opacity = '0.4';
+
+              fetch('/orders/' + orderId + '/assignments/' + aid, {
+                method: 'DELETE',
+                headers: { 'X-CSRF-Token': csrfToken, 'Accept': 'application/json' }
+              })
+                .then(function(r) {
+                  if (!r.ok) throw new Error(r.status);
+                  return r.json();
+                })
+                .then(function() { return _drawerReloadAssignees(orderId); })
+                .catch(function(err) {
+                  if (row) row.style.opacity = '1';
+                  unassignBtn.disabled = false;
+                  alert('담당자 제거 실패: ' + err.message);
+                });
             }
-          })
-          .then(function(r) { return r.json(); })
-          .then(function() { _drawerReloadContent(orderId); })
-          .catch(function() { if (btn) btn.disabled = false; });
-        };
+          });
+        }
 
         // ── 드로어 제목 인라인 편집 ──────────────────────────
         function editDrawerTitle() {
