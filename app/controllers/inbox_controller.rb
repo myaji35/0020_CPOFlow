@@ -6,7 +6,8 @@ class InboxController < ApplicationController
   # ISS-261: viewer read-only — 쓰기/변경성 AJAX 액션은 member 이상만
   before_action :require_member!, only: %i[translate analyze_link generate_reply
                                            convert_to_order feedback reclassify
-                                           bulk_delete bulk_trash bulk_to_kanban bulk_restore
+                                           bulk_delete bulk_trash bulk_to_kanban
+                                           bulk_all_uncertain_to_kanban bulk_restore
                                            sync destroy]
   before_action :check_rate_limit!, only: %i[translate analyze_link generate_reply]
 
@@ -229,6 +230,71 @@ class InboxController < ApplicationController
     message = "#{count}건 견적으로 이동"
     message += " (#{blocked_count}건은 제외/보관 상태로 차단됨)" if blocked_count.positive?
     render json: { status: "ok", count: count, blocked: blocked_count, message: message }
+  end
+
+  # POST /inbox/bulk_all_uncertain_to_kanban
+  # 현재 필터/검색에 매치되는 rfq_pending 전건을 한 번에 칸반 진입.
+  # rfq_pending 누적(운영 4,582건) 일괄 해소용 — confirm_token 으로 안전장치.
+  def bulk_all_uncertain_to_kanban
+    # 안전장치: confirm_token 확인 (UI 가 "OK" 입력 후 hidden 값으로 전송)
+    return render json: { error: "확인 토큰 누락 — UI 사용 권장" }, status: :unprocessable_entity unless params[:confirm_token] == "PROCEED"
+
+    target_filter = params[:filter].presence || "uncertain"
+    search_query  = params[:q].to_s.strip
+    max_batch     = [ params[:max].to_i, 0 ].max
+    max_batch     = 5000 if max_batch.zero? || max_batch > 5000  # 안전상한
+
+    base_scope = scoped_orders.not_archived
+                              .where.not(original_email_from: [ nil, "" ])
+                              .where(status: :new_rfq, rfq_status: :rfq_pending)
+
+    case target_filter
+    when "uncertain"
+      # 그대로 사용
+    when "rfq", "all"
+      # rfq/all 필터에서도 동작 — rfq_pending 만 잡음
+    else
+      return render json: { error: "지원하지 않는 필터" }, status: :unprocessable_entity
+    end
+
+    if search_query.present?
+      term = "%#{search_query}%"
+      base_scope = base_scope.where(
+        "reference_no LIKE :q OR original_email_subject LIKE :q OR original_email_from LIKE :q OR customer_name LIKE :q OR title LIKE :q",
+        q: term
+      )
+    end
+
+    target_orders = base_scope.limit(max_batch).to_a
+    count = target_orders.size
+
+    if count.zero?
+      return render json: { status: "ok", count: 0, message: "처리할 미분류 카드가 없습니다." }
+    end
+
+    board = if params[:board_id].present?
+      KanbanBoard.find_by(id: params[:board_id])
+    else
+      KanbanBoard.default_board.first || KanbanBoard.ensure_default!
+    end
+
+    # 일괄 update — 학습 데이터 누적 + Activity 기록 (callback 트리거 필요하므로 each)
+    record_bulk_feedback(target_orders, "confirmed")
+    target_orders.each_slice(500) do |batch|
+      batch.each do |order|
+        order.update!(status: :new_rfq, rfq_status: :rfq_triage, kanban_board_id: board.id)
+        Activity.create!(order: order, user: current_user, action: "bulk_uncertain_to_kanban")
+      end
+    end
+
+    Rails.logger.info "[inbox#bulk_all_uncertain] #{count}건 일괄 칸반 진입 (filter=#{target_filter} q=#{search_query.presence || '-'} board=#{board.id})"
+    render json: {
+      status:  "ok",
+      count:   count,
+      filter:  target_filter,
+      board:   board.name,
+      message: "#{count}건을 칸반 New 컬럼으로 일괄 이동했습니다."
+    }
   end
 
   # POST /inbox/bulk_restore — 휴지통 복원 (rfq_pending)

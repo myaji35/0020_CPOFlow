@@ -303,6 +303,40 @@ class InboxControllerTest < ActionDispatch::IntegrationTest
     order.reload.destroy; client.destroy
   end
 
+  test "bulk_all_uncertain_to_kanban — confirm_token 누락이면 422" do
+    post inbox_bulk_all_uncertain_to_kanban_path, params: { filter: "uncertain" }
+    assert_response :unprocessable_entity
+  end
+
+  test "bulk_all_uncertain_to_kanban — rfq_pending 카드 일괄 칸반 진입" do
+    client = Client.create!(name: "Bulk Cli", code: "BLKC#{SecureRandom.hex(2)}")
+    pending_orders = 3.times.map do |i|
+      Order.create!(
+        title: "Pending #{i}",
+        customer_name: "C#{i}",
+        client: client,
+        status: :new_rfq,
+        rfq_status: :rfq_pending,
+        user: @user,
+        original_email_from: "p#{i}@example.com",
+        original_email_subject: "P#{i}"
+      )
+    end
+
+    post inbox_bulk_all_uncertain_to_kanban_path,
+         params: { filter: "uncertain", confirm_token: "PROCEED" }
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal "ok", body["status"]
+    assert body["count"] >= 3, "최소 3건 이상 처리 (실제: #{body['count']})"
+
+    pending_orders.each do |o|
+      o.reload
+      assert_equal "rfq_triage", o.rfq_status, "#{o.id} → rfq_triage 전이"
+    end
+    pending_orders.each(&:destroy); client.destroy
+  end
+
   private
 
   def login_as(user)

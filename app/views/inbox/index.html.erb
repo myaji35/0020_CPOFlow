@@ -157,6 +157,7 @@
           <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">
             <% case @current_filter
                when "rfq" %>RFQ 대기 메일
+            <% when "uncertain" %>미분류 RFQ
             <% when "converted" %>처리된 메일
             <% else %>전체 메일
             <% end %>
@@ -173,6 +174,25 @@
             </button>
           </div>
         </div>
+
+        <%# 미분류 일괄 처리 배너 — uncertain 필터에서만 노출 %>
+        <% if @current_filter == "uncertain" && @count_uncertain.to_i > 0 %>
+          <div class="mx-4 mb-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2 min-w-0">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-amber-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <div class="min-w-0">
+                <p class="text-sm font-semibold text-amber-900 leading-tight">미분류 RFQ <%= @count_uncertain %>건이 인박스 단계에서 대기 중</p>
+                <p class="text-xs text-amber-800 mt-0.5">AI uncertain 분류로 칸반 미진입. 일괄로 칸반 New 컬럼에 보낼 수 있습니다.</p>
+              </div>
+            </div>
+            <button onclick="bulkAllUncertainToKanban()" id="bulk-all-uncertain-btn"
+                    class="shrink-0 px-3 py-2 text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-md transition-colors flex items-center gap-1.5"
+                    title="현재 필터에 매치되는 미분류 RFQ 전건을 칸반 New 컬럼으로 이동합니다.">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              <span>전체 <%= @total_filtered %>건 칸반으로</span>
+            </button>
+          </div>
+        <% end %>
 
         <%# Search bar %>
         <div class="px-4 pb-3">
@@ -1300,6 +1320,57 @@
     if (input) input.value = '';
     visitInbox(buildInboxUrl(''));
   }
+
+  // --- Bulk uncertain → 칸반 일괄 ---
+  // 현재 필터/검색에 매치되는 rfq_pending 전건을 칸반 New 로 이동.
+  // 안전장치: confirm prompt + confirm_token=PROCEED.
+  window.bulkAllUncertainToKanban = function() {
+    const btn = document.getElementById('bulk-all-uncertain-btn');
+    if (!btn) return;
+    const params = new URLSearchParams(window.location.search);
+    const filter = params.get('filter') || 'uncertain';
+    const q = params.get('q') || '';
+    const totalText = btn.textContent.trim();
+
+    if (!confirm(`현재 미분류 RFQ 전체를 칸반 New 컬럼으로 이동합니다.\n(${totalText})\n\n계속 진행하시겠습니까?`)) {
+      return;
+    }
+
+    btn.disabled = true;
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10"/></svg><span>이동 중...</span>';
+
+    const body = new URLSearchParams();
+    body.append('filter', filter);
+    if (q) body.append('q', q);
+    body.append('confirm_token', 'PROCEED');
+
+    fetch('/inbox/bulk_all_uncertain_to_kanban', {
+      method: 'POST',
+      headers: {
+        'X-CSRF-Token': document.querySelector('meta[name=csrf-token]')?.content,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json'
+      },
+      body: body.toString()
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.status === 'ok') {
+        showSyncNotification(`${data.count}건 칸반으로 이동 완료. 새로고침합니다.`, 'success');
+        setTimeout(() => window.location.reload(), 1200);
+      } else {
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
+        showSyncNotification(data.error || '일괄 이동 실패', 'error');
+      }
+    })
+    .catch((e) => {
+      btn.innerHTML = originalHTML;
+      btn.disabled = false;
+      showSyncNotification('네트워크 오류 — 다시 시도해주세요.', 'error');
+    });
+  };
 
   // --- Sync ---
   function triggerSync() {

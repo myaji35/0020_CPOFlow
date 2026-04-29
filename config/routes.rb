@@ -84,6 +84,7 @@ Rails.application.routes.draw do
   post "inbox/bulk_delete",    to: "inbox#bulk_delete",    as: :inbox_bulk_delete
   post "inbox/bulk_trash",     to: "inbox#bulk_trash",     as: :inbox_bulk_trash
   post "inbox/bulk_to_kanban", to: "inbox#bulk_to_kanban", as: :inbox_bulk_to_kanban
+  post "inbox/bulk_all_uncertain_to_kanban", to: "inbox#bulk_all_uncertain_to_kanban", as: :inbox_bulk_all_uncertain_to_kanban
   post "inbox/bulk_restore",   to: "inbox#bulk_restore",   as: :inbox_bulk_restore
 
   # Calendar
