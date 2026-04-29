@@ -97,15 +97,15 @@ module Sap
 
           page.wait_for_timeout(3000)
 
-          pdf_links = find_pdf_links(page)
-          Rails.logger.info "AribaScraperService: PDF 링크 #{pdf_links.size}개 발견"
+          attachment_links = find_attachment_links(page)
+          Rails.logger.info "AribaScraperService: 첨부 링크 #{attachment_links.size}개 발견 (PDF/Office/압축 등 다중 형식)"
 
-          pdf_links.each do |link_ref|
-            blob_info = download_and_attach_pdf(page, link_ref, order)
+          attachment_links.each do |link_ref|
+            blob_info = download_and_attach(page, link_ref, order)
             if blob_info
               saved << blob_info
             else
-              errors << "PDF 다운로드 실패: #{link_ref}"
+              errors << "첨부 다운로드 실패: #{link_ref}"
             end
           end
 
@@ -150,10 +150,16 @@ module Sap
         results.each do |r|
           next unless r["path"] && File.exist?(r["path"])
 
+          # P1: Node fetcher 가 보고한 content_type 우선, 없으면 확장자에서 추론, 그래도 없으면 octet-stream
+          ext = File.extname(r["filename"].to_s).delete(".").downcase
+          ct = r["content_type"].presence ||
+               EXTENSION_CONTENT_TYPE[ext] ||
+               "application/octet-stream"
+
           blob = ActiveStorage::Blob.create_and_upload!(
             io:           File.open(r["path"]),
             filename:     r["filename"],
-            content_type: "application/pdf"
+            content_type: ct
           )
           order.attachments.attach(blob)
 
@@ -194,8 +200,41 @@ module Sap
       Rails.logger.error "AribaScraperService: 로그인 실패 #{e.message}"
     end
 
-    def find_pdf_links(page)
-      page.query_selector_all('a[href*=".pdf"], a[title*=".pdf"]')
+    # 첨부 가능 확장자 화이트리스트 — Ariba 포털에 RFQ 첨부로 흔히 올라오는 형식
+    SUPPORTED_ATTACHMENT_EXTENSIONS = %w[pdf docx doc xlsx xls xlsb xlsm pptx ppt csv txt zip 7z rar hwp].freeze
+
+    # 확장자 → MIME content_type 매핑
+    EXTENSION_CONTENT_TYPE = {
+      "pdf"  => "application/pdf",
+      "docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "doc"  => "application/msword",
+      "xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "xls"  => "application/vnd.ms-excel",
+      "xlsb" => "application/vnd.ms-excel.sheet.binary.macroenabled.12",
+      "xlsm" => "application/vnd.ms-excel.sheet.macroEnabled.12",
+      "pptx" => "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "ppt"  => "application/vnd.ms-powerpoint",
+      "csv"  => "text/csv",
+      "txt"  => "text/plain",
+      "zip"  => "application/zip",
+      "7z"   => "application/x-7z-compressed",
+      "rar"  => "application/x-rar-compressed",
+      "hwp"  => "application/x-hwp"
+    }.freeze
+
+    # Ariba 페이지에서 첨부 다운로드 링크 수집 (PDF + Office + 압축 + Ariba 일반 download 패턴)
+    def find_attachment_links(page)
+      ext_selectors = SUPPORTED_ATTACHMENT_EXTENSIONS.flat_map { |ext|
+        [ "a[href*=\".#{ext}\"]", "a[title*=\".#{ext}\"]" ]
+      }
+      generic_selectors = [
+        'a[href*="download"]',
+        'a[href*="attachment"]',
+        'a[href*="getDocument"]',
+        'a[href*="documentDownload"]'
+      ]
+      selector = (ext_selectors + generic_selectors).join(", ")
+      page.query_selector_all(selector)
           .map { |el| el.get_attribute("href") }
           .compact
           .uniq
@@ -203,29 +242,39 @@ module Sap
       []
     end
 
-    def download_and_attach_pdf(page, href, order)
+    # 호환 alias — 기존 호출처가 find_pdf_links 그대로 쓰는 경우 유지
+    alias_method :find_pdf_links, :find_attachment_links
+
+    # 다운로드 후 확장자 기반 content_type 자동 추론하여 ActiveStorage 저장
+    def download_and_attach(page, href, order)
       download = page.expect_download do
         page.goto(href)
       end
 
-      filename  = File.basename(URI.parse(href).path).presence || "ariba_doc_#{Time.now.to_i}.pdf"
+      # 1) 다운로드 측 suggested filename 우선 (Ariba 가 Content-Disposition 으로 docx/xlsx 등 정확히 줌)
+      suggested = download.suggested_filename rescue nil
+      url_basename = File.basename(URI.parse(href).path).presence
+      filename = suggested.presence || url_basename || "ariba_doc_#{Time.now.to_i}"
       safe_name = filename.gsub(/[^\w\.\-]/, "_")
 
-      # 임시 파일에 저장 후 ActiveStorage에 업로드
+      ext = File.extname(safe_name).delete(".").downcase
+      # 확장자 미식별 시 기본 .bin 으로 저장하지 않고 .pdf 가정 (legacy 호환). 단 octet-stream 으로 마킹.
+      content_type = EXTENSION_CONTENT_TYPE[ext] || "application/octet-stream"
+
       tmp_path = Rails.root.join("tmp", safe_name)
       download.save_as(tmp_path.to_s)
 
       blob = ActiveStorage::Blob.create_and_upload!(
         io:           File.open(tmp_path),
         filename:     safe_name,
-        content_type: "application/pdf"
+        content_type: content_type
       )
       order.attachments.attach(blob)
 
       File.delete(tmp_path) rescue nil
 
-      Rails.logger.info "AribaScraperService: #{safe_name} → ActiveStorage (Order##{order.id})"
-      { filename: safe_name, blob_key: blob.key }
+      Rails.logger.info "AribaScraperService: #{safe_name} (#{content_type}) → ActiveStorage (Order##{order.id})"
+      { filename: safe_name, blob_key: blob.key, content_type: content_type }
     rescue => e
       Rails.logger.error "AribaScraperService: PDF 다운로드 실패 #{e.message}"
       nil
