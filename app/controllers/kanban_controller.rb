@@ -173,6 +173,14 @@ class KanbanController < ApplicationController
     render partial: "kanban/column_more", locals: { status: status, orders: @more_orders }, layout: false
   end
 
+  # GET /kanban/card/:id — 단일 카드 partial 재렌더 (담당자/상태/배지 변경 후 부분 갱신용)
+  def card
+    order = scoped_orders.includes(:assignees, :tasks, :sub_orders, :card_status, :client, :project, :comments).find(params[:id])
+    render partial: "kanban/card", locals: { order: order }, layout: false
+  rescue ActiveRecord::RecordNotFound
+    render html: "", layout: false, status: :not_found
+  end
+
   def move
     @order = scoped_orders.find(params[:id])
     board = @order.kanban_board

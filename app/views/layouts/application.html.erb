@@ -433,19 +433,45 @@
         if (!window.__drawerAssigneesDelegationInstalled) {
           window.__drawerAssigneesDelegationInstalled = true;
 
-          function _drawerReloadAssignees(orderId) {
-            var root = document.getElementById('order-assignees-' + orderId);
-            if (!root) return;
-            var orderPath = root.dataset.drawerOrderPath || ('/orders/' + orderId);
-            return fetch(orderPath + '?drawer=1', {
+          // 글로벌 헬퍼 — 카드의 모든 변경(담당자/상태/제목/배지/D-X/색상) 반영하도록 카드 partial 전체 재렌더.
+          // 호출처: 담당자 변경, 향후 상태 이동·제목 수정·카드상태 변경 등에서 공용 사용.
+          window.refreshKanbanCard = function(orderId) {
+            return fetch('/kanban/card/' + orderId, {
               headers: { 'Accept': 'text/html', 'X-Requested-With': 'XMLHttpRequest' }
             })
-              .then(function(r) { return r.text(); })
+              .then(function(r) { return r.ok ? r.text() : null; })
               .then(function(html) {
-                var doc = new DOMParser().parseFromString(html, 'text/html');
-                var fresh = doc.getElementById('order-assignees-' + orderId);
-                if (fresh) root.innerHTML = fresh.innerHTML;
-              });
+                if (!html) return;
+                document.querySelectorAll('[data-order-id="' + orderId + '"]').forEach(function(el) {
+                  // 칸반 카드 root 만 교체 (드로어/버튼 등 제외)
+                  if (el.classList.contains('relative') && el.classList.contains('rounded-md')) {
+                    var tmp = document.createElement('div');
+                    tmp.innerHTML = html.trim();
+                    var fresh = tmp.firstElementChild;
+                    if (fresh) el.replaceWith(fresh);
+                  }
+                });
+              })
+              .catch(function() {});
+          };
+
+          function _drawerReloadAssignees(orderId) {
+            var root = document.getElementById('order-assignees-' + orderId);
+            var drawerPromise = Promise.resolve();
+            if (root) {
+              var orderPath = root.dataset.drawerOrderPath || ('/orders/' + orderId);
+              drawerPromise = fetch(orderPath + '?drawer=1', {
+                headers: { 'Accept': 'text/html', 'X-Requested-With': 'XMLHttpRequest' }
+              })
+                .then(function(r) { return r.text(); })
+                .then(function(html) {
+                  var doc = new DOMParser().parseFromString(html, 'text/html');
+                  var fresh = doc.getElementById('order-assignees-' + orderId);
+                  if (fresh) root.innerHTML = fresh.innerHTML;
+                });
+            }
+            // 카드 영역도 동시 갱신
+            return Promise.all([drawerPromise, window.refreshKanbanCard(orderId)]);
           }
 
           document.addEventListener('click', function(e) {

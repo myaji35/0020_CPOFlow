@@ -19,6 +19,7 @@ Rails.application.routes.draw do
 
   # Kanban board (ISS-044: /orders/kanban 직관적 alias redirect)
   get "kanban",         to: "kanban#index"
+  get "kanban/card/:id", to: "kanban#card", as: :kanban_card  # 단일 카드 partial (담당자 변경 후 부분 갱신)
   get "orders/kanban",  to: redirect("/kanban")
   patch "orders/:id/move", to: "kanban#move", as: :move_order
   post "kanban/merge", to: "kanban#merge", as: :kanban_merge
