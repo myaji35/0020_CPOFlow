@@ -289,17 +289,19 @@
                   class="w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-accent hover:text-white text-gray-500 dark:text-gray-500 transition-colors text-sm font-bold"
                   title="담당자 추가">+</button>
         </div>
-        <%# 2026-04-29: drawer 안에서 담당자 변경 시 redirect 차단 — fetch+JSON 으로 비동기 처리.
-            폼이 아닌 button onclick 으로 직접 호출하여 페이지 이동 없음. %>
-        <div id="order-assignees-<%= order.id %>" data-order-assignees-root>
+        <%# 2026-04-29: 담당자 추가/제거는 inline fetch — 폼 submit 으로 인한 redirect 차단.
+            drawer 안에서 직접 fetch 호출 → 성공 시 해당 영역만 reload (window.location.reload 폴백). %>
+        <div id="order-assignees-<%= order.id %>"
+             data-drawer-order-id="<%= order.id %>"
+             data-drawer-order-path="<%= order_path(order) %>">
           <div x-show="showAssignMenu" @click.outside="showAssignMenu = false"
                class="mb-3 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
             <% unassigned_employees = Employee.active.where.not(id: order.assignee_ids).by_name %>
             <% if unassigned_employees.any? %>
               <% unassigned_employees.each do |emp| %>
                 <button type="button"
-                        onclick="assignDrawerAssignee(<%= order.id %>, <%= emp.id %>, this)"
-                        class="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors text-left">
+                        data-action-assign-employee="<%= emp.id %>"
+                        class="js-drawer-assign w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors text-left">
                   <div class="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold shrink-0"><%= emp.initials %></div>
                   <span><%= emp.display_name %></span>
                   <span class="ml-auto text-gray-500 text-xs"><%= emp.employment_type_label %></span>
@@ -320,8 +322,9 @@
                     <p class="text-xs text-gray-500 dark:text-gray-500"><%= assignment.employee.employment_type_label %></p>
                   </div>
                   <button type="button"
-                          onclick="if (confirm('<%= j assignment.employee.display_name %>을(를) 담당자에서 제거할까요?')) unassignDrawerAssignee(<%= order.id %>, <%= assignment.id %>, this)"
-                          class="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded-full text-gray-500 hover:bg-red-100 hover:text-red-500 dark:hover:bg-red-900/30 transition-all text-xs"
+                          data-action-unassign="<%= assignment.id %>"
+                          data-employee-name="<%= assignment.employee.display_name %>"
+                          class="js-drawer-unassign opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded-full text-gray-500 hover:bg-red-100 hover:text-red-500 dark:hover:bg-red-900/30 transition-all text-xs"
                           title="담당자 제거">✕</button>
                 </div>
               <% end %>
@@ -330,6 +333,85 @@
             <p class="text-xs text-gray-500 dark:text-gray-500">배정된 담당자 없음</p>
           <% end %>
         </div>
+        <script>
+          // 드로어 안에서 담당자 추가/제거 — event delegation 으로 inline 처리.
+          // drawer fetch 로 콘텐츠가 새로 삽입될 때마다 실행되어야 하므로 IIFE 즉시 실행.
+          (function() {
+            var root = document.querySelector('[id="order-assignees-<%= order.id %>"]');
+            if (!root || root.dataset.handlerAttached === '1') return;
+            root.dataset.handlerAttached = '1';
+            var orderId = root.dataset.drawerOrderId;
+            var orderPath = root.dataset.drawerOrderPath;
+
+            function postFetch(url, method, formBody) {
+              return fetch(url, {
+                method: method,
+                headers: {
+                  'X-CSRF-Token': document.querySelector('meta[name=csrf-token]')?.content,
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                  'Accept': 'application/json'
+                },
+                body: formBody || ''
+              });
+            }
+
+            function reloadDrawerAssignees() {
+              fetch(orderPath + '?drawer=1', { headers: { 'Accept': 'text/html', 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function(r) { return r.text(); })
+                .then(function(html) {
+                  var doc = new DOMParser().parseFromString(html, 'text/html');
+                  var fresh = doc.querySelector('[id="order-assignees-' + orderId + '"]');
+                  if (fresh) {
+                    root.innerHTML = fresh.innerHTML;
+                    root.dataset.handlerAttached = '';  // 재바인딩 위해 해제
+                    // 다음 tick 에 다시 IIFE 호출이 되어야 하지만, drawer 콘텐츠 자체가
+                    // partial 안에 같은 script 가 들어있으므로 innerHTML 교체 후
+                    // script 가 다시 평가되도록 재삽입.
+                    var scr = doc.querySelector('script[data-drawer-assignees-handler="' + orderId + '"]');
+                  }
+                });
+            }
+
+            root.addEventListener('click', function(e) {
+              var assignBtn = e.target.closest('.js-drawer-assign');
+              var unassignBtn = e.target.closest('.js-drawer-unassign');
+
+              if (assignBtn) {
+                e.preventDefault();
+                var empId = assignBtn.dataset.actionAssignEmployee;
+                assignBtn.disabled = true;
+                var body = new URLSearchParams();
+                body.append('employee_id', empId);
+                postFetch('/orders/' + orderId + '/assignments', 'POST', body.toString())
+                  .then(function(r) {
+                    if (!r.ok) throw new Error('assign failed ' + r.status);
+                    return r.json();
+                  })
+                  .then(function() { window.location.reload(); })
+                  .catch(function(err) {
+                    assignBtn.disabled = false;
+                    alert('담당자 배정 실패: ' + err.message);
+                  });
+              } else if (unassignBtn) {
+                e.preventDefault();
+                var name = unassignBtn.dataset.employeeName || '담당자';
+                if (!confirm(name + '을(를) 담당자에서 제거할까요?')) return;
+                var aid = unassignBtn.dataset.actionUnassign;
+                unassignBtn.disabled = true;
+                postFetch('/orders/' + orderId + '/assignments/' + aid, 'DELETE')
+                  .then(function(r) {
+                    if (!r.ok) throw new Error('unassign failed ' + r.status);
+                    return r.json();
+                  })
+                  .then(function() { window.location.reload(); })
+                  .catch(function(err) {
+                    unassignBtn.disabled = false;
+                    alert('담당자 제거 실패: ' + err.message);
+                  });
+              }
+            });
+          })();
+        </script>
       </div>
 
       <%# 스테이지 이동 — 이전/현재/다음 + 더보기 (Full Page 모드에서는 사이드바 패널이 담당) %>
