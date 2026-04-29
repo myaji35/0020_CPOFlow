@@ -15,7 +15,8 @@
                  ""
                end
 %>
-<div class="relative rounded-md border pl-[14px] pr-3 py-2.5 shadow-sh-1 hover:shadow-sh-2 hover:border-ink-300 transition-all group cursor-pointer hover:cursor-grab active:cursor-grabbing<%= ' ring-2 ring-red-500 ring-offset-1' if order.critical? %>"
+<div id="kanban-card-<%= order.id %>"
+     class="kanban-card-root relative rounded-md border pl-[14px] pr-3 py-2.5 shadow-sh-1 hover:shadow-sh-2 hover:border-ink-300 transition-all group cursor-pointer hover:cursor-grab active:cursor-grabbing<%= ' ring-2 ring-red-500 ring-offset-1' if order.critical? %>"
      style="<%= card_bg_style %> <%= card_border_style %>"
      data-order-id="<%= order.id %>"
      data-card-status-key="<%= order.card_status&.key %>"

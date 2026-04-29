@@ -433,26 +433,30 @@
         if (!window.__drawerAssigneesDelegationInstalled) {
           window.__drawerAssigneesDelegationInstalled = true;
 
-          // 글로벌 헬퍼 — 카드의 모든 변경(담당자/상태/제목/배지/D-X/색상) 반영하도록 카드 partial 전체 재렌더.
-          // 호출처: 담당자 변경, 향후 상태 이동·제목 수정·카드상태 변경 등에서 공용 사용.
+          // 글로벌 헬퍼 — 카드 partial 전체 재렌더로 모든 변경 정보 즉시 반영
+          // (담당자, D-X 배지, 카드상태 색상, 제목, 첨부 카운트, 자식 카운트, SLA 리본)
           window.refreshKanbanCard = function(orderId) {
+            console.log('[refreshKanbanCard] 시작 orderId=', orderId);
             return fetch('/kanban/card/' + orderId, {
               headers: { 'Accept': 'text/html', 'X-Requested-With': 'XMLHttpRequest' }
             })
-              .then(function(r) { return r.ok ? r.text() : null; })
-              .then(function(html) {
-                if (!html) return;
-                document.querySelectorAll('[data-order-id="' + orderId + '"]').forEach(function(el) {
-                  // 칸반 카드 root 만 교체 (드로어/버튼 등 제외)
-                  if (el.classList.contains('relative') && el.classList.contains('rounded-md')) {
-                    var tmp = document.createElement('div');
-                    tmp.innerHTML = html.trim();
-                    var fresh = tmp.firstElementChild;
-                    if (fresh) el.replaceWith(fresh);
-                  }
-                });
+              .then(function(r) {
+                console.log('[refreshKanbanCard] 응답 status=', r.status);
+                return r.ok ? r.text() : null;
               })
-              .catch(function() {});
+              .then(function(html) {
+                if (!html) { console.warn('[refreshKanbanCard] 빈 응답'); return; }
+                var existing = document.getElementById('kanban-card-' + orderId);
+                if (!existing) { console.warn('[refreshKanbanCard] kanban-card-' + orderId + ' 요소 없음'); return; }
+                var tmp = document.createElement('div');
+                tmp.innerHTML = html.trim();
+                var fresh = tmp.firstElementChild;
+                if (fresh) {
+                  existing.replaceWith(fresh);
+                  console.log('[refreshKanbanCard] 교체 완료');
+                }
+              })
+              .catch(function(err) { console.error('[refreshKanbanCard] 실패', err); });
           };
 
           function _drawerReloadAssignees(orderId) {
