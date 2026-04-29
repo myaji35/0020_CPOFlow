@@ -1,14 +1,16 @@
 <%
   card_bg_style     = "background-color:#{order.card_bg_color};"
   card_border_style = "border-color:#{order.card_border_color};"
-  # SLA 리본 톤 — days_until_due 기반
+  # SLA 리본 톤 — days_until_due 기반 (2026-04-29: D+7 기본 정책 반영, 임계값 D-3/D-7)
   _days = order.days_until_due
   sla_ribbon = if order.critical? || (_days && _days < 0)
-                 "bg-red-500"  # danger
+                 "bg-red-500"   # 지연/critical
+               elsif _days && _days <= 3
+                 "bg-red-500"   # D-3 이내 빨강
                elsif _days && _days <= 7
-                 "bg-amber-500"  # warn
+                 "bg-amber-500" # D-4~7 노랑
                elsif _days && _days > 7
-                 "bg-emerald-500"  # ok
+                 "bg-emerald-500" # 여유 있음
                else
                  ""
                end

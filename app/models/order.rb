@@ -342,11 +342,14 @@ class Order < ApplicationRecord
     (due_date - Date.today).to_i
   end
 
+  # 2026-04-29: 신규 발주 기본 마감일이 D+7로 변경됨에 따라 임계값 재조정.
+  # 이전: urgent ≤7d, warning ≤14d (모든 신규 발주가 urgent 가 되어버려 의미 없음)
+  # 변경: urgent ≤3d (정말 임박한 것만 빨강), warning ≤7d (1주 이내), normal 그 외.
   def due_urgency
     days = days_until_due
     return :overdue if days&.negative?
-    return :urgent  if days && days <= 7
-    return :warning if days && days <= 14
+    return :urgent  if days && days <= 3
+    return :warning if days && days <= 7
     :normal
   end
 

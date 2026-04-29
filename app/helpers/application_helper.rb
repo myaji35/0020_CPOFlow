@@ -27,17 +27,21 @@ module ApplicationHelper
   end
 
   # Due date badge (solid bg + white text — SLDS)
+  # 2026-04-29: 기본 마감일 D+7 정책 반영 — 임계값 D-3 / D-7 / 그 외.
   def due_badge(order)
     days = order.days_until_due
     return "" unless days
 
     if days < 0
       content_tag(:span, "OVERDUE #{days.abs}d", class: "text-xs font-semibold px-2 py-0.5 rounded-full", style: "background:#D93025; color:white")
-    elsif days <= 7
+    elsif days <= 3
+      # 빨강 — D-3 이내 (정말 임박)
       content_tag(:span, "D-#{days}", class: "text-xs font-semibold px-2 py-0.5 rounded-full", style: "background:#D93025; color:white")
-    elsif days <= 14
+    elsif days <= 7
+      # 노랑 — D-4 ~ D-7 (1주 이내, 신규 발주 기본 사이클)
       content_tag(:span, "D-#{days}", class: "text-xs font-semibold px-2 py-0.5 rounded-full", style: "background:#F4A83A; color:white")
     else
+      # 초록 — 여유 있음
       content_tag(:span, "D-#{days}", class: "text-xs font-semibold px-2 py-0.5 rounded-full", style: "background:#1E8E3E; color:white")
     end
   end
