@@ -289,47 +289,47 @@
                   class="w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-accent hover:text-white text-gray-500 dark:text-gray-500 transition-colors text-sm font-bold"
                   title="담당자 추가">+</button>
         </div>
-        <div x-show="showAssignMenu" @click.outside="showAssignMenu = false"
-             class="mb-3 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
-          <% unassigned_employees = Employee.active.where.not(id: order.assignee_ids).by_name %>
-          <% if unassigned_employees.any? %>
-            <% unassigned_employees.each do |emp| %>
-              <%= form_with url: order_assignments_path(order), method: :post, local: true do |f| %>
-                <%= f.hidden_field :employee_id, value: emp.id %>
-                <button type="submit"
+        <%# 2026-04-29: drawer 안에서 담당자 변경 시 redirect 차단 — fetch+JSON 으로 비동기 처리.
+            폼이 아닌 button onclick 으로 직접 호출하여 페이지 이동 없음. %>
+        <div id="order-assignees-<%= order.id %>" data-order-assignees-root>
+          <div x-show="showAssignMenu" @click.outside="showAssignMenu = false"
+               class="mb-3 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
+            <% unassigned_employees = Employee.active.where.not(id: order.assignee_ids).by_name %>
+            <% if unassigned_employees.any? %>
+              <% unassigned_employees.each do |emp| %>
+                <button type="button"
+                        onclick="assignDrawerAssignee(<%= order.id %>, <%= emp.id %>, this)"
                         class="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors text-left">
                   <div class="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold shrink-0"><%= emp.initials %></div>
                   <span><%= emp.display_name %></span>
                   <span class="ml-auto text-gray-500 text-xs"><%= emp.employment_type_label %></span>
                 </button>
               <% end %>
-            <% end %>
-          <% else %>
-            <p class="px-3 py-2 text-xs text-gray-500 dark:text-gray-500">모든 팀원이 배정됨</p>
-          <% end %>
-        </div>
-        <% if order.assignees.any? %>
-          <div class="space-y-1">
-            <% order.assignments.includes(:employee).each do |assignment| %>
-              <% next unless assignment.employee %>
-              <div class="flex items-center gap-2 group">
-                <div class="w-7 h-7 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold shrink-0"><%= assignment.employee.initials %></div>
-                <div class="min-w-0 flex-1">
-                  <p class="text-sm font-medium text-gray-900 dark:text-white truncate"><%= assignment.employee.display_name %></p>
-                  <p class="text-xs text-gray-500 dark:text-gray-500"><%= assignment.employee.employment_type_label %></p>
-                </div>
-                <%= form_with url: order_assignment_path(order, assignment), method: :delete, local: true do |f| %>
-                  <button type="submit"
-                          class="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded-full text-gray-500 hover:bg-red-100 hover:text-red-500 dark:hover:bg-red-900/30 transition-all text-xs"
-                          title="담당자 제거"
-                          onclick="return confirm('<%= assignment.employee.display_name %>을(를) 담당자에서 제거할까요?')">✕</button>
-                <% end %>
-              </div>
+            <% else %>
+              <p class="px-3 py-2 text-xs text-gray-500 dark:text-gray-500">모든 팀원이 배정됨</p>
             <% end %>
           </div>
-        <% else %>
-          <p class="text-xs text-gray-500 dark:text-gray-500">배정된 담당자 없음</p>
-        <% end %>
+          <% if order.assignees.any? %>
+            <div class="space-y-1">
+              <% order.assignments.includes(:employee).each do |assignment| %>
+                <% next unless assignment.employee %>
+                <div class="flex items-center gap-2 group">
+                  <div class="w-7 h-7 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold shrink-0"><%= assignment.employee.initials %></div>
+                  <div class="min-w-0 flex-1">
+                    <p class="text-sm font-medium text-gray-900 dark:text-white truncate"><%= assignment.employee.display_name %></p>
+                    <p class="text-xs text-gray-500 dark:text-gray-500"><%= assignment.employee.employment_type_label %></p>
+                  </div>
+                  <button type="button"
+                          onclick="if (confirm('<%= j assignment.employee.display_name %>을(를) 담당자에서 제거할까요?')) unassignDrawerAssignee(<%= order.id %>, <%= assignment.id %>, this)"
+                          class="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded-full text-gray-500 hover:bg-red-100 hover:text-red-500 dark:hover:bg-red-900/30 transition-all text-xs"
+                          title="담당자 제거">✕</button>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <p class="text-xs text-gray-500 dark:text-gray-500">배정된 담당자 없음</p>
+          <% end %>
+        </div>
       </div>
 
       <%# 스테이지 이동 — 이전/현재/다음 + 더보기 (Full Page 모드에서는 사이드바 패널이 담당) %>

@@ -394,16 +394,24 @@
           fetch(orderPath + '?drawer=1', {
             headers: { 'Accept': 'text/html', 'X-Requested-With': 'XMLHttpRequest' }
           })
-          .then(function(r) { return r.text(); })
+          .then(function(r) {
+            if (r.status === 404) {
+              // 카드가 휴지통으로 이동된 경우 (archived) — 친절한 안내 + 자동 새로고침 제안
+              body.innerHTML = '<div class="p-6 space-y-3"><div class="text-sm text-amber-700 font-semibold">이 카드는 더 이상 칸반에 없습니다.</div><div class="text-xs text-gray-500">휴지통으로 이동되었거나 다른 사용자가 이미 이동한 카드일 수 있습니다.</div><button onclick="closeOrderDrawer(); window.location.reload();" class="px-3 py-2 text-xs bg-primary text-white rounded-md">화면 새로고침</button></div>';
+              throw new Error('drawer_not_found');
+            }
+            return r.text();
+          })
           .then(function(html) {
             var parser = new DOMParser();
             var doc    = parser.parseFromString(html, 'text/html');
             var el     = doc.getElementById('order-drawer-content');
-            body.innerHTML = el ? el.innerHTML : '<div class="p-6 text-sm text-red-400">내용을 불러올 수 없습니다.</div>';
+            body.innerHTML = el ? el.innerHTML : '<div class="p-6 space-y-2"><div class="text-sm text-amber-700 font-semibold">카드 내용을 불러올 수 없습니다.</div><div class="text-xs text-gray-500">화면이 오래된 상태일 수 있습니다.</div><button onclick="closeOrderDrawer(); window.location.reload();" class="px-3 py-2 text-xs bg-primary text-white rounded-md">화면 새로고침</button></div>';
             // ISS-263: 드로어 콘텐츠 data-order-status로 "다음 단계" 버튼 활성화
             _setupNextStatusButton(el ? el.getAttribute('data-order-status') : null);
           })
-          .catch(function() {
+          .catch(function(err) {
+            if (err && err.message === 'drawer_not_found') return;
             body.innerHTML = '<div class="p-6 text-sm text-red-400">네트워크 오류가 발생했습니다.</div>';
           });
         }
@@ -418,6 +426,52 @@
             document.body.style.overflow = '';
           }, 300);
         }
+
+        // 2026-04-29: 드로어 안에서 담당자 추가/제거 — fetch 비동기, 드로어 유지.
+        function _drawerReloadContent(orderId) {
+          var body = document.getElementById('order-drawer-body');
+          if (!body) return Promise.resolve();
+          // 같은 order 의 드로어 콘텐츠를 다시 fetch 하여 담당자 상태 동기화
+          var path = (typeof _drawerOrderPath !== 'undefined' && _drawerOrderPath) ? _drawerOrderPath : ('/orders/' + orderId);
+          return fetch(path + '?drawer=1', { headers: { 'Accept': 'text/html', 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(r) { return r.text(); })
+            .then(function(html) {
+              var doc = new DOMParser().parseFromString(html, 'text/html');
+              var fresh = doc.getElementById('order-assignees-' + orderId);
+              var existing = document.getElementById('order-assignees-' + orderId);
+              if (fresh && existing) existing.innerHTML = fresh.innerHTML;
+            }).catch(function() {});
+        }
+        window.assignDrawerAssignee = function(orderId, employeeId, btn) {
+          if (btn) btn.disabled = true;
+          var body = new URLSearchParams();
+          body.append('employee_id', employeeId);
+          fetch('/orders/' + orderId + '/assignments', {
+            method: 'POST',
+            headers: {
+              'X-CSRF-Token': document.querySelector('meta[name=csrf-token]')?.content,
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Accept': 'application/json'
+            },
+            body: body.toString()
+          })
+          .then(function(r) { return r.json(); })
+          .then(function() { _drawerReloadContent(orderId); })
+          .catch(function() { if (btn) btn.disabled = false; });
+        };
+        window.unassignDrawerAssignee = function(orderId, assignmentId, btn) {
+          if (btn) btn.disabled = true;
+          fetch('/orders/' + orderId + '/assignments/' + assignmentId, {
+            method: 'DELETE',
+            headers: {
+              'X-CSRF-Token': document.querySelector('meta[name=csrf-token]')?.content,
+              'Accept': 'application/json'
+            }
+          })
+          .then(function(r) { return r.json(); })
+          .then(function() { _drawerReloadContent(orderId); })
+          .catch(function() { if (btn) btn.disabled = false; });
+        };
 
         // ── 드로어 제목 인라인 편집 ──────────────────────────
         function editDrawerTitle() {

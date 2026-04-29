@@ -85,16 +85,16 @@ class Gmail::EmailToOrderServiceTest < ActiveSupport::TestCase
     )
   end
 
-  # ===== 1. v2 confirmed → rfq_triage (Active Mode) =====
-  test "v2_confirmed은 rfq_triage로 자동 진입 (Active Mode)" do
+  # ===== 1. v2 confirmed 도 rfq_pending — 자동 진입 전면 중단 정책 (2026-04-29) =====
+  test "v2_confirmed도 rfq_pending — 자동 칸반 진입 차단" do
     parsed = build_parsed(id: "iss053-msg-confirmed")
     v2 = v2_result(verdict: :confirmed, confidence: "high", stage_reached: 2)
 
     order = Gmail::EmailToOrderService.new(@account, parsed, empty_detection, v2_result: v2).create_order!
 
     assert_not_nil order, "Order should be created"
-    assert_equal "rfq_triage", order.rfq_status,
-      "v2 confirmed → rfq_triage (Active Mode: AI 판정 직접 반영)"
+    assert_equal "rfq_pending", order.rfq_status,
+      "AI confirmed 여도 rfq_pending — 사용자가 명시적으로 칸반에 보내야 rfq_triage 전이 (자동 진입 전면 중단)"
     assert_equal "v2", order.classifier_version
     assert_equal 2, order.stage_reached
     assert_in_delta 0.95, order.classification_confidence.to_f, 0.001
@@ -245,8 +245,8 @@ class Gmail::EmailToOrderServiceTest < ActiveSupport::TestCase
     assert order.archived?, "동일 thread 가 휴지통에 있으면 새 카드도 archived"
   end
 
-  # ===== 좀비 차단: archived 가 없으면 정상 칸반 진입 =====
-  test "no_zombie: archived 전적 없으면 정상 생성" do
+  # ===== 좀비 차단: archived 가 없으면 정상 생성 (rfq_pending 으로 시작) =====
+  test "no_zombie: archived 전적 없으면 정상 생성 (rfq_pending)" do
     ref = "70001#{rand(10000..99999)}"
     parsed = build_parsed(id: "normal-msg-#{ref}", subject: "RFQ #{ref}", body: ref)
     detection = empty_detection.merge(rfq_verdict: :confirmed, is_rfq: true)
@@ -257,6 +257,7 @@ class Gmail::EmailToOrderServiceTest < ActiveSupport::TestCase
 
     assert_not_nil order
     assert_not order.archived?, "전적 없으면 archived 안 됨"
-    assert_equal "rfq_triage", order.rfq_status
+    # 2026-04-29 정책: 모든 신규 카드는 rfq_pending. 사용자가 명시적으로 칸반 진입.
+    assert_equal "rfq_pending", order.rfq_status, "자동 칸반 진입 전면 중단 — 모든 신규 카드는 rfq_pending"
   end
 end

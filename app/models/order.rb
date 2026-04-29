@@ -181,8 +181,16 @@ class Order < ApplicationRecord
     archived_at.present?
   end
 
+  # 카드를 휴지통으로 보냄. 자식(sub_orders)도 함께 archived.
+  # 2026-04-29: 자식이 nullify 로 살아남아 칸반에 "3개씩 새로 생기는 느낌" 차단.
+  # 자식 카드들도 같은 trash 사이클에 함께 묶어 사용자 의도(부모 삭제 = 전체 삭제) 보장.
   def archive!
-    update!(archived_at: Time.current)
+    Order.transaction do
+      now = Time.current
+      update!(archived_at: now)
+      # 자식들도 함께 archive (이미 archived 인 자식은 그대로)
+      sub_orders.where(archived_at: nil).update_all(archived_at: now)
+    end
   end
 
   # 좀비 차단 가드 — 같은 reference_no 또는 gmail_thread_id 중 하나라도
@@ -206,9 +214,12 @@ class Order < ApplicationRecord
     rel.exists?
   end
 
-  # 휴지통에서 복원 — archived_at clear
+  # 휴지통에서 복원 — archived_at clear. 자식도 같은 사이클에 복원.
   def restore!
-    update!(archived_at: nil)
+    Order.transaction do
+      update!(archived_at: nil)
+      sub_orders.where.not(archived_at: nil).update_all(archived_at: nil)
+    end
   end
 
   # 영구 삭제 — DB에서 완전히 제거 (복구 불가)

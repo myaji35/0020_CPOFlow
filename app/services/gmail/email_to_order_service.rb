@@ -20,16 +20,13 @@ module Gmail
       # Idempotency: skip if already imported
       return nil if Order.exists?(source_email_id: @email[:id])
 
-      # RFQ 번호가 있는 메일 → 바로 rfq_triage (견적 확정, 칸반 진입)
-      # AI confirmed → rfq_triage
-      # AI uncertain 또는 판정 없음 → rfq_pending (사용자 리뷰 대기)
-      rfq_status_val = if @has_rfq_number
-        Order.rfq_statuses[:rfq_triage]
-      elsif @v2&.verdict == :confirmed || @detection[:rfq_verdict] == :confirmed
-        Order.rfq_statuses[:rfq_triage]
-      else
-        Order.rfq_statuses[:rfq_pending]
-      end
+      # 2026-04-29 (대표님 지시): 칸반 New 자동 진입 전면 중단.
+      # 이전 정책: has_rfq_number 또는 AI confirmed 시 rfq_triage 로 자동 칸반 진입.
+      # 변경 정책: 모든 신규 카드는 rfq_pending 으로 시작 → 받은편지함 "미분류" 탭에 머물고
+      #            사용자가 명시적으로 "칸반으로 보내기" 액션해야만 rfq_triage 전이.
+      #            (convert_to_order / bulk_to_kanban / bulk_all_uncertain_to_kanban)
+      # 이유: 시스템이 자동으로 칸반에 카드를 추가하면 사용자가 처리 흐름을 통제할 수 없음.
+      rfq_status_val = Order.rfq_statuses[:rfq_pending]
 
       # 발주번호 추출 + 메인 카드 탐색
       ref_no = ReferenceNumberExtractor.extract(
