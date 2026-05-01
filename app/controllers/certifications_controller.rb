@@ -42,6 +42,7 @@ class CertificationsController < ApplicationController
   end
 
   def certification_params
-    params.require(:certification).permit(:name, :issuing_body, :issued_date, :expiry_date, :notes)
+    params.require(:certification).permit(:name, :issuing_body, :issued_date, :expiry_date, :notes,
+                                          documents: [])
   end
 end

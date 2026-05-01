@@ -261,6 +261,7 @@
       <%= f.label :notes, "메모", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
       <%= f.text_area :notes, rows: 3, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary resize-none" %>
     </div>
+    <%= render "shared/documents_field", f: f, record: employee %>
   </div>
 
   <div class="flex justify-end gap-3">

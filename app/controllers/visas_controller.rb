@@ -58,6 +58,7 @@ class VisasController < ApplicationController
 
   def visa_params
     params.require(:visa).permit(:visa_type, :issuing_country, :visa_number,
-                                 :issue_date, :expiry_date, :status, :notes)
+                                 :issue_date, :expiry_date, :status, :notes,
+                                 documents: [])
   end
 end

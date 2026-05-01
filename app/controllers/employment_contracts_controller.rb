@@ -49,7 +49,8 @@ class EmploymentContractsController < ApplicationController
   def contract_params
     params.require(:employment_contract).permit(
       :project_id, :start_date, :end_date, :base_salary, :currency,
-      :pay_frequency, :status, :notes
+      :pay_frequency, :status, :notes,
+      documents: []
     )
   end
 end

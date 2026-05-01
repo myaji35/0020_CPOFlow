@@ -91,7 +91,8 @@ class EmployeesController < ApplicationController
     params.require(:employee).permit(
       :user_id, :email, :name, :name_en, :nationality, :passport_number, :date_of_birth,
       :phone, :emergency_contact, :emergency_phone, :department_id, :job_title,
-      :employment_type, :hire_date, :termination_date, :active, :notes
+      :employment_type, :hire_date, :termination_date, :active, :notes,
+      documents: []
     )
   end
 end

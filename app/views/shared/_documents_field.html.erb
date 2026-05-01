@@ -1,0 +1,18 @@
+<% record = local_assigns.fetch(:record) %>
+<% f = local_assigns.fetch(:f) %>
+<div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+  <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">첨부 문서</h3>
+  <% if record.persisted? && record.documents.any? %>
+    <ul class="mb-3 space-y-1.5">
+      <% record.documents.each do |doc| %>
+        <li class="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm">
+          <svg class="w-4 h-4 text-gray-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <%= link_to doc.filename, rails_blob_path(doc, disposition: "attachment"), class: "flex-1 truncate text-gray-700 dark:text-gray-200 hover:text-primary" %>
+          <span class="text-xs text-gray-500 flex-shrink-0"><%= number_to_human_size(doc.byte_size) %></span>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+  <%= f.label :documents, "파일 추가 (PDF/이미지/Office, 최대 25MB)", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1.5" %>
+  <%= f.file_field :documents, multiple: true, class: "block w-full text-sm text-gray-700 dark:text-gray-200 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-primary file:text-white file:text-xs file:font-medium hover:file:opacity-80 cursor-pointer" %>
+</div>

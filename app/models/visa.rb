@@ -1,4 +1,6 @@
 class Visa < ApplicationRecord
+  include DocumentAttachable
+
   belongs_to :employee
 
   VISA_TYPES    = %w[Employment Tourist Transit Residence].freeze

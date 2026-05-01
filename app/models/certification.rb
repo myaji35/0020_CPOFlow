@@ -1,4 +1,6 @@
 class Certification < ApplicationRecord
+  include DocumentAttachable
+
   belongs_to :employee
 
   validates :name, presence: true

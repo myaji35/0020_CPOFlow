@@ -1,4 +1,6 @@
 class EmploymentContract < ApplicationRecord
+  include DocumentAttachable
+
   belongs_to :employee
   belongs_to :project, optional: true
 
