@@ -1,9 +1,7 @@
 <%# ISS-046 후속: 칸반 컬럼 백그라운드 추가 페치 응답 %>
 <%# locals: status, orders %>
 <turbo-frame id="kanban-more-<%= status %>" class="contents">
-  <% prev_stat = Order::KANBAN_COLUMNS[Order::KANBAN_COLUMNS.index(status) - 1] if Order::KANBAN_COLUMNS.index(status) && Order::KANBAN_COLUMNS.index(status) > 0 %>
-  <% next_stat = Order::KANBAN_COLUMNS[Order::KANBAN_COLUMNS.index(status) + 1] if Order::KANBAN_COLUMNS.index(status) %>
   <% orders.each do |order| %>
-    <%= render "kanban/card", order: order, prev_status: prev_stat, next_status: next_stat %>
+    <%= render "kanban/card", order: order %>
   <% end %>
 </turbo-frame>
