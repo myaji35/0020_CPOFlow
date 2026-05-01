@@ -61,15 +61,8 @@
         </svg>
       </span>
       <span class="shrink-0"><%= card_status_badge(order) %></span>
-      <%# 관리번호 — 마지막(최신) 번호 1개만 표시 (PO > QUO > RFQ) %>
-      <% latest_no = order.po_no.presence || order.quo_no.presence || order.rfq_no.presence %>
-      <% if latest_no %>
-        <span class="text-base font-bold truncate" title="<%= latest_no %>"
-              <% if order.reference_no.present? %>
-              data-controller="kanban-refno-preview"
-              data-kanban-refno-preview-ref-value="<%= order.reference_no %>"
-              <% end %>><% if latest_no.length > 4 %><span class="text-gray-500 dark:text-gray-500 font-medium"><%= latest_no[0...-4] %></span><span class="text-[#1E3A5F] dark:text-blue-400"><%= latest_no[-4..] %></span><% else %><span class="text-[#1E3A5F] dark:text-blue-400"><%= latest_no %></span><% end %></span>
-      <% end %>
+      <%# 관리번호 — TrackingCode 정의 순서대로 활성 코드 모두 표시 (R:99999 Q:99999 P:99999) %>
+      <%= render "orders/tracking_chips", order: order %>
     </div>
     <div class="flex items-center gap-1 shrink-0">
       <% if order.due_date %>

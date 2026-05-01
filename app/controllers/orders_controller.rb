@@ -1,9 +1,9 @@
 class OrdersController < ApplicationController
   include AttachmentPreviewable
 
-  before_action :set_order, only: %i[show edit update destroy move_status quick_update preview_attachment attach attach_from_url detach]
+  before_action :set_order, only: %i[show edit update destroy move_status quick_update update_tracking preview_attachment attach attach_from_url detach]
   # ISS-261: viewer read-only — member 이상만 쓰기 가능
-  before_action :require_member!, only: %i[create new edit update move_status quick_update attach attach_from_url detach save_filter delete_saved_filter]
+  before_action :require_member!, only: %i[create new edit update move_status quick_update update_tracking attach attach_from_url detach save_filter delete_saved_filter]
   before_action :require_manager!, only: %i[destroy]
 
   def index
@@ -243,6 +243,31 @@ class OrdersController < ApplicationController
       render json: { success: true }
     else
       render json: { success: false, errors: @order.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+
+  # PATCH /orders/:id/update_tracking
+  # body: { tracking_code_id, value }
+  # value 빈 문자열이면 해당 TrackingNumber 삭제 (legacy 컬럼도 콜백이 정리)
+  def update_tracking
+    code_id = params[:tracking_code_id]
+    value   = params[:value].to_s.strip
+    tc = TrackingCode.find_by(id: code_id)
+    return render(json: { success: false, error: "관리번호 코드를 찾을 수 없습니다." }, status: :not_found) unless tc
+
+    tn = @order.tracking_numbers.find_or_initialize_by(tracking_code_id: tc.id)
+    if value.blank?
+      tn.destroy if tn.persisted?
+      Activity.create!(order: @order, user: current_user, action: "updated")
+      render json: { success: true, value: "" }
+    else
+      tn.value = value
+      if tn.save
+        Activity.create!(order: @order, user: current_user, action: "updated")
+        render json: { success: true, value: value }
+      else
+        render json: { success: false, errors: tn.errors.full_messages }, status: :unprocessable_entity
+      end
     end
   end
 

@@ -9,6 +9,8 @@ class Order < ApplicationRecord
   belongs_to :parent_order, class_name: "Order", optional: true
   has_many   :sub_orders, class_name: "Order", foreign_key: :parent_order_id,
              dependent: :nullify, inverse_of: :parent_order
+  has_many :tracking_numbers, dependent: :destroy
+  has_many :tracking_codes,   through: :tracking_numbers
   has_many :tasks, dependent: :destroy
   has_many :comments, dependent: :destroy
   has_many :activities, dependent: :destroy
@@ -149,6 +151,7 @@ class Order < ApplicationRecord
   # 기본값 보장: 새 Order는 default(normal)로 시작
   before_validation :ensure_card_status, on: :create
   before_validation :backfill_customer_name_from_client
+  after_save :sync_legacy_tracking_columns_to_numbers
 
   # 저장 후 자동 배정: 수동 지정 없으면 규칙 재평가
   after_save :maybe_auto_assign_card_status, if: :should_auto_reassign?
@@ -427,6 +430,30 @@ class Order < ApplicationRecord
   def backfill_customer_name_from_client
     return if customer_name.present?
     self.customer_name = client&.name
+  end
+
+  # 레거시 컬럼(rfq_no/quo_no/po_no)이 직접 변경된 경우(이메일 파서, quick_update 등)
+  # → tracking_numbers 신규 구조에도 동기화해 카드/드로어 표시 일관성 유지.
+  # TrackingNumber#sync_legacy_column 콜백이 무한 루프를 일으키지 않도록
+  # update_columns 사용한 변경은 콜백을 거치지 않으므로 안전.
+  LEGACY_TRACKING_FIELDS = { rfq_no: "RFQ", quo_no: "QUO", po_no: "PO" }.freeze
+
+  def sync_legacy_tracking_columns_to_numbers
+    LEGACY_TRACKING_FIELDS.each do |field, code|
+      next unless saved_change_to_attribute?(field)
+      val = read_attribute(field)
+      tc = TrackingCode.find_by(code: code)
+      next unless tc
+      tn = tracking_numbers.find_or_initialize_by(tracking_code_id: tc.id)
+      if val.blank?
+        tn.destroy if tn.persisted?
+      elsif tn.value != val
+        tn.value = val
+        tn.save(validate: true)
+      end
+    end
+  rescue ActiveRecord::RecordNotFound
+    # tracking_codes 시드 미적용 환경(드뭄) — 무시
   end
 
   def should_auto_reassign?

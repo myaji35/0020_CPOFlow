@@ -43,6 +43,7 @@ Rails.application.routes.draw do
     member do
       patch :move_status
       patch :quick_update
+      patch :update_tracking
       post  :attach
       post  :attach_from_url
       delete "detach/:blob_id", action: :detach, as: :detach
@@ -275,6 +276,9 @@ Rails.application.routes.draw do
       member { patch :inline_rename }
     end
     resources :kanban_columns, except: %i[show new edit] do
+      collection { patch :reorder }
+    end
+    resources :tracking_codes, except: %i[show new edit] do
       collection { patch :reorder }
     end
   end

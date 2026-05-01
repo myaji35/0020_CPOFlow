@@ -441,6 +441,24 @@
   </div>
   <% end %>
 
+  <%# 관리번호 코드 관리 (admin only) %>
+  <% if current_user.admin? %>
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 mb-6">
+    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#1E3A5F]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11H1l8-8 8 8h-8v8z"/><path d="M21 13l-4 4-4-4"/></svg>
+        <div>
+          <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">관리번호 코드</h2>
+          <p class="text-xs text-gray-500 dark:text-gray-500">발주 카드에 표시할 관리번호(RFQ, QUO, PO, INV 등) 코드와 단축 라벨을 정의합니다.</p>
+        </div>
+      </div>
+      <%= link_to settings_tracking_codes_path, class: "text-sm text-primary dark:text-accent hover:underline" do %>
+        관리하러 가기 →
+      <% end %>
+    </div>
+  </div>
+  <% end %>
+
   <%# 칸반 상태 관리 (admin+manager 공통 노출 — ISS-078) %>
   <% if current_user.role.in?(%w[admin manager]) %>
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 mb-6">

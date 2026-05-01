@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_01_073457) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_01_080806) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -722,6 +722,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_01_073457) do
     t.index ["order_id"], name: "index_tasks_on_order_id"
   end
 
+  create_table "tracking_codes", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.string "code", limit: 3, null: false
+    t.string "color", default: "#6366F1", null: false
+    t.datetime "created_at", null: false
+    t.string "name"
+    t.integer "position", default: 0, null: false
+    t.string "short_label", limit: 2, null: false
+    t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_tracking_codes_on_code", unique: true
+    t.index ["position"], name: "index_tracking_codes_on_position"
+  end
+
+  create_table "tracking_numbers", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "order_id", null: false
+    t.integer "tracking_code_id", null: false
+    t.datetime "updated_at", null: false
+    t.string "value", null: false
+    t.index ["order_id", "tracking_code_id"], name: "idx_tracking_numbers_order_code", unique: true
+    t.index ["order_id"], name: "index_tracking_numbers_on_order_id"
+    t.index ["tracking_code_id"], name: "index_tracking_numbers_on_tracking_code_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "branch"
     t.integer "company_id"
@@ -807,6 +831,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_01_073457) do
   add_foreign_key "supplier_products", "suppliers"
   add_foreign_key "tasks", "orders"
   add_foreign_key "tasks", "users", column: "assignee_id"
+  add_foreign_key "tracking_numbers", "orders"
+  add_foreign_key "tracking_numbers", "tracking_codes"
   add_foreign_key "users", "companies"
   add_foreign_key "visas", "employees"
 end
