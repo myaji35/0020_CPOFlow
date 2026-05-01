@@ -1,0 +1,102 @@
+name: Deploy
+
+# main 브랜치에 push될 때마다 운영(Vultr)에 자동 배포.
+# 수동 실행도 가능 (workflow_dispatch).
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+# 동시 배포 방지 — 진행 중인 배포가 있으면 큐에 대기, 새 푸시는 직전 배포 완료 후 진행
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
+
+      - name: Set up SSH agent for Kamal
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.KAMAL_SSH_PRIVATE_KEY }}
+
+      - name: Add server to known_hosts (skip strict host check)
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H 158.247.235.31 >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Write Kamal secrets
+        env:
+          RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          KAMAL_REGISTRY_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
+          ECOUNT_COM_CODE: ${{ secrets.ECOUNT_COM_CODE }}
+          ECOUNT_USER_ID: ${{ secrets.ECOUNT_USER_ID }}
+          ECOUNT_API_CERT_KEY: ${{ secrets.ECOUNT_API_CERT_KEY }}
+          ECOUNT_ZONE: ${{ secrets.ECOUNT_ZONE }}
+          ECOUNT_ENV: ${{ secrets.ECOUNT_ENV }}
+          CPOFLOW_API_KEY: ${{ secrets.CPOFLOW_API_KEY }}
+        run: |
+          mkdir -p .kamal
+          cat > .kamal/secrets <<EOF
+          RAILS_MASTER_KEY=$RAILS_MASTER_KEY
+          GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID
+          GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET
+          KAMAL_REGISTRY_PASSWORD=$KAMAL_REGISTRY_PASSWORD
+          ECOUNT_COM_CODE=$ECOUNT_COM_CODE
+          ECOUNT_USER_ID=$ECOUNT_USER_ID
+          ECOUNT_API_CERT_KEY=$ECOUNT_API_CERT_KEY
+          ECOUNT_ZONE=$ECOUNT_ZONE
+          ECOUNT_ENV=$ECOUNT_ENV
+          CPOFLOW_API_KEY=$CPOFLOW_API_KEY
+          EOF
+          chmod 600 .kamal/secrets
+
+      - name: Deploy with Kamal
+        run: bundle exec kamal deploy
+
+      - name: Health check
+        run: |
+          for i in 1 2 3 4 5; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://cpoflow.ddtl.co.kr/up || echo "000")
+            echo "Health check #$i: HTTP $STATUS"
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ Production healthy"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "❌ Health check failed"
+          exit 1
+
+      - name: Notify deploy summary
+        if: always()
+        run: |
+          echo "### Deploy Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Triggered by**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Result**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **URL**: https://cpoflow.ddtl.co.kr" >> $GITHUB_STEP_SUMMARY
