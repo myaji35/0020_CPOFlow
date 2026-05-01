@@ -29,7 +29,8 @@ Rails.application.routes.draw do
   resources :orders do
     collection do
       get :preview_by_ref  # M3-4: 칸반 reference_no 호버 미니프리뷰
-      get :price_history   # ISS-224: 동일 조합 직전 단가 조회
+      get :price_history        # ISS-224: 동일 조합 직전 단가 조회
+      get :pricing_suggestion   # ISS-308: OrderQuote 이력 단가·공급사 추천
       post   :save_filter            # ISS-229
       delete :delete_saved_filter    # ISS-229
     end

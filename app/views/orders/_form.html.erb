@@ -213,7 +213,9 @@
   <div class="border-t border-gray-200 dark:border-gray-700"></div>
 
   <%# ===== 섹션 3: 품목 / 금액 (구매 전용) ===== %>
-  <div id="item-price-section" data-price-history-url="<%= price_history_orders_path %>">
+  <div id="item-price-section"
+       data-price-history-url="<%= price_history_orders_path %>"
+       data-pricing-suggestion-url="<%= pricing_suggestion_orders_path %>">
     <h3 class="text-xs font-semibold text-gray-500 dark:text-gray-500 mb-3">품목 / 금액</h3>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
       <div>
@@ -244,7 +246,28 @@
         <button type="button" onclick="document.getElementById('price-history-suggestions').classList.add('hidden')" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 text-xs">닫기</button>
       </div>
       <ul id="price-history-list" class="space-y-1.5 text-xs"></ul>
-      <p class="text-[10px] text-blue-600 dark:text-blue-400 mt-2">💡 단가 셀 클릭 시 총액에 자동 입력 (수량 × 단가)</p>
+      <p class="text-[10px] text-blue-600 dark:text-blue-400 mt-2">단가 셀 클릭 시 총액에 자동 입력 (수량 × 단가)</p>
+    </div>
+
+    <%# ISS-308: 견적 단가 pre-fill 위젯 (OrderQuote 이력) %>
+    <div id="iss308-quote-suggestion" class="hidden mt-3 p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-900/50">
+      <div class="flex items-center justify-between mb-2">
+        <p class="text-xs font-semibold text-green-800 dark:text-green-300 flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="3"/></svg>
+          <span>견적 이력 추천 단가</span>
+        </p>
+        <button type="button" onclick="document.getElementById('iss308-quote-suggestion').classList.add('hidden')" class="text-green-600 dark:text-green-400 hover:text-green-800 text-xs">닫기</button>
+      </div>
+      <ul id="iss308-quote-list" class="space-y-1.5 text-xs"></ul>
+    </div>
+
+    <%# ISS-308: 공급사 추천 칩 %>
+    <div id="iss308-supplier-chips" class="hidden mt-3">
+      <p class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5 flex items-center gap-1">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        이 품목 추천 공급사
+      </p>
+      <div id="iss308-supplier-chip-list" class="flex flex-wrap gap-2"></div>
     </div>
   </div>
   <% else %>
@@ -507,5 +530,124 @@
     });
     // 초기 로드 시 한 번
     if (itemInput && itemInput.value.trim()) fetchHistory();
+  })();
+
+  // ISS-308: 견적 단가 pre-fill + 공급사 추천
+  (function() {
+    var section = document.getElementById('item-price-section');
+    if (!section) return;
+    var suggestionUrl = section.dataset.pricingSuggestionUrl;
+    var itemInput     = document.getElementById('order-item-name');
+    var clientHidden  = document.querySelector('input[name="order[client_id]"]');
+    var supplierHidden = document.querySelector('input[name="order[supplier_id]"]');
+    var estimatedInput = document.getElementById('order-estimated-value');
+    var quoteBox   = document.getElementById('iss308-quote-suggestion');
+    var quoteList  = document.getElementById('iss308-quote-list');
+    var chipBox    = document.getElementById('iss308-supplier-chips');
+    var chipList   = document.getElementById('iss308-supplier-chip-list');
+    var debounceTimer = null;
+
+    function fetchSuggestion() {
+      var itemName = itemInput && itemInput.value.trim();
+      if (!itemName || itemName.length < 3) {
+        if (quoteBox) quoteBox.classList.add('hidden');
+        if (chipBox)  chipBox.classList.add('hidden');
+        return;
+      }
+      var params = new URLSearchParams({ item_name: itemName });
+      var clientId = clientHidden && clientHidden.value;
+      if (clientId) params.set('client_id', clientId);
+
+      fetch(suggestionUrl + '?' + params.toString(), { headers: { 'Accept': 'application/json' } })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          renderQuotes(data.recent_quotes || [], data.suggested_unit_price, data.suggested_currency);
+          renderSupplierChips(data.suggested_suppliers || []);
+        })
+        .catch(function() {});
+    }
+
+    function renderQuotes(quotes, suggestedPrice, suggestedCurrency) {
+      if (!quoteBox || !quoteList) return;
+      if (quotes.length === 0) { quoteBox.classList.add('hidden'); return; }
+      quoteList.innerHTML = quotes.map(function(q, idx) {
+        var price = q.unit_price ? (q.currency + ' ' + q.unit_price.toLocaleString()) : '-';
+        var isBest = idx === 0;
+        return '<li class="flex items-center gap-2 hover:bg-green-100 dark:hover:bg-green-900/40 p-1.5 rounded cursor-pointer' + (isBest ? ' font-semibold' : '') + '" ' +
+               'onclick="window.applyQuoteSuggestion(' + (q.unit_price || 0) + ', \'' + (q.currency || 'AED') + '\')" ' +
+               'title="클릭 시 단가 자동 입력">' +
+               '<span class="text-gray-500 dark:text-gray-400 shrink-0 w-24">' + (q.date || '-') + '</span>' +
+               '<span class="text-gray-700 dark:text-gray-200 truncate flex-1">' + (q.supplier || '공급사 미상') + '</span>' +
+               '<span class="text-green-700 dark:text-green-300 font-semibold shrink-0">' + price + '/개</span>' +
+               (isBest ? '<span class="ml-1 px-1.5 py-0.5 rounded text-[10px] text-white" style="background:#1E8E3E">추천</span>' : '') +
+               '</li>';
+      }).join('');
+      quoteBox.classList.remove('hidden');
+
+      // 최신 단가가 있고 폼에 값이 아직 없으면 자동 채움
+      if (suggestedPrice && estimatedInput && !estimatedInput.value) {
+        var qty = parseFloat(document.querySelector('input[name="order[quantity]"]') && document.querySelector('input[name="order[quantity]"]').value) || 1;
+        estimatedInput.value = (suggestedPrice * qty).toFixed(2);
+        estimatedInput.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
+
+    function renderSupplierChips(suppliers) {
+      if (!chipBox || !chipList) return;
+      if (suppliers.length === 0) { chipBox.classList.add('hidden'); return; }
+      chipList.innerHTML = suppliers.map(function(s) {
+        return '<button type="button" ' +
+               'onclick="window.applySupplierChip(' + s.id + ', \'' + s.name.replace(/'/g, "\\'") + '\')" ' +
+               'class="px-3 py-1.5 rounded-full text-xs font-medium border border-gray-300 bg-white dark:bg-gray-800 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:border-[#00A1E0] hover:text-[#00A1E0] transition-colors">' +
+               s.name +
+               (s.code ? ' <span class="text-gray-400 text-[10px]">(' + s.code + ')</span>' : '') +
+               '</button>';
+      }).join('');
+      chipBox.classList.remove('hidden');
+    }
+
+    // 추천 단가 클릭 → estimated_value 자동 채움
+    window.applyQuoteSuggestion = function(unitPrice, currency) {
+      if (!estimatedInput) return;
+      var qty = parseFloat(document.querySelector('input[name="order[quantity]"]') && document.querySelector('input[name="order[quantity]"]').value) || 1;
+      estimatedInput.value = (unitPrice * qty).toFixed(2);
+      estimatedInput.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+
+    // 공급사 칩 클릭 → supplier hidden field 자동 채움 + autocomplete badge 표시
+    window.applySupplierChip = function(supplierId, supplierName) {
+      var hidden = document.querySelector('input[name="order[supplier_id]"]');
+      if (!hidden) return;
+      hidden.value = supplierId;
+      hidden.dispatchEvent(new Event('change', { bubbles: true }));
+
+      // autocomplete badge 업데이트
+      var supplierAutocomplete = hidden.closest('[data-controller="autocomplete"]');
+      if (supplierAutocomplete) {
+        var badge = supplierAutocomplete.querySelector('[data-autocomplete-target="badge"]');
+        var badgeLabel = supplierAutocomplete.querySelector('[data-autocomplete-target="badgeLabel"]');
+        var inputEl = supplierAutocomplete.querySelector('[data-autocomplete-target="input"]');
+        if (badge && badgeLabel) {
+          badgeLabel.textContent = supplierName;
+          badge.classList.remove('hidden');
+        }
+        if (inputEl) inputEl.classList.add('hidden');
+      }
+      if (chipBox) chipBox.classList.add('hidden');
+    };
+
+    function debounced() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(fetchSuggestion, 450);
+    }
+
+    if (itemInput) itemInput.addEventListener('input', debounced);
+    [clientHidden].forEach(function(h) {
+      if (!h) return;
+      var mo = new MutationObserver(debounced);
+      mo.observe(h, { attributes: true, attributeFilter: ['value'] });
+      h.addEventListener('change', debounced);
+    });
+    if (itemInput && itemInput.value.trim().length >= 3) fetchSuggestion();
   })();
 </script>

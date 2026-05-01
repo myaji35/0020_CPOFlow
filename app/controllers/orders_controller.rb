@@ -3,7 +3,7 @@ class OrdersController < ApplicationController
 
   before_action :set_order, only: %i[show edit update destroy move_status quick_update update_tracking preview_attachment attach attach_from_url detach]
   # ISS-261: viewer read-only — member 이상만 쓰기 가능
-  before_action :require_member!, only: %i[create new edit update move_status quick_update update_tracking attach attach_from_url detach save_filter delete_saved_filter]
+  before_action :require_member!, only: %i[create new edit update move_status quick_update update_tracking attach attach_from_url detach save_filter delete_saved_filter pricing_suggestion]
   before_action :require_manager!, only: %i[destroy]
 
   def index
@@ -180,6 +180,18 @@ class OrdersController < ApplicationController
       }
     end
     render json: { count: entries.size, entries: entries }
+  end
+
+  # ISS-308: GET /orders/pricing_suggestion
+  # params: item_name (필수), client_id (optional)
+  # OrderQuote 이력에서 단가 추천 + 공급사 추천
+  def pricing_suggestion
+    order_stub = Order.new(
+      item_name: params[:item_name].to_s.strip,
+      client_id: params[:client_id].presence
+    )
+    result = OrderPricingSuggester.call(order_stub)
+    render json: result
   end
 
   def update
