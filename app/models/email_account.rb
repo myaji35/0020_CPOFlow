@@ -8,9 +8,10 @@ class EmailAccount < ApplicationRecord
 
   validates :email, presence: true, uniqueness: { scope: :user_id }
 
+  # ISS-319: gmail.modify (Restricted scope) 제거 — Google Verification 비용/시간 절감
+  # CASA Tier 2 보안 감사($15K~75K/년) 회피. trash/UNREAD 라벨 변경 기능은 비활성됨.
   GMAIL_SCOPES = [
-    "https://www.googleapis.com/auth/gmail.readonly",
-    "https://www.googleapis.com/auth/gmail.modify"
+    "https://www.googleapis.com/auth/gmail.readonly"
   ].freeze
 
   def synced_recently?

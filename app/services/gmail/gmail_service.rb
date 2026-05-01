@@ -90,26 +90,16 @@ module Gmail
       }
     end
 
-    # Move message to Gmail Trash (30일 후 Gmail 영구삭제)
+    # ISS-319: gmail.modify scope 제거로 비활성. 호출 시 noop + 경고 로그.
+    # 향후 활성화하려면 EmailAccount::GMAIL_SCOPES에 gmail.modify 재추가 + Google Verification 통과 필요.
     def trash_message(gmail_message_id)
-      refresh_token_if_needed!
-      @gmail.trash_user_message("me", gmail_message_id)
-      true
-    rescue Google::Apis::Error => e
-      Rails.logger.error "[GmailService] trash_message error: #{e.message}"
+      Rails.logger.warn "[GmailService] trash_message NOOP — gmail.modify scope 제거됨 (ISS-319). msg=#{gmail_message_id}"
       false
     end
 
-    # Mark message as read in Gmail
     def mark_as_read(gmail_message_id)
-      refresh_token_if_needed!
-      @gmail.modify_user_message(
-        "me",
-        gmail_message_id,
-        Google::Apis::GmailV1::ModifyMessageRequest.new(remove_label_ids: [ "UNREAD" ])
-      )
-    rescue Google::Apis::Error => e
-      Rails.logger.error "[GmailService] mark_as_read error: #{e.message}"
+      Rails.logger.warn "[GmailService] mark_as_read NOOP — gmail.modify scope 제거됨 (ISS-319). msg=#{gmail_message_id}"
+      nil
     end
 
     # Download attachment data from Gmail.
