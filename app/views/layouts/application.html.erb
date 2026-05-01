@@ -783,5 +783,154 @@
       <!-- Auth pages: no sidebar -->
       <%= yield %>
     <% end %>
+
+    <%# ISS-328: 긴급 견적 메일 초안 모달 %>
+    <div id="urgent-email-modal"
+         class="hidden fixed inset-0 z-[200] flex items-center justify-center px-4"
+         onclick="if(event.target===this) closeUrgentEmailModal()">
+      <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+      <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+          <div class="flex items-center gap-2">
+            <span class="text-red-600">🚨</span>
+            <h3 class="text-base font-semibold text-gray-900 dark:text-white">긴급 견적 의뢰 메일 초안</h3>
+          </div>
+          <button onclick="closeUrgentEmailModal()"
+                  class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <div id="urgent-email-loading" class="flex-1 flex items-center justify-center p-10">
+          <div class="text-center">
+            <svg class="animate-spin w-8 h-8 text-red-600 mx-auto mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" opacity="0.25"/><path d="M21 12a9 9 0 00-9-9"/></svg>
+            <p class="text-sm text-gray-500">메일 초안 생성 중...</p>
+          </div>
+        </div>
+
+        <div id="urgent-email-content" class="hidden flex-1 overflow-y-auto p-5 space-y-4">
+          <div class="flex gap-2 border-b border-gray-100 dark:border-gray-700 pb-3 mb-4">
+            <button onclick="switchUrgentTab('ko')" id="urgent-tab-ko"
+                    class="px-3 py-1.5 text-sm font-medium rounded-md bg-red-600 text-white transition-colors">한국어</button>
+            <button onclick="switchUrgentTab('en')" id="urgent-tab-en"
+                    class="px-3 py-1.5 text-sm font-medium rounded-md text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">English</button>
+          </div>
+
+          <div id="urgent-body-ko">
+            <div class="mb-3">
+              <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">제목</label>
+              <div id="urgent-subject-ko" class="px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white"></div>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">본문</label>
+              <div id="urgent-body-ko-text" class="px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white whitespace-pre-wrap min-h-[120px]"></div>
+            </div>
+          </div>
+
+          <div id="urgent-body-en" class="hidden">
+            <div class="mb-3">
+              <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Subject</label>
+              <div id="urgent-subject-en" class="px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white"></div>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Body</label>
+              <div id="urgent-body-en-text" class="px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white whitespace-pre-wrap min-h-[120px]"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="urgent-email-footer" class="hidden px-5 py-4 border-t border-gray-200 dark:border-gray-700 flex gap-2 flex-wrap">
+          <button onclick="copyUrgentEmail('ko')"
+                  class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            한국어 복사
+          </button>
+          <button onclick="copyUrgentEmail('en')"
+                  class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            English Copy
+          </button>
+          <a id="urgent-gmail-ko" href="#" target="_blank" rel="noopener"
+             class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            Gmail로 열기 (한)
+          </a>
+          <a id="urgent-gmail-en" href="#" target="_blank" rel="noopener"
+             class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            Gmail Open (EN)
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let _urgentDraftData = {};
+
+      function openUrgentEmailDraftModal(orderId) {
+        const modal = document.getElementById('urgent-email-modal');
+        const loading = document.getElementById('urgent-email-loading');
+        const content = document.getElementById('urgent-email-content');
+        const footer = document.getElementById('urgent-email-footer');
+
+        modal.classList.remove('hidden');
+        loading.classList.remove('hidden');
+        content.classList.add('hidden');
+        footer.classList.add('hidden');
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+        fetch(`/orders/${orderId}/urgent_email_draft`, {
+          method: 'POST',
+          headers: { 'X-CSRF-Token': csrfToken, 'Accept': 'application/json' }
+        })
+        .then(r => r.json())
+        .then(data => {
+          _urgentDraftData = data;
+          document.getElementById('urgent-subject-ko').textContent = data.subject_ko;
+          document.getElementById('urgent-body-ko-text').textContent = data.body_ko;
+          document.getElementById('urgent-subject-en').textContent = data.subject_en;
+          document.getElementById('urgent-body-en-text').textContent = data.body_en;
+          document.getElementById('urgent-gmail-ko').href = data.mailto_ko;
+          document.getElementById('urgent-gmail-en').href = data.mailto_en;
+
+          loading.classList.add('hidden');
+          content.classList.remove('hidden');
+          footer.classList.remove('hidden');
+        })
+        .catch(() => {
+          loading.innerHTML = '<p class="text-sm text-red-500 text-center">메일 초안 생성 실패. 다시 시도해주세요.</p>';
+        });
+      }
+
+      function closeUrgentEmailModal() {
+        document.getElementById('urgent-email-modal').classList.add('hidden');
+      }
+
+      function switchUrgentTab(lang) {
+        ['ko', 'en'].forEach(l => {
+          document.getElementById(`urgent-body-${l}`).classList.toggle('hidden', l !== lang);
+          const tab = document.getElementById(`urgent-tab-${l}`);
+          if (l === lang) {
+            tab.classList.add('bg-red-600', 'text-white');
+            tab.classList.remove('text-gray-600', 'hover:bg-gray-100');
+          } else {
+            tab.classList.remove('bg-red-600', 'text-white');
+            tab.classList.add('text-gray-600', 'hover:bg-gray-100');
+          }
+        });
+      }
+
+      function copyUrgentEmail(lang) {
+        const subject = lang === 'ko' ? _urgentDraftData.subject_ko : _urgentDraftData.subject_en;
+        const body = lang === 'ko' ? _urgentDraftData.body_ko : _urgentDraftData.body_en;
+        const text = `${subject}\n\n${body}`;
+        navigator.clipboard.writeText(text).then(() => {
+          const btn = event.currentTarget;
+          const orig = btn.textContent;
+          btn.textContent = '✓ 복사됨';
+          setTimeout(() => { btn.textContent = orig; }, 2000);
+        });
+      }
+    </script>
   </body>
 </html>

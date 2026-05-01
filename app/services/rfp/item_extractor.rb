@@ -24,6 +24,7 @@ module Rfp
             "source_excerpt": "원문에서 직접 인용한 30자 이상의 문장 (REQUIRED - 할루시네이션 방지용)"
           }
         ],
+        "rfp_deadline": "YYYY-MM-DD or null",
         "confidence": 0.85,
         "ambiguities": ["수량 단위 모호", "납기일 미기재"]
       }
@@ -32,8 +33,9 @@ module Rfp
       1. source_excerpt is MANDATORY for each item — skip items without it
       2. source_excerpt must be verbatim text from the document (minimum 30 characters)
       3. quantity must be a number (not string)
-      4. If no items found, return {"items": [], "confidence": 0.0, "ambiguities": ["품목 없음"]}
+      4. If no items found, return {"items": [], "rfp_deadline": null, "confidence": 0.0, "ambiguities": ["품목 없음"]}
       5. Return ONLY the JSON object, no markdown fences, no explanation
+      6. rfp_deadline: the EARLIEST/most urgent deadline in the document — look for keywords like "Submission Deadline", "Close Date", "마감일", "제출기한", or the earliest delivery_date among all items. Return null if not found.
     PROMPT
 
     def self.call(combined_text)

@@ -75,6 +75,9 @@ module Rfp
         bump_opus_counter
       end
 
+      # ISS-328: 마감 D-1 긴급 알림
+      check_urgent_deadline(order, result)
+
     rescue => e
       Rails.logger.error("[Rfp::AnalyzeAttachmentsJob] order=#{order_id} #{e.class}: #{e.message}\n#{e.backtrace&.first(5)&.join("\n")}")
       begin
@@ -115,6 +118,24 @@ module Rfp
       parts << "[원문 출처]"
       parts << item["source_excerpt"].to_s
       parts.join("\n")
+    end
+
+    # ISS-328: rfp_deadline 또는 items의 earliest delivery_date로 D-1 판정
+    def check_urgent_deadline(order, result)
+      return unless result.is_a?(Hash)
+
+      deadline_str = result["rfp_deadline"].presence ||
+                     result["items"].to_a.map { |i| i["delivery_date"] }.compact.min
+      return if deadline_str.blank?
+
+      deadline_date = Date.parse(deadline_str.to_s)
+      days_left = (deadline_date - Date.current).to_i
+      if days_left <= 1 && days_left >= 0
+        Rails.logger.info("[Rfp::AnalyzeAttachmentsJob] order=#{order.id} D-#{days_left} 긴급 알림 발송")
+        Rfp::UrgentAlertService.call(order, deadline_date, days_left)
+      end
+    rescue ArgumentError => e
+      Rails.logger.warn("[Rfp::AnalyzeAttachmentsJob] deadline parse fail: #{deadline_str} — #{e.message}")
     end
 
     def bump_opus_counter

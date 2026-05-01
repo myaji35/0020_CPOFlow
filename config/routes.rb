@@ -61,6 +61,7 @@ Rails.application.routes.draw do
       get  "pdf/quote",          to: "orders/pdf#quote",           as: :pdf_quote
       get  "pdf/purchase_order", to: "orders/pdf#purchase_order",  as: :pdf_purchase_order
       get  "attachment_preview/:blob_id", action: :preview_attachment, as: :attachment_preview
+      post :urgent_email_draft   # ISS-328: 긴급 견적 의뢰 메일 초안
     end
   end
 

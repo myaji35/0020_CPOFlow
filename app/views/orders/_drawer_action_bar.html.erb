@@ -50,6 +50,15 @@
       <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
       <span><%= t("orders.drawer.action_task") %></span>
     </button>
+    <%# ISS-328: 긴급 견적 메일 초안 버튼 — urgent/critical 카드만 노출 %>
+    <% if order.card_status&.key.in?(%w[urgent critical]) %>
+      <button type="button"
+              onclick="openUrgentEmailDraftModal(<%= order.id %>)"
+              class="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md text-[12px] bg-red-600/80 border border-red-400/40 text-white hover:bg-red-600 transition-colors">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        <span>긴급 견적 메일</span>
+      </button>
+    <% end %>
     <div class="ml-auto flex items-center">
       <a href="<%= order_path(order) %>" target="_blank" rel="noopener"
          class="inline-flex items-center gap-1 h-8 px-2 rounded-md text-[11.5px] text-blue-100 hover:bg-white/[0.06] hover:text-white transition-colors"

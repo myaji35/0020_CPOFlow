@@ -1,9 +1,9 @@
 class OrdersController < ApplicationController
   include AttachmentPreviewable
 
-  before_action :set_order, only: %i[show edit update destroy move_status quick_update update_tracking preview_attachment attach attach_from_url detach]
+  before_action :set_order, only: %i[show edit update destroy move_status quick_update update_tracking preview_attachment attach attach_from_url detach urgent_email_draft]
   # ISS-261: viewer read-only — member 이상만 쓰기 가능
-  before_action :require_member!, only: %i[create new edit update move_status quick_update update_tracking attach attach_from_url detach save_filter delete_saved_filter pricing_suggestion]
+  before_action :require_member!, only: %i[create new edit update move_status quick_update update_tracking attach attach_from_url detach save_filter delete_saved_filter pricing_suggestion urgent_email_draft]
   before_action :require_manager!, only: %i[destroy]
 
   def index
@@ -477,7 +477,35 @@ class OrdersController < ApplicationController
     render partial: "orders/refno_preview", locals: { data: data }
   end
 
+  # ISS-328: POST /orders/:id/urgent_email_draft
+  # 긴급 견적 의뢰 메일 초안 생성 → JSON 반환
+  def urgent_email_draft
+    draft = Rfp::UrgentQuoteEmailDrafter.call(@order)
+
+    supplier_email = @order.supplier&.contact_persons&.first&.email.presence ||
+                     @order.contact_person&.email.presence ||
+                     ""
+
+    mailto_ko = build_mailto(supplier_email, draft[:subject_ko], draft[:body_ko])
+    mailto_en = build_mailto(supplier_email, draft[:subject_en], draft[:body_en])
+
+    render json: {
+      subject_ko: draft[:subject_ko],
+      subject_en: draft[:subject_en],
+      body_ko: draft[:body_ko],
+      body_en: draft[:body_en],
+      mailto_ko: mailto_ko,
+      mailto_en: mailto_en,
+      supplier_email: supplier_email,
+      error: draft[:error]
+    }
+  end
+
   private
+
+  def build_mailto(to, subject, body)
+    "mailto:#{CGI.escape(to)}?subject=#{CGI.escape(subject)}&body=#{CGI.escape(body)}"
+  end
 
   def set_order
     @order = scoped_orders.find(params[:id])
