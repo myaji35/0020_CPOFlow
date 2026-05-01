@@ -1,4 +1,6 @@
 class ApplicationController < ActionController::Base
+  include Pagy::Backend  # ISS-310: 페이지네이션
+
   allow_browser versions: :modern
   stale_when_importmap_changes
 

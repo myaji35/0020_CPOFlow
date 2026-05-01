@@ -1,4 +1,6 @@
 module ApplicationHelper
+  include Pagy::Frontend  # ISS-310: 페이지네이션 헬퍼 (pagy_nav 등)
+
   # Sidebar nav link helper (Redesign Phase 1 — navy shell, 232px)
   def nav_link_to(path, icon:, label:, &block)
     active = current_page?(path) || (path != "/" && request.path.start_with?(path))

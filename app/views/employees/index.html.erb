@@ -207,4 +207,17 @@
       </tbody>
     </table>
   </div>
+
+  <%# ISS-310: 페이지네이션 %>
+  <% if defined?(@pagy) && @pagy.pages > 1 %>
+    <div class="mt-4 flex items-center justify-between text-sm">
+      <div class="text-gray-500 dark:text-gray-400">
+        총 <span class="font-semibold text-gray-700 dark:text-gray-300"><%= @pagy.count %></span>명 ·
+        <%= @pagy.from %>–<%= @pagy.to %> 표시 (페이지 <%= @pagy.page %>/<%= @pagy.pages %>)
+      </div>
+      <div class="flex items-center gap-1">
+        <%= raw pagy_nav(@pagy) %>
+      </div>
+    </div>
+  <% end %>
 </div>

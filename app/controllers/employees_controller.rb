@@ -38,6 +38,9 @@ class EmployeesController < ApplicationController
     }
     @departments = Department.active.by_sort
     @job_titles  = JobTitle.active.by_sort
+
+    # ISS-310: 페이지네이션 — 직원 100명+ 시 전체 로드 방지
+    @pagy, @employees = pagy(@employees, items: 25)
   end
 
   def show
