@@ -53,6 +53,15 @@ class User < ApplicationRecord
   validates :locale, inclusion: { in: LOCALES }, allow_blank: true
   validates :theme,  inclusion: { in: THEMES },  allow_blank: true
 
+  # ISS-296: 퇴사자 계정 잠금 — Employee.active=false 또는 termination_date 경과 시 로그인 차단
+  def active_for_authentication?
+    super && active
+  end
+
+  def inactive_message
+    active ? super : :account_deactivated
+  end
+
   # Employee 연결 시 직원 이름 우선 표시, 없으면 User.name
   def display_name
     employee&.name.presence || name.presence || email.split("@").first

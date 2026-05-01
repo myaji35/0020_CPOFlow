@@ -1,4 +1,6 @@
 class Employee < ApplicationRecord
+  include DocumentAttachable
+
   belongs_to :user,       optional: true
   belongs_to :department, optional: true
   has_many :visas,                dependent: :destroy
@@ -28,6 +30,9 @@ class Employee < ApplicationRecord
   # email 비우면 user_id도 끊는다 (수동 동기화 일관성).
   before_save :sync_user_by_email, if: :will_save_change_to_email?
 
+  # ISS-296: active 또는 termination_date 변경 시 연결된 User 계정 활성화 상태 동기화
+  after_save :sync_user_account_status, if: -> { saved_change_to_active? || saved_change_to_termination_date? }
+
   def sync_user_by_email
     if email.present?
       matched = User.find_by("LOWER(email) = ?", email.downcase)
@@ -35,6 +40,13 @@ class Employee < ApplicationRecord
     else
       self.user_id = nil
     end
+  end
+
+  # ISS-296: Employee 상태 변경 → 연결 User 계정 활성화 동기화
+  def sync_user_account_status
+    return unless user_id
+    should_be_active = active && (termination_date.nil? || termination_date > Date.current)
+    user.update_column(:active, should_be_active) if user.active != should_be_active
   end
 
   scope :active,     -> { where(active: true) }
