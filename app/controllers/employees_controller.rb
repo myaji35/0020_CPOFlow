@@ -121,8 +121,8 @@ class EmployeesController < ApplicationController
   # ISS-311: CSV export
   def export_employees_csv(employees)
     CSV.generate(headers: true) do |csv|
-      csv << ["#", "이름(한글)", "이름(영문)", "국적", "여권번호", "전화", "이메일",
-              "부서", "직급", "고용형태", "입사일", "퇴직일", "재직중"]
+      csv << [ "#", "이름(한글)", "이름(영문)", "국적", "여권번호", "전화", "이메일",
+              "부서", "직급", "고용형태", "입사일", "퇴직일", "재직중" ]
       employees.find_each do |e|
         csv << [
           e.id, e.name, e.name_en, e.nationality, e.passport_number,
