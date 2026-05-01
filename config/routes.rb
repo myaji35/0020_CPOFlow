@@ -51,7 +51,9 @@ Rails.application.routes.draw do
       patch :update_tracking
       post  :attach
       post  :attach_from_url
-      delete "detach/:blob_id", action: :detach, as: :detach
+      # ISS-315: GET prefetch / 외부 링크 클릭으로 RoutingError 자주 발생
+      # → DELETE 정상 호출 + GET fallback (302 redirect to order, 안전)
+      match  "detach/:blob_id", action: :detach, via: %i[delete get], as: :detach
       get  "pdf/quote",          to: "orders/pdf#quote",           as: :pdf_quote
       get  "pdf/purchase_order", to: "orders/pdf#purchase_order",  as: :pdf_purchase_order
       get  "attachment_preview/:blob_id", action: :preview_attachment, as: :attachment_preview

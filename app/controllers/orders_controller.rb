@@ -419,6 +419,12 @@ class OrdersController < ApplicationController
 
   # DELETE /orders/:id/detach/:blob_id — 첨부파일 삭제
   def detach
+    # ISS-315: GET 요청은 prefetch/외부링크 가능성 — destroy 금지, 안전 redirect
+    if request.get?
+      Rails.logger.warn "[ISS-315] detach GET fallback — order=#{@order.id} blob=#{params[:blob_id]} ip=#{request.remote_ip} ua=#{request.user_agent.to_s.first(100)}"
+      return redirect_to @order, alert: "파일 삭제는 카드에서 휴지통 아이콘을 직접 클릭하세요. (안전을 위해 링크 클릭은 무시됩니다)"
+    end
+
     attachment = @order.attachments.find { |a| a.blob_id == params[:blob_id].to_i }
     if attachment
       attachment.purge
