@@ -1,11 +1,11 @@
-<% content_for :page_title, "Edit Order" %>
+<% content_for :page_title, t("orders.edit") %>
 
 <div class="max-w-3xl mx-auto">
   <div class="flex items-center gap-3 mb-6">
     <%= link_to order_path(@order), class: "text-gray-500 hover:text-gray-600" do %>
       <i class="lni lni-arrow-left text-lg"></i>
     <% end %>
-    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Edit Order</h2>
+    <h2 class="text-xl font-semibold text-gray-900 dark:text-white"><%= t("orders.edit") %></h2>
     <span class="text-gray-500 dark:text-gray-500 text-sm">· <%= @order.title.truncate(40) %></span>
   </div>
 

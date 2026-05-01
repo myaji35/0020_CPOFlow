@@ -4,19 +4,19 @@
 <div class="mt-4 p-3 border border-gray-300 rounded-lg bg-white">
   <div class="flex items-center justify-between mb-2">
     <h4 class="text-sm font-semibold text-gray-900">
-      📊 연결된 거래
+      <%= t("orders.drawer_links.title") %>
       <span class="text-xs font-normal text-gray-600">
         (<%= order.outgoing_links.confirmed.count + order.incoming_links.confirmed.count %>)
       </span>
     </h4>
-    <span class="text-xs text-gray-500">M1 · 텍스트 미리보기</span>
+    <span class="text-xs text-gray-500"><%= t("orders.drawer_links.preview_label") %></span>
   </div>
 
   <% confirmed_out = order.outgoing_links.confirmed.to_a %>
   <% confirmed_in  = order.incoming_links.confirmed.to_a %>
 
   <% if confirmed_out.empty? && confirmed_in.empty? %>
-    <p class="text-xs text-gray-500">아직 연결된 거래가 없습니다.</p>
+    <p class="text-xs text-gray-500"><%= t("orders.drawer_links.empty") %></p>
   <% else %>
     <ul class="space-y-1 text-sm text-gray-900">
       <% confirmed_out.each do |link| %>

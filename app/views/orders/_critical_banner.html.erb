@@ -9,13 +9,13 @@
         <line x1="12" y1="17" x2="12.01" y2="17"/>
       </svg>
       <div>
-        <p class="text-sm font-bold text-[#D93025]">즉시 조치 필요</p>
+        <p class="text-sm font-bold text-[#D93025]"><%= t("orders.critical_banner.title") %></p>
         <p class="text-sm text-[#16325C] mt-0.5">
-          마감일 <strong><%= (Date.today - order.due_date).to_i %>일</strong> 경과 &middot; 담당자 미배정
+          <%= t("orders.critical_banner.body", days: (Date.today - order.due_date).to_i) %>
         </p>
       </div>
     </div>
-    <%= link_to "지금 담당자 배정",
+    <%= link_to t("orders.critical_banner.assign_link"),
                 "#assignment-section",
                 class: "shrink-0 inline-flex items-center px-4 py-2 rounded-lg text-sm font-semibold text-white hover:opacity-90 transition-opacity",
                 style: "background:#D93025;" %>

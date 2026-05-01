@@ -1,7 +1,7 @@
 <% is_purchase = @board&.is_default? || @board&.board_type == "purchase" %>
-<% board_name = @board&.name || "구매보드" %>
-<% page_title = is_purchase ? "새 주문 등록" : "새 카드 등록" %>
-<% page_desc = is_purchase ? "수동으로 신규 구매 주문을 생성합니다" : "#{board_name}에 새 카드를 추가합니다" %>
+<% board_name = @board&.name || t("orders.new_board_default") %>
+<% page_title = is_purchase ? t("orders.new_purchase_title") : t("orders.new_card_title") %>
+<% page_desc = is_purchase ? t("orders.new_purchase_desc") : t("orders.new_card_desc", board: board_name) %>
 <% content_for :title, page_title %>
 
 <%# 배경 오버레이 — 클릭 시 칸반으로 돌아감 %>

@@ -12,7 +12,7 @@
           data-controller="file-dropzone"
           data-file-dropzone-max-size-value="26214400"
           data-file-dropzone-auto-submit-value="false"
-          data-file-dropzone-idle-label-value="파일 선택 또는 드래그"
+          data-file-dropzone-idle-label-value="<%= t("orders.attachments.upload_label") %>"
           class="flex items-center gap-2">
       <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
 
@@ -22,7 +22,7 @@
         <svg class="w-5 h-5 text-gray-500 group-hover:text-[#00A1E0] transition-colors pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         <span data-file-dropzone-target="label"
               class="text-sm text-gray-500 group-hover:text-[#00A1E0] transition-colors pointer-events-none">
-          파일 선택 또는 드래그
+          <%= t("orders.attachments.upload_label") %>
         </span>
       </label>
       <input type="file" name="files[]" multiple
@@ -31,7 +31,7 @@
              style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
       <button type="submit" data-file-dropzone-target="submit"
               class="px-4 py-2.5 text-sm font-medium text-white bg-[#1E3A5F] rounded-lg hover:bg-[#1E3A5F]/90 cursor-pointer transition-colors shrink-0">
-        업로드
+        <%= t("orders.attachments.upload_btn") %>
       </button>
     </form>
   </div>
@@ -41,31 +41,31 @@
     <button @click="open = !open" type="button"
             class="flex items-center gap-1.5 text-xs text-gray-500 hover:text-[#00A1E0] transition-colors">
       <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-      URL로 파일 첨부
+      <%= t("orders.attachments.url_attach_toggle") %>
     </button>
     <div x-show="open" x-cloak class="mt-2">
       <%= form_with url: attach_from_url_order_path(order), method: :post,
           data: { turbo: true },
           class: "space-y-2" do |f| %>
         <div class="flex items-center gap-2">
-          <input type="text" name="url" placeholder="https://example.com/file.pdf · Google Drive · Dropbox · OneDrive · 웹 페이지..."
+          <input type="text" name="url" placeholder="<%= t("orders.attachments.url_placeholder") %>"
                  class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500" required />
           <button type="submit" @click="loading = true"
                   class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 cursor-pointer transition-colors shrink-0 flex items-center gap-1.5">
             <template x-if="loading">
               <svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
             </template>
-            첨부
+            <%= t("orders.attachments.attach_btn") %>
           </button>
         </div>
         <label class="flex items-center gap-2 text-xs text-gray-600 cursor-pointer select-none">
           <input type="checkbox" name="save_as_link" value="1"
                  class="rounded border-gray-300 text-brand-600 focus:ring-brand-500" />
-          <span>링크로만 저장 (다운로드 시도 안 함)</span>
+          <span><%= t("orders.attachments.save_as_link_label") %></span>
         </label>
         <p class="text-[11px] text-gray-500 leading-relaxed">
-          지원: 직접 파일 URL · Google Drive / Docs / Sheets / Slides · Dropbox · OneDrive ·
-          <span class="text-gray-600">다운로드 실패 시 자동으로 링크로 저장됩니다.</span>
+          <%= t("orders.attachments.url_hint") %>
+          <span class="text-gray-600"><%= t("orders.attachments.url_fallback_hint") %></span>
         </p>
       <% end %>
     </div>
@@ -82,10 +82,10 @@
       <div class="px-5 py-3 border-b border-gray-200 flex items-center justify-between">
         <h3 class="text-sm font-semibold text-gray-900 flex items-center gap-2">
           <svg class="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-          첨부파일 및 링크
+          <%= t("orders.attachments.files_and_links_title") %>
         </h3>
         <% total_att = [ att_meta.size, active_storage_attachments.size ].max + links.size %>
-        <span class="text-xs text-gray-500"><%= total_att %>개</span>
+        <span class="text-xs text-gray-500"><%= t("inbox.attachment_count", count: total_att) %></span>
       </div>
       <div class="px-5 py-4 space-y-2">
         <%# ISS-307: 첨부파일 자동 분류 결과 (캐시됨, 최초 로드 시 분류 실행) %>
@@ -117,7 +117,7 @@
                         elsif is_image then ct.split("/").last&.upcase
                         elsif is_html then "HTML"
                         elsif is_word then "Word"
-                        elsif is_text then "텍스트"
+                        elsif is_text then t("orders.attachments.type_text")
                         else ct.split("/").last&.upcase
                         end
           %>
@@ -141,22 +141,22 @@
                 <span class="<%= icon_color %>"><%= type_label %></span> ·
                 <%= number_to_human_size(blob.byte_size) %>
                 <% if is_viewable %>
-                  · <span class="text-blue-500">클릭하여 미리보기</span>
+                  · <span class="text-blue-500"><%= t("orders.attachments.click_to_preview") %></span>
                 <% end %>
               </p>
             </div>
             <% if is_viewable %>
-              <span class="relative z-10 p-1.5 rounded hover:bg-blue-100 transition-colors" title="미리보기">
+              <span class="relative z-10 p-1.5 rounded hover:bg-blue-100 transition-colors" title="<%= t("orders.attachments.preview_title") %>">
                 <svg class="w-3.5 h-3.5 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               </span>
             <% end %>
-            <a href="<%= rails_blob_path(blob, disposition: "attachment") %>" class="relative z-10 p-1.5 rounded hover:bg-gray-200 transition-colors" title="다운로드" onclick="event.stopPropagation()">
+            <a href="<%= rails_blob_path(blob, disposition: "attachment") %>" class="relative z-10 p-1.5 rounded hover:bg-gray-200 transition-colors" title="<%= t("orders.attachments.download_title") %>" onclick="event.stopPropagation()">
               <svg class="w-3.5 h-3.5 text-gray-500 group-hover:text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             </a>
             <%= link_to detach_order_path(order, blob_id: blob.id), method: :delete,
-                data: { turbo_method: :delete, turbo_confirm: "#{fn}을(를) 삭제할까요?" },
+                data: { turbo_method: :delete, turbo_confirm: t("orders.attachments.delete_confirm", name: fn) },
                 class: "relative z-10 p-1.5 rounded hover:bg-red-100 transition-colors",
-                title: "삭제", onclick: "event.stopPropagation()" do %>
+                title: t("common.delete"), onclick: "event.stopPropagation()" do %>
               <svg class="w-3.5 h-3.5 text-gray-500 hover:text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             <% end %>
           </div>
@@ -174,7 +174,7 @@
                 <p class="text-xs text-gray-500">
                   <%= att[:mime_type]&.split("/")&.last&.upcase %>
                   <% if att[:size] %> · <%= number_to_human_size(att[:size]) %><% end %>
-                  · 재동기화 필요
+                  · <%= t("orders.attachments.resync_needed") %>
                 </p>
               </div>
             </div>
@@ -212,8 +212,8 @@
   <% else %>
     <div class="p-8 text-center">
       <svg class="w-10 h-10 mx-auto text-gray-200 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-      <p class="text-sm text-gray-500">첨부파일이 없습니다</p>
-      <p class="text-xs text-gray-300 mt-1">위 영역에서 파일을 추가하세요</p>
+      <p class="text-sm text-gray-500"><%= t("orders.attachments.no_attachments") %></p>
+      <p class="text-xs text-gray-300 mt-1"><%= t("orders.attachments.no_attachments_hint") %></p>
     </div>
   <% end %>
   <div class="h-4"></div>
