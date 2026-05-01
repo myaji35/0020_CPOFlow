@@ -12,5 +12,5 @@ Rails.application.configure do
     :ko
   end
 
-  config.i18n.fallbacks = [ :en ]
+  config.i18n.fallbacks = { ko: :en, ar: :en }
 end
