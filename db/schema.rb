@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_01_080806) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_01_090709) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -325,6 +325,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_01_080806) do
     t.date "date_of_birth"
     t.string "department"
     t.integer "department_id"
+    t.string "email"
     t.string "emergency_contact"
     t.string "emergency_phone"
     t.string "employment_type", default: "regular", null: false
@@ -341,6 +342,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_01_080806) do
     t.integer "user_id"
     t.index ["active"], name: "index_employees_on_active"
     t.index ["department_id"], name: "index_employees_on_department_id"
+    t.index ["email"], name: "index_employees_on_email"
     t.index ["name"], name: "index_employees_on_name"
     t.index ["nationality"], name: "index_employees_on_nationality"
     t.index ["user_id"], name: "index_employees_on_user_id"

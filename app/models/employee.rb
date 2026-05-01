@@ -22,6 +22,20 @@ class Employee < ApplicationRecord
 
   validates :name, :nationality, :employment_type, presence: true
   validates :employment_type, inclusion: { in: EMPLOYMENT_TYPES }
+  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
+
+  # email 입력 시 같은 email의 User 찾아 자동 연결.
+  # email 비우면 user_id도 끊는다 (수동 동기화 일관성).
+  before_save :sync_user_by_email, if: :will_save_change_to_email?
+
+  def sync_user_by_email
+    if email.present?
+      matched = User.find_by("LOWER(email) = ?", email.downcase)
+      self.user_id = matched&.id
+    else
+      self.user_id = nil
+    end
+  end
 
   scope :active,     -> { where(active: true) }
   scope :by_name,    -> { order(:name) }
