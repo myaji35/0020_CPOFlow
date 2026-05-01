@@ -29,6 +29,7 @@ env:
     - ECOUNT_ZONE
     - ECOUNT_ENV
     - CPOFLOW_API_KEY
+    - SENTRY_DSN
     # ISS-260: SMTP — .kamal/secrets에 값 채우면 자동 활성화 (미설정 시 :test fallback)
     # 2026-04-27: secrets 누락으로 임시 비활성화 (메일 발송 OFF, :test fallback 동작)
     # SMTP 자격증명 입력 후 아래 5줄 주석 해제하여 재활성화

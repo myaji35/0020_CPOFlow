@@ -6,11 +6,25 @@ class ApplicationController < ActionController::Base
 
   before_action :authenticate_user!
   before_action :set_locale
+  before_action :set_sentry_context, if: -> { defined?(Sentry) }
 
   # ISS-269: Optimistic locking 충돌 시 사용자 친화적 재시도 안내
   rescue_from ActiveRecord::StaleObjectError, with: :handle_stale_object_error
 
   private
+
+  def set_sentry_context
+    return unless current_user
+    Sentry.set_user(
+      id: current_user.id,
+      email: current_user.email,
+      role: current_user.role
+    )
+    Sentry.set_tags(
+      branch: current_user.try(:branch).to_s,
+      role: current_user.role
+    )
+  end
 
   def handle_stale_object_error(exception)
     Rails.logger.warn "[ISS-269] StaleObjectError #{exception.record&.class}##{exception.record&.id} by user=#{current_user&.id}"

@@ -67,6 +67,8 @@ gem "rack-attack"
 
 # Error monitoring (production)
 gem "stackprof"
+gem "sentry-ruby"
+gem "sentry-rails"
 
 # Monthly/weekly grouping for reports
 gem "groupdate"

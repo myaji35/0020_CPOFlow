@@ -90,6 +90,7 @@ jobs:
           ECOUNT_ZONE: ${{ secrets.ECOUNT_ZONE }}
           ECOUNT_ENV: ${{ secrets.ECOUNT_ENV }}
           CPOFLOW_API_KEY: ${{ secrets.CPOFLOW_API_KEY }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: |
           mkdir -p .kamal
           cat > .kamal/secrets <<EOF
@@ -103,6 +104,7 @@ jobs:
           ECOUNT_ZONE=$ECOUNT_ZONE
           ECOUNT_ENV=$ECOUNT_ENV
           CPOFLOW_API_KEY=$CPOFLOW_API_KEY
+          SENTRY_DSN=$SENTRY_DSN
           EOF
           chmod 600 .kamal/secrets
 
