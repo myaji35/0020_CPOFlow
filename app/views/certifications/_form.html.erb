@@ -1,36 +1,35 @@
-<%= form_with model: [@employee, certification], class: "flex flex-col gap-4" do |f| %>
+<%= form_with model: [@employee, certification], multipart: true, class: "flex flex-col gap-6" do |f| %>
   <% if certification.errors.any? %>
     <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg text-sm">
       <% certification.errors.full_messages.each do |msg| %><p><%= msg %></p><% end %>
     </div>
   <% end %>
 
-  <div class="grid grid-cols-2 gap-4">
-    <div class="col-span-2">
-      <%= f.label :name, "자격증명 *", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
-      <%= f.text_field :name, required: true, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary", placeholder: "산업안전산업기사" %>
+  <%= render "shared/form_with_documents", f: f, record: certification do %>
+    <div class="grid grid-cols-2 gap-4">
+      <div class="col-span-2">
+        <%= f.label :name, "자격증명 *", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.text_field :name, required: true, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary", placeholder: "산업안전산업기사" %>
+      </div>
+      <div>
+        <%= f.label :issuing_body, "발급 기관", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.text_field :issuing_body, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+      </div>
+      <div></div>
+      <div>
+        <%= f.label :issued_date, "취득일", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.date_field :issued_date, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+      </div>
+      <div>
+        <%= f.label :expiry_date, "만료일", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.date_field :expiry_date, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+      </div>
+      <div class="col-span-2">
+        <%= f.label :notes, "메모", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.text_area :notes, rows: 2, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary resize-none" %>
+      </div>
     </div>
-    <div>
-      <%= f.label :issuing_body, "발급 기관", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
-      <%= f.text_field :issuing_body, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
-    </div>
-    <div></div>
-    <div>
-      <%= f.label :issued_date, "취득일", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
-      <%= f.date_field :issued_date, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
-    </div>
-    <div>
-      <%= f.label :expiry_date, "만료일", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
-      <%= f.date_field :expiry_date, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
-    </div>
-    <div class="col-span-2">
-      <%= f.label :notes, "메모", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
-      <%= f.text_area :notes, rows: 2, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary resize-none" %>
-    </div>
-    <div class="col-span-2">
-      <%= render "shared/documents_field", f: f, record: certification %>
-    </div>
-  </div>
+  <% end %>
 
   <div class="flex justify-end gap-3">
     <%= link_to "취소", @employee, class: "px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-500 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700" %>
