@@ -57,3 +57,12 @@ worktrees/
 .harness-worktree-meta
 .claude/worktrees.json
 .kamal/secrets.backup-*
+
+# 자동 생성물 — git 추적 금지 (CI lint 노이즈/false push 방지)
+graphify-out/
+coverage/
+project-state.md
+qa-dashboard.yml
+snapshot-after-close.md
+docs/.pdca-snapshots/
+docs/.pdca-status.json
