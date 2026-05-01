@@ -10,8 +10,8 @@
         </svg>
       </div>
       <div class="flex-1 min-w-0">
-        <p class="text-sm font-semibold text-gray-900 dark:text-white mb-0.5">시작 전 Gmail을 먼저 연결하세요</p>
-        <p class="text-xs text-gray-600 dark:text-gray-400">Gmail을 연결하면 RFQ 메일이 자동으로 칸반 카드로 변환됩니다. 아래 <strong>Connect Gmail</strong> 버튼을 눌러 연결을 시작하세요.</p>
+        <p class="text-sm font-semibold text-gray-900 dark:text-white mb-0.5"><%= t("settings.gmail_onboarding_title") %></p>
+        <p class="text-xs text-gray-600 dark:text-gray-400"><%= t("settings.gmail_onboarding_desc").html_safe %></p>
       </div>
     </div>
   <% end %>
@@ -49,7 +49,7 @@
           <p class="text-xs text-gray-500">Auto-detect RFQ emails and convert to Kanban cards</p>
         </div>
         <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium <%= @gmail_connected_count > 0 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-600' %>">
-          <%= @gmail_connected_count > 0 ? "#{@gmail_connected_count}개 연결됨" : '미연결' %>
+          <%= @gmail_connected_count > 0 ? t("settings.gmail_connected_count", count: @gmail_connected_count) : t("settings.gmail_not_connected") %>
         </span>
       </div>
       <%= link_to gmail_oauth_authorize_path, class: "flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors" do %>
@@ -72,9 +72,9 @@
                 <p class="text-xs text-gray-500">
                   <% if account.connected? %>
                     <% if needs_reauth %>
-                      <span class="text-red-500 font-medium">재인증 필요 — 토큰 만료됨</span>
+                      <span class="text-red-500 font-medium"><%= t("settings.gmail_reauth_needed") %></span>
                     <% elsif account.token_expired? %>
-                      <span class="text-yellow-600 font-medium">토큰 갱신 중...</span>
+                      <span class="text-yellow-600 font-medium"><%= t("settings.gmail_token_refreshing") %></span>
                     <% elsif account.last_synced_at %>
                       Last synced <%= time_ago_in_words(account.last_synced_at) %> ago
                     <% else %>
@@ -113,12 +113,12 @@
     <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-3">
       <svg class="w-5 h-5 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       <div>
-        <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">Google Chat 납기 알림</h2>
-        <p class="text-xs text-gray-500 dark:text-gray-500">D-14 / D-7 / D-3 / D-0 납기일 알림을 Google Chat으로 발송합니다</p>
+        <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100"><%= t("settings.gchat_title") %></h2>
+        <p class="text-xs text-gray-500 dark:text-gray-500"><%= t("settings.gchat_subtitle") %></p>
       </div>
       <% webhook_set = AppSetting.google_chat_webhook_url.present? %>
       <span class="ml-auto text-xs px-2 py-0.5 rounded-full font-medium <%= webhook_set ? 'bg-green-600 text-white dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-500 text-white dark:bg-gray-700 dark:text-gray-500' %>">
-        <%= webhook_set ? '연결됨' : '미설정' %>
+        <%= webhook_set ? t("settings.status_connected") : t("settings.status_not_set") %>
       </span>
     </div>
 
@@ -133,11 +133,11 @@
                 value: AppSetting.google_chat_webhook_url.to_s,
                 placeholder: "https://chat.googleapis.com/v1/spaces/.../messages?key=...&token=...",
                 class: "flex-1 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono" %>
-            <%= f.submit "저장",
+            <%= f.submit t("common.save"),
                 class: "px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer whitespace-nowrap" %>
           </div>
           <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
-            Google Chat 스페이스 → 메뉴 → "앱 및 통합" → "수신 Webhook" → "추가"에서 URL을 복사하세요.
+            <%= t("settings.gchat_webhook_hint") %>
           </p>
         </div>
       <% end %>
@@ -145,23 +145,23 @@
       <% if AppSetting.google_chat_webhook_url.present? %>
         <div class="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700">
           <div>
-            <p class="text-sm font-medium text-gray-700 dark:text-gray-300">테스트 메시지 발송</p>
-            <p class="text-xs text-gray-500 dark:text-gray-500">Google Chat으로 테스트 알림을 즉시 발송합니다</p>
+            <p class="text-sm font-medium text-gray-700 dark:text-gray-300"><%= t("settings.gchat_test_title") %></p>
+            <p class="text-xs text-gray-500 dark:text-gray-500"><%= t("settings.gchat_test_desc") %></p>
           </div>
           <%= button_to settings_test_notifications_path, method: :post,
               class: "flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" do %>
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            <span>테스트 발송</span>
+            <span><%= t("settings.gchat_test_btn") %></span>
           <% end %>
         </div>
 
         <div class="mt-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 px-4 py-3">
-          <p class="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-1">알림 스케줄</p>
+          <p class="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-1"><%= t("settings.gchat_schedule_title") %></p>
           <ul class="text-xs text-blue-600 dark:text-blue-400 space-y-0.5">
-            <li>🔵 D-14 — 납기 2주 전 (매일 오전 7:00)</li>
-            <li>🟡 D-7 &nbsp;— 납기 1주 전</li>
-            <li>🟠 D-3 &nbsp;— 납기 3일 전</li>
-            <li>🔴 D-0 &nbsp;— 납기 당일</li>
+            <li><%= t("settings.gchat_schedule_d14") %></li>
+            <li><%= t("settings.gchat_schedule_d7") %></li>
+            <li><%= t("settings.gchat_schedule_d3") %></li>
+            <li><%= t("settings.gchat_schedule_d0") %></li>
           </ul>
         </div>
       <% end %>
@@ -172,8 +172,8 @@
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 mb-6">
     <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
       <div>
-        <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">내 알림 설정</h2>
-        <p class="text-xs text-gray-500 dark:text-gray-500">알림 타입 × 채널별 on/off</p>
+        <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100"><%= t("settings.notification_pref_title") %></h2>
+        <p class="text-xs text-gray-500 dark:text-gray-500"><%= t("settings.notification_pref_subtitle") %></p>
       </div>
     </div>
     <%= form_with url: settings_update_notification_preferences_path, method: :patch, class: "px-6 py-4" do %>
@@ -181,7 +181,7 @@
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b border-gray-200 dark:border-gray-700">
-              <th class="text-left py-2 text-xs font-semibold text-gray-600 dark:text-gray-400">알림 타입</th>
+              <th class="text-left py-2 text-xs font-semibold text-gray-600 dark:text-gray-400"><%= t("settings.notification_type_col") %></th>
               <% User::NOTIFICATION_CHANNELS.each do |key, label| %>
                 <th class="text-center py-2 text-xs font-semibold text-gray-600 dark:text-gray-400 min-w-[90px]"><%= label %></th>
               <% end %>
@@ -210,9 +210,9 @@
       </div>
       <div class="mt-4 flex items-center justify-between">
         <p class="text-[11px] text-gray-500 dark:text-gray-500">
-          💡 Slack·KakaoTalk은 연동 준비 중 — 설정은 저장되지만 실제 발송은 관리자 설정 완료 후 작동합니다.
+          <%= t("settings.notification_pref_hint") %>
         </p>
-        <%= submit_tag "알림 설정 저장", class: "text-sm font-medium bg-[#00A1E0] hover:bg-[#0090c8] text-white px-4 py-2 rounded-lg transition-colors cursor-pointer" %>
+        <%= submit_tag t("settings.notification_save_btn"), class: "text-sm font-medium bg-[#00A1E0] hover:bg-[#0090c8] text-white px-4 py-2 rounded-lg transition-colors cursor-pointer" %>
       </div>
     <% end %>
   </div>
@@ -249,8 +249,8 @@
     <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-3">
       <svg class="w-5 h-5 text-gray-500 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
       <div>
-        <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">환경설정</h2>
-        <p class="text-xs text-gray-500 dark:text-gray-500">언어 및 화면 테마를 설정합니다</p>
+        <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100"><%= t("settings.preferences_title") %></h2>
+        <p class="text-xs text-gray-500 dark:text-gray-500"><%= t("settings.preferences_subtitle") %></p>
       </div>
     </div>
 
@@ -258,8 +258,8 @@
     <div class="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
       <div class="flex items-center justify-between">
         <div>
-          <p class="text-sm font-medium text-gray-900 dark:text-gray-100">언어 / Language</p>
-          <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">인터페이스 표시 언어를 선택합니다</p>
+          <p class="text-sm font-medium text-gray-900 dark:text-gray-100"><%= t("settings.language_label") %></p>
+          <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5"><%= t("settings.language_hint") %></p>
         </div>
         <div class="flex gap-2">
           <% [["한국어", "ko"], ["English", "en"], ["العربية", "ar"]].each do |label, code| %>
@@ -277,14 +277,14 @@
     <div class="px-6 py-5">
       <div class="flex items-center justify-between">
         <div>
-          <p class="text-sm font-medium text-gray-900 dark:text-gray-100">테마 / Theme</p>
-          <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">라이트, 다크, 또는 시스템 설정에 따릅니다</p>
+          <p class="text-sm font-medium text-gray-900 dark:text-gray-100"><%= t("settings.theme_label") %></p>
+          <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5"><%= t("settings.theme_hint") %></p>
         </div>
         <div class="flex gap-2">
           <% [
-            ["라이트", "light", "☀️"],
-            ["다크", "dark", "🌙"],
-            ["시스템", "system", "💻"]
+            [t("settings.theme_light"), "light", "☀️"],
+            [t("settings.theme_dark"), "dark", "🌙"],
+            [t("settings.theme_system"), "system", "💻"]
           ].each do |label, code, icon| %>
             <%= button_to settings_update_theme_path, method: :patch,
                 params: { theme: code },
@@ -312,8 +312,8 @@
         <path d="M3 9h18M3 15h18M9 3v18"/>
       </svg>
       <div>
-        <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">Google Sheets 연동 <span class="text-xs font-normal text-gray-500 dark:text-gray-500 ml-1">Admin only</span></h2>
-        <p class="text-xs text-gray-500 dark:text-gray-500">경영진용 데이터 대시보드 스프레드시트 연결</p>
+        <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100"><%= t("settings.sheets_title") %> <span class="text-xs font-normal text-gray-500 dark:text-gray-500 ml-1">Admin only</span></h2>
+        <p class="text-xs text-gray-500 dark:text-gray-500"><%= t("settings.sheets_subtitle") %></p>
       </div>
     </div>
 
@@ -323,21 +323,21 @@
         <div class="flex items-center gap-2 mb-4 px-3 py-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
           <svg class="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           <div class="flex-1 min-w-0">
-            <p class="text-xs font-medium text-green-800 dark:text-green-300">연동됨</p>
+            <p class="text-xs font-medium text-green-800 dark:text-green-300"><%= t("settings.sheets_linked") %></p>
             <p class="text-xs text-green-600 dark:text-green-400 font-mono truncate">ID: <%= sheets_id %></p>
           </div>
           <% if sheets_url.present? %>
             <a href="<%= sheets_url %>" target="_blank" rel="noopener"
                class="flex items-center gap-1 text-xs text-green-700 dark:text-green-400 hover:underline flex-shrink-0">
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-              Sheets 열기
+              <%= t("settings.sheets_open_btn") %>
             </a>
           <% end %>
         </div>
       <% else %>
         <div class="flex items-center gap-2 mb-4 px-3 py-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
           <svg class="w-4 h-4 text-gray-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <p class="text-xs text-gray-500 dark:text-gray-500">아직 연동된 Spreadsheet가 없습니다.</p>
+          <p class="text-xs text-gray-500 dark:text-gray-500"><%= t("settings.sheets_not_linked") %></p>
         </div>
       <% end %>
 
@@ -354,12 +354,11 @@
                    class="flex-1 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 font-mono placeholder:font-sans placeholder:text-gray-500" />
             <button type="submit"
                     class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap">
-              저장
+              <%= t("common.save") %>
             </button>
           </div>
           <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-500">
-            구글 드라이브에서 스프레드시트를 열고 주소창의 URL 전체를 붙여넣으세요.
-            Service Account 이메일을 <strong>편집자</strong>로 추가해야 동기화가 됩니다.
+            <%= t("settings.sheets_url_hint").html_safe %>
           </p>
         </div>
       <% end %>
@@ -367,24 +366,24 @@
       <%# 초기화 버튼 (연동된 경우만 표시) %>
       <% if sheets_id.present? %>
         <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
-          <p class="text-xs text-gray-500 dark:text-gray-500">연동을 해제하고 초기화합니다.</p>
+          <p class="text-xs text-gray-500 dark:text-gray-500"><%= t("settings.sheets_reset_desc") %></p>
           <%= button_to admin_sheets_config_clear_path, method: :delete,
-              data: { turbo_confirm: "Google Sheets 연동을 초기화하시겠습니까?" },
+              data: { turbo_confirm: t("settings.sheets_reset_confirm") },
               class: "text-xs px-3 py-1.5 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-colors" do %>
-            연동 초기화
+            <%= t("settings.sheets_reset_btn") %>
           <% end %>
         </div>
       <% end %>
 
       <%# Service Account 안내 %>
       <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-        <p class="text-xs font-medium text-gray-600 dark:text-gray-500 mb-2">Service Account 설정 안내</p>
+        <p class="text-xs font-medium text-gray-600 dark:text-gray-500 mb-2"><%= t("settings.sheets_sa_guide_title") %></p>
         <ol class="text-xs text-gray-500 dark:text-gray-500 space-y-1 list-decimal list-inside">
-          <li>Google Cloud Console → Service Account 생성</li>
-          <li>JSON 키 다운로드</li>
-          <li><code class="bg-gray-100 dark:bg-gray-700 px-1 rounded font-mono">bin/rails credentials:edit</code> 에서 <code class="bg-gray-100 dark:bg-gray-700 px-1 rounded font-mono">google.service_account</code> 등록</li>
-          <li>스프레드시트 → 공유 → Service Account 이메일을 <strong>편집자</strong>로 추가</li>
-          <li>위 URL 입력창에 스프레드시트 URL 붙여넣기 → 저장</li>
+          <li><%= t("settings.sheets_sa_step1") %></li>
+          <li><%= t("settings.sheets_sa_step2") %></li>
+          <li><%= t("settings.sheets_sa_step3").html_safe %></li>
+          <li><%= t("settings.sheets_sa_step4").html_safe %></li>
+          <li><%= t("settings.sheets_sa_step5") %></li>
         </ol>
       </div>
     </div>
@@ -394,11 +393,11 @@
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 mb-6">
     <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
       <div>
-        <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">메뉴 권한 관리</h2>
-        <p class="text-xs text-gray-500 dark:text-gray-500">역할별 메뉴 접근 및 CRUD 권한 설정</p>
+        <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100"><%= t("settings.menu_permissions_title") %></h2>
+        <p class="text-xs text-gray-500 dark:text-gray-500"><%= t("settings.menu_permissions_subtitle") %></p>
       </div>
       <%= link_to settings_menu_permissions_path, class: "text-sm text-primary dark:text-accent hover:underline" do %>
-        권한 설정 →
+        <%= t("settings.menu_permissions_link") %>
       <% end %>
     </div>
   </div>
@@ -412,12 +411,12 @@
       <div class="flex items-center gap-3">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#1E3A5F]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
         <div>
-          <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">칸반 보드 관리</h2>
-          <p class="text-xs text-gray-500 dark:text-gray-500">보드를 추가·삭제·복제하고, 각 보드별 블럭(상태)을 관리합니다.</p>
+          <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100"><%= t("settings.kanban_boards_title") %></h2>
+          <p class="text-xs text-gray-500 dark:text-gray-500"><%= t("settings.kanban_boards_subtitle") %></p>
         </div>
       </div>
       <%= link_to settings_kanban_boards_path, class: "text-sm text-primary dark:text-accent hover:underline" do %>
-        관리하러 가기 →
+        <%= t("settings.manage_link") %>
       <% end %>
     </div>
   </div>
@@ -430,12 +429,12 @@
       <div class="flex items-center gap-3">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#1E3A5F]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         <div>
-          <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">블럭(칼럼) 관리</h2>
-          <p class="text-xs text-gray-500 dark:text-gray-500">보드별 칸반 칼럼을 추가·편집·순서 변경·삭제합니다.</p>
+          <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100"><%= t("settings.kanban_columns_title") %></h2>
+          <p class="text-xs text-gray-500 dark:text-gray-500"><%= t("settings.kanban_columns_subtitle") %></p>
         </div>
       </div>
       <%= link_to settings_kanban_columns_path, class: "text-sm text-primary dark:text-accent hover:underline" do %>
-        관리하러 가기 →
+        <%= t("settings.manage_link") %>
       <% end %>
     </div>
   </div>
@@ -448,12 +447,12 @@
       <div class="flex items-center gap-3">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#1E3A5F]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11H1l8-8 8 8h-8v8z"/><path d="M21 13l-4 4-4-4"/></svg>
         <div>
-          <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">관리번호 코드</h2>
-          <p class="text-xs text-gray-500 dark:text-gray-500">발주 카드에 표시할 관리번호(RFQ, QUO, PO, INV 등) 코드와 단축 라벨을 정의합니다.</p>
+          <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100"><%= t("settings.tracking_codes_title") %></h2>
+          <p class="text-xs text-gray-500 dark:text-gray-500"><%= t("settings.tracking_codes_subtitle") %></p>
         </div>
       </div>
       <%= link_to settings_tracking_codes_path, class: "text-sm text-primary dark:text-accent hover:underline" do %>
-        관리하러 가기 →
+        <%= t("settings.manage_link") %>
       <% end %>
     </div>
   </div>
@@ -464,11 +463,11 @@
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 mb-6">
     <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
       <div>
-        <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">칸반 상태 관리</h2>
-        <p class="text-xs text-gray-500 dark:text-gray-500">카드 상태 이름·색상·자동 배정 규칙을 편집합니다.</p>
+        <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100"><%= t("settings.card_statuses_title") %></h2>
+        <p class="text-xs text-gray-500 dark:text-gray-500"><%= t("settings.card_statuses_subtitle") %></p>
       </div>
       <%= link_to settings_card_statuses_path, class: "text-sm text-primary dark:text-accent hover:underline" do %>
-        관리하러 가기 →
+        <%= t("settings.manage_link") %>
       <% end %>
     </div>
   </div>
@@ -478,9 +477,9 @@
   <% if current_user.role.in?(%w[admin manager]) %>
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
     <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-      <h2 class="text-base font-semibold text-gray-900 dark:text-white">eCountERP API 연동</h2>
+      <h2 class="text-base font-semibold text-gray-900 dark:text-white"><%= t("settings.ecount_title") %></h2>
       <%= link_to admin_ecount_sync_index_path, class: "text-xs text-blue-600 hover:underline dark:text-blue-400" do %>
-        동기화 관리
+        <%= t("settings.ecount_sync_link") %>
         <svg class="w-3 h-3 inline ml-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
       <% end %>
     </div>
@@ -490,29 +489,29 @@
       <% ecount_configured = Rails.application.credentials.dig(:ecount, :api_cert_key).present? rescue false %>
 
       <div class="flex items-center justify-between text-sm">
-        <span class="text-gray-600 dark:text-gray-500">API 연결 상태</span>
+        <span class="text-gray-600 dark:text-gray-500"><%= t("settings.ecount_api_status") %></span>
         <% if ecount_configured %>
           <span class="inline-flex items-center gap-1 text-green-600 dark:text-green-400 font-medium text-xs">
-            <span class="w-2 h-2 rounded-full bg-green-500"></span> 설정됨
+            <span class="w-2 h-2 rounded-full bg-green-500"></span> <%= t("settings.ecount_configured") %>
           </span>
         <% else %>
           <span class="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium text-xs">
-            <span class="w-2 h-2 rounded-full bg-amber-500"></span> 미설정
+            <span class="w-2 h-2 rounded-full bg-amber-500"></span> <%= t("settings.ecount_not_configured") %>
           </span>
         <% end %>
       </div>
 
       <div class="flex items-center justify-between text-sm">
-        <span class="text-gray-600 dark:text-gray-500">품목 마지막 동기화</span>
+        <span class="text-gray-600 dark:text-gray-500"><%= t("settings.ecount_products_last_sync") %></span>
         <span class="text-gray-900 dark:text-gray-200 text-xs tabular-nums">
-          <%= products_last ? products_last.completed_at.strftime("%m/%d %H:%M") : "없음" %>
+          <%= products_last ? products_last.completed_at.strftime("%m/%d %H:%M") : t("settings.ecount_never_synced") %>
         </span>
       </div>
 
       <div class="flex items-center justify-between text-sm">
-        <span class="text-gray-600 dark:text-gray-500">거래처 마지막 동기화</span>
+        <span class="text-gray-600 dark:text-gray-500"><%= t("settings.ecount_customers_last_sync") %></span>
         <span class="text-gray-900 dark:text-gray-200 text-xs tabular-nums">
-          <%= customers_last ? customers_last.completed_at.strftime("%m/%d %H:%M") : "없음" %>
+          <%= customers_last ? customers_last.completed_at.strftime("%m/%d %H:%M") : t("settings.ecount_never_synced") %>
         </span>
       </div>
     </div>
@@ -526,8 +525,8 @@
         <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
       </svg>
       <div>
-        <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100">AI API 설정</h2>
-        <p class="text-xs text-gray-500 dark:text-gray-500">RFQ 자동 분석 및 답변 초안 생성에 사용되는 AI 서비스 키</p>
+        <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100"><%= t("settings.ai_api_title") %></h2>
+        <p class="text-xs text-gray-500 dark:text-gray-500"><%= t("settings.ai_api_subtitle") %></p>
       </div>
     </div>
 
@@ -537,11 +536,11 @@
         <div class="flex items-center justify-between mb-3">
           <div>
             <p class="text-sm font-medium text-gray-900 dark:text-gray-100">Anthropic API Key</p>
-            <p class="text-xs text-gray-500 dark:text-gray-500">Claude Haiku — RFQ 이메일 판정, 답변 초안 생성</p>
+            <p class="text-xs text-gray-500 dark:text-gray-500"><%= t("settings.ai_api_anthropic_desc") %></p>
           </div>
           <button type="button" onclick="verifyApiKey()" id="verify-btn"
                   class="px-3 py-1.5 text-xs font-medium bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
-            연결 확인
+            <%= t("settings.ai_api_verify_btn") %>
           </button>
         </div>
 
@@ -552,11 +551,11 @@
           <div class="flex-1">
             <%= f.text_field :anthropic_api_key,
                 value: current_key.present? ? "sk-ant-...#{current_key[-8..]}" : "",
-                placeholder: has_credential_key ? "credentials에 설정됨 (DB 오버라이드 가능)" : "sk-ant-api03-...",
+                placeholder: has_credential_key ? t("settings.ai_api_credential_placeholder") : "sk-ant-api03-...",
                 class: "w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 dark:bg-gray-700 placeholder-gray-400 focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]",
                 autocomplete: "off" %>
           </div>
-          <%= f.submit "저장", class: "px-4 py-2.5 bg-primary hover:bg-primary-dark text-white text-sm font-medium rounded-lg transition-colors cursor-pointer" %>
+          <%= f.submit t("common.save"), class: "px-4 py-2.5 bg-primary hover:bg-primary-dark text-white text-sm font-medium rounded-lg transition-colors cursor-pointer" %>
         <% end %>
 
         <%# 상태 표시 %>
@@ -566,24 +565,24 @@
 
         <% token_status = ClaudeTokenResolver.status %>
         <% if token_status[:configured] %>
-          <% source_labels = { db: "DB (수동 입력)", claude_cli: "Claude CLI 자동 감지", env: "환경변수", credentials: "credentials 파일" } %>
+          <% source_labels = { db: t("settings.ai_api_source_db"), claude_cli: t("settings.ai_api_source_cli"), env: t("settings.ai_api_source_env"), credentials: t("settings.ai_api_source_credentials") } %>
           <p class="text-xs mt-2 flex items-center gap-1 <%= token_status[:source] == :claude_cli ? 'text-purple-600 dark:text-purple-400' : 'text-green-600 dark:text-green-400' %>">
             <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            토큰 활성 — <%= source_labels[token_status[:source]] %>
+            <%= t("settings.ai_api_token_active", source: source_labels[token_status[:source]]) %>
             <span class="text-gray-500 dark:text-gray-500 ml-1"><%= token_status[:masked] %></span>
           </p>
           <% if token_status[:source] == :claude_cli %>
             <p class="text-xs text-gray-500 dark:text-gray-500 mt-1 ml-4">
-              ~/.claude/credentials.json에서 OAuth 토큰 자동 사용 중 — API 키 입력 불필요
+              <%= t("settings.ai_api_claude_cli_hint") %>
             </p>
           <% end %>
         <% else %>
           <p class="text-xs text-red-500 mt-2 flex items-center gap-1">
             <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            API Key 미설정 — RFQ 이메일 AI 분석이 작동하지 않습니다
+            <%= t("settings.ai_api_not_set") %>
           </p>
           <p class="text-xs text-gray-500 dark:text-gray-500 mt-1 ml-4">
-            해결: ① 위에 API Key 입력 또는 ② 서버에 Claude CLI 설치 후 <code class="bg-gray-100 dark:bg-gray-700 px-1 rounded">claude login</code> 실행
+            <%= t("settings.ai_api_not_set_hint").html_safe %>
           </p>
         <% end %>
       </div>
@@ -592,16 +591,16 @@
       <div class="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/40 rounded-lg p-4">
         <p class="text-xs font-semibold text-amber-700 dark:text-amber-400 mb-2 flex items-center gap-1.5">
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          운영 비용 안내
+          <%= t("settings.ai_api_cost_title") %>
         </p>
         <ul class="text-xs text-amber-800 dark:text-amber-300 space-y-1.5">
-          <li>· Claude Haiku 분석 1건당 약 $0.001 (1,000건 ≈ $1)</li>
-          <li>· Anthropic 콘솔에서 <strong>Auto-recharge 활성화</strong>를 권장합니다</li>
-          <li>· 최소 $5 충전으로 약 5,000건 분석 가능</li>
+          <li><%= t("settings.ai_api_cost_per_call") %></li>
+          <li><%= t("settings.ai_api_cost_autorecharge").html_safe %></li>
+          <li><%= t("settings.ai_api_cost_min_charge") %></li>
         </ul>
         <a href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener noreferrer"
            class="inline-flex items-center gap-1 mt-3 text-xs font-medium text-amber-700 dark:text-amber-400 hover:underline">
-          Anthropic 콘솔 → 결제 설정
+          <%= t("settings.ai_api_billing_link") %>
           <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
         </a>
       </div>
@@ -614,7 +613,7 @@
       var statusDiv = document.getElementById('api-key-status');
       var statusContent = document.getElementById('api-key-status-content');
       btn.disabled = true;
-      btn.textContent = '확인 중...';
+      btn.textContent = '<%= t("settings.ai_api_verifying") %>';
       statusDiv.classList.add('hidden');
 
       fetch('<%= settings_verify_api_key_path %>', {
@@ -635,11 +634,11 @@
       .catch(function() {
         statusDiv.classList.remove('hidden');
         statusContent.className = 'flex items-center gap-2 px-3 py-2 rounded-lg text-xs bg-red-600 text-white border border-red-200';
-        statusContent.textContent = '네트워크 오류';
+        statusContent.textContent = '<%= t("kanban.js_network_error") %>';
       })
       .finally(function() {
         btn.disabled = false;
-        btn.textContent = '연결 확인';
+        btn.textContent = '<%= t("settings.ai_api_verify_btn") %>';
       });
     }
   </script>
@@ -651,17 +650,17 @@
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
       </svg>
       <div>
-        <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100">CPO Agent 설정</h2>
-        <p class="text-xs text-gray-500 dark:text-gray-500">자동 처리 모드 관리 (유용함 5회 이상 시 자동 활성화)</p>
+        <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100"><%= t("settings.cpo_agent_title") %></h2>
+        <p class="text-xs text-gray-500 dark:text-gray-500"><%= t("settings.cpo_agent_subtitle") %></p>
       </div>
     </div>
     <div class="divide-y divide-gray-100 dark:divide-gray-700">
       <%
         insight_types = {
-          "price_comparison" => { label: "단가 비교", desc: "과거 견적 비교 테이블 자동 첨부" },
-          "supplier_risk"    => { label: "거래처 리스크", desc: "대체 거래처 자동 추천" },
-          "due_date_risk"    => { label: "납기 위험", desc: "담당자에게 알림 자동 발송" },
-          "cost_saving"      => { label: "비용 절감", desc: "저렴한 견적 자동 추가" }
+          "price_comparison" => { label: t("settings.cpo_insight_price_label"), desc: t("settings.cpo_insight_price_desc") },
+          "supplier_risk"    => { label: t("settings.cpo_insight_supplier_label"), desc: t("settings.cpo_insight_supplier_desc") },
+          "due_date_risk"    => { label: t("settings.cpo_insight_due_label"), desc: t("settings.cpo_insight_due_desc") },
+          "cost_saving"      => { label: t("settings.cpo_insight_cost_label"), desc: t("settings.cpo_insight_cost_desc") }
         }
       %>
       <% insight_types.each do |type, info| %>
@@ -672,9 +671,9 @@
             <p class="text-xs text-gray-500 dark:text-gray-500"><%= info[:desc] %></p>
             <% if level %>
               <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                유용함 <%= level.useful_count %>회
+                <%= t("settings.cpo_useful_count", count: level.useful_count) %>
                 <% if level.auto_activated_at %>
-                  · 자동 전환: <%= level.auto_activated_at.strftime('%Y-%m-%d') %>
+                  · <%= t("settings.cpo_auto_activated", date: level.auto_activated_at.strftime('%Y-%m-%d')) %>
                 <% end %>
               </p>
             <% end %>
@@ -682,7 +681,7 @@
           <%= button_to settings_agent_trust_toggle_path(insight_type: type),
                 method: :patch,
                 class: "relative inline-flex h-6 w-11 items-center rounded-full transition-colors #{level&.auto_mode ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-600'}",
-                title: level&.auto_mode ? "자동 → 수동" : "수동 → 자동" do %>
+                title: level&.auto_mode ? t("settings.cpo_auto_to_manual") : t("settings.cpo_manual_to_auto") do %>
             <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform #{level&.auto_mode ? 'translate-x-6' : 'translate-x-1'}"></span>
           <% end %>
         </div>
