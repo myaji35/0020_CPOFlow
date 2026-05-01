@@ -62,8 +62,17 @@ jobs:
             exit 1
           fi
           echo "✓ SSH key format OK ($(wc -l < ~/.ssh/id_rsa) lines)"
-          ssh-keyscan -H 158.247.235.31 >> ~/.ssh/known_hosts 2>/dev/null || true
+          # known_hosts — hash 없이 plain hostname (Net::SSH가 매칭 실패하지 않도록)
+          ssh-keyscan 158.247.235.31 >> ~/.ssh/known_hosts 2>/dev/null || true
           chmod 600 ~/.ssh/known_hosts
+          # SSH config — StrictHostKeyChecking=accept-new (서버 키 검증 우회)
+          cat >> ~/.ssh/config <<EOF
+          Host 158.247.235.31
+            StrictHostKeyChecking no
+            UserKnownHostsFile /dev/null
+            LogLevel ERROR
+          EOF
+          chmod 600 ~/.ssh/config
           eval "$(ssh-agent -s)"
           ssh-add ~/.ssh/id_rsa
           echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" >> $GITHUB_ENV
