@@ -123,7 +123,9 @@
             assignment = emp.current_assignment
           %>
           <!-- FR-08: group 클래스로 hover Quick Action 지원 -->
-          <tr class="group hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors <%= emp.active? ? '' : 'opacity-50' %>">
+          <tr class="group hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer <%= emp.active? ? '' : 'opacity-50' %>"
+              onclick="if(!event.target.closest('a,button,input,select,textarea')){window.location='<%= employee_path(emp) %>'}"
+              title="<%= t("employees.view_detail", default: "상세 보기") %>">
             <td class="px-4 py-3">
               <div class="flex items-center gap-2.5">
                 <!-- FR-01: 미니 아바타 (32px) -->

@@ -48,7 +48,7 @@
     <!-- Group: 운영 -->
     <div class="px-3 pt-3 pb-1 text-[10px] font-semibold tracking-[1.2px] uppercase text-blue-200/60 transition-opacity"
          :class="collapsed ? 'opacity-0 h-0 pt-0 pb-0 overflow-hidden' : 'opacity-100'">
-      운영
+      <%= t("nav.section_operations", default: "운영") %>
     </div>
     <div class="flex flex-col px-2 gap-px">
       <%= nav_link_to dashboard_path, icon: "lni lni-grid-alt", label: t("nav.dashboard") %>
@@ -68,25 +68,25 @@
     <!-- Group: 마스터 -->
     <div class="px-3 pt-4 pb-1 text-[10px] font-semibold tracking-[1.2px] uppercase text-blue-200/60 transition-opacity"
          :class="collapsed ? 'opacity-0 h-0 pt-0 pb-0 overflow-hidden' : 'opacity-100'">
-      마스터
+      <%= t("nav.section_master", default: "마스터") %>
     </div>
     <div class="flex flex-col px-2 gap-px">
-      <%= nav_link_to clients_path, icon: "lni lni-briefcase", label: "발주처" %>
-      <%= nav_link_to suppliers_path, icon: "lni lni-delivery", label: "거래처" %>
-      <%= nav_link_to contact_persons_path, icon: "lni lni-users", label: "외부 담당자" %>
-      <%= nav_link_to projects_path, icon: "lni lni-map-marker", label: "현장" %>
-      <%= nav_link_to employees_path, icon: "lni lni-user", label: "직원 관리" %>
-      <%= nav_link_to org_chart_path, icon: "lni lni-graph", label: "조직도" %>
+      <%= nav_link_to clients_path, icon: "lni lni-briefcase", label: t("nav.clients", default: "발주처") %>
+      <%= nav_link_to suppliers_path, icon: "lni lni-delivery", label: t("nav.suppliers", default: "거래처") %>
+      <%= nav_link_to contact_persons_path, icon: "lni lni-users", label: t("nav.contact_persons", default: "외부 담당자") %>
+      <%= nav_link_to projects_path, icon: "lni lni-map-marker", label: t("nav.projects", default: "현장") %>
+      <%= nav_link_to employees_path, icon: "lni lni-user", label: t("nav.employees", default: "직원 관리") %>
+      <%= nav_link_to org_chart_path, icon: "lni lni-graph", label: t("nav.org_chart", default: "조직도") %>
     </div>
 
     <% if current_user.manager? || current_user.admin? %>
       <!-- Group: 관리 -->
       <div class="px-3 pt-4 pb-1 text-[10px] font-semibold tracking-[1.2px] uppercase text-blue-200/60 transition-opacity"
            :class="collapsed ? 'opacity-0 h-0 pt-0 pb-0 overflow-hidden' : 'opacity-100'">
-        관리
+        <%= t("nav.section_admin", default: "관리") %>
       </div>
       <div class="flex flex-col px-2 gap-px">
-        <%= nav_link_to reports_path, icon: "lni lni-bar-chart", label: "경영 리포트" %>
+        <%= nav_link_to reports_path, icon: "lni lni-bar-chart", label: t("nav.reports", default: "경영 리포트") %>
 
         <%# eCount 그룹 %>
         <% ecount_active = request.path.start_with?("/admin/ecount") || request.path.start_with?("/admin/imports") %>
@@ -126,8 +126,8 @@
     <% end %>
     <% if current_user.admin? %>
       <div class="flex flex-col px-2 gap-px mt-px">
-        <%= nav_link_to settings_menu_permissions_path, icon: "lni lni-shield", label: "메뉴 권한" %>
-        <%= nav_link_to admin_reviews_path, icon: "lni lni-comments-alt", label: "피드백 관리" %>
+        <%= nav_link_to settings_menu_permissions_path, icon: "lni lni-shield", label: t("nav.menu_permissions", default: "메뉴 권한") %>
+        <%= nav_link_to admin_reviews_path, icon: "lni lni-comments-alt", label: t("nav.feedback_admin", default: "피드백 관리") %>
       </div>
     <% end %>
   </div>
@@ -138,7 +138,7 @@
       <%
         trash_count = (current_user.admin? ? Order.archived : Order.archived.joins(:user).where(users: { branch: current_user.branch })).count rescue 0
       %>
-      <%= nav_link_to trash_path, icon: "lni lni-trash-can", label: "휴지통" do %>
+      <%= nav_link_to trash_path, icon: "lni lni-trash-can", label: t("nav.trash", default: "휴지통") do %>
         <% if trash_count > 0 %>
           <span class="ml-auto text-[10px] font-semibold bg-white/15 text-white px-1.5 py-0.5 rounded-full"
                 x-bind:class="collapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'"><%= trash_count %></span>
