@@ -46,6 +46,12 @@ export default class extends Controller {
     this._debounceTimer = setTimeout(() => this._fetchResults(q), 300)
   }
 
+  // focus 시 빈 검색으로 드롭다운 즉시 펼치기 (외부담당자처럼 옵션 적은 필드용)
+  onFocus(e) {
+    if (e.target.value.trim().length > 0) return
+    this._fetchResults("")
+  }
+
   // 키보드 네비게이션
   onKeydown(e) {
     const items = this.dropdownTarget.querySelectorAll("[data-ac-item]")
@@ -72,6 +78,7 @@ export default class extends Controller {
   // 배지 X 버튼 — 선택 해제
   clear() {
     this.hiddenTarget.value = ""
+    this.hiddenTarget.dispatchEvent(new Event("change", { bubbles: true }))
     this.badgeTarget.classList.add("hidden")
     this.inputTarget.classList.remove("hidden")
     this.inputTarget.value = ""
@@ -164,6 +171,7 @@ export default class extends Controller {
 
   _select(id, label, sub) {
     this.hiddenTarget.value = id
+    this.hiddenTarget.dispatchEvent(new Event("change", { bubbles: true }))
     this._showBadge({ id, name: label, [this.sublabelValue]: sub })
     this._closeDropdown()
   }

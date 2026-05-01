@@ -189,6 +189,7 @@ Rails.application.routes.draw do
   resources :contact_persons, only: %i[index show] do
     collection do
       post :create_from_signature
+      get  :search
     end
   end
 

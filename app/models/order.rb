@@ -5,6 +5,7 @@ class Order < ApplicationRecord
   belongs_to :client,   optional: true
   belongs_to :supplier, optional: true
   belongs_to :project,  optional: true
+  belongs_to :contact_person, optional: true
   belongs_to :parent_order, class_name: "Order", optional: true
   has_many   :sub_orders, class_name: "Order", foreign_key: :parent_order_id,
              dependent: :nullify, inverse_of: :parent_order
@@ -147,6 +148,7 @@ class Order < ApplicationRecord
 
   # 기본값 보장: 새 Order는 default(normal)로 시작
   before_validation :ensure_card_status, on: :create
+  before_validation :backfill_customer_name_from_client
 
   # 저장 후 자동 배정: 수동 지정 없으면 규칙 재평가
   after_save :maybe_auto_assign_card_status, if: :should_auto_reassign?
@@ -420,6 +422,11 @@ class Order < ApplicationRecord
 
   def ensure_card_status
     self.card_status ||= CardStatus.default
+  end
+
+  def backfill_customer_name_from_client
+    return if customer_name.present?
+    self.customer_name = client&.name
   end
 
   def should_auto_reassign?

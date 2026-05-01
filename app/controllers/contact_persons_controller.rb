@@ -1,6 +1,6 @@
 class ContactPersonsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_contactable, except: %i[index show create_from_signature]
+  before_action :set_contactable, except: %i[index show create_from_signature search]
   before_action :set_contact_person, only: %i[edit update destroy]
   before_action :set_contact_person_standalone, only: %i[show]
 
@@ -174,6 +174,28 @@ class ContactPersonsController < ApplicationController
         end
       end
     end
+  end
+
+  # GET /contact_persons/search?client_id=X&q=Y — 주문 폼 외부담당자 자동완성
+  def search
+    q = params[:q].to_s.strip
+    scope = ContactPerson.for_clients
+    if params[:client_id].present?
+      scope = scope.where(contactable_id: params[:client_id])
+    end
+    if q.present?
+      term = "%#{q.downcase}%"
+      scope = scope.where(
+        "LOWER(contact_persons.name) LIKE :t OR LOWER(contact_persons.email) LIKE :t " \
+        "OR contact_persons.phone LIKE :t OR contact_persons.mobile LIKE :t",
+        t: term
+      )
+    end
+    results = scope.primary_first.limit(20).map do |cp|
+      sub = [ cp.department, cp.email ].compact_blank.join(" · ")
+      { id: cp.id, name: cp.name, code: sub, primary: cp.primary }
+    end
+    render json: results
   end
 
   # POST /contact_persons/create_from_signature — Inbox 발신처 카드에서 담당자 저장

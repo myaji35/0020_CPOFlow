@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_29_010000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_01_073457) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -491,6 +491,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_29_010000) do
     t.decimal "classification_confidence", precision: 5, scale: 4
     t.string "classifier_version", default: "v1", null: false
     t.integer "client_id"
+    t.integer "contact_person_id"
     t.datetime "created_at", null: false
     t.string "currency", default: "USD"
     t.string "customer_name"
@@ -557,6 +558,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_29_010000) do
     t.index ["classifier_version", "created_at"], name: "index_orders_on_classifier_version_and_created_at"
     t.index ["classifier_version"], name: "index_orders_on_classifier_version"
     t.index ["client_id"], name: "index_orders_on_client_id"
+    t.index ["contact_person_id"], name: "index_orders_on_contact_person_id"
     t.index ["due_date"], name: "index_orders_on_due_date"
     t.index ["ecount_slip_no"], name: "index_orders_on_ecount_slip_no"
     t.index ["email_received_at"], name: "index_orders_on_email_received_at"
@@ -792,6 +794,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_29_010000) do
   add_foreign_key "order_links", "users", column: "created_by_id"
   add_foreign_key "orders", "card_statuses"
   add_foreign_key "orders", "clients"
+  add_foreign_key "orders", "contact_persons"
   add_foreign_key "orders", "kanban_boards"
   add_foreign_key "orders", "kanban_columns"
   add_foreign_key "orders", "projects"
