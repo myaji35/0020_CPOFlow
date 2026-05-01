@@ -772,6 +772,146 @@ en:
     imports:
       create_success: "Import started. Please check the results shortly."
 
+  # ── Legal (ISS-320) ───────────────────────────────────────────────
+  legal:
+    toc: "Table of Contents"
+    print: "Print"
+    privacy:
+      title: "Privacy Policy"
+      badge: "Privacy & Data Protection"
+      effective_date: "Effective: January 1, 2025 | Last Updated: May 1, 2026"
+      intro: "AtoZ2010 Inc. ('Company') operates CPOFlow and is committed to protecting your personal information. This Privacy Policy explains how we collect, use, store, and share your data. It is designed to comply with the Republic of Korea Personal Information Protection Act (PIPA) and the UAE Federal Decree-Law on Personal Data Protection (PDPL)."
+      disclaimer_title: "Legal Disclaimer: "
+      disclaimer_body: "This Privacy Policy is provided for informational purposes only and does not constitute legal advice. For specific legal questions, please consult a qualified attorney."
+      s1:
+        heading: "Company Information"
+        company_name_label: "Company"
+        hq_label: "Headquarters"
+        branch_label: "Branch Office"
+        service_label: "Service"
+        contact_label: "Privacy Contact"
+      s2:
+        heading: "Information We Collect"
+        account_title: "Account Information"
+        account_email: "Email address (via Google OAuth or direct registration)"
+        account_name: "Full name"
+        account_role: "Role and branch (Korea / UAE)"
+        account_google_token: "Google OAuth tokens (stored with AES-256-GCM encryption)"
+        gmail_title: "Gmail Data"
+        gmail_scope_note: "We use the gmail.readonly scope only. We read email content for RFQ extraction — we do not compose, delete, or modify any messages."
+        gmail_subject: "Email subject lines"
+        gmail_body: "Email body text (for RFQ extraction)"
+        gmail_attachments: "Attachments (quotation PDFs, POs, invoices, XLS files)"
+        gmail_metadata: "Sender email address and received timestamp"
+        usage_title: "Usage Information"
+        usage_log: "Page visit records and user action logs"
+        usage_browser: "Browser type, operating system, IP address (security purposes)"
+      s3:
+        heading: "How We Use Your Information"
+        purpose_rfq: "Automatically detect RFQ emails from Gmail and route them to the procurement kanban board"
+        purpose_attachment: "Analyze attachments via Anthropic Claude API to extract item names, quantities, and unit prices"
+        purpose_workflow: "Manage 9-stage procurement workflows (new_rfq through done)"
+        purpose_notification: "Send notifications and manage delivery deadlines"
+        purpose_improvement: "Improve service quality and diagnose errors"
+      s4:
+        heading: "Third-Party Sharing"
+        intro: "We share data with third parties only for the following limited purposes:"
+        col_party: "Third Party"
+        col_data: "Data Shared"
+        col_purpose: "Purpose"
+        google_data: "OAuth tokens, mail access authorization"
+        google_purpose: "Gmail API authentication and email retrieval"
+        anthropic_data: "Portions of email body and attachment text"
+        anthropic_purpose: "RFQ analysis via Claude API (text is sent to Anthropic servers)"
+        vultr_data: "All service data"
+        vultr_purpose: "Cloud hosting (UAE or nearby region)"
+        no_sell: "We do not sell your personal information or share it for advertising purposes."
+      s5:
+        heading: "Data Retention"
+        email_label: "Emails & Attachments"
+        email_period: "Retained indefinitely; deleted within 30 days of a verified deletion request"
+        attachment_label: "Order Attachments"
+        attachment_period: "Retained indefinitely for procurement record keeping"
+        log_label: "Access Logs"
+        log_period: "90 days"
+        account_label: "Account Data"
+        account_period: "Deleted within 30 days of account closure (except where retention is required by law)"
+      s6:
+        heading: "Your Rights"
+        right_access: "Right to access your personal information held by us"
+        right_rectify: "Right to request correction of inaccurate information"
+        right_delete: "Right to request deletion of your data (including account closure)"
+        right_gmail_revoke: "Right to disconnect Gmail access at any time (via Settings > Gmail or directly in your Google Account)"
+        right_contact: "To exercise any of these rights, please contact us at:"
+      s7:
+        heading: "Security Measures"
+        lockbox: "Gmail OAuth tokens: encrypted with Lockbox gem + AES-256-GCM"
+        https: "All data transmitted over HTTPS (TLS 1.2 or higher)"
+        access_control: "Role-based access control (viewer / member / manager / admin)"
+        backup: "Daily database backups (planned)"
+      s8:
+        heading: "Cookies"
+        body: "CPOFlow uses only essential cookies required for service operation. We do not use third-party advertising or tracking cookies."
+        session: "Session cookies: maintain login state (deleted when browser is closed)"
+        csrf: "CSRF protection cookies: prevent request forgery (security)"
+        no_tracking: "No third-party tracking scripts (e.g. Google Analytics) are used"
+      s9:
+        heading: "Minimum Age"
+        body: "CPOFlow is not directed at children under 14 years of age. If we become aware that personal information of a child under 14 has been collected, we will delete it promptly."
+      s10:
+        heading: "Policy Changes"
+        body: "If this Privacy Policy changes, we will notify you at least 30 days before the changes take effect, via in-app notice or to your registered email address. Continued use of the service after the effective date constitutes acceptance of the updated policy."
+      s11:
+        heading: "Contact Us"
+        body: "For any privacy inquiries, requests to access, correct, or delete your data, please contact:"
+        email_label: "Email"
+        company_label: "Company"
+    terms:
+      title: "Terms of Service"
+      badge: "Terms of Service"
+      effective_date: "Effective: January 1, 2025 | Last Updated: May 1, 2026"
+      intro: "These Terms of Service ('Terms') govern your access to and use of CPOFlow, a procurement management service operated by AtoZ2010 Inc. ('Company'). By using the service, you agree to these Terms."
+      t1:
+        heading: "Service Description"
+        body1: "CPOFlow is a Software as a Service (SaaS) platform for procurement management. It provides Gmail-integrated RFQ detection, a 9-stage kanban workflow, and AI-assisted document analysis."
+        body2: "The service is operated by AtoZ2010 Inc. and is available exclusively to invited employees and authorized organizational members."
+      t2:
+        heading: "Eligibility"
+        body: "You may use CPOFlow only if you meet all of the following conditions:"
+        age: "You are at least 14 years of age"
+        authority: "You have been granted access by your company or organization"
+        invited: "You hold an account invited by an administrator"
+      t3:
+        heading: "User Obligations"
+        intro: "By using CPOFlow, you agree to:"
+        no_share: "Not share your login credentials (password, OAuth tokens) with any third party"
+        no_scrape: "Not scrape, crawl, or extract data from the service using automated means without authorization"
+        no_misuse: "Not use the service for purposes other than procurement management"
+        no_law_violation: "Not use the service in violation of applicable laws of the Republic of Korea or the UAE"
+        must_secure: "Notify the Company immediately upon discovering any unauthorized access to your account"
+      t4:
+        heading: "Intellectual Property"
+        body1: "All intellectual property rights in CPOFlow — including its software, design, brand, logo, and documentation — belong exclusively to AtoZ2010 Inc."
+        body2: "Data uploaded by users (order information, attachments, etc.) remains the property of the respective user or their organization."
+      t5:
+        heading: "Limitation of Liability"
+        llm_title: "Important Notice Regarding AI Analysis"
+        llm_body: "CPOFlow uses the Anthropic Claude API to automatically analyze RFQ emails and attachments. AI-generated results (item names, quantities, prices, supplier suggestions) are provided for reference only. Users must independently verify all AI outputs before finalizing any purchase order. The Company is not liable for errors arising from reliance on AI-generated analysis."
+        general: "The Company is not liable for service interruptions caused by circumstances beyond its reasonable control, including natural disasters, war, network failures, or outages of third-party services (Google, Anthropic)."
+        service_as_is: "The service is provided 'as-is' without express warranties of fitness for a particular purpose."
+      t6:
+        heading: "Service Suspension & Termination"
+        body1: "The Company may suspend or terminate accounts in cases of operational necessity or violation of these Terms. Where possible, prior notice will be provided."
+        body2: "Users may request account deletion at any time by contacting an administrator. Deletion will be completed within 30 days of the request."
+      t7:
+        heading: "Governing Law & Dispute Resolution"
+        governing_law: "These Terms are governed by the laws of the United Arab Emirates. For disputes involving users based at the Seoul branch, the laws of the Republic of Korea shall apply in priority."
+        jurisdiction: "Disputes will be resolved first through good-faith negotiation. If no resolution is reached, either party may bring a claim in the competent courts of Abu Dhabi, UAE, or Seoul, Republic of Korea, as applicable."
+      t8:
+        heading: "Amendments"
+        body1: "The Company may update these Terms at any time. Where changes are material, we will provide at least 14 days' advance notice via in-app announcement or email to your registered address."
+        body2: "Continued use of the service after the effective date of amended Terms constitutes your acceptance of those changes."
+
   # ── Errors ────────────────────────────────────────────────────────
   errors:
     messages:

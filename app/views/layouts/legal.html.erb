@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="<%= I18n.locale %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= yield(:page_title) %> — CPOFlow</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            hero:    '#166c72',
+            navy:    '#1E3A5F',
+            surface: '#f5f6f8',
+          },
+          fontFamily: {
+            sans: ['"Inter Tight"', 'Pretendard Variable', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    @media print {
+      .no-print { display: none !important; }
+      body { font-size: 11pt; }
+      h2 { page-break-after: avoid; }
+    }
+    body { font-family: 'Inter Tight', 'Pretendard Variable', sans-serif; }
+  </style>
+</head>
+<body class="bg-surface min-h-screen text-gray-900">
+
+  <!-- Header -->
+  <header class="bg-navy text-white no-print">
+    <div class="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-2 hover:opacity-80 transition">
+        <div class="w-8 h-8 bg-hero rounded-md flex items-center justify-center">
+          <span class="text-white font-bold text-sm">CF</span>
+        </div>
+        <span class="font-semibold text-base">CPOFlow</span>
+      </a>
+      <nav class="flex items-center gap-5 text-sm text-white/70">
+        <a href="/privacy" class="hover:text-white transition">
+          <%= I18n.locale == :ko ? "개인정보처리방침" : "Privacy Policy" %>
+        </a>
+        <a href="/terms" class="hover:text-white transition">
+          <%= I18n.locale == :ko ? "서비스 이용약관" : "Terms of Service" %>
+        </a>
+        <a href="/users/sign_in" class="ml-4 px-3 py-1.5 bg-hero rounded text-white text-xs font-medium hover:bg-[#11555a] transition">
+          <%= I18n.locale == :ko ? "로그인" : "Sign In" %>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main content -->
+  <main class="max-w-4xl mx-auto px-6 py-12">
+    <%= yield %>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-gray-200 mt-16 no-print">
+    <div class="max-w-4xl mx-auto px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-400">
+      <span>© 2024–2026 AtoZ2010 Inc. All rights reserved.</span>
+      <div class="flex gap-4">
+        <a href="/privacy" class="hover:text-hero transition">
+          <%= I18n.locale == :ko ? "개인정보처리방침" : "Privacy Policy" %>
+        </a>
+        <a href="/terms" class="hover:text-hero transition">
+          <%= I18n.locale == :ko ? "서비스 이용약관" : "Terms of Service" %>
+        </a>
+        <a href="mailto:privacy@atozone.com" class="hover:text-hero transition">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,179 @@
+<% content_for :page_title, t("legal.terms.title") %>
+
+<%# ── Hero ─────────────────────────────────────────────────────────── %>
+<div class="mb-10">
+  <div class="inline-flex items-center gap-2 text-xs font-medium text-hero bg-hero/10 px-3 py-1 rounded-full mb-4">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    <%= t("legal.terms.badge") %>
+  </div>
+  <h1 class="text-3xl font-bold text-navy mb-3"><%= t("legal.terms.title") %></h1>
+  <p class="text-sm text-gray-500"><%= t("legal.terms.effective_date") %></p>
+  <p class="mt-4 text-gray-600 leading-relaxed max-w-2xl"><%= t("legal.terms.intro") %></p>
+</div>
+
+<%# ── Disclaimer ───────────────────────────────────────────────────── %>
+<div class="bg-amber-50 border border-amber-200 rounded-lg px-5 py-4 mb-10 text-sm text-amber-800">
+  <strong><%= t("legal.privacy.disclaimer_title") %></strong>
+  <%= t("legal.privacy.disclaimer_body") %>
+</div>
+
+<%# ── Table of Contents ────────────────────────────────────────────── %>
+<div class="bg-white border border-gray-200 rounded-xl p-6 mb-10 no-print">
+  <h2 class="text-sm font-semibold text-gray-700 mb-4 uppercase tracking-wider"><%= t("legal.toc") %></h2>
+  <ol class="space-y-1.5 text-sm">
+    <% [
+      ["#t1", "legal.terms.t1.heading"],
+      ["#t2", "legal.terms.t2.heading"],
+      ["#t3", "legal.terms.t3.heading"],
+      ["#t4", "legal.terms.t4.heading"],
+      ["#t5", "legal.terms.t5.heading"],
+      ["#t6", "legal.terms.t6.heading"],
+      ["#t7", "legal.terms.t7.heading"],
+      ["#t8", "legal.terms.t8.heading"],
+    ].each_with_index do |(href, key), i| %>
+      <li>
+        <a href="<%= href %>" class="text-hero hover:underline">
+          <%= i + 1 %>. <%= t(key) %>
+        </a>
+      </li>
+    <% end %>
+  </ol>
+</div>
+
+<%# ── Sections ─────────────────────────────────────────────────────── %>
+<div class="space-y-10">
+
+  <%# T1: Service Definition %>
+  <section id="t1" class="bg-white border border-gray-200 rounded-xl p-7">
+    <h2 class="text-xl font-semibold text-navy mb-4 flex items-center gap-2">
+      <span class="w-7 h-7 rounded-full bg-hero/10 text-hero text-xs font-bold flex items-center justify-center">1</span>
+      <%= t("legal.terms.t1.heading") %>
+    </h2>
+    <div class="text-sm text-gray-700 space-y-3">
+      <p><%= t("legal.terms.t1.body1") %></p>
+      <p><%= t("legal.terms.t1.body2") %></p>
+    </div>
+  </section>
+
+  <%# T2: Eligibility %>
+  <section id="t2" class="bg-white border border-gray-200 rounded-xl p-7">
+    <h2 class="text-xl font-semibold text-navy mb-4 flex items-center gap-2">
+      <span class="w-7 h-7 rounded-full bg-hero/10 text-hero text-xs font-bold flex items-center justify-center">2</span>
+      <%= t("legal.terms.t2.heading") %>
+    </h2>
+    <div class="text-sm text-gray-700 space-y-2">
+      <p><%= t("legal.terms.t2.body") %></p>
+      <ul class="list-disc list-inside space-y-1.5 text-gray-600 mt-3">
+        <li><%= t("legal.terms.t2.age") %></li>
+        <li><%= t("legal.terms.t2.authority") %></li>
+        <li><%= t("legal.terms.t2.invited") %></li>
+      </ul>
+    </div>
+  </section>
+
+  <%# T3: User Obligations %>
+  <section id="t3" class="bg-white border border-gray-200 rounded-xl p-7">
+    <h2 class="text-xl font-semibold text-navy mb-4 flex items-center gap-2">
+      <span class="w-7 h-7 rounded-full bg-hero/10 text-hero text-xs font-bold flex items-center justify-center">3</span>
+      <%= t("legal.terms.t3.heading") %>
+    </h2>
+    <div class="text-sm text-gray-700">
+      <p class="mb-3"><%= t("legal.terms.t3.intro") %></p>
+      <ul class="space-y-2.5">
+        <li class="flex gap-3">
+          <svg class="w-4 h-4 text-hero mt-0.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+          <span class="text-gray-600"><%= t("legal.terms.t3.no_share") %></span>
+        </li>
+        <li class="flex gap-3">
+          <svg class="w-4 h-4 text-hero mt-0.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+          <span class="text-gray-600"><%= t("legal.terms.t3.no_scrape") %></span>
+        </li>
+        <li class="flex gap-3">
+          <svg class="w-4 h-4 text-hero mt-0.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+          <span class="text-gray-600"><%= t("legal.terms.t3.no_misuse") %></span>
+        </li>
+        <li class="flex gap-3">
+          <svg class="w-4 h-4 text-hero mt-0.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+          <span class="text-gray-600"><%= t("legal.terms.t3.no_law_violation") %></span>
+        </li>
+        <li class="flex gap-3">
+          <svg class="w-4 h-4 text-hero mt-0.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          <span class="text-gray-600"><%= t("legal.terms.t3.must_secure") %></span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <%# T4: Intellectual Property %>
+  <section id="t4" class="bg-white border border-gray-200 rounded-xl p-7">
+    <h2 class="text-xl font-semibold text-navy mb-4 flex items-center gap-2">
+      <span class="w-7 h-7 rounded-full bg-hero/10 text-hero text-xs font-bold flex items-center justify-center">4</span>
+      <%= t("legal.terms.t4.heading") %>
+    </h2>
+    <div class="text-sm text-gray-700 space-y-3">
+      <p><%= t("legal.terms.t4.body1") %></p>
+      <p><%= t("legal.terms.t4.body2") %></p>
+    </div>
+  </section>
+
+  <%# T5: Limitation of Liability %>
+  <section id="t5" class="bg-white border border-gray-200 rounded-xl p-7">
+    <h2 class="text-xl font-semibold text-navy mb-4 flex items-center gap-2">
+      <span class="w-7 h-7 rounded-full bg-hero/10 text-hero text-xs font-bold flex items-center justify-center">5</span>
+      <%= t("legal.terms.t5.heading") %>
+    </h2>
+    <div class="text-sm text-gray-700 space-y-3">
+      <div class="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
+        <p class="font-semibold text-gray-800 mb-1.5"><%= t("legal.terms.t5.llm_title") %></p>
+        <p class="text-gray-600"><%= t("legal.terms.t5.llm_body") %></p>
+      </div>
+      <p><%= t("legal.terms.t5.general") %></p>
+      <p><%= t("legal.terms.t5.service_as_is") %></p>
+    </div>
+  </section>
+
+  <%# T6: Service Suspension / Termination %>
+  <section id="t6" class="bg-white border border-gray-200 rounded-xl p-7">
+    <h2 class="text-xl font-semibold text-navy mb-4 flex items-center gap-2">
+      <span class="w-7 h-7 rounded-full bg-hero/10 text-hero text-xs font-bold flex items-center justify-center">6</span>
+      <%= t("legal.terms.t6.heading") %>
+    </h2>
+    <div class="text-sm text-gray-700 space-y-2">
+      <p><%= t("legal.terms.t6.body1") %></p>
+      <p><%= t("legal.terms.t6.body2") %></p>
+    </div>
+  </section>
+
+  <%# T7: Dispute Resolution %>
+  <section id="t7" class="bg-white border border-gray-200 rounded-xl p-7">
+    <h2 class="text-xl font-semibold text-navy mb-4 flex items-center gap-2">
+      <span class="w-7 h-7 rounded-full bg-hero/10 text-hero text-xs font-bold flex items-center justify-center">7</span>
+      <%= t("legal.terms.t7.heading") %>
+    </h2>
+    <div class="text-sm text-gray-700 space-y-3">
+      <p><%= t("legal.terms.t7.governing_law") %></p>
+      <p><%= t("legal.terms.t7.jurisdiction") %></p>
+    </div>
+  </section>
+
+  <%# T8: Amendments %>
+  <section id="t8" class="bg-hero/5 border border-hero/20 rounded-xl p-7">
+    <h2 class="text-xl font-semibold text-navy mb-4 flex items-center gap-2">
+      <span class="w-7 h-7 rounded-full bg-hero/10 text-hero text-xs font-bold flex items-center justify-center">8</span>
+      <%= t("legal.terms.t8.heading") %>
+    </h2>
+    <div class="text-sm text-gray-700 space-y-2">
+      <p><%= t("legal.terms.t8.body1") %></p>
+      <p><%= t("legal.terms.t8.body2") %></p>
+    </div>
+  </section>
+
+</div>
+
+<%# ── Print button ────────────────────────────────────────────────── %>
+<div class="mt-10 no-print flex justify-end">
+  <button onclick="window.print()" class="inline-flex items-center gap-2 px-4 py-2 text-sm border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    <%= t("legal.print") %>
+  </button>
+</div>
