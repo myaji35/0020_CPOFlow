@@ -801,20 +801,31 @@ function initKanban() {
 
   filterAssignee.addEventListener('change', applyFilters);
 
-  // 키워드 검색: 서버 사이드 (300ms debounce 후 form submit)
+  // 키워드 검색: 서버 사이드 (450ms debounce, IME 조합 중에는 발화 차단)
+  // - 한글 등 IME 조합 중에는 input 이벤트가 음절마다 떠서 중간 상태로 submit되며 깜빡임 발생
+  // - compositionstart/end로 조합 구간을 추적해, 조합 중에는 디바운스 타이머 자체를 만들지 않음
+  // - 조합 종료 후에만 한 번 디바운스 후 submit
   const searchForm = document.getElementById('kanban-search-form');
   let searchDebounce = null;
-  function submitSearch() {
-    if (!searchForm) return;
-    searchForm.submit();
-  }
-  filterKeyword.addEventListener('input', function() {
+  let isComposing = false;
+  function scheduleSearch() {
     clearTimeout(searchDebounce);
-    searchDebounce = setTimeout(submitSearch, 350);
+    searchDebounce = setTimeout(function() {
+      if (!searchForm) return;
+      searchForm.submit();
+    }, 450);
+  }
+  filterKeyword.addEventListener('compositionstart', function() {
+    isComposing = true;
+    clearTimeout(searchDebounce);  // 진행 중이던 발화도 취소 (입력 흐름 끊김 방지)
   });
   filterKeyword.addEventListener('compositionend', function() {
-    clearTimeout(searchDebounce);
-    searchDebounce = setTimeout(submitSearch, 350);
+    isComposing = false;
+    scheduleSearch();
+  });
+  filterKeyword.addEventListener('input', function() {
+    if (isComposing) return;  // 조합 중 input 이벤트는 무시
+    scheduleSearch();
   });
   // Enter 키는 즉시 제출 (form 기본 동작) — 별도 처리 불필요
 
