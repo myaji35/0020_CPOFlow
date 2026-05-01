@@ -1,3 +1,5 @@
+require "csv"
+
 class EmployeesController < ApplicationController
   before_action :authenticate_user!
   before_action :set_employee, only: %i[show edit update destroy]
@@ -6,7 +8,7 @@ class EmployeesController < ApplicationController
   before_action :require_manager!, only: %i[destroy]
 
   def index
-    @employees = Employee.includes(:visas, :employment_contracts, :employee_assignments).by_name
+    @employees = Employee.includes(:visas, :employment_contracts, :employee_assignments, :department).by_name
     @employees = @employees.where(active: true) unless params[:show_inactive] == "1"
     if params[:q].present?
       @employees = @employees.where("name LIKE ? OR name_en LIKE ?",
@@ -39,8 +41,25 @@ class EmployeesController < ApplicationController
     @departments = Department.active.by_sort
     @job_titles  = JobTitle.active.by_sort
 
-    # ISS-310: 페이지네이션 — 직원 100명+ 시 전체 로드 방지
-    @pagy, @employees = pagy(@employees, items: 25)
+    # ISS-311: CSV export — 페이지네이션 전에 전체 relation 보관
+    full_employees = @employees
+
+    respond_to do |format|
+      format.html do
+        # ISS-310: 페이지네이션 — 직원 100명+ 시 전체 로드 방지
+        @pagy, @employees = pagy(@employees, items: 25)
+      end
+      format.csv do
+        # ISS-311: admin/manager만 export 허용
+        return head :forbidden unless current_user.admin_or_manager?
+
+        csv_data = export_employees_csv(full_employees)
+        send_data "\xEF\xBB\xBF" + csv_data,
+                  type: "text/csv; charset=utf-8",
+                  disposition: "attachment",
+                  filename: "employees-#{Date.today}.csv"
+      end
+    end
   end
 
   def show
@@ -97,5 +116,20 @@ class EmployeesController < ApplicationController
       :employment_type, :hire_date, :termination_date, :active, :notes,
       documents: []
     )
+  end
+
+  # ISS-311: CSV export
+  def export_employees_csv(employees)
+    CSV.generate(headers: true) do |csv|
+      csv << ["#", "이름(한글)", "이름(영문)", "국적", "여권번호", "전화", "이메일",
+              "부서", "직급", "고용형태", "입사일", "퇴직일", "재직중"]
+      employees.find_each do |e|
+        csv << [
+          e.id, e.name, e.name_en, e.nationality, e.passport_number,
+          e.phone, e.email, e.department&.name, e.job_title,
+          e.employment_type, e.hire_date, e.termination_date, e.active ? "Y" : "N"
+        ]
+      end
+    end
   end
 end

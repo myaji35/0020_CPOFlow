@@ -7,13 +7,23 @@
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white">직원 관리</h1>
       <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">비자/근무조건 선제 관리</p>
     </div>
-    <%# ISS-264: viewer는 Create 버튼 비노출 %>
-    <% if current_user.admin? || current_user.manager? || current_user.member? %>
-      <%= link_to new_employee_path, class: "inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors" do %>
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        직원 등록
+    <div class="flex items-center gap-2">
+      <%# ISS-311: CSV 다운로드 — admin/manager만 노출 %>
+      <% if current_user.admin_or_manager? %>
+        <%= link_to employees_path(request.query_parameters.merge(format: :csv)),
+            class: "inline-flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" do %>
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          CSV 다운로드
+        <% end %>
       <% end %>
-    <% end %>
+      <%# ISS-264: viewer는 Create 버튼 비노출 %>
+      <% if current_user.admin? || current_user.manager? || current_user.member? %>
+        <%= link_to new_employee_path, class: "inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors" do %>
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          직원 등록
+        <% end %>
+      <% end %>
+    </div>
   </div>
 
   <!-- 비자 만료 임박 배너 (ISS-205: 갱신 워크플로우 시작 CTA) -->
