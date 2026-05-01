@@ -40,9 +40,9 @@ class ReviewsController < ApplicationController
       # 관리자는 피드백 관리 화면으로, 그 외(일반/비로그인) 피드백 폼 재진입
       success_path = if user_signed_in? && current_user.admin?
                        admin_reviews_path
-                     else
+      else
                        new_review_path
-                     end
+      end
       success_msg = "소중한 의견 감사합니다! 빠른 시일 내에 검토하겠습니다."
 
       respond_to do |format|

@@ -59,7 +59,7 @@ class EcountApi::CustomerSyncServiceTest < ActiveSupport::TestCase
     attrs = { name: "", country: "US", contact_email: "", contact_phone: "", notes: "", ecount_synced_at: Time.current }
     result = svc.send(:save_record, Supplier, code, attrs)
     # name: "" 인 경우 validation이 있으면 에러, 없으면 ok
-    assert_includes [true, false], result[:ok]
+    assert_includes [ true, false ], result[:ok]
   end
 
   test "upsert_customer — AR_CD_TYPE:2 (Supplier)는 Supplier에 저장" do

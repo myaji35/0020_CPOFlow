@@ -10,7 +10,7 @@ class CreateKanbanColumns < ActiveRecord::Migration[8.1]
       t.integer :wip_limit
       t.timestamps
     end
-    add_index :kanban_columns, [:kanban_board_id, :key], unique: true
-    add_index :kanban_columns, [:kanban_board_id, :position]
+    add_index :kanban_columns, [ :kanban_board_id, :key ], unique: true
+    add_index :kanban_columns, [ :kanban_board_id, :position ]
   end
 end

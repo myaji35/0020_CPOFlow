@@ -62,7 +62,7 @@ module Gmail
       /\/open\//i,
       /utm_source=/i,
       # 일반 이미지 확장자 (URL 끝)
-      /\.(?:png|jpe?g|gif|svg|ico)(?:\?[^\s]*)?$/i,
+      /\.(?:png|jpe?g|gif|svg|ico)(?:\?[^\s]*)?$/i
     ].freeze
 
     # SAP/Ariba 도메인은 절대 필터링하지 않음

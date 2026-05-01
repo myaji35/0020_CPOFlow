@@ -18,12 +18,12 @@ namespace :employees do
       "LALA"     => { email: "ahmed@atozone.com",     confidence: :guess, note: "추측: Ahmed 팀?" },
       "RAJAN"    => { email: "park@atozone.com",      confidence: :guess, note: "추측: Park 팀?" },
       "Renjith"  => { email: "sarah@atozone.com",     confidence: :guess, note: "추측: Sarah 팀?" },
-      "NICKA"    => { email: "admin@cpoflow.com",     confidence: :guess, note: "추측: CPOFlow Admin?" },
+      "NICKA"    => { email: "admin@cpoflow.com",     confidence: :guess, note: "추측: CPOFlow Admin?" }
     }
 
     employees = Employee.where(user_id: nil)
     users_by_email = User.all.index_by { |u| u.email.downcase }
-    users_by_name = User.where.not(name: [nil, ""]).index_by { |u| u.name.downcase.strip }
+    users_by_name = User.where.not(name: [ nil, "" ]).index_by { |u| u.name.downcase.strip }
     already_assigned_user_ids = Employee.where.not(user_id: nil).pluck(:user_id)
 
     linked = 0

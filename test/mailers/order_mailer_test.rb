@@ -30,7 +30,7 @@ class OrderMailerTest < ActionMailer::TestCase
 
   test "due_reminder — 수신자 확인" do
     mail = OrderMailer.due_reminder(@order, @user, 7)
-    assert_equal [@user.email], mail.to
+    assert_equal [ @user.email ], mail.to
   end
 
   test "due_reminder — 제목에 Action Required 포함 (D-7)" do

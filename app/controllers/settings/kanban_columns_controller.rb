@@ -56,9 +56,9 @@ module Settings
     def set_current_board
       @current_board = if params[:board_id].present?
                          KanbanBoard.find(params[:board_id])
-                       else
+      else
                          KanbanBoard.default_board.first || KanbanBoard.ensure_default!
-                       end
+      end
     end
 
     def set_kanban_column

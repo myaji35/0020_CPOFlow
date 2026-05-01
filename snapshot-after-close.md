@@ -1,0 +1,449 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - navigation [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e6]: CF
+        - generic [ref=e7]: CPOFlow
+      - generic [ref=e8]:
+        - link " Dashboard" [ref=e10] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e11]: 
+          - generic: Dashboard
+        - link " Inbox" [ref=e13] [cursor=pointer]:
+          - /url: /inbox
+          - generic [ref=e14]: 
+          - generic: Inbox
+        - link " Kanban" [ref=e16] [cursor=pointer]:
+          - /url: /kanban
+          - generic [ref=e17]: 
+          - generic: Kanban
+        - link " Orders" [ref=e19] [cursor=pointer]:
+          - /url: /orders
+          - generic [ref=e20]: 
+          - generic: Orders
+        - link " Calendar" [ref=e22] [cursor=pointer]:
+          - /url: /calendar
+          - generic [ref=e23]: 
+          - generic: Calendar
+        - link " Team" [ref=e25] [cursor=pointer]:
+          - /url: /team
+          - generic [ref=e26]: 
+          - generic: Team
+        - link " 발주처" [ref=e29] [cursor=pointer]:
+          - /url: /clients
+          - generic [ref=e30]: 
+          - generic: 발주처
+        - link " 거래처" [ref=e32] [cursor=pointer]:
+          - /url: /suppliers
+          - generic [ref=e33]: 
+          - generic: 거래처
+        - link " 외부 담당자" [ref=e35] [cursor=pointer]:
+          - /url: /contact_persons
+          - generic [ref=e36]: 
+          - generic: 외부 담당자
+        - link " 현장" [ref=e38] [cursor=pointer]:
+          - /url: /projects
+          - generic [ref=e39]: 
+          - generic: 현장
+        - link " 직원 관리" [ref=e41] [cursor=pointer]:
+          - /url: /employees
+          - generic [ref=e42]: 
+          - generic: 직원 관리
+        - link " 조직도" [ref=e44] [cursor=pointer]:
+          - /url: /org_chart
+          - generic [ref=e45]: 
+          - generic: 조직도
+        - link " 경영 리포트" [ref=e48] [cursor=pointer]:
+          - /url: /reports
+          - generic [ref=e49]: 
+          - generic: 경영 리포트
+        - link " eCount Import" [ref=e51] [cursor=pointer]:
+          - /url: /admin/imports
+          - generic [ref=e52]: 
+          - generic: eCount Import
+        - link " 메뉴 권한" [ref=e54] [cursor=pointer]:
+          - /url: /settings/menu_permissions
+          - generic [ref=e55]: 
+          - generic: 메뉴 권한
+      - generic [ref=e56]:
+        - link " Settings" [ref=e58] [cursor=pointer]:
+          - /url: /settings
+          - generic [ref=e59]: 
+          - generic: Settings
+        - generic [ref=e60]:
+          - generic [ref=e61]: CA
+          - generic:
+            - paragraph: CPOFlow Admin
+            - paragraph: Admin
+    - generic [ref=e62]:
+      - banner [ref=e63]:
+        - generic:
+          - heading [level=1]
+        - generic [ref=e64]:
+          - button "검색... ⌘K" [ref=e65] [cursor=pointer]:
+            - img [ref=e66]
+            - generic [ref=e69]: 검색...
+            - generic [ref=e70]: ⌘K
+          - link "3" [ref=e71] [cursor=pointer]:
+            - /url: /kanban
+            - img [ref=e72]
+            - generic [ref=e75]: "3"
+          - button "2" [ref=e77] [cursor=pointer]:
+            - img [ref=e78]
+            - generic [ref=e81]: "2"
+          - link [ref=e82] [cursor=pointer]:
+            - /url: /users/sign_out
+            - img [ref=e83]
+      - main [ref=e86]:
+        - generic [ref=e87]:
+          - generic [ref=e89]:
+            - paragraph [ref=e90]: 받은편지함
+            - navigation [ref=e91]:
+              - link "전체 메일 481" [ref=e92] [cursor=pointer]:
+                - /url: /inbox
+                - img [ref=e93]
+                - text: 전체 메일
+                - generic [ref=e96]: "481"
+              - link "RFQ 대기 469" [ref=e97] [cursor=pointer]:
+                - /url: /inbox?filter=rfq
+                - img [ref=e98]
+                - text: RFQ 대기
+                - generic [ref=e101]: "469"
+              - link "확인 필요 1" [ref=e102] [cursor=pointer]:
+                - /url: /inbox?filter=uncertain
+                - img [ref=e103]
+                - text: 확인 필요
+                - generic [ref=e105]: "1"
+              - link "처리 완료 12" [ref=e106] [cursor=pointer]:
+                - /url: /inbox?filter=converted
+                - img [ref=e107]
+                - text: 처리 완료
+                - generic [ref=e110]: "12"
+            - paragraph [ref=e111]: 연결된 계정
+            - generic [ref=e112]:
+              - paragraph [ref=e113]: Gmail 계정이 연결되지 않았습니다.
+              - link "설정에서 연결하기" [ref=e114] [cursor=pointer]:
+                - /url: /settings
+                - text: 설정에서 연결하기
+                - img [ref=e115]
+          - generic [ref=e117]:
+            - generic [ref=e118]:
+              - generic [ref=e119]:
+                - generic [ref=e120]:
+                  - generic [ref=e121]: 전체 메일
+                  - generic [ref=e122]:
+                    - generic [ref=e123]: 481건
+                    - generic [ref=e124]:
+                      - img [ref=e581]
+                      - generic [ref=e584]: 7분 30초 후 새로고침
+                    - button "동기화" [ref=e129] [cursor=pointer]:
+                      - img [ref=e130]
+                      - text: 동기화
+                - generic [ref=e135]:
+                  - img [ref=e136]
+                  - textbox "이메일 검색 (제목, 발신자, 고객명)..." [ref=e139]
+              - generic [ref=e140]:
+                - list [ref=e141]:
+                  - listitem [ref=e142]:
+                    - generic [ref=e143] [cursor=pointer]:
+                      - img [ref=e144]
+                      - generic [ref=e146]: "6000009505"
+                      - generic [ref=e147]: Ravi Raushan
+                      - generic [ref=e148]: 2건
+                      - generic [ref=e149]: 03/07
+                  - listitem [ref=e150] [cursor=pointer]:
+                    - generic [ref=e151]:
+                      - generic [ref=e152]: Inbox
+                      - generic [ref=e153]: RFQ
+                      - generic [ref=e154]: 03/07
+                    - paragraph [ref=e155]: Event 6000009506 End Date Reminder
+                    - paragraph [ref=e156]: Ravi Raushan <s4system-produae+enec.Doc315087735@smtp.mn1.ariba.com>
+                    - paragraph [ref=e157]: "Ariba event Doc315087735 6000009506: You have not submitted a response for th..."
+                    - generic [ref=e159]: 확실
+                  - listitem [ref=e160]:
+                    - generic [ref=e161] [cursor=pointer]:
+                      - img [ref=e162]
+                      - generic [ref=e164]: "6000009417"
+                      - generic [ref=e165]: Ahmed Amer Nayef Al Khatib
+                      - generic [ref=e166]: 4건
+                      - generic [ref=e167]: 03/07
+                  - listitem [ref=e168] [cursor=pointer]:
+                    - generic [ref=e169]:
+                      - generic [ref=e170]: Inbox
+                      - generic [ref=e171]: RFQ
+                      - generic [ref=e172]: 03/06
+                    - paragraph [ref=e173]: Request for Quotation
+                    - paragraph [ref=e174]: "\"이태감\" <ltg@kps.co.kr>"
+                    - paragraph [ref=e175]: Dear Atoz, Hello, this is Taegam Lee from Kepco KPS, currently working at Bar...
+                    - generic [ref=e177]: 확실
+                  - listitem [ref=e178] [cursor=pointer]:
+                    - generic [ref=e179]:
+                      - generic [ref=e180]: Inbox
+                      - generic [ref=e181]: RFQ
+                      - generic [ref=e182]: 03/06
+                    - paragraph [ref=e183]: "ENEC/ENEC Operations Sourcing has invited you to participate in an event: RFQ_6000009532."
+                    - paragraph [ref=e184]: Atul Shinde <s4system-produae+enec.Doc315290076@smtp.mn1.ariba.com>
+                    - paragraph [ref=e185]: ENEC/ENEC Operations Sourcing has invited you to participate in the following...
+                    - generic [ref=e187]: 확실
+                  - listitem [ref=e188] [cursor=pointer]:
+                    - generic [ref=e189]:
+                      - generic [ref=e190]: Inbox
+                      - generic [ref=e191]: RFQ
+                      - generic [ref=e192]: 03/06
+                    - paragraph [ref=e193]: Event 6000009493 is no longer accepting responses.
+                    - paragraph [ref=e194]: Atul Shinde <s4system-produae+enec.Doc314902213@smtp.mn1.ariba.com>
+                    - paragraph [ref=e195]: Thank you for participating in the Ariba event Doc314902213 6000009493. The e...
+                    - generic [ref=e197]: 확실
+                  - listitem [ref=e198] [cursor=pointer]:
+                    - generic [ref=e199]:
+                      - generic [ref=e200]: Inbox
+                      - generic [ref=e201]: RFQ
+                      - generic [ref=e202]: 03/06
+                    - paragraph [ref=e203]: Request for Quotation (RFQ) 6000009176 - 1200011160
+                    - paragraph [ref=e204]: Rochelle Tuibeo <rochelle.tuibeo@enec.ae>
+                    - paragraph [ref=e205]: Classification - For Official Use Only (FOUO) - For Addressee Eyes Only (FAEO...
+                    - generic [ref=e207]: 확실
+                  - listitem [ref=e208] [cursor=pointer]:
+                    - generic [ref=e209]:
+                      - generic [ref=e210]: Inbox
+                      - generic [ref=e211]: RFQ
+                      - generic [ref=e212]: 03/06
+                    - paragraph [ref=e213]: Event RFQ 6000009316 PR 1200011309 O2 SENSOR is no longer accepting responses.
+                    - paragraph [ref=e214]: Theikanath Bobby Bosco <s4system-produae+enec.Doc312414332@smtp.mn1.ariba.com>
+                    - paragraph [ref=e215]: Thank you for participating in the Ariba event Doc312414332 RFQ 6000009316 PR...
+                    - generic [ref=e217]: 확실
+                  - listitem [ref=e218] [cursor=pointer]:
+                    - generic [ref=e219]:
+                      - generic [ref=e220]: Inbox
+                      - generic [ref=e221]: RFQ
+                      - generic [ref=e222]: 03/06
+                    - paragraph [ref=e223]: Event 6000009283 is no longer accepting responses.
+                    - paragraph [ref=e224]: Ravi Raushan <s4system-produae+enec.Doc312339745@smtp.mn1.ariba.com>
+                    - paragraph [ref=e225]: Thank you for participating in the Ariba event Doc312339745 6000009283. The e...
+                    - generic [ref=e227]: 확실
+                  - listitem [ref=e228] [cursor=pointer]:
+                    - generic [ref=e229]:
+                      - generic [ref=e230]: Inbox
+                      - generic [ref=e231]: RFQ
+                      - generic [ref=e232]: 03/06
+                    - paragraph [ref=e233]: Event RFQ 6000009324 PR 1200011110 OIL REFRI pc2 is no longer accepting responses.
+                    - paragraph [ref=e234]: Theikanath Bobby Bosco <s4system-produae+enec.Doc312488050@smtp.mn1.ariba.com>
+                    - paragraph [ref=e235]: Thank you for participating in the Ariba event Doc312488050 RFQ 6000009324 PR...
+                    - generic [ref=e237]: 확실
+                  - listitem [ref=e238]:
+                    - generic [ref=e239] [cursor=pointer]:
+                      - img [ref=e240]
+                      - generic [ref=e242]: "6000009311"
+                      - generic [ref=e243]: Sulaiman Mohamed Sulaiman Mirak AlBlooshi
+                      - generic [ref=e244]: 3건
+                      - generic [ref=e245]: 03/06
+                  - listitem [ref=e246] [cursor=pointer]:
+                    - generic [ref=e247]:
+                      - generic [ref=e248]: Inbox
+                      - generic [ref=e249]: RFQ
+                      - generic [ref=e250]: 03/06
+                    - paragraph [ref=e251]: Event 6000009328 is no longer accepting responses.
+                    - paragraph [ref=e252]: Sulaiman Mohamed Sulaiman Mirak AlBlooshi <s4system-produae+enec.Doc312492563@smtp.mn1.ariba.com>
+                    - paragraph [ref=e253]: Thank you for participating in the Ariba event Doc312492563 6000009328. The e...
+                    - generic [ref=e255]: 확실
+                  - listitem [ref=e256] [cursor=pointer]:
+                    - generic [ref=e257]:
+                      - generic [ref=e258]: Inbox
+                      - generic [ref=e259]: RFQ
+                      - generic [ref=e260]: 03/06
+                    - paragraph [ref=e261]: URGENT RFQ 6000009390
+                    - paragraph [ref=e262]: Sulaiman Mohamed Sulaiman Mirak Alblooshi <sulaiman.alblooshi@enec.ae>
+                    - paragraph [ref=e263]: Classification - For Official Use Only (FOUO) Dear valued supplier, URGENT I ...
+                    - generic [ref=e265]: 확실
+                  - listitem [ref=e266] [cursor=pointer]:
+                    - generic [ref=e267]:
+                      - generic [ref=e268]: Inbox
+                      - generic [ref=e269]: RFQ
+                      - generic [ref=e270]: 03/06
+                    - paragraph [ref=e271]: Event RFQ_6000009305 is no longer accepting responses.
+                    - paragraph [ref=e272]: Atul Shinde <s4system-produae+enec.Doc312346762@smtp.mn1.ariba.com>
+                    - paragraph [ref=e273]: Thank you for participating in the Ariba event Doc312346762 RFQ_6000009305. T...
+                    - generic [ref=e275]: 확실
+                  - listitem [ref=e276] [cursor=pointer]:
+                    - generic [ref=e277]:
+                      - generic [ref=e278]: Inbox
+                      - generic [ref=e279]: RFQ
+                      - generic [ref=e280]: 03/06
+                    - paragraph [ref=e281]: Event 6000009363 End Date Reminder
+                    - paragraph [ref=e282]: Ravi Raushan <s4system-produae+enec.Doc313218584@smtp.mn1.ariba.com>
+                    - paragraph [ref=e283]: "Ariba event Doc313218584 6000009363: You have not submitted a response for th..."
+                    - generic [ref=e285]: 확실
+                  - listitem [ref=e286] [cursor=pointer]:
+                    - generic [ref=e287]:
+                      - generic [ref=e288]: Inbox
+                      - generic [ref=e289]: RFQ
+                      - generic [ref=e290]: 03/06
+                    - paragraph [ref=e291]: "ENEC/ENEC Operations Sourcing has invited you to participate in an event: RFQ 6000009425 PR 1200011358 LG."
+                    - paragraph [ref=e292]: Theikanath Bobby Bosco <s4system-produae+enec.Doc313597420@smtp.mn1.ariba.com>
+                    - paragraph [ref=e293]: ENEC/ENEC Operations Sourcing has invited you to participate in the following...
+                    - generic [ref=e295]: 확실
+                  - listitem [ref=e296] [cursor=pointer]:
+                    - generic [ref=e297]:
+                      - generic [ref=e298]: Inbox
+                      - generic [ref=e299]: RFQ
+                      - generic [ref=e300]: 03/06
+                    - paragraph [ref=e301]: Event 6000009368 End Date Reminder
+                    - paragraph [ref=e302]: Ravi Raushan <s4system-produae+enec.Doc313251191@smtp.mn1.ariba.com>
+                    - paragraph [ref=e303]: "Ariba event Doc313251191 6000009368: You have not submitted a response for th..."
+                    - generic [ref=e305]: 확실
+                  - listitem [ref=e306] [cursor=pointer]:
+                    - generic [ref=e307]:
+                      - generic [ref=e308]: Inbox
+                      - generic [ref=e309]: RFQ
+                      - generic [ref=e310]: 03/06
+                    - paragraph [ref=e311]: Event 6000009369 End Date Reminder
+                    - paragraph [ref=e312]: Ravi Raushan <s4system-produae+enec.Doc313275845@smtp.mn1.ariba.com>
+                    - paragraph [ref=e313]: "Ariba event Doc313275845 6000009369: You have not submitted a response for th..."
+                    - generic [ref=e315]: 확실
+                  - listitem [ref=e316] [cursor=pointer]:
+                    - generic [ref=e317]:
+                      - generic [ref=e318]: Inbox
+                      - generic [ref=e319]: RFQ
+                      - generic [ref=e320]: 03/06
+                    - paragraph [ref=e321]: "Re: Meggitt RFQ 6000008488 <Urgent requirement> || PR 1200009992"
+                    - paragraph [ref=e322]: Bosco Bobby <theikanath.bobby@enec.ae>
+                    - paragraph [ref=e323]: Classification - For Official Use Only (FOUO) Gentle reminder. Will you be ab...
+                    - generic [ref=e325]: 확실
+                  - listitem [ref=e326] [cursor=pointer]:
+                    - generic [ref=e327]:
+                      - generic [ref=e328]: Inbox
+                      - generic [ref=e329]: RFQ
+                      - generic [ref=e330]: 03/06
+                    - paragraph [ref=e331]: Event RFQ 6000009343 PR 2200010789 is no longer accepting responses.
+                    - paragraph [ref=e332]: Theikanath Bobby Bosco <s4system-produae+enec.Doc312766881@smtp.mn1.ariba.com>
+                    - paragraph [ref=e333]: Thank you for participating in the Ariba event Doc312766881 RFQ 6000009343 PR...
+                    - generic [ref=e335]: 확실
+                  - listitem [ref=e336] [cursor=pointer]:
+                    - generic [ref=e337]:
+                      - generic [ref=e338]: Inbox
+                      - generic [ref=e339]: RFQ
+                      - generic [ref=e340]: 03/06
+                    - paragraph [ref=e341]: Event RFQ_6000009327_PCB is no longer accepting responses.
+                    - paragraph [ref=e342]: Atul Shinde <s4system-produae+enec.Doc312606170@smtp.mn1.ariba.com>
+                    - paragraph [ref=e343]: Thank you for participating in the Ariba event Doc312606170 RFQ_6000009327_PC...
+                    - generic [ref=e345]: 확실
+                  - listitem [ref=e346] [cursor=pointer]:
+                    - generic [ref=e347]:
+                      - generic [ref=e348]: Inbox
+                      - generic [ref=e349]: RFQ
+                      - generic [ref=e350]: 03/06
+                    - paragraph [ref=e351]: Event RFQ_6000009375 is no longer accepting responses.
+                    - paragraph [ref=e352]: Atul Shinde <s4system-produae+enec.Doc313024631@smtp.mn1.ariba.com>
+                    - paragraph [ref=e353]: Thank you for participating in the Ariba event Doc313024631 RFQ_6000009375. T...
+                    - generic [ref=e355]: 확실
+                  - listitem [ref=e356] [cursor=pointer]:
+                    - generic [ref=e357]:
+                      - generic [ref=e358]: Inbox
+                      - generic [ref=e359]: RFQ
+                      - generic [ref=e360]: 03/06
+                    - paragraph [ref=e361]: Event RFQ_6000009318 is no longer accepting responses.
+                    - paragraph [ref=e362]: Atul Shinde <s4system-produae+enec.Doc312418821@smtp.mn1.ariba.com>
+                    - paragraph [ref=e363]: Thank you for participating in the Ariba event Doc312418821 RFQ_6000009318. T...
+                    - generic [ref=e365]: 확실
+                  - listitem [ref=e366] [cursor=pointer]:
+                    - generic [ref=e367]:
+                      - generic [ref=e368]: Inbox
+                      - generic [ref=e369]: RFQ
+                      - generic [ref=e370]: 03/06
+                    - paragraph [ref=e371]: "ENEC/ENEC Operations Sourcing has invited you to participate in an event: 6000009431."
+                    - paragraph [ref=e372]: Sulaiman Mohamed Sulaiman Mirak AlBlooshi <s4system-produae+enec.Doc313742778@smtp.mn1.ariba.com>
+                    - paragraph [ref=e373]: ENEC/ENEC Operations Sourcing has invited you to participate in the following...
+                    - generic [ref=e375]: 확실
+                - generic [ref=e376]:
+                  - generic [ref=e377]: 1–30 / 481건
+                  - generic [ref=e378]:
+                    - generic [ref=e379]: 1 / 17
+                    - link [ref=e380] [cursor=pointer]:
+                      - /url: /inbox?page=2
+                      - img [ref=e381]
+            - generic [ref=e384]:
+              - generic [ref=e385]:
+                - generic [ref=e386]:
+                  - generic [ref=e387]:
+                    - heading "Event 6000009505 End Date Reminder" [level=2] [ref=e388]
+                    - generic [ref=e389]:
+                      - img "smtp.mn1.ariba.com" [ref=e391]
+                      - generic [ref=e392]:
+                        - paragraph [ref=e393]: Ravi Raushan <s4system-produae+enec.Doc314982584@smtp.mn1.ariba.com>
+                        - paragraph [ref=e394]: 2026년 03월 06일 10:30
+                  - generic [ref=e395]:
+                    - generic [ref=e396]: Inbox
+                    - button "칸반으로 이동" [ref=e398] [cursor=pointer]:
+                      - img [ref=e399]
+                      - text: 칸반으로 이동
+                - generic [ref=e404]:
+                  - generic [ref=e405]: "#rfq"
+                  - generic [ref=e406]: "#auto-import"
+                  - generic [ref=e407]: "#ariba"
+                  - generic [ref=e408]: "#urgent"
+              - generic [ref=e409]:
+                - generic [ref=e410]:
+                  - img [ref=e411]
+                  - generic [ref=e413]: RFQ로 확정된 이메일입니다.
+                - button "RFQ 아님" [ref=e415] [cursor=pointer]:
+                  - img [ref=e416]
+                  - text: RFQ 아님
+              - generic [ref=e419]:
+                - generic [ref=e420]:
+                  - button "원문" [ref=e421] [cursor=pointer]
+                  - button "번역 (한글)" [ref=e422] [cursor=pointer]: 번역 (한글)
+                  - button "답변 초안" [ref=e424] [cursor=pointer]
+                  - button "첨부파일 및 링크 3" [ref=e425] [cursor=pointer]
+                - generic [ref=e459]:
+                  - generic [ref=e460]:
+                    - img [ref=e461]
+                    - text: AI 분석 결과
+                  - generic [ref=e467]: 95점
+                - generic [ref=e502]:
+                  - generic [ref=e503] [cursor=pointer]:
+                    - img [ref=e504]
+                    - generic [ref=e507]:
+                      - paragraph [ref=e508]: 6000009505.doc
+                      - paragraph [ref=e509]: HTML · 38.4 KB · 클릭하여 미리보기
+                    - link "다운로드" [ref=e510]:
+                      - /url: /rails/active_storage/blobs/redirect/eyJfcmFpbHMiOnsiZGF0YSI6NDUsInB1ciI6ImJsb2JfaWQifX0=--ae2850269f1d4936181758a118b9474e511956bc/6000009505.doc?disposition=attachment
+                      - img [ref=e511]
+                  - generic [ref=e515]:
+                    - img [ref=e516]
+                    - link "https://enec.supplier.mn1.ariba.com/ad/webjumper?ite..." [ref=e519] [cursor=pointer]:
+                      - /url: https://enec.supplier.mn1.ariba.com/ad/webjumper?itemID=HocoAKjibLvgBH&awcharset=UTF-8.
+                    - button "AI 분석" [ref=e520] [cursor=pointer]:
+                      - img [ref=e521]
+                      - text: AI 분석
+                    - link [ref=e524] [cursor=pointer]:
+                      - /url: https://enec.supplier.mn1.ariba.com/ad/webjumper?itemID=HocoAKjibLvgBH&awcharset=UTF-8.
+                      - img [ref=e525]
+                  - generic [ref=e530]:
+                    - img [ref=e531]
+                    - link "https://enec.supplier.mn1.ariba.com/ad/webjumper?ite..." [ref=e534] [cursor=pointer]:
+                      - /url: https://enec.supplier.mn1.ariba.com/ad/webjumper?itemID=HocoAKjibLvgBH&awcharset=UTF-8
+                    - button "AI 분석" [ref=e535] [cursor=pointer]:
+                      - img [ref=e536]
+                      - text: AI 분석
+                    - link [ref=e539] [cursor=pointer]:
+                      - /url: https://enec.supplier.mn1.ariba.com/ad/webjumper?itemID=HocoAKjibLvgBH&awcharset=UTF-8
+                      - img [ref=e540]
+              - generic [ref=e469]:
+                - paragraph [ref=e470]: "발주 #987 -- 6일 전 생성"
+                - generic [ref=e471]:
+                  - button "담당자로 저장" [ref=e473] [cursor=pointer]:
+                    - img [ref=e474]
+                    - text: 담당자로 저장
+                  - link "전체 발주 상세 보기" [ref=e477] [cursor=pointer]:
+                    - /url: /orders/987
+                    - text: 전체 발주 상세 보기
+                    - img [ref=e478]
+  - generic [ref=e480]:
+    - generic [ref=e482]:
+      - link "전체 화면" [ref=e483] [cursor=pointer]:
+        - /url: "#"
+        - img [ref=e484]
+        - text: 전체 화면
+      - button [ref=e488] [cursor=pointer]:
+        - img [ref=e489]
+    - img [ref=e494]

@@ -47,7 +47,7 @@ module Gmail
     # - [A-Za-z0-9_\-=] 비율이 98% 이상
     def looks_like_base64url?(data)
       return false unless data.is_a?(String)
-      return false unless [Encoding::US_ASCII, Encoding::UTF_8].include?(data.encoding)
+      return false unless [ Encoding::US_ASCII, Encoding::UTF_8 ].include?(data.encoding)
 
       sample = data.byteslice(0, 512) || data
       return false if sample.empty?

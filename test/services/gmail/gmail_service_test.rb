@@ -26,7 +26,7 @@ class Gmail::GmailServiceTest < ActiveSupport::TestCase
   test "parse_message — 빈 payload msg 처리" do
     # Google::Apis::GmailV1::Message 구조와 비슷한 mock 객체 생성
     msg = Struct.new(:id, :thread_id, :snippet, :label_ids, :payload).new(
-      "msg123", "thread456", "Test snippet", ["UNREAD"], nil
+      "msg123", "thread456", "Test snippet", [ "UNREAD" ], nil
     )
     svc    = Gmail::GmailService.allocate
     result = svc.parse_message(msg)
@@ -118,7 +118,7 @@ class Gmail::GmailServiceTest < ActiveSupport::TestCase
     part1 = PartStruct.new("text/html", BodyStruct.new("html"), nil)
     part2 = PartStruct.new("text/plain", BodyStruct.new("data"), nil)
     svc = Gmail::GmailService.allocate
-    result = svc.send(:find_part_recursive, [part1, part2], "text/plain")
+    result = svc.send(:find_part_recursive, [ part1, part2 ], "text/plain")
     assert_equal part2, result
   end
 
@@ -127,7 +127,7 @@ class Gmail::GmailServiceTest < ActiveSupport::TestCase
     BodyStruct2 = Struct.new(:data) unless defined?(BodyStruct2)
     part1 = PartStruct2.new("text/html", BodyStruct2.new(nil), nil)
     svc = Gmail::GmailService.allocate
-    result = svc.send(:find_part_recursive, [part1], "text/plain")
+    result = svc.send(:find_part_recursive, [ part1 ], "text/plain")
     assert_nil result
   end
 end

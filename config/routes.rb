@@ -267,7 +267,7 @@ Rails.application.routes.draw do
     patch "agent_trust/:insight_type", to: "agent_trust#toggle", as: :agent_trust_toggle
     patch "api_keys", to: "api_keys#update", as: :api_keys
     post  "api_keys/verify", to: "api_keys#verify", as: :verify_api_key
-    resources :kanban_boards, except: [:show] do
+    resources :kanban_boards, except: [ :show ] do
       member do
         patch :reorder
         post :duplicate

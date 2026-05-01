@@ -92,7 +92,7 @@ class TeamController < ApplicationController
       day = (Date.today - (29 - i))
       { date: day, count: daily_raw[day.to_s] || 0 }
     end
-    @activity_max = [@daily_activity.map { |d| d[:count] }.max || 1, 1].max
+    @activity_max = [ @daily_activity.map { |d| d[:count] }.max || 1, 1 ].max
     @activity_total = @daily_activity.sum { |d| d[:count] }
   end
 

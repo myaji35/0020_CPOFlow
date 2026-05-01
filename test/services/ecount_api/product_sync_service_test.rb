@@ -58,7 +58,7 @@ class EcountApi::ProductSyncServiceTest < ActiveSupport::TestCase
 
   test "extract_result — Array 그대로 반환" do
     svc  = EcountApi::ProductSyncService.new
-    data = [{ "PROD_CD" => "A" }, { "PROD_CD" => "B" }]
+    data = [ { "PROD_CD" => "A" }, { "PROD_CD" => "B" } ]
     assert_equal data, svc.send(:extract_result, data)
   end
 

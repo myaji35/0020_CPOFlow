@@ -14,7 +14,7 @@ module Admin
       def index
         @q = params[:q].to_s.strip
 
-        scope = Order.not_archived.where.not(reference_no: [nil, ""])
+        scope = Order.not_archived.where.not(reference_no: [ nil, "" ])
 
         # 텍스트 검색
         if @q.present?
@@ -64,9 +64,9 @@ module Admin
         @sort_dir = sort_dir
 
         # 페이지네이션
-        @page        = [params[:page].to_i, 1].max
+        @page        = [ params[:page].to_i, 1 ].max
         @per_page    = PER_PAGE
-        @total_pages = [(@total.to_f / @per_page).ceil, 1].max
+        @total_pages = [ (@total.to_f / @per_page).ceil, 1 ].max
 
         @transactions = scope.order(sort_col => sort_dir)
                              .offset((@page - 1) * @per_page).limit(@per_page)

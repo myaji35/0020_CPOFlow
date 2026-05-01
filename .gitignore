@@ -52,3 +52,8 @@
 /*.png
 /*-snapshot.txt
 /arc-*.txt
+.claude/worktrees
+worktrees/
+.harness-worktree-meta
+.claude/worktrees.json
+.kamal/secrets.backup-*

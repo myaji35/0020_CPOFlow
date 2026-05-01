@@ -40,6 +40,6 @@ class Gmail::LlmRfqAnalyzerServiceTest < ActiveSupport::TestCase
 
   test "api_key_configured? — ClaudeTokenResolver 위임" do
     result = @service.send(:api_key_configured?)
-    assert_includes [true, false], result
+    assert_includes [ true, false ], result
   end
 end

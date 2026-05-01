@@ -376,10 +376,10 @@ class InboxController < ApplicationController
 
     # verdict → rfq_status 매핑 (기존 orchestrator 규칙 따름)
     new_rfq_status = case result.verdict.to_sym
-                     when :confirmed then :rfq_triage
-                     when :excluded  then :rfq_excluded
-                     else                 :rfq_pending
-                     end
+    when :confirmed then :rfq_triage
+    when :excluded  then :rfq_excluded
+    else                 :rfq_pending
+    end
 
     order.update!(rfq_status: new_rfq_status)
     Gmail::RfqFeedbackService.record!(order, current_user,

@@ -62,7 +62,6 @@ module Ecount
       rescue Date::Error, ArgumentError
         nil
       end
-
     end
   end
 end

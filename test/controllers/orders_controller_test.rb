@@ -173,7 +173,7 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
 
   test "orders index — JSON 응답" do
     get orders_path, as: :json
-    assert_includes [200, 406], response.status
+    assert_includes [ 200, 406 ], response.status
   end
 
   # ─── destroy ─────────────────────────────
@@ -200,14 +200,14 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
   test "detach — 존재하지 않는 blob_id는 에러 없이 처리됨" do
     order = Order.create!(title: "Detach Test", customer_name: "Cust", user: @user, status: :new_rfq)
     delete detach_order_path(order, blob_id: 99999999)
-    assert_includes [302, 404, 422], response.status
+    assert_includes [ 302, 404, 422 ], response.status
     order.reload.destroy
   end
 
   # ─── preview_by_ref ───────────────────────
   test "preview_by_ref — ref_no 없으면 에러 없이 처리됨" do
     get preview_by_ref_orders_path, params: { ref_no: "NONEXISTENT_REF_#{SecureRandom.hex(4)}" }
-    assert_includes [200, 400, 404], response.status
+    assert_includes [ 200, 400, 404 ], response.status
   end
 
   # ─── quick_update 추가 케이스 ─────────────

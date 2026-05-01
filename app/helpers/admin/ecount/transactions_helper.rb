@@ -31,9 +31,9 @@ module Admin
         new_dir = (@sort_col == col.to_s && @sort_dir == :asc) ? "desc" : "asc"
         arrow = if @sort_col == col.to_s
                   @sort_dir == :asc ? " ↑" : " ↓"
-                else
+        else
                   ""
-                end
+        end
         link_to "#{label}#{arrow}".html_safe,
                 admin_ecount_transactions_path(tx_filter_params(sort: col, dir: new_dir, page: 1)),
                 class: "hover:text-[#00A1E0] #{'text-[#00A1E0] font-bold' if @sort_col == col.to_s}"

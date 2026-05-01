@@ -17,7 +17,7 @@ class Ecount::EcountParserTest < ActiveSupport::TestCase
 
   test "parse — CSV UTF-8 파일 파싱" do
     csv_content = "품목코드,품목명,단위\nP001,테스트품목,EA\nP002,두번째품목,PCS\n"
-    Tempfile.create(["ecount_test", ".csv"], encoding: "UTF-8") do |f|
+    Tempfile.create([ "ecount_test", ".csv" ], encoding: "UTF-8") do |f|
       f.write(csv_content)
       f.flush
       rows = Ecount::EcountParser.new(f.path).parse
@@ -29,7 +29,7 @@ class Ecount::EcountParserTest < ActiveSupport::TestCase
   end
 
   test "parse — 빈 CSV 파일은 빈 배열" do
-    Tempfile.create(["ecount_empty", ".csv"], encoding: "UTF-8") do |f|
+    Tempfile.create([ "ecount_empty", ".csv" ], encoding: "UTF-8") do |f|
       f.write("품목코드,품목명\n")
       f.flush
       rows = Ecount::EcountParser.new(f.path).parse
@@ -39,7 +39,7 @@ class Ecount::EcountParserTest < ActiveSupport::TestCase
 
   test "parse — 알 수 없는 헤더도 오류 없이 처리" do
     csv_content = "알수없는헤더,품목명\nVAL001,테스트\n"
-    Tempfile.create(["ecount_unk", ".csv"], encoding: "UTF-8") do |f|
+    Tempfile.create([ "ecount_unk", ".csv" ], encoding: "UTF-8") do |f|
       f.write(csv_content)
       f.flush
       assert_nothing_raised do

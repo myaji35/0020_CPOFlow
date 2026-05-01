@@ -47,9 +47,9 @@ class Ecount::EcountImportServiceTest < ActiveSupport::TestCase
 
   test "strategy — 3가지 import_type 모두 해당 Strategy 클래스를 반환" do
     [
-      ["products", Ecount::Strategies::ProductImportStrategy],
-      ["suppliers", Ecount::Strategies::SupplierImportStrategy],
-      ["orders", Ecount::Strategies::OrderImportStrategy]
+      [ "products", Ecount::Strategies::ProductImportStrategy ],
+      [ "suppliers", Ecount::Strategies::SupplierImportStrategy ],
+      [ "orders", Ecount::Strategies::OrderImportStrategy ]
     ].each do |type, klass|
       log = ImportLog.new(status: :pending, import_type: type, user: @user)
       svc = Ecount::EcountImportService.new(log)

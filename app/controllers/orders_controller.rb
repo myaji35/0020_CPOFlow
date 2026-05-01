@@ -47,8 +47,8 @@ class OrdersController < ApplicationController
     @total_count = @orders.count
 
     # KPI 카드용 집계
-    @kpi_in_progress = @orders.where.not(orders: { status: [:get_grn, :give_up, :done] }).count
-    @kpi_completed   = @orders.where(orders: { status: [:get_grn, :done] }).count
+    @kpi_in_progress = @orders.where.not(orders: { status: [ :get_grn, :give_up, :done ] }).count
+    @kpi_completed   = @orders.where(orders: { status: [ :get_grn, :done ] }).count
     @kpi_overdue     = @orders.where("orders.due_date < ? AND orders.status NOT IN (?, ?, ?)", Date.today, Order.statuses[:get_grn], Order.statuses[:give_up], Order.statuses[:done]).count
 
     @orders = @orders.limit(50).offset((params[:page].to_i > 0 ? params[:page].to_i - 1 : 0) * 50)

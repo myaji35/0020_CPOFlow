@@ -1,0 +1,159 @@
+{
+  "timestamp": "2026-03-12T06:18:27.947Z",
+  "reason": "compaction",
+  "status": {
+    "version": "2.0",
+    "lastUpdated": "2026-03-12T06:15:03.335Z",
+    "activeFeatures": [
+      "0020_CPOFlow",
+      "db",
+      "config",
+      "environments"
+    ],
+    "primaryFeature": "0020_CPOFlow",
+    "features": {
+      "0020_CPOFlow": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-10T23:55:22.719Z",
+          "lastUpdated": "2026-03-12T06:15:03.334Z"
+        },
+        "lastFile": "/Volumes/E_SSD/02_GitHub.nosync/0020_CPOFlow/app/controllers/inbox_controller.rb"
+      },
+      "db": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-10T23:55:50.173Z",
+          "lastUpdated": "2026-03-10T23:55:56.785Z"
+        },
+        "lastFile": "/Volumes/E_SSD/02_GitHub.nosync/0020_CPOFlow/db/seeds.rb"
+      },
+      "config": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-11T00:09:17.055Z",
+          "lastUpdated": "2026-03-11T00:09:17.055Z"
+        },
+        "lastFile": "/Volumes/E_SSD/02_GitHub.nosync/0020_CPOFlow/config/routes.rb"
+      },
+      "environments": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-12T05:44:29.179Z",
+          "lastUpdated": "2026-03-12T05:44:29.179Z"
+        },
+        "lastFile": "/Volumes/E_SSD/02_GitHub.nosync/0020_CPOFlow/config/environments/production.rb"
+      }
+    },
+    "pipeline": {
+      "currentPhase": 1,
+      "level": "Dynamic",
+      "phaseHistory": []
+    },
+    "session": {
+      "startedAt": "2026-03-10T23:51:12.436Z",
+      "onboardingCompleted": false,
+      "lastActivity": "2026-03-12T06:15:03.335Z"
+    },
+    "history": [
+      {
+        "timestamp": "2026-03-10T23:55:22.719Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-10T23:55:50.173Z",
+        "feature": "db",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-10T23:55:53.635Z",
+        "feature": "db",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-10T23:55:56.785Z",
+        "feature": "db",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-11T00:09:17.055Z",
+        "feature": "config",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-11T00:09:29.227Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-11T00:09:53.550Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-12T05:44:29.179Z",
+        "feature": "environments",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-12T05:44:51.321Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-12T05:45:44.656Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-12T06:01:29.622Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-12T06:14:53.264Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-12T06:15:03.334Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      }
+    ]
+  }
+}

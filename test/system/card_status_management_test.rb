@@ -27,7 +27,7 @@ class CardStatusManagementTest < ApplicationSystemTestCase
     within(row) do
       name_el = find("[contenteditable=true]")
       name_el.click
-      name_el.send_keys [:control, "a"], :backspace, "VVVIP"
+      name_el.send_keys [ :control, "a" ], :backspace, "VVVIP"
       name_el.send_keys :tab # blur
     end
     sleep 0.5

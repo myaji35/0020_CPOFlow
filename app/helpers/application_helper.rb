@@ -5,9 +5,9 @@ module ApplicationHelper
     wrapper_class = active ? "active" : ""
     row_class = if active
                   "relative flex items-center gap-3 px-3 py-2 rounded-sm text-[13px] font-medium bg-white/10 text-white"
-                else
+    else
                   "relative flex items-center gap-3 px-3 py-2 rounded-sm text-[13px] font-medium text-blue-100 hover:bg-white/10 hover:text-white transition-colors"
-                end
+    end
 
     content_tag(:div, class: "group #{wrapper_class}".strip) do
       link_to(path, class: row_class) do

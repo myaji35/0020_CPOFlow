@@ -40,7 +40,7 @@ class Admin::ImportsControllerTest < ActionDispatch::IntegrationTest
 
   test "show — 존재하지 않는 id는 redirect 또는 404" do
     get admin_import_path(id: 99999999)
-    assert_includes [302, 404], response.status
+    assert_includes [ 302, 404 ], response.status
   end
 
   test "index — 검색 파라미터 적용" do

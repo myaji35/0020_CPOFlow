@@ -60,10 +60,10 @@ module Admin
         begin
           result = Gmail::ClassificationOrchestrator.new(parsed, order: order).classify
           new_rfq_status = case result.verdict.to_sym
-                           when :confirmed then :rfq_triage
-                           when :excluded  then :rfq_excluded
-                           else                 :rfq_pending
-                           end
+          when :confirmed then :rfq_triage
+          when :excluded  then :rfq_excluded
+          else                 :rfq_pending
+          end
           order.update!(rfq_status: new_rfq_status)
           success += 1
         rescue => e

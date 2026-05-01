@@ -16,7 +16,7 @@ class EcountApi::BaseServiceTest < ActiveSupport::TestCase
   end
 
   test "RETRY_DELAYS 상수 정의됨" do
-    assert_equal [2, 4, 8], EcountApi::BaseService::RETRY_DELAYS
+    assert_equal [ 2, 4, 8 ], EcountApi::BaseService::RETRY_DELAYS
   end
 
   test "ApiError < StandardError" do
@@ -35,9 +35,9 @@ class EcountApi::BaseServiceTest < ActiveSupport::TestCase
 
   test "parse_response! — 0000 코드 시 DATA1 반환" do
     svc  = EcountApi::BaseService.new
-    body = { "RESPONSE" => { "HEADER" => { "RESULT_CODE" => "0000" }, "DATA1" => [{ "id" => 1 }] } }
+    body = { "RESPONSE" => { "HEADER" => { "RESULT_CODE" => "0000" }, "DATA1" => [ { "id" => 1 } ] } }
     result = svc.send(:parse_response!, FakeResponse.new(body.to_json))
-    assert_equal [{ "id" => 1 }], result
+    assert_equal [ { "id" => 1 } ], result
   end
 
   test "parse_response! — DATA1 없을 때 빈 배열 반환" do
@@ -67,20 +67,20 @@ class EcountApi::BaseServiceTest < ActiveSupport::TestCase
 
   test "parse_response! — Status:200 + Data 구조 반환" do
     svc  = EcountApi::BaseService.new
-    body = { "Status" => "200", "Data" => { "Result" => [{ "CODE" => "P001" }], "TotalCnt" => 1 } }
+    body = { "Status" => "200", "Data" => { "Result" => [ { "CODE" => "P001" } ], "TotalCnt" => 1 } }
     result = svc.send(:parse_response!, FakeResponse.new(body.to_json))
-    assert_equal({ "Result" => [{ "CODE" => "P001" }], "TotalCnt" => 1 }, result)
+    assert_equal({ "Result" => [ { "CODE" => "P001" } ], "TotalCnt" => 1 }, result)
   end
 
   test "parse_response! — Status:4010은 AuthError 발생" do
     svc  = EcountApi::BaseService.new
-    body = { "Status" => "4010", "Errors" => [{ "Message" => "session expired" }] }
+    body = { "Status" => "4010", "Errors" => [ { "Message" => "session expired" } ] }
     assert_raises(EcountApi::AuthError) { svc.send(:parse_response!, FakeResponse.new(body.to_json)) }
   end
 
   test "parse_response! — Status:4001은 RateLimitError 발생" do
     svc  = EcountApi::BaseService.new
-    body = { "Status" => "4001", "Errors" => [{ "Message" => "rate limit" }] }
+    body = { "Status" => "4001", "Errors" => [ { "Message" => "rate limit" } ] }
     assert_raises(EcountApi::RateLimitError) { svc.send(:parse_response!, FakeResponse.new(body.to_json)) }
   end
 

@@ -1,0 +1,472 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - navigation [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e6]: CF
+        - generic [ref=e7]: CPOFlow
+      - generic [ref=e8]:
+        - link " Dashboard" [ref=e10] [cursor=pointer]:
+          - /url: /dashboard
+          - generic [ref=e11]: 
+          - generic: Dashboard
+        - link " Inbox" [ref=e13] [cursor=pointer]:
+          - /url: /inbox
+          - generic [ref=e14]: 
+          - generic: Inbox
+        - link " Kanban" [ref=e16] [cursor=pointer]:
+          - /url: /kanban
+          - generic [ref=e17]: 
+          - generic: Kanban
+        - link " Orders" [ref=e19] [cursor=pointer]:
+          - /url: /orders
+          - generic [ref=e20]: 
+          - generic: Orders
+        - link " Calendar" [ref=e22] [cursor=pointer]:
+          - /url: /calendar
+          - generic [ref=e23]: 
+          - generic: Calendar
+        - link " Team" [ref=e25] [cursor=pointer]:
+          - /url: /team
+          - generic [ref=e26]: 
+          - generic: Team
+        - link " 발주처" [ref=e29] [cursor=pointer]:
+          - /url: /clients
+          - generic [ref=e30]: 
+          - generic: 발주처
+        - link " 거래처" [ref=e32] [cursor=pointer]:
+          - /url: /suppliers
+          - generic [ref=e33]: 
+          - generic: 거래처
+        - link " 외부 담당자" [ref=e35] [cursor=pointer]:
+          - /url: /contact_persons
+          - generic [ref=e36]: 
+          - generic: 외부 담당자
+        - link " 현장" [ref=e38] [cursor=pointer]:
+          - /url: /projects
+          - generic [ref=e39]: 
+          - generic: 현장
+        - link " 직원 관리" [ref=e41] [cursor=pointer]:
+          - /url: /employees
+          - generic [ref=e42]: 
+          - generic: 직원 관리
+        - link " 조직도" [ref=e44] [cursor=pointer]:
+          - /url: /org_chart
+          - generic [ref=e45]: 
+          - generic: 조직도
+        - link " 경영 리포트" [ref=e48] [cursor=pointer]:
+          - /url: /reports
+          - generic [ref=e49]: 
+          - generic: 경영 리포트
+        - link " eCount Import" [ref=e51] [cursor=pointer]:
+          - /url: /admin/imports
+          - generic [ref=e52]: 
+          - generic: eCount Import
+        - link " 메뉴 권한" [ref=e54] [cursor=pointer]:
+          - /url: /settings/menu_permissions
+          - generic [ref=e55]: 
+          - generic: 메뉴 권한
+      - generic [ref=e56]:
+        - link " Settings" [ref=e58] [cursor=pointer]:
+          - /url: /settings
+          - generic [ref=e59]: 
+          - generic: Settings
+        - generic [ref=e60]:
+          - generic [ref=e61]: AU
+          - generic:
+            - paragraph: Admin User
+            - paragraph: Admin
+    - generic [ref=e62]:
+      - banner [ref=e63]:
+        - generic:
+          - heading [level=1]
+        - generic [ref=e64]:
+          - button "검색... ⌘K" [ref=e65] [cursor=pointer]:
+            - img [ref=e66]
+            - generic [ref=e69]: 검색...
+            - generic [ref=e70]: ⌘K
+          - button "6" [ref=e72] [cursor=pointer]:
+            - img [ref=e73]
+            - generic [ref=e76]: "6"
+          - link [ref=e77] [cursor=pointer]:
+            - /url: /users/sign_out
+            - img [ref=e78]
+      - generic [ref=e81]:
+        - generic [ref=e82]: 
+        - text: Signed in successfully.
+      - main [ref=e83]:
+        - generic [ref=e84]:
+          - generic [ref=e85]:
+            - heading "대시보드" [level=1] [ref=e86]
+            - paragraph [ref=e87]: 전체 발주 현황 및 KPI
+          - generic [ref=e88]:
+            - link "신규 발주" [ref=e89] [cursor=pointer]:
+              - /url: /orders/new
+              - img [ref=e90]
+              - text: 신규 발주
+            - link "캘린더" [ref=e91] [cursor=pointer]:
+              - /url: /calendar
+              - img [ref=e92]
+              - text: 캘린더
+            - link "칸반" [ref=e94] [cursor=pointer]:
+              - /url: /kanban
+              - img [ref=e95]
+              - text: 칸반
+        - generic [ref=e99]:
+          - generic [ref=e101]:
+            - generic [ref=e102]:
+              - paragraph [ref=e103]: 진행 중
+              - paragraph [ref=e104]: "6"
+              - paragraph [ref=e105]: 건
+            - img [ref=e107]
+          - generic [ref=e111]:
+            - generic [ref=e112]:
+              - paragraph [ref=e113]: 이번달 납품
+              - paragraph [ref=e114]: "0"
+              - paragraph [ref=e115]: 건 완료
+            - img [ref=e117]
+          - generic [ref=e121] [cursor=pointer]:
+            - generic [ref=e122]:
+              - paragraph [ref=e123]: 지연 발주
+              - paragraph [ref=e124]: "5"
+              - paragraph [ref=e125]: 즉시 조치 필요
+              - paragraph [ref=e126]: 클릭하여 목록 보기
+            - img [ref=e128]
+          - generic [ref=e131] [cursor=pointer]:
+            - generic [ref=e132]:
+              - paragraph [ref=e133]: 긴급 D-7
+              - paragraph [ref=e134]: "6"
+              - paragraph [ref=e135]: 7일 내 납기
+              - paragraph [ref=e136]: 클릭하여 목록 보기
+            - img [ref=e138]
+          - generic [ref=e142]:
+            - generic [ref=e143]:
+              - paragraph [ref=e144]: 납기 준수율
+              - paragraph [ref=e145]: 0%
+              - paragraph [ref=e146]:
+                - generic [ref=e147]:
+                  - img [ref=e148]
+                  - text: 0.0% 전월 대비
+            - img [ref=e151]
+          - generic [ref=e154]:
+            - generic [ref=e155]:
+              - paragraph [ref=e156]: 이번달 수주액
+              - paragraph [ref=e157]: $0
+              - paragraph [ref=e158]:
+                - generic [ref=e159]:
+                  - img [ref=e160]
+                  - text: 100.0% 전월 대비
+            - img [ref=e163]
+        - generic [ref=e165]:
+          - generic [ref=e166]:
+            - generic [ref=e167]:
+              - heading "발주 파이프라인" [level=2] [ref=e168]
+              - link "칸반 보기" [ref=e169] [cursor=pointer]:
+                - /url: /kanban
+            - generic [ref=e170]:
+              - generic [ref=e171]:
+                - generic [ref=e172]: New(신규)
+                - generic [ref=e175]: "1"
+              - generic [ref=e176]:
+                - generic [ref=e177]: Make QUO(견적작성)
+                - generic [ref=e180]: "1"
+              - generic [ref=e181]:
+                - generic [ref=e182]: Pending PO(발주대기)
+                - generic [ref=e185]: "1"
+              - generic [ref=e186]:
+                - generic [ref=e187]: New PO(발주확정)
+                - generic [ref=e190]: "1"
+              - generic [ref=e191]:
+                - generic [ref=e192]: Delivery Items(납품진행)
+                - generic [ref=e195]: "1"
+              - generic [ref=e196]:
+                - generic [ref=e197]: Problem(문제)
+                - generic [ref=e200]: "1"
+              - generic [ref=e201]:
+                - generic [ref=e202]: Get GRN(수령확인)
+                - generic [ref=e204]: "1"
+              - generic [ref=e205]:
+                - generic [ref=e206]: Give Up(포기)
+                - generic [ref=e208]: "0"
+              - generic [ref=e209]:
+                - generic [ref=e210]: Done(완료)
+                - generic [ref=e212]: "0"
+          - generic [ref=e213]:
+            - heading "현장 카테고리" [level=2] [ref=e214]
+            - generic [ref=e215]:
+              - generic [ref=e216]:
+                - generic [ref=e217]: 원전
+                - generic [ref=e219]:
+                  - generic [ref=e220]: 0건
+                  - generic [ref=e221]: $0
+              - generic [ref=e223]:
+                - generic [ref=e224]: 수력
+                - generic [ref=e226]:
+                  - generic [ref=e227]: 0건
+                  - generic [ref=e228]: $0
+              - generic [ref=e230]:
+                - generic [ref=e231]: 터널
+                - generic [ref=e233]:
+                  - generic [ref=e234]: 0건
+                  - generic [ref=e235]: $0
+              - generic [ref=e237]:
+                - generic [ref=e238]: GTX
+                - generic [ref=e240]:
+                  - generic [ref=e241]: 0건
+                  - generic [ref=e242]: $0
+        - generic [ref=e244]:
+          - generic [ref=e245]:
+            - heading "기간별 수주 트렌드" [level=2] [ref=e246]
+            - generic [ref=e247]:
+              - button "주간 8주" [ref=e248] [cursor=pointer]
+              - button "월간 12개월" [ref=e249] [cursor=pointer]
+              - button "분기 6분기" [ref=e250] [cursor=pointer]
+              - button "연간" [ref=e251] [cursor=pointer]
+          - generic [ref=e252]:
+            - paragraph [ref=e253]: 최근 12개월 수주/납품 현황
+            - generic [ref=e254]:
+              - generic [ref=e255]:
+                - generic [ref=e256]:
+                  - generic "수주 0건"
+                  - generic "납품 0건"
+                - generic [ref=e257]: 05월
+              - generic [ref=e258]:
+                - generic [ref=e259]:
+                  - generic "수주 0건"
+                  - generic "납품 0건"
+                - generic [ref=e260]: 06월
+              - generic [ref=e261]:
+                - generic [ref=e262]:
+                  - generic "수주 0건"
+                  - generic "납품 0건"
+                - generic [ref=e263]: 07월
+              - generic [ref=e264]:
+                - generic [ref=e265]:
+                  - generic "수주 0건"
+                  - generic "납품 0건"
+                - generic [ref=e266]: 08월
+              - generic [ref=e267]:
+                - generic [ref=e268]:
+                  - generic "수주 0건"
+                  - generic "납품 0건"
+                - generic [ref=e269]: 09월
+              - generic [ref=e270]:
+                - generic [ref=e271]:
+                  - generic "수주 0건"
+                  - generic "납품 0건"
+                - generic [ref=e272]: 10월
+              - generic [ref=e273]:
+                - generic [ref=e274]:
+                  - generic "수주 0건"
+                  - generic "납품 0건"
+                - generic [ref=e275]: 11월
+              - generic [ref=e276]:
+                - generic [ref=e277]:
+                  - generic "수주 0건"
+                  - generic "납품 0건"
+                - generic [ref=e278]: 12월
+              - generic [ref=e279]:
+                - generic [ref=e280]:
+                  - generic "수주 0건"
+                  - generic "납품 0건"
+                - generic [ref=e281]: 01월
+              - generic [ref=e282]:
+                - generic [ref=e283]:
+                  - generic "수주 0건"
+                  - generic "납품 0건"
+                - generic [ref=e284]: 02월
+              - generic [ref=e285]:
+                - generic [ref=e286]:
+                  - generic "수주 7건" [ref=e287]
+                  - generic "납품 1건" [ref=e288]
+                - generic [ref=e289]: 03월
+              - generic [ref=e290]:
+                - generic [ref=e291]:
+                  - generic "수주 0건"
+                  - generic "납품 0건"
+                - generic [ref=e292]: 04월
+            - generic [ref=e293]:
+              - generic [ref=e296]: 수주
+              - generic [ref=e299]: 납품
+        - generic [ref=e300]:
+          - generic [ref=e301]:
+            - generic [ref=e302]:
+              - heading "긴급 납기" [level=3] [ref=e303]
+              - link "칸반" [ref=e304] [cursor=pointer]:
+                - /url: /kanban
+            - generic [ref=e305]:
+              - link "D+26 Dubai Creek Tower - Structural Adhesive Emaar Properties Problem(문제)" [ref=e306] [cursor=pointer]:
+                - /url: /orders/6
+                - generic [ref=e308]: D+26
+                - generic [ref=e309]:
+                  - paragraph [ref=e310]: Dubai Creek Tower - Structural Adhesive
+                  - paragraph [ref=e311]: Emaar Properties
+                - generic [ref=e312]: Problem(문제)
+              - link "D+24 Sika Grout - Shin-Hanul NPP Unit 3&4 KEPCO E&C Delivery Items(납품진행)" [ref=e313] [cursor=pointer]:
+                - /url: /orders/5
+                - generic [ref=e315]: D+24
+                - generic [ref=e316]:
+                  - paragraph [ref=e317]: Sika Grout - Shin-Hanul NPP Unit 3&4
+                  - paragraph [ref=e318]: KEPCO E&C
+                - generic [ref=e319]: Delivery Items(납품진행)
+              - link "D+22 Sika Waterproofing - Barakah Nuclear Plant Phase 3 ENEC (Emirates Nuclear Energy Corp) New(신규)" [ref=e320] [cursor=pointer]:
+                - /url: /orders/1
+                - generic [ref=e322]: D+22
+                - generic [ref=e323]:
+                  - paragraph [ref=e324]: Sika Waterproofing - Barakah Nuclear Plant Phase 3
+                  - paragraph [ref=e325]: ENEC (Emirates Nuclear Energy Corp)
+                - generic [ref=e326]: New(신규)
+              - link "D+15 GTX-A Tunnel Sealant - 광명역 구간 현대건설 (Hyundai E&C) Make QUO(견적작성)" [ref=e327] [cursor=pointer]:
+                - /url: /orders/2
+                - generic [ref=e329]: D+15
+                - generic [ref=e330]:
+                  - paragraph [ref=e331]: GTX-A Tunnel Sealant - 광명역 구간
+                  - paragraph [ref=e332]: 현대건설 (Hyundai E&C)
+                - generic [ref=e333]: Make QUO(견적작성)
+              - link "D+8 Cheongpyeong Dam Waterproofing Repair K-Water Pending PO(발주대기)" [ref=e334] [cursor=pointer]:
+                - /url: /orders/3
+                - generic [ref=e336]: D+8
+                - generic [ref=e337]:
+                  - paragraph [ref=e338]: Cheongpyeong Dam Waterproofing Repair
+                  - paragraph [ref=e339]: K-Water
+                - generic [ref=e340]: Pending PO(발주대기)
+          - generic [ref=e341]:
+            - generic [ref=e342]:
+              - heading "비자 만료 임박" [level=3] [ref=e343]
+              - generic [ref=e344]: 1건
+            - generic [ref=e346]:
+              - generic [ref=e348]: D-16
+              - generic [ref=e349]:
+                - paragraph [ref=e350]: 김민준
+                - paragraph [ref=e351]: Employment · 2026.04.24
+          - generic [ref=e352]:
+            - generic [ref=e353]:
+              - heading "계약 만료 임박" [level=3] [ref=e354]
+              - generic [ref=e355]: 3건
+            - generic [ref=e356]:
+              - generic [ref=e357]:
+                - generic [ref=e359]: D--404
+                - generic [ref=e360]:
+                  - paragraph [ref=e361]: Ravi Kumar
+                  - paragraph [ref=e362]: 계약중 · 2025.02.28
+                - link "보기" [ref=e363] [cursor=pointer]:
+                  - /url: /employees/3
+              - generic [ref=e364]:
+                - generic [ref=e366]: D--312
+                - generic [ref=e367]:
+                  - paragraph [ref=e368]: Muhammad Arif
+                  - paragraph [ref=e369]: 계약중 · 2025.05.31
+                - link "보기" [ref=e370] [cursor=pointer]:
+                  - /url: /employees/2
+              - generic [ref=e371]:
+                - generic [ref=e373]: D--4
+                - generic [ref=e374]:
+                  - paragraph [ref=e375]: 김민준
+                  - paragraph [ref=e376]: 계약중 · 2026.04.04
+                - link "보기" [ref=e377] [cursor=pointer]:
+                  - /url: /employees/1
+          - generic [ref=e378]:
+            - generic [ref=e379]:
+              - generic [ref=e380]:
+                - generic [ref=e381]:
+                  - img [ref=e382]
+                  - paragraph [ref=e385]: Google Sheets
+                  - generic [ref=e386]: Mock
+                - button "지금 동기화" [ref=e388] [cursor=pointer]
+              - paragraph [ref=e389]: 아직 동기화 없음
+            - generic [ref=e390]:
+              - generic [ref=e391]:
+                - heading "최근 발주" [level=3] [ref=e392]
+                - link "신규 발주" [ref=e393] [cursor=pointer]:
+                  - /url: /orders/new
+              - generic [ref=e394]:
+                - link "Yeongwol PSP - Membrane Waterproofing 03/10 Get GRN(수령확인)" [ref=e395] [cursor=pointer]:
+                  - /url: /orders/7
+                  - generic [ref=e396]:
+                    - paragraph [ref=e397]: Yeongwol PSP - Membrane Waterproofing
+                    - paragraph [ref=e398]: 03/10
+                  - generic [ref=e399]: Get GRN(수령확인)
+                - link "Dubai Creek Tower - Structural Adhesive 03/10 Problem(문제)" [ref=e400] [cursor=pointer]:
+                  - /url: /orders/6
+                  - generic [ref=e401]:
+                    - paragraph [ref=e402]: Dubai Creek Tower - Structural Adhesive
+                    - paragraph [ref=e403]: 03/10
+                  - generic [ref=e404]: Problem(문제)
+                - link "Sika Grout - Shin-Hanul NPP Unit 3&4 03/10 Delivery Items(납품진행)" [ref=e405] [cursor=pointer]:
+                  - /url: /orders/5
+                  - generic [ref=e406]:
+                    - paragraph [ref=e407]: Sika Grout - Shin-Hanul NPP Unit 3&4
+                    - paragraph [ref=e408]: 03/10
+                  - generic [ref=e409]: Delivery Items(납품진행)
+                - link "Abu Dhabi Metro Extension - Concrete Admixtures 03/10 New PO(발주확정)" [ref=e410] [cursor=pointer]:
+                  - /url: /orders/4
+                  - generic [ref=e411]:
+                    - paragraph [ref=e412]: Abu Dhabi Metro Extension - Concrete Admixtures
+                    - paragraph [ref=e413]: 03/10
+                  - generic [ref=e414]: New PO(발주확정)
+        - generic [ref=e415]:
+          - generic [ref=e416]:
+            - generic [ref=e417]:
+              - heading "Top 5 발주처" [level=3] [ref=e418]
+              - link "전체 보기" [ref=e419] [cursor=pointer]:
+                - /url: /clients
+            - generic [ref=e421]:
+              - img [ref=e422]
+              - paragraph [ref=e425]: 거래 데이터가 쌓이면 여기에 표시됩니다
+          - generic [ref=e426]:
+            - generic [ref=e427]:
+              - heading "Top 5 거래처" [level=3] [ref=e428]
+              - link "전체 보기" [ref=e429] [cursor=pointer]:
+                - /url: /suppliers
+            - generic [ref=e431]:
+              - img [ref=e432]
+              - paragraph [ref=e435]: 거래 데이터가 쌓이면 여기에 표시됩니다
+        - generic [ref=e436]:
+          - generic [ref=e437]:
+            - heading "담당자별 워크로드" [level=3] [ref=e438]
+            - generic [ref=e439]: 총 6건 진행 중
+          - generic [ref=e440]:
+            - generic [ref=e441]:
+              - generic [ref=e442]: KS
+              - generic [ref=e443]:
+                - paragraph [ref=e444]: Kim Seung-sik
+                - generic [ref=e445]:
+                  - generic [ref=e446]: 매니저
+                  - generic [ref=e447]: Seoul
+              - generic [ref=e451]: 3 건
+              - generic [ref=e453]: 지연 3
+            - generic [ref=e454]:
+              - generic [ref=e455]: AU
+              - generic [ref=e456]:
+                - paragraph [ref=e457]: Admin User
+                - generic [ref=e458]:
+                  - generic [ref=e459]: 관리자
+                  - generic [ref=e460]: Abu Dhabi
+              - generic [ref=e464]: 1 건
+              - generic [ref=e466]: 지연 1
+            - generic [ref=e467]:
+              - generic [ref=e468]: AA
+              - generic [ref=e469]:
+                - paragraph [ref=e470]: Ahmed Al-Rashid
+                - generic [ref=e471]:
+                  - generic [ref=e472]: 멤버
+                  - generic [ref=e473]: Abu Dhabi
+              - generic [ref=e477]: 1 건
+              - generic [ref=e479]: 긴급 1
+            - generic [ref=e480]:
+              - generic [ref=e481]: SJ
+              - generic [ref=e482]:
+                - paragraph [ref=e483]: Sarah Johnson
+                - generic [ref=e484]:
+                  - generic [ref=e485]: 멤버
+                  - generic [ref=e486]: Abu Dhabi
+              - generic [ref=e490]: 1 건
+              - generic [ref=e492]: 지연 1
+  - generic [ref=e493]:
+    - generic [ref=e495]:
+      - link "전체 화면" [ref=e496] [cursor=pointer]:
+        - /url: "#"
+        - img [ref=e497]
+        - text: 전체 화면
+      - button [ref=e501] [cursor=pointer]:
+        - img [ref=e502]
+    - img [ref=e507]

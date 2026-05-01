@@ -100,8 +100,8 @@ class DashboardController < ApplicationController
         board: board,
         total: board_orders.count,
         new_rfq: board_orders.where(status: :new_rfq).count,
-        in_progress: board_orders.where.not(status: [:new_rfq, :done, :give_up]).count,
-        done: board_orders.where(status: [:done, :give_up]).count
+        in_progress: board_orders.where.not(status: [ :new_rfq, :done, :give_up ]).count,
+        done: board_orders.where(status: [ :done, :give_up ]).count
       }
     end
 

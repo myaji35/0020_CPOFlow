@@ -20,8 +20,8 @@ namespace :orders do
     # 1) 중복 그룹 찾기: reference_no + original_email_subject 기준
     groups = Order
       .where(archived_at: nil)                         # 이미 아카이브된 건 제외
-      .where.not(reference_no: [nil, ""])
-      .where.not(original_email_subject: [nil, ""])
+      .where.not(reference_no: [ nil, "" ])
+      .where.not(original_email_subject: [ nil, "" ])
       .group(:reference_no, :original_email_subject)
       .having("COUNT(*) > 1")
       .pluck(:reference_no, :original_email_subject)
@@ -43,8 +43,8 @@ namespace :orders do
       next if orders.size < 2
 
       # 보존 기준: 첨부 가장 많은 것 → 동일 시 id 낮은 것
-      keeper = orders.max_by { |o| [o.attachments.size, -o.id] }
-      duplicates = orders - [keeper]
+      keeper = orders.max_by { |o| [ o.attachments.size, -o.id ] }
+      duplicates = orders - [ keeper ]
 
       if (idx < 20) || ((idx + 1) % 100 == 0) || (idx == total_groups - 1)
         puts "[#{idx + 1}/#{total_groups}] ref=#{ref_no}"

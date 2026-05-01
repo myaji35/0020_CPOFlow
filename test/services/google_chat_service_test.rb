@@ -19,7 +19,7 @@ class GoogleChatServiceTest < ActiveSupport::TestCase
 
   test "notify — 클래스 메서드로 호출 가능" do
     result = GoogleChatService.notify("테스트", title: "제목")
-    assert_includes [true, false], result
+    assert_includes [ true, false ], result
   end
 
   test "notify — order 파라미터 있어도 오류 없음" do

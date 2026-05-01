@@ -174,10 +174,10 @@ class ClientsController < ApplicationController
                                      30.days.ago, 60.days.ago, Order.statuses[:get_grn], Order.statuses[:give_up]).count
     trend = if prev_overdue == 0
               recent_overdue > 0 ? :increasing : :stable
-            else
+    else
               change = ((recent_overdue - prev_overdue).to_f / prev_overdue * 100)
               change > 20 ? :increasing : (change < -20 ? :decreasing : :stable)
-            end
+    end
 
     # 평균 발주 금액
     avg_value = all_orders.average(:estimated_value).to_f.round(0)

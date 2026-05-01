@@ -10,12 +10,12 @@ class AgentInsightsController < ApplicationController
 
     base = AgentInsight.includes(:order, :supplier).order(created_at: :desc)
     scoped = case @current_filter
-             when "active"     then base.where(dismissed: false).where("expires_at IS NULL OR expires_at > ?", Time.current)
-             when "dismissed"  then base.where(dismissed: true)
-             when "useful"     then base.where(useful: true)
-             when "not_useful" then base.where(useful: false)
-             else                   base
-             end
+    when "active"     then base.where(dismissed: false).where("expires_at IS NULL OR expires_at > ?", Time.current)
+    when "dismissed"  then base.where(dismissed: true)
+    when "useful"     then base.where(useful: true)
+    when "not_useful" then base.where(useful: false)
+    else                   base
+    end
     scoped = scoped.where(insight_type: @current_type) if @current_type.present?
     @insights = scoped.limit(200)
 

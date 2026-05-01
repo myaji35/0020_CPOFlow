@@ -33,9 +33,9 @@ class OrderLinksController < ApplicationController
     target_type = params[:target_type].presence_in(%w[Order OrderQuote]) || "Order"
     target = if target_type == "Order"
                scoped_orders.find(params[:target_id])
-             else
+    else
                OrderQuote.where(order_id: scoped_orders.select(:id)).find(params[:target_id])
-             end
+    end
     @link = OrderLink.create!(
       source: source,
       target: target,

@@ -82,7 +82,7 @@ class MentionParserServiceTest < ActiveSupport::TestCase
     assert_difference("Notification.count", 2) do
       MentionParserService.new(@comment, @mentioner).call
     end
-    Notification.where(user: [@mentioned_user, other_user]).destroy_all
+    Notification.where(user: [ @mentioned_user, other_user ]).destroy_all
     other_emp.destroy
   end
 

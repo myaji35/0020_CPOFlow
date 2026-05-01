@@ -1,0 +1,497 @@
+{
+  "timestamp": "2026-03-16T02:13:00.858Z",
+  "reason": "compaction",
+  "status": {
+    "version": "2.0",
+    "lastUpdated": "2026-03-16T02:06:21.090Z",
+    "activeFeatures": [
+      "kanban-rename",
+      "0020_CPOFlow",
+      "db",
+      "config",
+      "environments",
+      "helpers",
+      "risk_assessment_service.rb",
+      "gmail",
+      "jobs",
+      "ecount",
+      "seeds"
+    ],
+    "primaryFeature": "kanban-rename",
+    "features": {
+      "kanban-rename": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [
+          "칸반 7→8단계 리네이밍",
+          "give_up 신규 추가",
+          "DB 정수값 유지"
+        ],
+        "documents": {
+          "plan": "docs/01-plan/features/kanban-rename.plan.md"
+        },
+        "timestamps": {
+          "started": "2026-03-16T10:00:00.000Z",
+          "lastUpdated": "2026-03-16T10:00:00.000Z"
+        },
+        "lastFile": "docs/01-plan/features/kanban-rename.plan.md"
+      },
+      "0020_CPOFlow": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-10T23:55:22.719Z",
+          "lastUpdated": "2026-03-16T02:06:21.090Z"
+        },
+        "lastFile": "/Volumes/E_SSD/02_GitHub.nosync/0020_CPOFlow/app/models/order.rb"
+      },
+      "db": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-10T23:55:50.173Z",
+          "lastUpdated": "2026-03-16T02:00:54.813Z"
+        },
+        "lastFile": "/Volumes/E_SSD/02_GitHub.nosync/0020_CPOFlow/db/seeds.rb"
+      },
+      "config": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-11T00:09:17.055Z",
+          "lastUpdated": "2026-03-11T00:09:17.055Z"
+        },
+        "lastFile": "/Volumes/E_SSD/02_GitHub.nosync/0020_CPOFlow/config/routes.rb"
+      },
+      "environments": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-12T05:44:29.179Z",
+          "lastUpdated": "2026-03-12T05:44:29.179Z"
+        },
+        "lastFile": "/Volumes/E_SSD/02_GitHub.nosync/0020_CPOFlow/config/environments/production.rb"
+      },
+      "helpers": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-16T01:57:47.883Z",
+          "lastUpdated": "2026-03-16T01:57:47.883Z"
+        },
+        "lastFile": "/Volumes/E_SSD/02_GitHub.nosync/0020_CPOFlow/app/helpers/application_helper.rb"
+      },
+      "risk_assessment_service.rb": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-16T01:57:54.479Z",
+          "lastUpdated": "2026-03-16T01:58:09.611Z"
+        },
+        "lastFile": "/Volumes/E_SSD/02_GitHub.nosync/0020_CPOFlow/app/services/risk_assessment_service.rb"
+      },
+      "gmail": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-16T01:58:14.841Z",
+          "lastUpdated": "2026-03-16T01:58:19.019Z"
+        },
+        "lastFile": "/Volumes/E_SSD/02_GitHub.nosync/0020_CPOFlow/app/services/gmail/email_to_order_service.rb"
+      },
+      "jobs": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-16T01:59:51.715Z",
+          "lastUpdated": "2026-03-16T01:59:51.715Z"
+        },
+        "lastFile": "/Volumes/E_SSD/02_GitHub.nosync/0020_CPOFlow/app/jobs/due_notification_job.rb"
+      },
+      "ecount": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-16T02:01:06.334Z",
+          "lastUpdated": "2026-03-16T02:01:11.253Z"
+        },
+        "lastFile": "/Volumes/E_SSD/02_GitHub.nosync/0020_CPOFlow/app/services/ecount/strategies/order_import_strategy.rb"
+      },
+      "seeds": {
+        "phase": "do",
+        "phaseNumber": 3,
+        "matchRate": null,
+        "iterationCount": 0,
+        "requirements": [],
+        "documents": {},
+        "timestamps": {
+          "started": "2026-03-16T02:01:26.854Z",
+          "lastUpdated": "2026-03-16T02:01:31.960Z"
+        },
+        "lastFile": "/Volumes/E_SSD/02_GitHub.nosync/0020_CPOFlow/db/seeds/mockup_data.rb"
+      }
+    },
+    "pipeline": {
+      "currentPhase": 1,
+      "level": "Dynamic",
+      "phaseHistory": []
+    },
+    "session": {
+      "startedAt": "2026-03-10T23:51:12.436Z",
+      "onboardingCompleted": false,
+      "lastActivity": "2026-03-16T02:06:21.090Z"
+    },
+    "history": [
+      {
+        "timestamp": "2026-03-10T23:55:22.719Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-10T23:55:50.173Z",
+        "feature": "db",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-10T23:55:53.635Z",
+        "feature": "db",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-10T23:55:56.785Z",
+        "feature": "db",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-11T00:09:17.055Z",
+        "feature": "config",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-11T00:09:29.227Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-11T00:09:53.550Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-12T05:44:29.179Z",
+        "feature": "environments",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-12T05:44:51.321Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-12T05:45:44.656Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-12T06:01:29.622Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-12T06:14:53.264Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-12T06:15:03.334Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T01:57:15.465Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T01:57:21.714Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T01:57:28.189Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T01:57:32.666Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T01:57:47.883Z",
+        "feature": "helpers",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T01:57:54.479Z",
+        "feature": "risk_assessment_service.rb",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T01:57:59.236Z",
+        "feature": "risk_assessment_service.rb",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T01:58:04.775Z",
+        "feature": "risk_assessment_service.rb",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T01:58:09.611Z",
+        "feature": "risk_assessment_service.rb",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T01:58:14.841Z",
+        "feature": "gmail",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T01:58:19.019Z",
+        "feature": "gmail",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T01:58:28.745Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T01:58:33.647Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T01:58:38.656Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T01:58:53.132Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T01:58:58.714Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T01:59:04.374Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T01:59:08.876Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T01:59:30.098Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T01:59:36.768Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T01:59:41.618Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T01:59:46.633Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T01:59:51.715Z",
+        "feature": "jobs",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T01:59:58.135Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T02:00:03.576Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T02:00:08.702Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T02:00:13.406Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T02:00:25.650Z",
+        "feature": "db",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T02:00:30.545Z",
+        "feature": "db",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T02:00:35.200Z",
+        "feature": "db",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T02:00:39.814Z",
+        "feature": "db",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T02:00:44.612Z",
+        "feature": "db",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T02:00:49.953Z",
+        "feature": "db",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T02:00:54.813Z",
+        "feature": "db",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T02:01:06.334Z",
+        "feature": "ecount",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T02:01:11.253Z",
+        "feature": "ecount",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T02:01:26.854Z",
+        "feature": "seeds",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T02:01:31.960Z",
+        "feature": "seeds",
+        "phase": "do",
+        "action": "updated"
+      },
+      {
+        "timestamp": "2026-03-16T02:06:21.090Z",
+        "feature": "0020_CPOFlow",
+        "phase": "do",
+        "action": "updated"
+      }
+    ]
+  }
+}

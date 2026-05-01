@@ -43,7 +43,7 @@ class KanbanColumnTest < ActiveSupport::TestCase
     @board.kanban_columns.destroy_all
     c1 = KanbanColumn.create!(kanban_board: @board, name: "B", key: "b_col", position: 2)
     c2 = KanbanColumn.create!(kanban_board: @board, name: "A", key: "a_col", position: 1)
-    assert_equal [c2, c1], @board.kanban_columns.ordered.to_a
+    assert_equal [ c2, c1 ], @board.kanban_columns.ordered.to_a
   end
 
   test "validates name max length" do
