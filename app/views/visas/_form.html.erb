@@ -8,24 +8,29 @@
   <%= render "shared/form_with_documents", f: f, record: visa do %>
     <div class="grid grid-cols-2 gap-4">
       <div>
-        <%= f.label :visa_type, "비자 종류", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
-        <%= f.select :visa_type, Visa::VISA_TYPES, {},
+        <%= f.label :visa_type, "비자 종류 *", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.select :visa_type, Visa::VISA_TYPES, { selected: visa.visa_type.presence || "Employment" },
+            required: true,
             class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
       </div>
       <div>
-        <%= f.label :issuing_country, "발급 국가 (ISO)", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.label :issuing_country, "발급 국가 (ISO) *", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
         <%= f.select :issuing_country,
             Employee::NATIONALITIES.map { |code, label| ["#{label} (#{code})", code] },
-            { include_blank: "선택" },
+            { include_blank: "선택", selected: visa.issuing_country.presence || @employee&.nationality },
+            required: true,
             class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+        <p class="text-xs text-gray-400 mt-1">기본값: 직원 국적</p>
       </div>
       <div>
         <%= f.label :visa_number, "비자 번호", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
         <%= f.text_field :visa_number, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
       </div>
       <div>
-        <%= f.label :status, "상태", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
-        <%= f.select :status, [["활성", "active"], ["만료", "expired"], ["신청중", "pending"], ["취소", "cancelled"]], {},
+        <%= f.label :status, "상태 *", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.select :status, [["활성", "active"], ["만료", "expired"], ["신청중", "pending"], ["취소", "cancelled"]],
+            { selected: visa.status.presence || "active" },
+            required: true,
             class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
       </div>
       <div>
