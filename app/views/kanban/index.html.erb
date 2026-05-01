@@ -215,8 +215,6 @@
   <% @kanban_column_keys.each_with_index do |status, col_idx| %>
     <% orders = @columns[status] || [] %>
     <% label = @kanban_column_labels[status] || status.humanize %>
-    <% prev_stat = col_idx > 0 ? @kanban_column_keys[col_idx - 1] : nil %>
-    <% next_stat = col_idx < @kanban_column_keys.length - 1 ? @kanban_column_keys[col_idx + 1] : nil %>
 
     <% wip_limit = @wip_limits[status] %>
     <% current_count = (status == "inbox") ? @inbox_grouped.size : (@column_totals && @column_totals[status] || orders.count) %>
@@ -256,14 +254,12 @@
           <% @inbox_grouped.each do |group| %>
             <%= render "kanban/card",
                        order: group[:order],
-                       prev_status: prev_stat,
-                       next_status: next_stat,
                        thread_count: group[:thread_count],
                        is_thread: group[:is_thread] %>
           <% end %>
         <% else %>
           <% orders.each do |order| %>
-            <%= render "kanban/card", order: order, prev_status: prev_stat, next_status: next_stat %>
+            <%= render "kanban/card", order: order %>
           <% end %>
         <% end %>
 
@@ -839,50 +835,6 @@ function initKanban() {
 
   setActiveToggle('filter-priority-btn', '');
   setActiveToggle('filter-due-btn', '');
-
-  // ── FR-02: 퀵액션 ──────────────────────────────────────────
-  // capture 단계에서 받음 — _card.html.erb의 인라인 onclick stopPropagation()이
-  // bubble을 차단하므로 capture(true)로 등록해야 클릭이 도달함
-  document.addEventListener('click', function(e) {
-    const btn = e.target.closest('.quick-move-btn');
-    if (!btn) return;
-    e.stopPropagation();
-
-    const orderId = btn.dataset.orderId;
-    const moveTo  = btn.dataset.moveTo;
-    const cardEl  = document.querySelector('[data-order-id="' + orderId + '"]');
-    if (!orderId || !moveTo || !cardEl) return;
-
-    btn.disabled = true;
-    btn.classList.add('opacity-50');
-
-    fetch('/orders/' + orderId + '/move', {
-      method:  'PATCH',
-      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF, 'Accept': 'application/json' },
-      body:    JSON.stringify({ status: moveTo })
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (data.success) {
-        const targetCol = document.getElementById('column-' + moveTo);
-        if (targetCol) {
-          targetCol.insertBefore(cardEl, targetCol.firstChild);
-          updateCounts(data.column_counts || null);
-          const colLabel = targetCol.closest('.kanban-column')?.querySelector('.column-name')?.textContent || moveTo;
-          showToast('→ ' + colLabel + ' 이동 완료', true);
-        }
-      } else {
-        showToast('이동 실패: ' + (data.errors || []).join(', '), false);
-        btn.disabled = false;
-        btn.classList.remove('opacity-50');
-      }
-    })
-    .catch(function() {
-      showToast('네트워크 오류가 발생했습니다.', false);
-      btn.disabled = false;
-      btn.classList.remove('opacity-50');
-    });
-  }, true);
 
   // ── 삭제 기능 ──────────────────────────────────────────────
   var deleteOrderId = null;
