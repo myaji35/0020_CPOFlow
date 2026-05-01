@@ -88,8 +88,10 @@
         <span class="text-xs text-gray-500"><%= total_att %>개</span>
       </div>
       <div class="px-5 py-4 space-y-2">
+        <%# ISS-307: 첨부파일 자동 분류 결과 (캐시됨, 최초 로드 시 분류 실행) %>
+        <% att_kinds = begin; order.attachment_kinds; rescue => e; Rails.logger.warn("[drawer] attachment_kinds: #{e.message}"); []; end %>
         <%# ActiveStorage 첨부파일 %>
-        <% active_storage_attachments.each do |att| %>
+        <% active_storage_attachments.each_with_index do |att, idx| %>
           <% blob = att.blob %>
           <% ct = blob.content_type.to_s %>
           <% fn = blob.filename.to_s %>
@@ -127,7 +129,14 @@
             <%# 파일 타입별 아이콘 %>
             <svg class="w-8 h-8 p-1.5 rounded bg-gray-100 <%= icon_color %> flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             <div class="flex-1 min-w-0">
-              <p class="text-xs font-medium text-gray-800 truncate"><%= fn %></p>
+              <p class="text-xs font-medium text-gray-800 truncate flex items-center gap-1.5">
+                <%= fn %>
+                <% if (kind = att_kinds[idx]) && kind[:type] != "other" %>
+                  <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-blue-600 text-white leading-none shrink-0">
+                    <%= kind[:type].upcase.gsub("_", " ") %>
+                  </span>
+                <% end %>
+              </p>
               <p class="text-xs text-gray-500">
                 <span class="<%= icon_color %>"><%= type_label %></span> ·
                 <%= number_to_human_size(blob.byte_size) %>

@@ -521,4 +521,15 @@ class Order < ApplicationRecord
 
     EcountSlipCreateJob.perform_later(id)
   end
+
+  public
+
+  # ISS-307: 첨부파일별 자동 분류 결과 (Rails.cache 24시간 캐시)
+  def attachment_kinds
+    attachments.includes(:blob).map do |att|
+      Rails.cache.fetch("attachment_kind/#{att.blob.key}", expires_in: 24.hours) do
+        Rfp::AttachmentClassifier.call(att)
+      end
+    end
+  end
 end
