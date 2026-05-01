@@ -48,6 +48,23 @@ class TasksController < ApplicationController
     redirect_to @order
   end
 
+  # ISS-293: RFP 자동 생성 태스크 👍/👎 피드백
+  # PATCH /orders/:order_id/tasks/:id/feedback
+  # params[:score] = "1" (좋음) | "-1" (나쁨) | "0" (취소)
+  def feedback
+    @task = @order.tasks.find(params[:id])
+    score = params[:score].to_i
+    # 같은 값을 다시 누르면 nil로 토글 (취소)
+    new_score = (@task.feedback_score == score) ? nil : score.nonzero?
+    @task.update_column(:feedback_score, new_score)
+
+    render json: {
+      success: true,
+      task_id: @task.id,
+      feedback_score: @task.feedback_score
+    }
+  end
+
   private
 
   def set_order

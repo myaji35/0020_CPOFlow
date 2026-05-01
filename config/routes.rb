@@ -33,7 +33,11 @@ Rails.application.routes.draw do
       post   :save_filter            # ISS-229
       delete :delete_saved_filter    # ISS-229
     end
-    resources :tasks, only: %i[create update destroy]
+    resources :tasks, only: %i[create update destroy] do
+      member do
+        patch :feedback  # ISS-293: RFP 자동 생성 태스크 👍/👎 피드백
+      end
+    end
     resources :comments, only: %i[create destroy]
     resources :assignments, only: %i[create destroy]
     resources :order_quotes, only: %i[new create destroy] do

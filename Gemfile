@@ -43,6 +43,9 @@ gem "faraday"
 # Anthropic Claude API for LLM-based RFQ analysis
 gem "anthropic"
 
+# PDF text extraction for RFP analysis (ISS-293)
+gem "pdf-reader"
+
 # Translation: use faraday directly with Google Translate API or LibreTranslate
 
 # Avatar / file uploads

@@ -198,7 +198,21 @@ class KanbanController < ApplicationController
           from_status: Order.statuses[old_status],
           to_status: Order.statuses[@order.status]
         )
-        render json: { success: true, new_status: @order.status, column_counts: build_column_counts(board) }
+
+        # ISS-293: new_rfq → make_quo 전환 시 RFP 자동 분석 Job 트리거
+        rfp_triggered = false
+        if old_status.to_s == "new_rfq" && @order.status.to_s == "make_quo"
+          Rfp::AnalyzeAttachmentsJob.perform_later(@order.id)
+          rfp_triggered = true
+          Rails.logger.info("[ISS-293] RFP 분석 Job enqueued for order=#{@order.id}")
+        end
+
+        render json: {
+          success: true,
+          new_status: @order.status,
+          column_counts: build_column_counts(board),
+          rfp_analysis_triggered: rfp_triggered
+        }
       else
         render json: { success: false, errors: @order.errors.full_messages }, status: :unprocessable_entity
       end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_01_090709) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_01_100000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -526,6 +526,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_01_090709) do
     t.string "quo_no"
     t.string "reference_no"
     t.text "reply_draft"
+    t.string "rfp_analysis_state", default: "pending"
+    t.datetime "rfp_analyzed_at"
     t.string "rfq_confidence", default: "none"
     t.string "rfq_no"
     t.integer "rfq_score", default: 0
@@ -571,6 +573,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_01_090709) do
     t.index ["parent_order_id"], name: "index_orders_on_parent_order_id"
     t.index ["project_id"], name: "index_orders_on_project_id"
     t.index ["reference_no"], name: "index_orders_on_reference_no"
+    t.index ["rfp_analysis_state"], name: "index_orders_on_rfp_analysis_state"
     t.index ["rfq_status"], name: "index_orders_on_rfq_status"
     t.index ["source_email_id"], name: "index_orders_on_source_email_id", unique: true, where: "source_email_id IS NOT NULL"
     t.index ["status", "rfq_status"], name: "index_orders_on_status_rfq_status"
@@ -713,15 +716,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_01_090709) do
 
   create_table "tasks", force: :cascade do |t|
     t.integer "assignee_id"
+    t.boolean "auto_generated", default: false
     t.boolean "completed", default: false, null: false
     t.datetime "created_at", null: false
     t.text "description"
     t.date "due_date"
+    t.integer "feedback_score"
     t.integer "order_id", null: false
+    t.bigint "source_attachment_id"
+    t.text "source_excerpt"
     t.string "title"
     t.datetime "updated_at", null: false
     t.index ["assignee_id"], name: "index_tasks_on_assignee_id"
     t.index ["order_id"], name: "index_tasks_on_order_id"
+    t.index ["source_attachment_id"], name: "index_tasks_on_source_attachment_id"
   end
 
   create_table "tracking_codes", force: :cascade do |t|
