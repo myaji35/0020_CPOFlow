@@ -16,7 +16,7 @@
       · 7개 이상: 세 줄
     각 셀은 "코드 + 값"을 좌측 정렬, 값은 뒷 5자리.
   %>
-  <span class="grid grid-cols-3 gap-x-2 gap-y-0.5 min-w-0 flex-1 text-sm font-mono font-semibold"
+  <span class="grid grid-cols-3 gap-x-2 gap-y-0.5 min-w-0 text-base font-mono font-bold tracking-tight"
         title="<%= chips.map { |c, v| "#{c.short_label}#{v}" }.join(' ') %>">
     <% chips.each do |c, val| %>
       <%
@@ -24,7 +24,7 @@
         display_val = s.length > 5 ? s[-5..] : s
       %>
       <span class="inline-flex items-baseline min-w-0 truncate">
-        <span class="font-bold" style="color: <%= c.color %>"><%= c.short_label %></span>
+        <span style="color: <%= c.color %>"><%= c.short_label %></span>
         <span class="text-[#1E3A5F] dark:text-blue-300 truncate"><%= display_val %></span>
       </span>
     <% end %>

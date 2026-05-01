@@ -51,17 +51,19 @@
   <!-- Card Header — 2줄 구조
        1줄: 드래그 핸들 + 관리번호 칩 (R:99999 Q:99999 P:99999)
        2줄: 보드 뱃지(KOR) + 납기 뱃지(OVERDUE 3d) -->
+  <%# 드래그 핸들 — 절대 위치로 띄워 헤더 줄에서 폭을 차지하지 않음 (좌측 정렬 보장) %>
+  <span class="drag-handle absolute top-2 left-1 text-gray-300 dark:text-gray-600 hover:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+        title="드래그하여 이동">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+      <circle cx="9"  cy="5"  r="1.5"/><circle cx="15" cy="5"  r="1.5"/>
+      <circle cx="9"  cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
+      <circle cx="9"  cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/>
+    </svg>
+  </span>
+
   <div class="mb-2 space-y-1.5 min-w-0">
-    <div class="flex items-center gap-1.5 min-w-0 overflow-hidden">
-      <span class="drag-handle text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity -ml-1 pr-0.5 shrink-0"
-            title="드래그하여 이동">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-          <circle cx="9"  cy="5"  r="1.5"/><circle cx="15" cy="5"  r="1.5"/>
-          <circle cx="9"  cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
-          <circle cx="9"  cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/>
-        </svg>
-      </span>
-      <%# 관리번호 — TrackingCode 정의 순서대로 활성 코드 모두 표시 %>
+    <%# 관리번호 — 카드 좌측 끝에 붙여 노출 (가장 중요한 식별자) %>
+    <div class="min-w-0 overflow-hidden">
       <%= render "orders/tracking_chips", order: order %>
     </div>
     <div class="flex items-center justify-between gap-1">
