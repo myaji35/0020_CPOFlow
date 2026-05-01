@@ -48,10 +48,11 @@
     </button>
   </div>
 
-  <!-- Card Header: drag handle + Priority + Reference No + Due badge -->
-  <div class="flex items-center justify-between mb-2">
-    <div class="flex items-center gap-1.5 min-w-0">
-      <!-- 드래그 핸들 -->
+  <!-- Card Header — 2줄 구조
+       1줄: 드래그 핸들 + 관리번호 칩 (R:99999 Q:99999 P:99999)
+       2줄: 보드 뱃지(KOR) + 납기 뱃지(OVERDUE 3d) -->
+  <div class="mb-2 space-y-1.5 min-w-0">
+    <div class="flex items-center gap-1.5 min-w-0 overflow-hidden">
       <span class="drag-handle text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity -ml-1 pr-0.5 shrink-0"
             title="드래그하여 이동">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
@@ -60,13 +61,13 @@
           <circle cx="9"  cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/>
         </svg>
       </span>
-      <span class="shrink-0"><%= card_status_badge(order) %></span>
-      <%# 관리번호 — TrackingCode 정의 순서대로 활성 코드 모두 표시 (R:99999 Q:99999 P:99999) %>
+      <%# 관리번호 — TrackingCode 정의 순서대로 활성 코드 모두 표시 %>
       <%= render "orders/tracking_chips", order: order %>
     </div>
-    <div class="flex items-center gap-1 shrink-0">
+    <div class="flex items-center justify-between gap-1">
+      <span class="shrink-0"><%= card_status_badge(order) %></span>
       <% if order.due_date %>
-        <%= due_badge(order) %>
+        <span class="shrink-0"><%= due_badge(order) %></span>
       <% end %>
     </div>
   </div>

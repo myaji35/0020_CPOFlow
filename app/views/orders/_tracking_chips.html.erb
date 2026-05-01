@@ -1,19 +1,31 @@
 <%#
   주문 카드의 관리번호 칩 라인.
   active 코드를 position 순으로 모두 노출하되, 값이 있는 코드만 표시한다.
-  형식: <span style="color:#hex">R</span>:<span class="text-[#1E3A5F]">99999</span>
+  형식: <span style="color:#hex">R</span><span class="text-[#1E3A5F]">99999</span>  (콜론 없음)
+  값은 카드 가독성을 위해 뒷 5자리만 노출 (전체 값은 title 툴팁/드로어에서 확인).
   locals: order
 %>
 <% codes = TrackingCode.active.ordered %>
 <% values_by_code = order.tracking_numbers.includes(:tracking_code).index_by(&:tracking_code_id) %>
 <% chips = codes.map { |c| [ c, values_by_code[c.id]&.value ] }.select { |_c, v| v.present? } %>
 <% if chips.any? %>
-  <span class="flex items-center gap-1.5 truncate text-xs font-mono">
+  <%#
+    3-column grid 배치:
+      · 1~3개: 한 줄에 3등분 균등 배치 (빈 자리 비워둠)
+      · 4~6개: 두 줄
+      · 7개 이상: 세 줄
+    각 셀은 "코드 + 값"을 좌측 정렬, 값은 뒷 5자리.
+  %>
+  <span class="grid grid-cols-3 gap-x-2 gap-y-0.5 min-w-0 flex-1 text-sm font-mono font-semibold"
+        title="<%= chips.map { |c, v| "#{c.short_label}#{v}" }.join(' ') %>">
     <% chips.each do |c, val| %>
-      <span class="inline-flex items-center gap-0.5">
+      <%
+        s = val.to_s
+        display_val = s.length > 5 ? s[-5..] : s
+      %>
+      <span class="inline-flex items-baseline min-w-0 truncate">
         <span class="font-bold" style="color: <%= c.color %>"><%= c.short_label %></span>
-        <span class="text-gray-500">:</span>
-        <span class="text-[#1E3A5F] dark:text-blue-300 font-semibold"><%= val %></span>
+        <span class="text-[#1E3A5F] dark:text-blue-300 truncate"><%= display_val %></span>
       </span>
     <% end %>
   </span>
