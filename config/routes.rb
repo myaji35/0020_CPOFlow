@@ -196,6 +196,7 @@ Rails.application.routes.draw do
 
   # 멘션 자동완성 (@ 입력 시 팀원 검색)
   get "/users/mention_suggestions", to: "users#mention_suggestions", as: :mention_suggestions
+  get "/users/search",              to: "users#search",              as: :search_users
 
   # 통합 검색 (Command Palette)
   get "/search", to: "search#index", as: :search

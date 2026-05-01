@@ -52,10 +52,29 @@
       </div>
       <div>
         <%= f.label :email, "이메일 (시스템 계정 자동 매칭)", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%
+          # 자동완성 후보: 미연결 User 우선 + 이미 연결된 User 후순위
+          linked_user_ids = Employee.where.not(user_id: nil).where.not(id: employee.id || 0).pluck(:user_id).uniq
+          unlinked_users  = User.where.not(id: linked_user_ids).order(:name).limit(50)
+          linked_users    = User.where(id: linked_user_ids).order(:name).limit(50)
+          datalist_id     = "employee-email-suggestions-#{employee.id || 'new'}"
+        %>
         <%= f.email_field :email,
             placeholder: "name@company.com",
+            list: datalist_id,
+            autocomplete: "off",
             class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
-        <p class="text-xs text-gray-500 mt-1">같은 이메일을 쓰는 시스템 사용자가 있으면 저장 시 자동 연결됩니다.</p>
+        <datalist id="<%= datalist_id %>">
+          <% unlinked_users.each do |u| %>
+            <option value="<%= u.email %>"><%= u.display_name %> · 미연결</option>
+          <% end %>
+          <% linked_users.each do |u| %>
+            <option value="<%= u.email %>"><%= u.display_name %> · 이미 연결됨</option>
+          <% end %>
+        </datalist>
+        <p class="text-xs text-gray-500 mt-1">
+          미연결 시스템 계정 <%= unlinked_users.size %>개 · 이미 연결됨 <%= linked_users.size %>개. 입력 칸 클릭 시 후보가 표시됩니다.
+        </p>
       </div>
       <div>
         <%= f.label :emergency_contact, "비상 연락처 (이름)", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>

@@ -1,6 +1,36 @@
 # frozen_string_literal: true
 
 class UsersController < ApplicationController
+  before_action :require_admin!, only: %i[search]
+
+  # GET /users/search?q=&exclude_linked=1
+  # admin 전용 — 직원 폼 email 자동완성용. 미연결(어떤 employee와도 연결 안 된) User 우선.
+  def search
+    q = params[:q].to_s.strip
+    linked_user_ids = Employee.where.not(user_id: nil).pluck(:user_id).uniq
+
+    base = User.all
+    base = base.where("LOWER(name) LIKE :t OR LOWER(email) LIKE :t", t: "%#{q.downcase}%") if q.present?
+
+    # 미연결 우선 정렬 (CASE WHEN), 같은 그룹 내에서는 이름순
+    sql = sanitize_sql_array([
+      "CASE WHEN id IN (?) THEN 1 ELSE 0 END, name",
+      linked_user_ids.empty? ? [ -1 ] : linked_user_ids
+    ])
+    base = base.order(Arel.sql(sql)).limit(20)
+
+    results = base.map do |u|
+      linked = linked_user_ids.include?(u.id)
+      {
+        id:     u.id,
+        name:   u.email,                                    # input 표시용 (email 기반 매칭)
+        code:   "#{u.display_name}#{linked ? ' · 연결됨' : ''}",
+        linked: linked
+      }
+    end
+    render json: results
+  end
+
   # GET /users/mention_suggestions?q=검색어
   # 1) Employee.active + user_id 매핑된 레코드 우선
   # 2) 부족하면 User 테이블에서 보충 (Employee 미등록된 관리자 계정 포함 보장)
@@ -49,5 +79,16 @@ class UsersController < ApplicationController
     end
 
     render json: items
+  end
+
+  private
+
+  def require_admin!
+    return if current_user&.admin?
+    render json: { error: "Admin only" }, status: :forbidden
+  end
+
+  def sanitize_sql_array(arr)
+    ActiveRecord::Base.send(:sanitize_sql_array, arr)
   end
 end
