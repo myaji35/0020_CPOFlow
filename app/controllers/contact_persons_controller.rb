@@ -1,5 +1,7 @@
 class ContactPersonsController < ApplicationController
   before_action :authenticate_user!
+  # ISS-300: 외부 담당자 변경은 member 이상만 (viewer는 조회만)
+  before_action :require_member!, only: %i[new create edit update destroy create_from_signature]
   before_action :set_contactable, except: %i[index show create_from_signature search]
   before_action :set_contact_person, only: %i[edit update destroy]
   before_action :set_contact_person_standalone, only: %i[show]

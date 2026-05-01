@@ -2,6 +2,8 @@
 
 module Settings
   class CardStatusesController < BaseController
+    # ISS-300: 카드 상태(시스템 메타) 변경은 manager 이상만
+    before_action :require_manager!
     before_action :set_current_board
     before_action :set_card_status, only: %i[update destroy inline_rename]
 

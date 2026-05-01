@@ -1,5 +1,7 @@
 class VisasController < ApplicationController
   before_action :authenticate_user!
+  # ISS-300: 비자 정보는 외국인 직원 거주권 관련 — manager 이상만 CRUD
+  before_action :require_manager!
   before_action :set_employee
   before_action :set_visa, only: %i[edit update destroy start_renewal]
 

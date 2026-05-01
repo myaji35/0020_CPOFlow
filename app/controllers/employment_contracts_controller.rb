@@ -1,5 +1,7 @@
 class EmploymentContractsController < ApplicationController
   before_action :authenticate_user!
+  # ISS-300: 고용계약은 민감정보(급여/계약조건) — manager 이상만 CRUD
+  before_action :require_manager!
   before_action :set_employee
   before_action :set_contract, only: %i[edit update destroy]
 
