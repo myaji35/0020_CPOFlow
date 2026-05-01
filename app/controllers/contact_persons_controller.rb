@@ -179,6 +179,10 @@ class ContactPersonsController < ApplicationController
   end
 
   # GET /contact_persons/search?client_id=X&q=Y — 주문 폼 외부담당자 자동완성
+  # 변경 이력 (UX 개선):
+  #   - 표시 이름: 이메일 username(`Aaesha.s.alzaabi`) → 풀네임 형식(`Aaesha S Alzaabi`)
+  #   - limit 20 → client_id 지정 시 100 (ENEC처럼 contact 多), 검색어 있으면 50
+  #   - 정렬: primary 우선 + 풀네임(스페이스 포함) 우선, 그 다음 LOWER(name)
   def search
     q = params[:q].to_s.strip
     scope = ContactPerson.for_clients
@@ -193,12 +197,28 @@ class ContactPersonsController < ApplicationController
         t: term
       )
     end
-    results = scope.primary_first.limit(20).map do |cp|
+    # 정렬: primary 우선 → 풀네임(공백 포함) 우선(자동import dot-name 후순위) → name ASC
+    scope = scope.select("contact_persons.*, CASE WHEN name LIKE '% %' THEN 0 ELSE 1 END AS _name_priority")
+                 .order(Arel.sql("primary DESC, _name_priority ASC, LOWER(name) ASC"))
+    limit = q.present? ? 50 : (params[:client_id].present? ? 100 : 30)
+    results = scope.limit(limit).map do |cp|
+      pretty = humanize_contact_name(cp.name)
       sub = [ cp.department, cp.email ].compact_blank.join(" · ")
-      { id: cp.id, name: cp.name, code: sub, primary: cp.primary }
+      { id: cp.id, name: pretty, code: sub, primary: cp.primary, raw_name: cp.name }
     end
     render json: results
   end
+
+  private
+
+  # 자동 import된 이메일 username 형식(`aaesha.s.alzaabi` / `bernard.swanson`)을
+  # 사람이 읽기 쉬운 풀네임으로 변환. 이미 공백 있는 이름은 그대로.
+  def humanize_contact_name(raw)
+    return raw if raw.blank?
+    return raw if raw.include?(" ")  # 이미 풀네임 (Bosco Bobby 등)
+    raw.split(".").map { |part| part.empty? ? part : part[0].upcase + part[1..].to_s.downcase }.join(" ")
+  end
+  public
 
   # POST /contact_persons/create_from_signature — Inbox 발신처 카드에서 담당자 저장
   def create_from_signature
