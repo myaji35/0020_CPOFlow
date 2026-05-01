@@ -36,15 +36,28 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
 
-      - name: Set up SSH agent for Kamal
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.KAMAL_SSH_PRIVATE_KEY }}
-
-      - name: Add server to known_hosts (skip strict host check)
+      - name: Set up SSH for Kamal (manual write — robust to line ending issues)
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.KAMAL_SSH_PRIVATE_KEY }}
         run: |
           mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          # 키 파일 작성 — LF 정규화 + 끝에 빈 줄 보장
+          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+          # 파일 끝에 빈 줄이 없으면 추가
+          [ -z "$(tail -c1 ~/.ssh/id_rsa)" ] || echo "" >> ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          # 키 형식 검증
+          ssh-keygen -y -f ~/.ssh/id_rsa > /dev/null && echo "✓ SSH key format OK" || (echo "✗ SSH key invalid" && exit 1)
+          # known_hosts 등록
           ssh-keyscan -H 158.247.235.31 >> ~/.ssh/known_hosts 2>/dev/null || true
+          chmod 600 ~/.ssh/known_hosts
+          # ssh-agent 시작 + 키 추가
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/id_rsa
+          # 환경변수 export (다음 step에서 사용)
+          echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" >> $GITHUB_ENV
+          echo "SSH_AGENT_PID=$SSH_AGENT_PID" >> $GITHUB_ENV
 
       - name: Write Kamal secrets
         env:
