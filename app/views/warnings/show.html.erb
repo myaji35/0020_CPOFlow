@@ -1,0 +1,38 @@
+<div class="max-w-3xl mx-auto py-6 px-4">
+  <div class="flex items-center justify-between mb-4">
+    <h1 class="text-lg font-semibold text-gray-900"><%= @employee.name %> — <%= @warning.subject %></h1>
+    <div class="flex gap-2">
+      <span class="text-xs px-2 py-0.5 rounded-full <%= @warning.severity_badge_class %>"><%= @warning.severity_label %></span>
+      <span class="text-xs px-2 py-0.5 rounded-full <%= @warning.status_badge_class %>"><%= @warning.status_label %></span>
+    </div>
+  </div>
+  <dl class="bg-white border border-gray-200 rounded-lg p-4 grid grid-cols-2 gap-3 text-sm">
+    <div><dt class="text-gray-500 text-xs">분류</dt><dd class="font-medium"><%= @warning.category_label %></dd></div>
+    <div><dt class="text-gray-500 text-xs">발급</dt><dd class="font-medium"><%= @warning.issued_at.strftime("%Y-%m-%d %H:%M") %></dd></div>
+    <div><dt class="text-gray-500 text-xs">발급자</dt><dd class="font-medium"><%= @warning.issued_by&.name || "-" %></dd></div>
+    <div><dt class="text-gray-500 text-xs">유효 기한</dt><dd class="font-medium"><%= @warning.effective_until&.strftime("%Y-%m-%d") || "-" %></dd></div>
+    <div class="col-span-2"><dt class="text-gray-500 text-xs">상세</dt><dd class="font-medium whitespace-pre-line"><%= @warning.description.presence || "-" %></dd></div>
+    <% if @warning.documents.attached? %>
+      <div class="col-span-2"><dt class="text-gray-500 text-xs mb-2">첨부 문서</dt>
+        <div class="flex flex-wrap gap-2">
+          <% @warning.documents.each do |doc| %>
+            <%= link_to doc.filename.to_s, rails_blob_path(doc, disposition: "attachment"), class: "text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded hover:bg-blue-100" %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+    <% if @warning.acknowledged_at %>
+      <div class="col-span-2"><dt class="text-gray-500 text-xs">확인</dt><dd class="font-medium"><%= @warning.acknowledged_at.strftime("%Y-%m-%d %H:%M") %><% if @warning.acknowledged_signature.present? %> · 서명: <%= @warning.acknowledged_signature %><% end %></dd></div>
+    <% end %>
+  </dl>
+  <div class="mt-4 flex justify-between">
+    <%= link_to "← 직원으로", employee_path(@employee, tab: "warnings"), class: "text-sm text-gray-500 hover:text-primary" %>
+    <div class="flex gap-2">
+      <% if @warning.status == "active" %>
+        <%= button_to "확인 처리", acknowledge_employee_warning_path(@employee, @warning), method: :patch, class: "text-xs px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+      <% end %>
+      <%= link_to "수정", edit_employee_warning_path(@employee, @warning), class: "text-xs px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50" %>
+      <%= button_to "삭제", employee_warning_path(@employee, @warning), method: :delete, data: { confirm: "정말 삭제하시겠습니까?" }, class: "text-xs px-3 py-1.5 border border-red-300 text-red-600 rounded hover:bg-red-50" %>
+    </div>
+  </div>
+</div>

@@ -65,8 +65,10 @@ class EmployeesController < ApplicationController
   def show
     @visas          = @employee.visas.by_expiry
     @contracts      = @employee.employment_contracts.by_start
-    @assignments    = @employee.employee_assignments.includes(:project).by_start
     @certifications = @employee.certifications.by_expiry
+    # ISS-332: 경고장 (현장배정/휴가 탭 제거)
+    @warnings       = @employee.warnings.recent
+    @warnings_count = @warnings.size
   end
 
   def new

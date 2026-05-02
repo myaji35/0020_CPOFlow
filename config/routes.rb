@@ -196,6 +196,10 @@ Rails.application.routes.draw do
     resources :employment_contracts, only: %i[new create edit update destroy]
     resources :employee_assignments, only: %i[new create edit update destroy]
     resources :certifications,       only: %i[new create edit update destroy]
+    # ISS-332: 경고장 (현장 배정 대체)
+    resources :warnings do
+      member { patch :acknowledge }
+    end
   end
 
   # ISS-305: 휴가/근태 Leave 모듈
