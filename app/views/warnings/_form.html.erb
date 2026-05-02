@@ -2,50 +2,61 @@
   form_url = @warning.persisted? ? employee_warning_path(@employee, @warning) : employee_warnings_path(@employee)
   form_method = @warning.persisted? ? :patch : :post
 %>
-<%= form_with model: @warning, url: form_url, method: form_method, scope: :warning, local: true, multipart: true, class: "space-y-4" do |f| %>
+<%= form_with model: @warning, url: form_url, method: form_method, scope: :warning, multipart: true, class: "flex flex-col gap-6" do |f| %>
   <% if @warning.errors.any? %>
-    <div class="bg-red-50 border border-red-200 rounded p-3 text-xs text-red-700">
-      <% @warning.errors.full_messages.each { |m| %><div><%= m %></div><% } %>
+    <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg text-sm">
+      <% @warning.errors.full_messages.each do |msg| %><p><%= msg %></p><% end %>
     </div>
   <% end %>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div>
-      <label class="block text-xs font-medium text-gray-600 mb-1">발급일시 <span class="text-red-500">*</span></label>
-      <%= f.datetime_local_field :issued_at, class: "w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md", required: true %>
+  <%= render "shared/form_with_documents", f: f, record: @warning do %>
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <%= f.label :issued_at, "발급일시 *", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.datetime_local_field :issued_at, required: true,
+            class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+      </div>
+      <div>
+        <%= f.label :effective_until, "유효 기한 (옵션)", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.date_field :effective_until,
+            class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+      </div>
+      <div>
+        <%= f.label :category, "분류 *", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.select :category, EmployeeWarning::CATEGORIES.map { |c| [EmployeeWarning::CATEGORY_LABELS[c], c] }, {},
+            required: true,
+            class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+      </div>
+      <div>
+        <%= f.label :severity, "중대도 *", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.select :severity, EmployeeWarning::SEVERITIES.map { |s| [EmployeeWarning::SEVERITY_LABELS[s], s] }, {},
+            required: true,
+            class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+      </div>
+      <div class="col-span-2">
+        <%= f.label :subject, "제목 *", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.text_field :subject, required: true,
+            placeholder: "예: 출근 시간 미준수 (3주 누적)",
+            class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+      </div>
+      <div class="col-span-2">
+        <%= f.label :description, "상세 내용", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.text_area :description, rows: 6,
+            placeholder: "사실관계, 위반사항, 시정조치 등",
+            class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+      </div>
+      <div class="col-span-2">
+        <%= f.label :status, "상태", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.select :status, EmployeeWarning::STATUSES.map { |s| [EmployeeWarning::STATUS_LABELS[s], s] }, {},
+            class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+      </div>
     </div>
-    <div>
-      <label class="block text-xs font-medium text-gray-600 mb-1">유효 기한 (옵션)</label>
-      <%= f.date_field :effective_until, class: "w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md" %>
-    </div>
-    <div>
-      <label class="block text-xs font-medium text-gray-600 mb-1">분류 <span class="text-red-500">*</span></label>
-      <%= f.select :category, EmployeeWarning::CATEGORIES.map { |c| [EmployeeWarning::CATEGORY_LABELS[c], c] }, {}, class: "w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md" %>
-    </div>
-    <div>
-      <label class="block text-xs font-medium text-gray-600 mb-1">중대도 <span class="text-red-500">*</span></label>
-      <%= f.select :severity, EmployeeWarning::SEVERITIES.map { |s| [EmployeeWarning::SEVERITY_LABELS[s], s] }, {}, class: "w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md" %>
-    </div>
-    <div class="md:col-span-2">
-      <label class="block text-xs font-medium text-gray-600 mb-1">제목 <span class="text-red-500">*</span></label>
-      <%= f.text_field :subject, class: "w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md", placeholder: "예: 출근 시간 미준수 (3주 누적)", required: true %>
-    </div>
-    <div class="md:col-span-2">
-      <label class="block text-xs font-medium text-gray-600 mb-1">상세 내용</label>
-      <%= f.text_area :description, rows: 5, class: "w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md", placeholder: "사실관계, 위반사항, 시정조치 등" %>
-    </div>
-    <div class="md:col-span-2">
-      <label class="block text-xs font-medium text-gray-600 mb-1">상태</label>
-      <%= f.select :status, EmployeeWarning::STATUSES.map { |s| [EmployeeWarning::STATUS_LABELS[s], s] }, {}, class: "w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md" %>
-    </div>
-    <div class="md:col-span-2">
-      <label class="block text-xs font-medium text-gray-600 mb-1">첨부 문서 (옵션)</label>
-      <%= f.file_field :documents, multiple: true, class: "block w-full text-xs" %>
-    </div>
-  </div>
+  <% end %>
 
-  <div class="flex justify-end gap-2 pt-2 border-t">
-    <%= link_to "취소", employee_path(@employee, tab: "warnings"), class: "px-4 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50" %>
-    <%= f.submit (@warning.persisted? ? "수정" : "발급"), class: "px-4 py-1.5 bg-primary text-white text-sm font-medium rounded-md hover:bg-blue-700" %>
+  <div class="flex justify-end gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+    <%= link_to "취소", employee_path(@employee, tab: "warnings"),
+        class: "px-4 py-1.5 text-sm border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700" %>
+    <%= f.submit (@warning.persisted? ? "수정" : "발급"),
+        class: "px-4 py-1.5 bg-primary text-white text-sm font-medium rounded-lg hover:opacity-90" %>
   </div>
 <% end %>

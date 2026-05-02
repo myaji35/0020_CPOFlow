@@ -1,4 +1,14 @@
-<div class="max-w-3xl mx-auto py-6 px-4">
-  <h1 class="text-lg font-semibold text-gray-900 mb-4"><%= @employee.name %> — 경고장 수정</h1>
+<% content_for :title, "경고장 수정" %>
+<div class="flex flex-col gap-4">
+  <div class="flex items-center gap-2 text-sm text-gray-500">
+    <%= link_to "직원 관리", employees_path, class: "hover:text-primary" %>
+    <span>/</span>
+    <%= link_to @employee.name, @employee, class: "hover:text-primary" %>
+    <span>/</span>
+    <%= link_to "경고장", employee_path(@employee, tab: "warnings"), class: "hover:text-primary" %>
+    <span>/</span>
+    <span>수정</span>
+  </div>
+  <h1 class="text-2xl font-bold text-gray-900 dark:text-white">경고장 수정</h1>
   <%= render "form" %>
 </div>
