@@ -9,7 +9,7 @@ class Employee < ApplicationRecord
   has_many :assigned_projects, through: :employee_assignments, source: :project
   has_many :certifications,       dependent: :destroy
   has_many :leaves, class_name: "Leave", dependent: :destroy
-  has_many :warnings, dependent: :destroy  # ISS-332
+  has_many :warnings, class_name: "EmployeeWarning", dependent: :destroy  # ISS-332
 
   EMPLOYMENT_TYPES = %w[regular contract dispatch].freeze
   NATIONALITIES = {

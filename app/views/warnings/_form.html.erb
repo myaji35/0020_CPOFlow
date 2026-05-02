@@ -1,4 +1,8 @@
-<%= form_with model: [ @employee, @warning ], local: true, multipart: true, class: "space-y-4" do |f| %>
+<%
+  form_url = @warning.persisted? ? employee_warning_path(@employee, @warning) : employee_warnings_path(@employee)
+  form_method = @warning.persisted? ? :patch : :post
+%>
+<%= form_with model: @warning, url: form_url, method: form_method, scope: :warning, local: true, multipart: true, class: "space-y-4" do |f| %>
   <% if @warning.errors.any? %>
     <div class="bg-red-50 border border-red-200 rounded p-3 text-xs text-red-700">
       <% @warning.errors.full_messages.each { |m| %><div><%= m %></div><% } %>
@@ -16,11 +20,11 @@
     </div>
     <div>
       <label class="block text-xs font-medium text-gray-600 mb-1">분류 <span class="text-red-500">*</span></label>
-      <%= f.select :category, Warning::CATEGORIES.map { |c| [Warning::CATEGORY_LABELS[c], c] }, {}, class: "w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md" %>
+      <%= f.select :category, EmployeeWarning::CATEGORIES.map { |c| [EmployeeWarning::CATEGORY_LABELS[c], c] }, {}, class: "w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md" %>
     </div>
     <div>
       <label class="block text-xs font-medium text-gray-600 mb-1">중대도 <span class="text-red-500">*</span></label>
-      <%= f.select :severity, Warning::SEVERITIES.map { |s| [Warning::SEVERITY_LABELS[s], s] }, {}, class: "w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md" %>
+      <%= f.select :severity, EmployeeWarning::SEVERITIES.map { |s| [EmployeeWarning::SEVERITY_LABELS[s], s] }, {}, class: "w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md" %>
     </div>
     <div class="md:col-span-2">
       <label class="block text-xs font-medium text-gray-600 mb-1">제목 <span class="text-red-500">*</span></label>
@@ -32,7 +36,7 @@
     </div>
     <div class="md:col-span-2">
       <label class="block text-xs font-medium text-gray-600 mb-1">상태</label>
-      <%= f.select :status, Warning::STATUSES.map { |s| [Warning::STATUS_LABELS[s], s] }, {}, class: "w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md" %>
+      <%= f.select :status, EmployeeWarning::STATUSES.map { |s| [EmployeeWarning::STATUS_LABELS[s], s] }, {}, class: "w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md" %>
     </div>
     <div class="md:col-span-2">
       <label class="block text-xs font-medium text-gray-600 mb-1">첨부 문서 (옵션)</label>

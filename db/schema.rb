@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_01_120001) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_02_030000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -148,6 +148,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_01_120001) do
     t.datetime "updated_at", null: false
     t.index ["employee_id"], name: "index_certifications_on_employee_id"
     t.index ["expiry_date"], name: "index_certifications_on_expiry_date"
+  end
+
+  create_table "checklist_items", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.text "allowed_values"
+    t.string "category", default: "general", null: false
+    t.string "code", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.string "name_en"
+    t.integer "position", default: 0, null: false
+    t.text "prompt_hint", null: false
+    t.boolean "required", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.index ["category", "active"], name: "index_checklist_items_on_category_and_active"
+    t.index ["code"], name: "index_checklist_items_on_code", unique: true
   end
 
   create_table "classification_logs", force: :cascade do |t|
@@ -299,7 +315,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_01_120001) do
     t.datetime "token_expires_at"
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
-    t.index ["email"], name: "index_email_accounts_on_email", unique: true
+    t.index ["email", "user_id"], name: "index_email_accounts_on_email_and_user_id", unique: true
+    t.index ["email"], name: "index_email_accounts_on_email_lookup"
     t.index ["user_id"], name: "index_email_accounts_on_user_id"
   end
 
@@ -553,6 +570,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_01_120001) do
     t.text "reply_draft"
     t.string "rfp_analysis_state", default: "pending"
     t.datetime "rfp_analyzed_at"
+    t.text "rfp_checklist_json"
     t.string "rfq_confidence", default: "none"
     t.string "rfq_no"
     t.integer "rfq_score", default: 0
@@ -826,6 +844,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_01_120001) do
     t.index ["expiry_date"], name: "index_visas_on_expiry_date"
   end
 
+  create_table "warnings", force: :cascade do |t|
+    t.datetime "acknowledged_at"
+    t.text "acknowledged_signature"
+    t.string "category", default: "other", null: false
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.date "effective_until"
+    t.integer "employee_id", null: false
+    t.datetime "issued_at", null: false
+    t.integer "issued_by_id"
+    t.string "severity", default: "verbal", null: false
+    t.string "status", default: "active", null: false
+    t.string "subject", null: false
+    t.datetime "updated_at", null: false
+    t.index ["employee_id", "issued_at"], name: "index_warnings_on_employee_id_and_issued_at"
+    t.index ["employee_id"], name: "index_warnings_on_employee_id"
+    t.index ["issued_by_id"], name: "index_warnings_on_issued_by_id"
+    t.index ["status"], name: "index_warnings_on_status"
+  end
+
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "activities", "orders"
@@ -876,4 +914,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_01_120001) do
   add_foreign_key "tracking_numbers", "tracking_codes"
   add_foreign_key "users", "companies"
   add_foreign_key "visas", "employees"
+  add_foreign_key "warnings", "employees"
+  add_foreign_key "warnings", "users", column: "issued_by_id"
 end

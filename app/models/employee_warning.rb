@@ -1,5 +1,8 @@
 # ISS-332: 경고장 — 인사 처분 기록
-class Warning < ApplicationRecord
+# 모델명: EmployeeWarning (Ruby의 표준 ::Warning 모듈과 충돌 회피)
+# 테이블명은 :warnings 유지 (마이그 변경 불필요)
+class EmployeeWarning < ApplicationRecord
+  self.table_name = "warnings"
   CATEGORIES = %w[tardiness absence quality safety behavior other].freeze
   SEVERITIES = %w[verbal written final suspension termination].freeze
   STATUSES   = %w[active acknowledged expired revoked].freeze
