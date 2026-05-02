@@ -37,6 +37,12 @@ module Rfp
     end
 
     def call
+      # ISS-333: 노이즈 첨부 (ariba_login_capture 등) 즉시 other로 분류
+      relevance = Rfp::AttachmentRelevanceFilter.call(@attachment)
+      unless relevance[:relevant]
+        return { type: "other", confidence: 0.95, evidence: "noise filter: #{relevance[:reason]}", source: "noise_filter" }
+      end
+
       filename = @attachment.blob.filename.to_s
       heuristic = filename_heuristic(filename)
       return { type: heuristic, confidence: 0.85, evidence: "filename: #{filename}", source: "heuristic" } if heuristic

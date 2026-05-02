@@ -24,8 +24,24 @@ module Rfp
 
       order.update_columns(rfp_analysis_state: "processing")
 
+      # ISS-333: 사전 필터 — ariba_login_capture 등 노이즈 제외
+      relevant_attachments = order.attachments.select do |att|
+        result = Rfp::AttachmentRelevanceFilter.call(att)
+        unless result[:relevant]
+          Rails.logger.info("[Rfp::AnalyzeAttachmentsJob] order=#{order_id} — 첨부 필터 제외: #{att.blob.filename} (#{result[:reason]})")
+        end
+        result[:relevant]
+      end
+
+      if relevant_attachments.empty?
+        Rails.logger.info("[Rfp::AnalyzeAttachmentsJob] order=#{order_id} — 모든 첨부가 필터에서 제외됨 (login capture 등)")
+        create_fallback_task(order, "첨부파일 모두 시스템 자동 캡처(ariba_page 등)로 분류되어 분석 대상 없음. 원본 메일을 직접 확인하세요.")
+        order.update_columns(rfp_analysis_state: "skipped", rfp_analyzed_at: Time.current)
+        return
+      end
+
       # 1) 텍스트 추출
-      extracted = order.attachments.map do |att|
+      extracted = relevant_attachments.map do |att|
         Rfp::AttachmentExtractor.call(att).merge(attachment_id: att.id)
       end
       valid_texts = extracted.select { |e| e[:text].present? }
