@@ -7,7 +7,7 @@ module Rfp
     API_URL = "https://api.anthropic.com/v1/messages"
     API_VERSION = "2023-06-01"
 
-    SYSTEM_PROMPT = <<~PROMPT.freeze
+    BASE_SYSTEM_PROMPT = <<~PROMPT.freeze
       You are an expert procurement analyst. Extract all line items from the RFP/RFQ document text provided.
 
       Return ONLY valid JSON matching this exact schema:
@@ -25,6 +25,7 @@ module Rfp
           }
         ],
         "rfp_deadline": "YYYY-MM-DD or null",
+        "checklist": {%<checklist_schema>s},
         "confidence": 0.85,
         "ambiguities": ["수량 단위 모호", "납기일 미기재"]
       }
@@ -33,9 +34,14 @@ module Rfp
       1. source_excerpt is MANDATORY for each item — skip items without it
       2. source_excerpt must be verbatim text from the document (minimum 30 characters)
       3. quantity must be a number (not string)
-      4. If no items found, return {"items": [], "rfp_deadline": null, "confidence": 0.0, "ambiguities": ["품목 없음"]}
+      4. If no items found, return {"items": [], "rfp_deadline": null, "checklist": {}, "confidence": 0.0, "ambiguities": ["품목 없음"]}
       5. Return ONLY the JSON object, no markdown fences, no explanation
       6. rfp_deadline: the EARLIEST/most urgent deadline in the document — look for keywords like "Submission Deadline", "Close Date", "마감일", "제출기한", or the earliest delivery_date among all items. Return null if not found.
+
+      ## Checklist (ISS-330)
+      Extract the following standard checklist items into "checklist":
+      %<checklist_hints>s
+      For values not found in the document, use null. For arrays, use [] when empty.
     PROMPT
 
     def self.call(combined_text)
@@ -51,7 +57,7 @@ module Rfp
       payload = {
         model: MODEL,
         max_tokens: MAX_TOKENS,
-        system: SYSTEM_PROMPT,
+        system: build_system_prompt,
         messages: [
           {
             role: "user",
@@ -70,6 +76,17 @@ module Rfp
     end
 
     private
+
+    # ISS-330: 활성 ChecklistItem들로 system prompt 동적 생성
+    def build_system_prompt
+      items = ChecklistItem.active.ordered.to_a
+      checklist_schema = items.map { |i| "\"#{i.code}\": \"value or null\"" }.join(", ")
+      checklist_hints = items.map(&:prompt_fragment).join("\n")
+      format(BASE_SYSTEM_PROMPT, checklist_schema: checklist_schema, checklist_hints: checklist_hints)
+    rescue => e
+      Rails.logger.warn("[Rfp::ItemExtractor] checklist build failed, using base: #{e.message}")
+      format(BASE_SYSTEM_PROMPT, checklist_schema: "", checklist_hints: "(no checklist configured)")
+    end
 
     def make_request(api_key, payload)
       require "net/http"

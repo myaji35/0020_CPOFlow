@@ -92,8 +92,12 @@ module Rfp
         create_fallback_task(order, "품목 추출 완료되었으나 유효한 source_excerpt가 없어 태스크 생성 불가")
         order.update_columns(rfp_analysis_state: "failed", rfp_analyzed_at: Time.current)
       else
-        Rails.logger.info("[Rfp::AnalyzeAttachmentsJob] order=#{order_id} — #{created_count}개 태스크 생성 완료")
-        order.update_columns(rfp_analysis_state: "done", rfp_analyzed_at: Time.current)
+        # ISS-330: 체크리스트 결과 저장
+        checklist = result["checklist"]
+        update_attrs = { rfp_analysis_state: "done", rfp_analyzed_at: Time.current }
+        update_attrs[:rfp_checklist_json] = checklist.to_json if checklist.is_a?(Hash) && checklist.any?
+        Rails.logger.info("[Rfp::AnalyzeAttachmentsJob] order=#{order_id} — #{created_count}개 태스크 생성 완료, checklist: #{checklist&.keys}")
+        order.update_columns(update_attrs)
         bump_opus_counter
       end
 

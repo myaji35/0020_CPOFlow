@@ -1,0 +1,87 @@
+<% content_for :title, "RFP 체크리스트 (ISS-330)" %>
+<div class="max-w-5xl mx-auto py-6 px-4">
+  <header class="mb-6">
+    <h1 class="text-xl font-semibold text-gray-900">RFP 체크리스트</h1>
+    <p class="text-sm text-gray-500 mt-1">RFP 자동 분석 시 LLM이 추출할 표준 항목들. AtoZ2010 사내 표준에 맞춰 추가/수정.</p>
+  </header>
+
+  <!-- 신규 추가 폼 -->
+  <%= form_with model: @item, url: settings_checklist_items_path, local: true, class: "bg-white border border-gray-200 rounded-lg p-4 mb-6" do |f| %>
+    <h2 class="text-sm font-semibold text-gray-700 mb-3">새 체크리스트 항목</h2>
+    <% if @item.errors.any? %>
+      <div class="mb-3 text-xs text-red-600 bg-red-50 p-2 rounded">
+        <% @item.errors.full_messages.each { |m| %><div><%= m %></div><% } %>
+      </div>
+    <% end %>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">코드 (대문자/숫자/_)</label>
+        <%= f.text_field :code, class: "w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md", placeholder: "예: AQ_GRADE" %>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">이름 (한글)</label>
+        <%= f.text_field :name, class: "w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md", placeholder: "예: AQ 등급" %>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">이름 (영문, 옵션)</label>
+        <%= f.text_field :name_en, class: "w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md", placeholder: "AQ Grade" %>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">카테고리</label>
+        <%= f.select :category, ChecklistItem::CATEGORIES.map { |c| [c, c] }, {}, class: "w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md" %>
+      </div>
+      <div class="md:col-span-2">
+        <label class="block text-xs font-medium text-gray-600 mb-1">허용값 (콤마구분, 옵션)</label>
+        <%= text_field_tag "checklist_item[allowed_values_text]", "", class: "w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md", placeholder: "예: A, B, C, Reject" %>
+      </div>
+      <div class="md:col-span-3">
+        <label class="block text-xs font-medium text-gray-600 mb-1">LLM 프롬프트 힌트 (필수)</label>
+        <%= f.text_area :prompt_hint, rows: 2, class: "w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md", placeholder: "예: Acceptance Quality 등급 — 문서에서 A/B/C/Reject 중 어느 등급인지 추출" %>
+      </div>
+      <div class="md:col-span-3 flex items-center gap-4">
+        <%= f.check_box :required, class: "rounded" %><span class="text-xs text-gray-700">필수 항목</span>
+        <%= f.check_box :active, class: "rounded ml-3" %><span class="text-xs text-gray-700">활성</span>
+      </div>
+    </div>
+    <div class="mt-4 flex justify-end">
+      <%= f.submit "추가", class: "px-4 py-1.5 bg-primary text-white text-sm font-medium rounded-md hover:bg-blue-700" %>
+    </div>
+  <% end %>
+
+  <!-- 목록 -->
+  <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+    <table class="min-w-full text-sm">
+      <thead class="bg-gray-50 text-gray-600 text-xs uppercase">
+        <tr>
+          <th class="px-3 py-2 text-left">코드</th>
+          <th class="px-3 py-2 text-left">이름</th>
+          <th class="px-3 py-2 text-left">카테고리</th>
+          <th class="px-3 py-2 text-left">힌트</th>
+          <th class="px-3 py-2 text-left">허용값</th>
+          <th class="px-3 py-2 text-center">필수</th>
+          <th class="px-3 py-2 text-center">활성</th>
+          <th class="px-3 py-2 text-right">작업</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        <% @items.each do |item| %>
+          <tr>
+            <td class="px-3 py-2 font-mono text-xs text-gray-700"><%= item.code %></td>
+            <td class="px-3 py-2"><%= item.name %><% if item.name_en.present? %><div class="text-xs text-gray-500"><%= item.name_en %></div><% end %></td>
+            <td class="px-3 py-2"><span class="text-xs px-2 py-0.5 rounded bg-blue-50 text-blue-700"><%= item.category %></span></td>
+            <td class="px-3 py-2 text-xs text-gray-600 max-w-md truncate" title="<%= item.prompt_hint %>"><%= item.prompt_hint %></td>
+            <td class="px-3 py-2 text-xs text-gray-500"><%= item.allowed_values_array.join(", ") %></td>
+            <td class="px-3 py-2 text-center"><%= item.required? ? "✓" : "—" %></td>
+            <td class="px-3 py-2 text-center"><%= item.active? ? "✓" : "—" %></td>
+            <td class="px-3 py-2 text-right">
+              <%= button_to "삭제", settings_checklist_item_path(item), method: :delete, data: { turbo_confirm: "정말 삭제하시겠습니까?" }, class: "text-xs text-red-600 hover:underline" %>
+            </td>
+          </tr>
+        <% end %>
+        <% if @items.empty? %>
+          <tr><td colspan="8" class="px-3 py-8 text-center text-sm text-gray-400">아직 체크리스트 항목이 없습니다. 위 폼에서 추가하세요.</td></tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
