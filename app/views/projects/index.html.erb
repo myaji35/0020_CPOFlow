@@ -1,11 +1,11 @@
-<% content_for :title, "프로젝트 관리" %>
+<% content_for :title, t("projects.page_title") %>
 
 <div class="flex flex-col gap-6">
   <!-- Header -->
   <div class="flex items-center justify-between">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">현장/프로젝트 관리</h1>
-      <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">원전·수력·터널·GTX 현장별 예산 집행률 관리</p>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white"><%= t("projects.page_title") %></h1>
+      <p class="text-sm text-gray-500 dark:text-gray-500 mt-1"><%= t("projects.page_subtitle") %></p>
     </div>
     <div class="flex items-center gap-2">
       <%# ISS-226: 뷰 토글 (리스트/Gantt) %>
@@ -13,19 +13,19 @@
         <%= link_to projects_path(request.query_parameters.merge(view: "list")),
               class: "px-3 py-2 text-sm font-medium transition-colors " + (@view == "list" ? "bg-[#1E3A5F] text-white" : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50") do %>
           <svg class="w-4 h-4 inline-block mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-          리스트
+          <%= t("projects.view_list") %>
         <% end %>
         <%= link_to projects_path(request.query_parameters.merge(view: "gantt")),
               class: "px-3 py-2 text-sm font-medium transition-colors " + (@view == "gantt" ? "bg-[#1E3A5F] text-white" : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50") do %>
           <svg class="w-4 h-4 inline-block mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="5" rx="1"/><rect x="8" y="11" width="10" height="5" rx="1"/><rect x="5" y="18" width="9" height="2" rx="1"/></svg>
-          Gantt
+          <%= t("projects.view_gantt") %>
         <% end %>
       </div>
       <%# ISS-264: viewer는 Create 버튼 비노출 %>
       <% if current_user.admin? || current_user.manager? || current_user.member? %>
         <%= link_to new_project_path, class: "inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors" do %>
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          새 프로젝트
+          <%= t("projects.new_btn") %>
         <% end %>
       <% end %>
     </div>
@@ -36,36 +36,36 @@
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
       <div class="flex items-center gap-2 mb-1">
         <svg class="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        <p class="text-xs text-gray-500 dark:text-gray-500 font-medium">총 현장 수</p>
+        <p class="text-xs text-gray-500 dark:text-gray-500 font-medium"><%= t("projects.stat_total") %></p>
       </div>
-      <p class="text-2xl font-bold text-gray-900 dark:text-white"><%= @total_count %>개</p>
-      <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">활성 <%= @active_count %>개</p>
+      <p class="text-2xl font-bold text-gray-900 dark:text-white"><%= @total_count %>個</p>
+      <p class="text-xs text-gray-500 dark:text-gray-500 mt-1"><%= t("projects.stat_active_suffix", count: @active_count) %></p>
     </div>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
       <div class="flex items-center gap-2 mb-1">
         <svg class="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        <p class="text-xs text-gray-500 dark:text-gray-500 font-medium">활성 주문 연결</p>
+        <p class="text-xs text-gray-500 dark:text-gray-500 font-medium"><%= t("projects.stat_active_orders") %></p>
       </div>
       <p class="text-2xl font-bold text-primary"><%= number_with_delimiter(@active_order_count) %>건</p>
-      <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">진행중 현장의 주문</p>
+      <p class="text-xs text-gray-500 dark:text-gray-500 mt-1"><%= t("projects.stat_active_orders_note") %></p>
     </div>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
       <div class="flex items-center gap-2 mb-1">
         <svg class="w-4 h-4 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        <p class="text-xs text-gray-500 dark:text-gray-500 font-medium">총 집행금액</p>
+        <p class="text-xs text-gray-500 dark:text-gray-500 font-medium"><%= t("projects.stat_total_value") %></p>
       </div>
       <p class="text-2xl font-bold text-green-600 dark:text-green-400">$<%= number_with_delimiter(@total_utilized.round.to_i) %></p>
       <% if @total_budget > 0 %>
-        <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">예산 대비 <%= (@total_utilized / @total_budget * 100).round(1) %>%</p>
+        <p class="text-xs text-gray-500 dark:text-gray-500 mt-1"><%= t("projects.budget_ratio", pct: (@total_utilized / @total_budget * 100).round(1)) %></p>
       <% end %>
     </div>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
       <div class="flex items-center gap-2 mb-1">
         <svg class="w-4 h-4 text-orange-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        <p class="text-xs text-gray-500 dark:text-gray-500 font-medium">평균 주문/현장</p>
+        <p class="text-xs text-gray-500 dark:text-gray-500 font-medium"><%= t("projects.stat_avg_orders") %></p>
       </div>
       <p class="text-2xl font-bold text-orange-600 dark:text-orange-400"><%= @avg_orders_per_project %>건</p>
-      <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">현장당 평균 발주</p>
+      <p class="text-xs text-gray-500 dark:text-gray-500 mt-1"><%= t("projects.stat_avg_note") %></p>
     </div>
   </div>
 
@@ -74,7 +74,7 @@
     <%= form_with url: projects_path, method: :get, local: true, class: "flex-1 flex items-center gap-2" do %>
       <div class="relative flex-1 max-w-md">
         <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" name="q" value="<%= params[:q] %>" placeholder="이름, 위치, 코드로 검색..."
+        <input type="text" name="q" value="<%= params[:q] %>" placeholder="<%= t("projects.search_placeholder") %>"
                class="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 dark:text-white dark:bg-gray-800 dark:border-gray-600 placeholder-gray-400 focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]">
       </div>
       <% if params[:category].present? %><input type="hidden" name="category" value="<%= params[:category] %>"><% end %>
@@ -83,11 +83,11 @@
         <input type="checkbox" name="active_only" value="1" <%= params[:active_only] == "1" ? "checked" : "" %>
                onchange="this.form.submit()"
                class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary">
-        활성만
+        <%= t("projects.active_only") %>
       </label>
-      <button type="submit" class="bg-primary text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors">검색</button>
+      <button type="submit" class="bg-primary text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors"><%= t("projects.search_btn") %></button>
       <% if params[:q].present? || params[:active_only] == "1" %>
-        <%= link_to "초기화", projects_path(category: params[:category], status: params[:status]), class: "text-sm text-gray-500 hover:text-primary" %>
+        <%= link_to t("projects.reset_btn"), projects_path(category: params[:category], status: params[:status]), class: "text-sm text-gray-500 hover:text-primary" %>
       <% end %>
     <% end %>
   </div>
@@ -95,7 +95,7 @@
   <!-- 카테고리 + 상태 필터 -->
   <div class="flex gap-2 flex-wrap items-center">
     <div class="flex gap-2 flex-wrap">
-      <%= link_to "전체", projects_path(status: params[:status]), class: "px-4 py-2 text-sm rounded-full #{params[:category].blank? ? 'bg-primary text-white' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-500 hover:border-primary'}" %>
+      <%= link_to t("projects.category_all"), projects_path(status: params[:status]), class: "px-4 py-2 text-sm rounded-full #{params[:category].blank? ? 'bg-primary text-white' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-500 hover:border-primary'}" %>
       <% Project::SITE_CATEGORIES.each do |cat| %>
         <% label = { "nuclear"=>"원전","hydro"=>"수력","tunnel"=>"터널","gtx"=>"GTX","general"=>"일반" }[cat] || cat %>
         <%= link_to label, projects_path(category: cat, status: params[:status]), class: "px-4 py-2 text-sm rounded-full #{params[:category] == cat ? 'bg-primary text-white' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-500 hover:border-primary'}" %>
@@ -103,8 +103,8 @@
     </div>
     <div class="w-px h-6 bg-gray-200 dark:bg-gray-700"></div>
     <div class="flex gap-2 flex-wrap">
-      <%= link_to "전체 상태", projects_path(category: params[:category]), class: "px-3 py-1.5 text-xs rounded-full #{params[:status].blank? ? 'bg-gray-700 text-white dark:bg-gray-300 dark:text-gray-900' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-500 hover:border-gray-400'}" %>
-      <% [["진행중", "active", "text-green-700 bg-green-50 dark:bg-green-900/30 dark:text-green-400"], ["계획", "planning", "text-yellow-700 bg-yellow-50 dark:bg-yellow-900/30 dark:text-yellow-400"], ["완료", "completed", "text-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-500"], ["중단", "suspended", "text-red-700 bg-red-50 dark:bg-red-900/30 dark:text-red-400"]].each do |label, val, cls| %>
+      <%= link_to t("projects.status_all"), projects_path(category: params[:category]), class: "px-3 py-1.5 text-xs rounded-full #{params[:status].blank? ? 'bg-gray-700 text-white dark:bg-gray-300 dark:text-gray-900' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-500 hover:border-gray-400'}" %>
+      <% [[t("projects.status_active"), "active", "text-green-700 bg-green-50 dark:bg-green-900/30 dark:text-green-400"], [t("projects.status_planning"), "planning", "text-yellow-700 bg-yellow-50 dark:bg-yellow-900/30 dark:text-yellow-400"], [t("projects.status_completed"), "completed", "text-gray-600 bg-gray-100 dark:bg-gray-700 dark:text-gray-500"], [t("projects.status_suspended"), "suspended", "text-red-700 bg-red-50 dark:bg-red-900/30 dark:text-red-400"]].each do |label, val, cls| %>
         <%= link_to label, projects_path(category: params[:category], status: val), class: "px-3 py-1.5 text-xs rounded-full font-medium #{params[:status] == val ? cls : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-500 hover:border-gray-400'}" %>
       <% end %>
     </div>
@@ -123,7 +123,7 @@
     <div class="grid grid-cols-2 gap-4">
       <!-- 파이차트 (SVG) -->
       <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-5">
-        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">현장 유형별 발주 비중</h3>
+        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4"><%= t("projects.chart_title") %></h3>
         <%
           colors = ["#1E3A5F","#00A1E0","#38BDF8","#7DD3FC","#BAE6FD"]
           cumulative = 0
@@ -165,7 +165,7 @@
               </div>
             <% end %>
             <div class="pt-2 border-t border-gray-200 dark:border-gray-700 flex justify-between text-xs font-semibold text-gray-700 dark:text-gray-300">
-              <span>합계</span><span><%= total_orders %>건 | $<%= number_with_delimiter(total_value.round.to_i) %></span>
+              <span><%= t("projects.chart_total") %></span><span><%= total_orders %>건 | $<%= number_with_delimiter(total_value.round.to_i) %></span>
             </div>
           </div>
         </div>
@@ -192,7 +192,7 @@
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-5">
       <div class="flex items-center justify-between mb-4">
         <div>
-          <h3 class="text-sm font-semibold text-gray-900 dark:text-white">프로젝트 타임라인</h3>
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-white"><%= t("projects.gantt_title") %></h3>
           <p class="text-xs text-gray-500 dark:text-gray-500">
             <%= @gantt_range[:start].strftime("%Y.%m.%d") %> ~ <%= @gantt_range[:end].strftime("%Y.%m.%d") %>
             · <%= @gantt_total_days %>일
@@ -201,10 +201,10 @@
         </div>
         <%# 범례 %>
         <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-500">
-          <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-[#00A1E0]"></span>진행</span>
-          <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-green-500"></span>완료</span>
-          <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-gray-400"></span>대기/중단</span>
-          <span class="flex items-center gap-1"><span class="w-0.5 h-3 bg-[#D93025]"></span>오늘</span>
+          <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-[#00A1E0]"></span><%= t("projects.gantt_legend_active") %></span>
+          <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-green-500"></span><%= t("projects.gantt_legend_completed") %></span>
+          <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-gray-400"></span><%= t("projects.gantt_legend_waiting") %></span>
+          <span class="flex items-center gap-1"><span class="w-0.5 h-3 bg-[#D93025]"></span><%= t("projects.gantt_legend_today") %></span>
         </div>
       </div>
 
@@ -273,7 +273,7 @@
                   </div>
                   <%# Today line %>
                   <% if today_in_range %>
-                    <div class="absolute top-0 bottom-0 w-0.5 bg-[#D93025] z-10" style="left: <%= today_offset %>%;" title="오늘"></div>
+                    <div class="absolute top-0 bottom-0 w-0.5 bg-[#D93025] z-10" style="left: <%= today_offset %>%;"></div>
                   <% end %>
                 </div>
               </div>
@@ -285,13 +285,13 @@
         <% no_date_count = @projects.count - @gantt_projects.size %>
         <% if no_date_count > 0 %>
           <p class="text-[11px] text-gray-500 dark:text-gray-500 mt-3">
-            💡 시작일/종료일이 없는 <%= no_date_count %>개 프로젝트는 Gantt에서 제외됨 — 각 프로젝트 수정에서 날짜 입력
+            <%= t("projects.gantt_no_dates", count: no_date_count) %>
           </p>
         <% end %>
       <% else %>
         <div class="py-10 text-center text-gray-500">
           <svg class="w-10 h-10 mx-auto mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/></svg>
-          <p class="text-sm">시작일/종료일이 설정된 프로젝트가 없습니다</p>
+          <p class="text-sm"><%= t("projects.gantt_empty") %></p>
         </div>
       <% end %>
     </div>
@@ -302,12 +302,12 @@
     <table class="w-full">
       <thead class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
         <tr>
-          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase">프로젝트명</th>
-          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase">발주처</th>
-          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase">현장 유형</th>
-          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase">상태</th>
-          <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase">오더 건수</th>
-          <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase">발주 금액</th>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase"><%= t("projects.col_project") %></th>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase"><%= t("projects.col_client") %></th>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase"><%= t("projects.col_category") %></th>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase"><%= t("projects.col_status") %></th>
+          <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase"><%= t("projects.col_orders") %></th>
+          <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase"><%= t("projects.col_value") %></th>
           <th class="px-4 py-3"></th>
         </tr>
       </thead>
@@ -331,12 +331,12 @@
               $<%= number_with_delimiter(proj.budget_utilized.round.to_i) %>
             </td>
             <td class="px-4 py-3 text-right">
-              <%= link_to "상세", proj, class: "text-xs text-primary hover:underline" %>
+              <%= link_to t("projects.detail_link"), proj, class: "text-xs text-primary hover:underline" %>
             </td>
           </tr>
         <% end %>
         <% if @projects.empty? %>
-          <tr><td colspan="7" class="px-4 py-12 text-center text-gray-500 dark:text-gray-500 text-sm">등록된 프로젝트가 없습니다.</td></tr>
+          <tr><td colspan="7" class="px-4 py-12 text-center text-gray-500 dark:text-gray-500 text-sm"><%= t("projects.empty") %></td></tr>
         <% end %>
       </tbody>
     </table>

@@ -9,7 +9,7 @@
       <div class="flex items-center gap-1.5 flex-wrap">
         <span class="font-semibold text-sm text-gray-900 dark:text-white truncate"><%= contact_person.name %></span>
         <% if contact_person.primary? %>
-          <span class="text-xs px-1.5 py-0.5 rounded-full bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 font-medium flex-shrink-0">주</span>
+          <span class="text-xs px-1.5 py-0.5 rounded-full bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 font-medium flex-shrink-0"><%= t("contact_persons.primary_badge") %></span>
         <% end %>
       </div>
       <p class="text-xs text-gray-500 dark:text-gray-500 truncate mt-0.5"><%= contact_person.title %></p>
@@ -45,7 +45,7 @@
       </a>
     <% end %>
     <% if contact_person.phone.present? %>
-      <a href="tel:<%= contact_person.phone %>" title="사무실: <%= contact_person.phone %>"
+      <a href="tel:<%= contact_person.phone %>" title="<%= t("contact_persons.office_phone_title", phone: contact_person.phone) %>"
          class="inline-flex items-center justify-center w-7 h-7 rounded-full border border-gray-200 dark:border-gray-600 text-gray-500 hover:text-green-600 hover:border-green-400 transition-colors">
         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.61 4.37 2 2 0 0 1 3.58 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.18 6.18l1.97-1.97a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
@@ -53,7 +53,7 @@
       </a>
     <% end %>
     <% if contact_person.mobile.present? %>
-      <a href="tel:<%= contact_person.mobile %>" title="모바일: <%= contact_person.mobile %>"
+      <a href="tel:<%= contact_person.mobile %>" title="<%= t("contact_persons.mobile_title", phone: contact_person.mobile) %>"
          class="inline-flex items-center justify-center w-7 h-7 rounded-full border border-gray-200 dark:border-gray-600 text-gray-500 hover:text-blue-600 hover:border-blue-400 transition-colors">
         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>
@@ -83,9 +83,9 @@
   <!-- 마지막 연락일 + 상세 보기 -->
   <div class="flex items-center justify-between">
     <p class="text-xs text-gray-500 dark:text-gray-500">
-      마지막 연락: <%= contact_person.last_contacted_label %>
+      <%= t("contact_persons.last_contacted", label: contact_person.last_contacted_label) %>
     </p>
     <%= link_to contact_person_path(contact_person),
-        class: "text-xs text-primary hover:underline" do %>상세 보기<% end %>
+        class: "text-xs text-primary hover:underline" do %><%= t("contact_persons.detail_link") %><% end %>
   </div>
 </div>

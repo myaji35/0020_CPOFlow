@@ -8,7 +8,7 @@
   <div class="flex items-start justify-between">
     <div>
       <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-500 mb-1">
-        <%= link_to "발주처 관리", clients_path, class: "hover:text-primary" %>
+        <%= link_to t("clients.breadcrumb"), clients_path, class: "hover:text-primary" %>
         <span>/</span>
         <span><%= @client.name %></span>
       </div>
@@ -24,13 +24,13 @@
     <div class="flex gap-2">
       <%= link_to edit_client_path(@client), class: "inline-flex items-center gap-1 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-500 px-3 py-2 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700" do %>
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        수정
+        <%= t("clients.edit_btn") %>
       <% end %>
       <% if current_user.manager? || current_user.admin? %>
-        <%= link_to client_path(@client), data: { turbo_method: :delete, turbo_confirm: "발주처를 삭제하시겠습니까?" },
+        <%= link_to client_path(@client), data: { turbo_method: :delete, turbo_confirm: t("clients.delete_confirm") },
             class: "inline-flex items-center gap-1 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-3 py-2 rounded-lg text-sm hover:bg-red-50 dark:hover:bg-red-900/20" do %>
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6m4-6v6"/><path d="M9 6V4h6v2"/></svg>
-          삭제
+          <%= t("clients.delete_btn") %>
         <% end %>
       <% end %>
     </div>
@@ -43,19 +43,19 @@
                     "D" => "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400" } %>
   <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-      <p class="text-xs text-gray-500 dark:text-gray-500">총 오더</p>
+      <p class="text-xs text-gray-500 dark:text-gray-500"><%= t("clients.kpi_total_orders") %></p>
       <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><%= @client.orders.count %></p>
     </div>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-      <p class="text-xs text-gray-500 dark:text-gray-500">총 거래금액</p>
+      <p class="text-xs text-gray-500 dark:text-gray-500"><%= t("clients.kpi_total_value") %></p>
       <p class="text-xl font-bold text-primary mt-1">$<%= number_with_delimiter(@client.total_order_value.round.to_i) %></p>
     </div>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-      <p class="text-xs text-gray-500 dark:text-gray-500">활성 오더</p>
+      <p class="text-xs text-gray-500 dark:text-gray-500"><%= t("clients.kpi_active_orders") %></p>
       <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><%= @client.active_orders_count %></p>
     </div>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-      <p class="text-xs text-gray-500 dark:text-gray-500">납기준수율</p>
+      <p class="text-xs text-gray-500 dark:text-gray-500"><%= t("clients.kpi_on_time_rate") %></p>
       <% if @on_time_rate %>
         <% rate_color = @on_time_rate >= 90 ? 'text-green-600 dark:text-green-400' : @on_time_rate >= 75 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400' %>
         <p class="text-2xl font-bold <%= rate_color %> mt-1"><%= @on_time_rate %>%</p>
@@ -64,13 +64,13 @@
       <% end %>
     </div>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-      <p class="text-xs text-gray-500 dark:text-gray-500">리스크 등급</p>
+      <p class="text-xs text-gray-500 dark:text-gray-500"><%= t("clients.kpi_risk_grade") %></p>
       <% if @risk_grade && @risk_grade != "N/A" %>
         <%
-          risk_desc = { "A" => "우수 (납기율 90%+, 연체 0건)",
-                        "B" => "양호 (납기율 75%+, 연체 1건 이하)",
-                        "C" => "주의 (납기율 60%+, 연체 3건 이하)",
-                        "D" => "위험 (납기율 60% 미만)" }
+          risk_desc = { "A" => t("clients.risk_excellent"),
+                        "B" => t("clients.risk_good"),
+                        "C" => t("clients.risk_caution"),
+                        "D" => t("clients.risk_danger") }
         %>
         <p class="mt-1">
           <span class="inline-flex px-3 py-1 text-xl font-bold rounded-lg <%= risk_color[@risk_grade] || 'bg-gray-500 text-white' %>" title="<%= risk_desc[@risk_grade] %>"><%= @risk_grade %></span>
@@ -78,7 +78,7 @@
         <p class="text-xs text-gray-500 dark:text-gray-500 mt-1"><%= risk_desc[@risk_grade] %></p>
       <% else %>
         <p class="text-2xl font-bold text-gray-300 dark:text-gray-600 mt-1">-</p>
-        <p class="text-xs text-gray-400 dark:text-gray-600 mt-1">납기 데이터 부족</p>
+        <p class="text-xs text-gray-400 dark:text-gray-600 mt-1"><%= t("clients.kpi_no_data") %></p>
       <% end %>
     </div>
   </div>
@@ -89,37 +89,37 @@
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
       <div class="flex items-center justify-between mb-4">
         <div>
-          <h3 class="text-sm font-semibold text-gray-900 dark:text-white">거래 품질 프로파일</h3>
-          <p class="text-xs text-gray-500 dark:text-gray-500">리스크 발주처 식별을 위한 추가 지표</p>
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-white"><%= t("clients.ci_title") %></h3>
+          <p class="text-xs text-gray-500 dark:text-gray-500"><%= t("clients.ci_subtitle") %></p>
         </div>
         <span class="inline-flex items-center gap-1 text-[10px] text-gray-400 dark:text-gray-500"
               title="조회 시각: <%= ci[:computed_at].strftime('%Y-%m-%d %H:%M') %>">
           <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          실시간
+          <%= t("clients.ci_realtime") %>
         </span>
       </div>
       <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
         <%# 평균 리드타임 %>
         <div class="p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-          <p class="text-[11px] text-gray-500 dark:text-gray-400">평균 리드타임</p>
+          <p class="text-[11px] text-gray-500 dark:text-gray-400"><%= t("clients.ci_avg_lead") %></p>
           <p class="text-xl font-bold text-gray-900 dark:text-white mt-0.5">
             <% if ci[:avg_lead_days] %>
-              <%= ci[:avg_lead_days] %><span class="text-xs font-normal ml-0.5">일</span>
+              <%= ci[:avg_lead_days] %><span class="text-xs font-normal ml-0.5"><%= t("clients.ci_lead_unit") %></span>
             <% else %><span class="text-gray-300">—</span><% end %>
           </p>
-          <p class="text-[10px] text-gray-400 mt-1">생성 → 납품</p>
+          <p class="text-[10px] text-gray-400 mt-1"><%= t("clients.ci_lead_note") %></p>
         </div>
         <%# 평균 견적 갯수 (까다로움 지수) %>
         <div class="p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-          <p class="text-[11px] text-gray-500 dark:text-gray-400">건당 견적 수</p>
+          <p class="text-[11px] text-gray-500 dark:text-gray-400"><%= t("clients.ci_avg_quotes") %></p>
           <p class="text-xl font-bold <%= ci[:avg_quotes] >= 3.0 ? 'text-[#F4A83A]' : 'text-gray-900 dark:text-white' %> mt-0.5">
-            <%= ci[:avg_quotes] %><span class="text-xs font-normal ml-0.5">개</span>
+            <%= ci[:avg_quotes] %><span class="text-xs font-normal ml-0.5"><%= t("clients.ci_quotes_unit") %></span>
           </p>
-          <p class="text-[10px] text-gray-400 mt-1"><%= ci[:avg_quotes] >= 3.0 ? "까다로움" : "일반" %></p>
+          <p class="text-[10px] text-gray-400 mt-1"><%= ci[:avg_quotes] >= 3.0 ? t("clients.ci_picky") : t("clients.ci_normal") %></p>
         </div>
         <%# 취소/포기율 %>
         <div class="p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-          <p class="text-[11px] text-gray-500 dark:text-gray-400">취소/포기율</p>
+          <p class="text-[11px] text-gray-500 dark:text-gray-400"><%= t("clients.ci_cancel_rate") %></p>
           <p class="text-xl font-bold <%= ci[:cancellation_rate] >= 10 ? 'text-[#D93025]' : (ci[:cancellation_rate] >= 5 ? 'text-[#F4A83A]' : 'text-gray-900 dark:text-white') %> mt-0.5">
             <%= ci[:cancellation_rate] %>%
           </p>
@@ -127,7 +127,7 @@
         </div>
         <%# 최근 30일 연체 트렌드 %>
         <div class="p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-          <p class="text-[11px] text-gray-500 dark:text-gray-400">연체 트렌드 (30일)</p>
+          <p class="text-[11px] text-gray-500 dark:text-gray-400"><%= t("clients.ci_overdue_trend") %></p>
           <p class="text-xl font-bold mt-0.5 flex items-center gap-1
                     <%= ci[:trend] == :increasing ? 'text-[#D93025]' : (ci[:trend] == :decreasing ? 'text-green-600' : 'text-gray-900 dark:text-white') %>">
             <%= ci[:recent_overdue] %>
@@ -143,11 +143,11 @@
         </div>
         <%# 평균 발주 금액 %>
         <div class="p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-          <p class="text-[11px] text-gray-500 dark:text-gray-400">평균 발주액</p>
+          <p class="text-[11px] text-gray-500 dark:text-gray-400"><%= t("clients.ci_avg_value") %></p>
           <p class="text-xl font-bold text-gray-900 dark:text-white mt-0.5">
             $<%= number_with_delimiter(ci[:avg_value]) %>
           </p>
-          <p class="text-[10px] text-gray-400 mt-1"><%= ci[:delivered_count] %>건 납품</p>
+          <p class="text-[10px] text-gray-400 mt-1"><%= t("clients.ci_delivered", count: ci[:delivered_count]) %></p>
         </div>
       </div>
     </div>
@@ -159,15 +159,15 @@
       <nav class="flex gap-6">
         <button @click="tab='contacts'" :class="tab==='contacts' ? 'border-primary text-primary' : 'border-transparent text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
             class="py-3 border-b-2 text-sm font-medium transition-colors">
-          담당자 (<%= @contact_persons.count %>)
+          <%= t("clients.tab_contacts") %> (<%= @contact_persons.count %>)
         </button>
         <button @click="tab='projects'" :class="tab==='projects' ? 'border-primary text-primary' : 'border-transparent text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
             class="py-3 border-b-2 text-sm font-medium transition-colors">
-          프로젝트 (<%= @projects.count %>)
+          <%= t("clients.tab_projects") %> (<%= @projects.count %>)
         </button>
         <button @click="tab='orders'" :class="tab==='orders' ? 'border-primary text-primary' : 'border-transparent text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
             class="py-3 border-b-2 text-sm font-medium transition-colors">
-          거래이력 (<%= @orders.count %>)
+          <%= t("clients.tab_orders") %> (<%= @orders.count %>)
         </button>
       </nav>
     </div>
@@ -175,15 +175,15 @@
     <!-- 담당자 탭 -->
     <div x-show="tab==='contacts'" class="p-4">
       <div class="flex justify-between items-center mb-4">
-        <h3 class="font-medium text-gray-900 dark:text-white">담당자 목록</h3>
+        <h3 class="font-medium text-gray-900 dark:text-white"><%= t("clients.contacts_list_title") %></h3>
         <div class="flex items-center gap-2">
           <%= link_to contact_persons_path, class: "inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300" do %>
-            전체 보기
+            <%= t("clients.contacts_view_all") %>
           <% end %>
           <button onclick="document.getElementById('new-contact-form-<%= @client.id %>').classList.toggle('hidden')"
                   class="inline-flex items-center gap-1 text-sm text-primary hover:underline">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            담당자 추가
+            <%= t("clients.contacts_add_btn") %>
           </button>
         </div>
       </div>
@@ -197,7 +197,7 @@
           <%= render "contact_persons/row", contact_person: cp, contactable: @client %>
         <% end %>
         <% if @contact_persons.empty? %>
-          <p class="text-center text-gray-500 dark:text-gray-500 text-sm py-8">등록된 담당자가 없습니다.</p>
+          <p class="text-center text-gray-500 dark:text-gray-500 text-sm py-8"><%= t("clients.contacts_empty") %></p>
         <% end %>
       </div>
     </div>
@@ -205,10 +205,10 @@
     <!-- 프로젝트 탭 -->
     <div x-show="tab==='projects'" class="p-4">
       <div class="flex justify-between items-center mb-4">
-        <h3 class="font-medium text-gray-900 dark:text-white">프로젝트 목록</h3>
+        <h3 class="font-medium text-gray-900 dark:text-white"><%= t("clients.projects_list_title") %></h3>
         <%= link_to new_project_path(client_id: @client.id), class: "inline-flex items-center gap-1 text-sm text-primary hover:underline" do %>
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          프로젝트 추가
+          <%= t("clients.projects_add_btn") %>
         <% end %>
       </div>
       <div class="space-y-3">
@@ -229,11 +229,11 @@
                 </div>
               <% end %>
             </div>
-            <%= link_to "상세", proj, class: "text-xs text-primary hover:underline" %>
+            <%= link_to t("clients.detail_link"), proj, class: "text-xs text-primary hover:underline" %>
           </div>
         <% end %>
         <% if @projects.empty? %>
-          <p class="text-center text-gray-500 dark:text-gray-500 text-sm py-8">등록된 프로젝트가 없습니다.</p>
+          <p class="text-center text-gray-500 dark:text-gray-500 text-sm py-8"><%= t("clients.projects_empty") %></p>
         <% end %>
       </div>
     </div>
@@ -243,7 +243,7 @@
       <!-- 월별 거래 추이 차트 (FR-03) -->
       <% if @monthly_trend.any? { |m| m[:orders] > 0 } %>
         <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-          <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase mb-3">월별 거래 추이 (최근 12개월)</h4>
+          <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase mb-3"><%= t("clients.orders_chart_title") %></h4>
           <canvas id="clientMonthlyChart" height="80"></canvas>
         </div>
         <script>
@@ -280,10 +280,10 @@
       <% if @order_status_counts.any? %>
         <div class="mb-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
           <div class="flex items-center justify-between mb-2">
-            <span class="text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase">상태별 현황</span>
+            <span class="text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase"><%= t("clients.orders_status_title") %></span>
             <% if @on_time_rate %>
               <span class="text-xs text-gray-500 dark:text-gray-500">
-                납기준수율 <span class="font-bold <%= @on_time_rate >= 80 ? 'text-green-600 dark:text-green-400' : @on_time_rate >= 60 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400' %>"><%= @on_time_rate %>%</span>
+                <%= t("clients.orders_on_time") %> <span class="font-bold <%= @on_time_rate >= 80 ? 'text-green-600 dark:text-green-400' : @on_time_rate >= 60 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400' %>"><%= @on_time_rate %>%</span>
               </span>
             <% end %>
           </div>
@@ -303,26 +303,26 @@
       <div class="flex flex-wrap items-center gap-2 mb-4">
         <%= form_with url: client_path(@client), method: :get, class: "flex flex-wrap items-center gap-2" do |f| %>
           <%= f.hidden_field :tab, value: "orders" %>
-          <%= f.select :period, [["전체 기간", ""], ["이번달", "this_month"], ["최근 3개월", "3months"], ["올해", "this_year"]],
+          <%= f.select :period, [[t("clients.filter_all_periods"), ""], [t("clients.filter_this_month"), "this_month"], [t("clients.filter_3months"), "3months"], [t("clients.filter_this_year"), "this_year"]],
               { selected: params[:period] },
               class: "text-xs border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg px-2 py-1.5" %>
-          <%= f.select :project_id, [["전체 현장", ""], *@projects.map { |p| [p.name, p.id] }],
+          <%= f.select :project_id, [[t("clients.filter_all_sites"), ""], *@projects.map { |p| [p.name, p.id] }],
               { selected: params[:project_id] },
               class: "text-xs border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg px-2 py-1.5" %>
-          <%= f.select :order_status, [["전체 상태", ""], *Order::STATUS_LABELS.map { |k, v| [v, k] }],
+          <%= f.select :order_status, [[t("clients.filter_all_statuses"), ""], *Order::STATUS_LABELS.map { |k, v| [v, k] }],
               { selected: params[:order_status] },
               class: "text-xs border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg px-2 py-1.5" %>
-          <%= f.select :sort, [["납기일순", "due_date"], ["금액순", "value"], ["최신순", "recent"]],
+          <%= f.select :sort, [[t("clients.sort_due_date"), "due_date"], [t("clients.sort_value"), "value"], [t("clients.sort_recent"), "recent"]],
               { selected: params[:sort] || "due_date" },
               class: "text-xs border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg px-2 py-1.5" %>
-          <%= f.submit "적용", class: "text-xs px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 cursor-pointer" %>
+          <%= f.submit t("clients.filter_apply"), class: "text-xs px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 cursor-pointer" %>
         <% end %>
         <%= link_to client_path(@client, format: :csv, **request.query_parameters.except("format")),
             class: "inline-flex items-center gap-1 text-xs text-gray-500 dark:text-gray-500 hover:text-primary border border-gray-200 dark:border-gray-600 px-2 py-1.5 rounded-lg transition-colors" do %>
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           CSV
         <% end %>
-        <span class="text-xs text-gray-500 dark:text-gray-500 ml-auto"><%= @orders.count %>건</span>
+        <span class="text-xs text-gray-500 dark:text-gray-500 ml-auto"><%= t("clients.orders_count", count: @orders.count) %></span>
       </div>
 
       <%# 거래이력 목록 %>
@@ -340,7 +340,7 @@
               </div>
               <% if order.due_date %>
                 <span class="text-xs <%= due_class %>">
-                  납기: <%= order.due_date.strftime("%Y-%m-%d") %>
+                  <%= t("clients.order_due", date: order.due_date.strftime("%Y-%m-%d")) %>
                   <% if days && days < 0 %>(D+<%= days.abs %>)<% elsif days %>  (D-<%= days %>)<% end %>
                 </span>
               <% end %>
@@ -350,12 +350,12 @@
                 <span class="text-sm font-medium text-gray-700 dark:text-gray-300">$<%= number_with_delimiter(order.estimated_value.round.to_i) %></span>
               <% end %>
               <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-500"><%= Order::STATUS_LABELS[order.status] || order.status %></span>
-              <%= link_to "상세", order, class: "text-xs text-primary hover:underline" %>
+              <%= link_to t("clients.detail_link"), order, class: "text-xs text-primary hover:underline" %>
             </div>
           </div>
         <% end %>
         <% if @orders.empty? %>
-          <p class="text-center text-gray-500 dark:text-gray-500 text-sm py-8">거래이력이 없습니다.</p>
+          <p class="text-center text-gray-500 dark:text-gray-500 text-sm py-8"><%= t("clients.orders_empty") %></p>
         <% end %>
       </div>
     </div>

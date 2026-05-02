@@ -2,7 +2,7 @@
 <div id="new-contact-form-<%= contactable.id %>"
      class="mb-4 p-4 border border-primary/20 rounded-lg bg-blue-50/30 dark:bg-blue-900/10">
   <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-    <%= contact_person.persisted? ? "담당자 수정 — #{contact_person.name}" : "새 담당자 추가" %>
+    <%= contact_person.persisted? ? t("contact_persons.inline_edit_title", name: contact_person.name) : t("contact_persons.inline_add_title") %>
   </h4>
 
   <% contactable_type = contactable.is_a?(Client) ? :client : :supplier %>
@@ -18,52 +18,52 @@
 
     <div class="grid grid-cols-2 gap-3 mb-3">
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1">이름 <span class="text-red-500">*</span></label>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1"><%= t("contact_persons.form_name") %></label>
         <%= f.text_field :name, required: true,
             class: "w-full text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:border-primary",
             placeholder: "홍길동" %>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1">직책</label>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1"><%= t("contact_persons.form_title") %></label>
         <%= f.text_field :title,
             class: "w-full text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:border-primary",
             placeholder: "Sales Manager" %>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1">부서</label>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1"><%= t("contact_persons.form_department") %></label>
         <%= f.select :department,
-            [["선택 안 함", ""]] + ContactPerson::DEPARTMENTS.map { |d| [d, d] },
+            [[t("contact_persons.form_select_none"), ""]] + ContactPerson::DEPARTMENTS.map { |d| [d, d] },
             { selected: contact_person.department },
             class: "w-full text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:border-primary" %>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1">이메일</label>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1"><%= t("contact_persons.form_email") %></label>
         <%= f.email_field :email,
             class: "w-full text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:border-primary",
             placeholder: "name@company.com" %>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1">전화 (사무실)</label>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1"><%= t("contact_persons.form_phone") %></label>
         <%= f.telephone_field :phone,
             class: "w-full text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:border-primary",
             placeholder: "+971-2-000-0000" %>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1">모바일</label>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1"><%= t("contact_persons.form_mobile") %></label>
         <%= f.telephone_field :mobile,
             class: "w-full text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:border-primary",
             placeholder: "+971-50-000-0000" %>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1">WhatsApp</label>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1"><%= t("contact_persons.form_whatsapp") %></label>
         <%= f.telephone_field :whatsapp,
             class: "w-full text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:border-primary",
             placeholder: "+971-50-000-0000" %>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1">언어</label>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1"><%= t("contact_persons.form_language") %></label>
         <%= f.select :language,
-            [["선택 안 함", ""]] + ContactPerson::LANGUAGES.map { |code, name| [name, code] },
+            [[t("contact_persons.form_select_none"), ""]] + ContactPerson::LANGUAGES.map { |code, name| [name, code] },
             { selected: contact_person.language },
             class: "w-full text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:border-primary" %>
       </div>
@@ -72,7 +72,7 @@
     <!-- 주 담당자 체크박스 -->
     <div class="flex items-center gap-2 mb-3">
       <%= f.check_box :primary, class: "rounded border-gray-300 text-primary focus:ring-primary" %>
-      <label class="text-xs text-gray-600 dark:text-gray-500">주 담당자로 설정</label>
+      <label class="text-xs text-gray-600 dark:text-gray-500"><%= t("contact_persons.inline_primary_label") %></label>
     </div>
 
     <div class="flex gap-2 justify-end">
@@ -81,16 +81,16 @@
         <button type="button"
                 onclick="resetContactForm('<%= contactable.class.name.downcase %>', <%= contactable.id %>)"
                 class="text-sm text-gray-500 dark:text-gray-500 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-          취소
+          <%= t("contact_persons.inline_cancel") %>
         </button>
       <% else %>
         <button type="button"
                 onclick="document.getElementById('new-contact-form-<%= contactable.id %>').classList.add('hidden')"
                 class="text-sm text-gray-500 dark:text-gray-500 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-          취소
+          <%= t("contact_persons.inline_cancel") %>
         </button>
       <% end %>
-      <%= f.submit contact_person.persisted? ? "수정 저장" : "저장",
+      <%= f.submit contact_person.persisted? ? t("contact_persons.inline_update") : t("contact_persons.inline_save"),
           class: "text-sm text-white bg-primary px-4 py-1.5 rounded-lg hover:bg-primary/90 cursor-pointer transition-colors" %>
     </div>
   <% end %>

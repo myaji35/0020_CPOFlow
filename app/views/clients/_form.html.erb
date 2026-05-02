@@ -11,43 +11,43 @@
 
   <div class="grid grid-cols-2 gap-4">
     <div>
-      <%= f.label :name, "회사명 *", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
-      <%= f.text_field :name, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary", placeholder: "예: ENEC" %>
+      <%= f.label :name, t("clients.form_company_name"), class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+      <%= f.text_field :name, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary", placeholder: "e.g. ENEC" %>
     </div>
     <div>
-      <%= f.label :code, "코드 *", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
-      <%= f.text_field :code, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary", placeholder: "예: CL-001" %>
+      <%= f.label :code, t("clients.form_code"), class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+      <%= f.text_field :code, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary", placeholder: "e.g. CL-001" %>
     </div>
   </div>
 
   <div class="grid grid-cols-2 gap-4">
     <div>
-      <%= f.label :country, "국가 *", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
-      <%= f.text_field :country, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary", placeholder: "예: AE, KR, US" %>
+      <%= f.label :country, t("clients.form_country"), class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+      <%= f.text_field :country, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary", placeholder: "e.g. AE, KR, US" %>
     </div>
     <div>
-      <%= f.label :industry, "산업군", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+      <%= f.label :industry, t("clients.form_industry"), class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
       <%= f.select :industry,
-          options_for_select([["선택하세요", ""]] + Client::INDUSTRIES.map { |i| [{ "nuclear"=>"원전","hydro"=>"수력","tunnel"=>"터널","gtx"=>"GTX","construction"=>"건설","general"=>"일반" }[i] || i, i] }, @client.industry),
+          options_for_select([[t("clients.form_select"), ""]] + Client::INDUSTRIES.map { |i| [{ "nuclear"=>"원전","hydro"=>"수력","tunnel"=>"터널","gtx"=>"GTX","construction"=>"건설","general"=>"일반" }[i] || i, i] }, @client.industry),
           {}, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
     </div>
   </div>
 
   <div class="grid grid-cols-3 gap-4">
     <div>
-      <%= f.label :credit_grade, "신용등급", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+      <%= f.label :credit_grade, t("clients.form_credit_grade"), class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
       <%= f.select :credit_grade,
-          options_for_select([["선택하세요", ""]] + Client::CREDIT_GRADES.map { |g| [g + "등급", g] }, @client.credit_grade),
+          options_for_select([[t("clients.form_select"), ""]] + Client::CREDIT_GRADES.map { |g| [g + "등급", g] }, @client.credit_grade),
           {}, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
     </div>
     <div>
-      <%= f.label :payment_terms, "결제조건", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+      <%= f.label :payment_terms, t("clients.form_payment_terms"), class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
       <%= f.select :payment_terms,
-          options_for_select([["선택하세요", ""]] + Client::PAYMENT_TERMS, @client.payment_terms),
+          options_for_select([[t("clients.form_select"), ""]] + Client::PAYMENT_TERMS, @client.payment_terms),
           {}, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
     </div>
     <div>
-      <%= f.label :currency, "통화", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+      <%= f.label :currency, t("clients.form_currency"), class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
       <%= f.select :currency,
           options_for_select(["AED", "USD", "KRW", "EUR", "CHF"].map { |c| [c, c] }, @client.currency || "AED"),
           {}, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
@@ -56,38 +56,38 @@
 
   <div class="grid grid-cols-2 gap-4">
     <div>
-      <%= f.label :address, "주소", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+      <%= f.label :address, t("clients.form_address"), class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
       <%= f.text_field :address, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
     </div>
     <div>
-      <%= f.label :website, "웹사이트", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+      <%= f.label :website, t("clients.form_website"), class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
       <%= f.url_field :website, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary", placeholder: "https://" %>
     </div>
   </div>
 
   <div class="grid grid-cols-2 gap-4">
     <div>
-      <%= f.label :contract_start_date, "계약 시작일", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+      <%= f.label :contract_start_date, t("clients.form_contract_start"), class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
       <%= f.date_field :contract_start_date, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
     </div>
     <div>
-      <%= f.label :ecount_code, "eCount 코드", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+      <%= f.label :ecount_code, t("clients.form_ecount_code"), class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
       <%= f.text_field :ecount_code, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
     </div>
   </div>
 
   <div>
-    <%= f.label :notes, "비고", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+    <%= f.label :notes, t("clients.form_notes"), class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
     <%= f.text_area :notes, rows: 3, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
   </div>
 
   <div class="flex items-center gap-2">
     <%= f.check_box :active, class: "rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary" %>
-    <%= f.label :active, "활성", class: "text-sm font-medium text-gray-700 dark:text-gray-300" %>
+    <%= f.label :active, t("clients.form_active"), class: "text-sm font-medium text-gray-700 dark:text-gray-300" %>
   </div>
 
   <div class="flex gap-3 pt-2">
-    <%= f.submit @client.new_record? ? "등록" : "수정", class: "bg-primary text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors cursor-pointer" %>
-    <%= link_to "취소", @client.new_record? ? clients_path : @client, class: "border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-500 px-6 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700" %>
+    <%= f.submit @client.new_record? ? t("clients.form_submit_create") : t("clients.form_submit_update"), class: "bg-primary text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors cursor-pointer" %>
+    <%= link_to t("clients.form_cancel"), @client.new_record? ? clients_path : @client, class: "border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-500 px-6 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700" %>
   </div>
 <% end %>

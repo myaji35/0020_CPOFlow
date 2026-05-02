@@ -7,64 +7,64 @@
 
   <div class="grid grid-cols-2 gap-4">
     <div>
-      <%= f.label :name, "이름 *", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+      <%= f.label :name, t("contact_persons.form_name"), class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
       <%= f.text_field :name, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
     </div>
     <div>
-      <%= f.label :title, "직책", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+      <%= f.label :title, t("contact_persons.form_title"), class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
       <%= f.text_field :title, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary", placeholder: "예: Procurement Manager" %>
     </div>
   </div>
 
   <div class="grid grid-cols-2 gap-4">
     <div>
-      <%= f.label :email, "이메일", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+      <%= f.label :email, t("contact_persons.form_email"), class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
       <%= f.email_field :email, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
     </div>
     <div>
-      <%= f.label :department, "부서", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+      <%= f.label :department, t("contact_persons.form_department"), class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
       <%= f.select :department,
-          options_for_select([["선택 안 함", ""]] + ContactPerson::DEPARTMENTS.map { |d| [d, d] }, @contact_person.department),
+          options_for_select([[t("contact_persons.form_select_none"), ""]] + ContactPerson::DEPARTMENTS.map { |d| [d, d] }, @contact_person.department),
           {}, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
     </div>
   </div>
 
   <div class="grid grid-cols-2 gap-4">
     <div>
-      <%= f.label :phone, "전화 (사무실)", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+      <%= f.label :phone, t("contact_persons.form_phone"), class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
       <%= f.text_field :phone, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary", placeholder: "+971-2-000-0000" %>
     </div>
     <div>
-      <%= f.label :mobile, "모바일", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+      <%= f.label :mobile, t("contact_persons.form_mobile"), class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
       <%= f.text_field :mobile, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary", placeholder: "+971-50-000-0000" %>
     </div>
   </div>
 
   <div class="grid grid-cols-2 gap-4">
     <div>
-      <%= f.label :whatsapp, "WhatsApp", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+      <%= f.label :whatsapp, t("contact_persons.form_whatsapp"), class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
       <%= f.text_field :whatsapp, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
     </div>
     <div>
-      <%= f.label :wechat, "WeChat", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+      <%= f.label :wechat, t("contact_persons.form_wechat"), class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
       <%= f.text_field :wechat, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
     </div>
   </div>
 
   <div class="grid grid-cols-2 gap-4">
     <div>
-      <%= f.label :linkedin, "LinkedIn URL", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+      <%= f.label :linkedin, t("contact_persons.form_linkedin"), class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
       <%= f.url_field :linkedin, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary", placeholder: "https://linkedin.com/in/..." %>
     </div>
     <div>
-      <%= f.label :nationality, "국적", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+      <%= f.label :nationality, t("contact_persons.form_nationality"), class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
       <%= f.text_field :nationality, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
     </div>
   </div>
 
   <div class="grid grid-cols-2 gap-4">
     <div>
-      <%= f.label :language, "언어", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+      <%= f.label :language, t("contact_persons.form_language"), class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
       <%= f.select :language,
           options_for_select(ContactPerson::LANGUAGES.map { |k, v| [v, k] }, @contact_person.language || "en"),
           {}, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
@@ -73,16 +73,16 @@
 
   <div class="flex items-center gap-2">
     <%= f.check_box :primary, class: "rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary" %>
-    <%= f.label :primary, "주담당자로 설정 ★", class: "text-sm font-medium text-gray-700 dark:text-gray-300" %>
+    <%= f.label :primary, t("contact_persons.form_primary"), class: "text-sm font-medium text-gray-700 dark:text-gray-300" %>
   </div>
 
   <div>
-    <%= f.label :notes, "비고", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+    <%= f.label :notes, t("contact_persons.form_notes"), class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
     <%= f.text_area :notes, rows: 2, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
   </div>
 
   <div class="flex gap-3 pt-2">
-    <%= f.submit @contact_person.new_record? ? "등록" : "수정", class: "bg-primary text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors cursor-pointer" %>
-    <%= link_to "취소", @contactable, class: "border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-500 px-6 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700" %>
+    <%= f.submit @contact_person.new_record? ? t("contact_persons.form_submit_create") : t("contact_persons.form_submit_update"), class: "bg-primary text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors cursor-pointer" %>
+    <%= link_to t("contact_persons.form_cancel"), @contactable, class: "border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-500 px-6 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700" %>
   </div>
 <% end %>

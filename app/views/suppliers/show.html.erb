@@ -8,7 +8,7 @@
   <div class="flex items-start justify-between">
     <div>
       <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-500 mb-1">
-        <%= link_to "거래처 관리", suppliers_path, class: "hover:text-primary" %>
+        <%= link_to t("suppliers.breadcrumb"), suppliers_path, class: "hover:text-primary" %>
         <span>/</span>
         <span><%= @supplier.name %></span>
       </div>
@@ -18,22 +18,22 @@
         <% if @supplier.industry.present? %><span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400"><%= @supplier.industry_label %></span><% end %>
         <% if @supplier.credit_grade.present? %><span class="text-xs font-bold"><%= @supplier.credit_grade %>등급</span><% end %>
         <% if @supplier.payment_terms.present? %><span><%= @supplier.payment_terms %></span><% end %>
-        <% if @supplier.lead_time_days.present? %><span>리드타임 <%= @supplier.lead_time_days %>일</span><% end %>
+        <% if @supplier.lead_time_days.present? %><span><%= t("suppliers.lead_time", days: @supplier.lead_time_days) %></span><% end %>
         <% ecount_diffs = @supplier.ecount_diff %>
         <% if ecount_diffs.any? %>
           <span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-[#D93025] text-white" title="eCount 값과 <%= ecount_diffs.size %>개 필드 불일치 — 아래 경고 박스 참조">
             <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            eCount 불일치 (<%= ecount_diffs.size %>개)
+            <%= t("suppliers.ecount_mismatch", count: ecount_diffs.size) %>
           </span>
         <% elsif @supplier.ecount_synced_at.present? %>
           <span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-green-600 text-white" title="<%= @supplier.ecount_synced_at.strftime('%Y-%m-%d %H:%M') %>">
             <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-            eCount 동기화됨
+            <%= t("suppliers.ecount_synced_badge") %>
           </span>
         <% elsif @supplier.ecount_code.present? %>
           <span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-yellow-500 text-white">
             <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            eCount 미동기화
+            <%= t("suppliers.ecount_unsynced_badge") %>
           </span>
         <% end %>
       </div>
@@ -41,7 +41,7 @@
     <div class="flex gap-2">
       <%= link_to edit_supplier_path(@supplier), class: "inline-flex items-center gap-1 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-500 px-3 py-2 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700" do %>
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        수정
+        <%= t("suppliers.edit_btn") %>
       <% end %>
     </div>
   </div>
@@ -53,17 +53,17 @@
         <svg class="w-5 h-5 text-[#D93025] flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         <div class="flex-1">
           <p class="text-sm font-semibold text-red-900 dark:text-red-200 mb-2">
-            eCount 값과 <%= ecount_diffs.size %>개 필드가 불일치합니다
+            <%= t("suppliers.ecount_warning_title", count: ecount_diffs.size) %>
           </p>
           <p class="text-xs text-red-700 dark:text-red-300 mb-3">
-            마지막 동기화: <%= @supplier.ecount_synced_at&.strftime('%Y-%m-%d %H:%M') || '미동기화' %> · CPOFlow에서 수정되었거나 eCount 쪽 값이 바뀐 상태입니다. 재동기화하거나 eCount에서 일괄 수정하세요.
+            <%= t("suppliers.ecount_warning_desc", date: (@supplier.ecount_synced_at&.strftime('%Y-%m-%d %H:%M') || t("suppliers.ecount_not_synced"))) %>
           </p>
           <table class="w-full text-xs">
             <thead>
               <tr class="text-left text-red-700 dark:text-red-400 border-b border-red-200 dark:border-red-900/50">
-                <th class="py-1.5 pr-3 font-semibold">필드</th>
-                <th class="py-1.5 pr-3 font-semibold">eCount 값</th>
-                <th class="py-1.5 font-semibold">CPOFlow 값</th>
+                <th class="py-1.5 pr-3 font-semibold"><%= t("suppliers.ecount_col_field") %></th>
+                <th class="py-1.5 pr-3 font-semibold"><%= t("suppliers.ecount_col_ecount") %></th>
+                <th class="py-1.5 font-semibold"><%= t("suppliers.ecount_col_local") %></th>
               </tr>
             </thead>
             <tbody class="divide-y divide-red-100 dark:divide-red-900/30">
@@ -88,19 +88,19 @@
                     "D" => "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400" } %>
   <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-      <p class="text-xs text-gray-500 dark:text-gray-500">총 공급 오더</p>
+      <p class="text-xs text-gray-500 dark:text-gray-500"><%= t("suppliers.kpi_total_orders") %></p>
       <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><%= @orders.count %></p>
     </div>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-      <p class="text-xs text-gray-500 dark:text-gray-500">총 공급 금액</p>
+      <p class="text-xs text-gray-500 dark:text-gray-500"><%= t("suppliers.kpi_total_value") %></p>
       <p class="text-xl font-bold text-primary mt-1">$<%= number_with_delimiter(@supplier.total_supply_value.round.to_i) %></p>
     </div>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-      <p class="text-xs text-gray-500 dark:text-gray-500">납품 품목</p>
+      <p class="text-xs text-gray-500 dark:text-gray-500"><%= t("suppliers.kpi_products") %></p>
       <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><%= @supplier_products.count %></p>
     </div>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-      <p class="text-xs text-gray-500 dark:text-gray-500">납기준수율</p>
+      <p class="text-xs text-gray-500 dark:text-gray-500"><%= t("suppliers.kpi_on_time_rate") %></p>
       <% if @on_time_rate %>
         <% rate_color = @on_time_rate >= 90 ? 'text-green-600 dark:text-green-400' : (@on_time_rate >= 75 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400') %>
         <p class="text-2xl font-bold <%= rate_color %> mt-1"><%= @on_time_rate %>%</p>
@@ -110,27 +110,27 @@
     </div>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
       <div class="flex items-center justify-between">
-        <p class="text-xs text-gray-500 dark:text-gray-500">성과 등급</p>
+        <p class="text-xs text-gray-500 dark:text-gray-500"><%= t("suppliers.kpi_grade") %></p>
         <%# ISS-214: 실시간 집계 표시 + 계산 근거 tooltip %>
         <span class="inline-flex items-center gap-1 text-[10px] text-gray-400 dark:text-gray-500"
               title="매 조회 시 실시간 계산됨&#10;총 <%= @grade_basis[:total_orders] %>건 중 연체 <%= @grade_basis[:overdue] %>건&#10;납기준수율 <%= @grade_basis[:on_time_rate] || '-' %>%&#10;조회 시각: <%= @grade_basis[:computed_at].strftime('%Y-%m-%d %H:%M') %>">
           <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          실시간
+          <%= t("suppliers.kpi_realtime") %>
         </span>
       </div>
       <% if @performance_grade && @performance_grade != "N/A" && @grade_basis[:sufficient] %>
         <p class="mt-1"><span class="inline-flex px-3 py-1 text-xl font-bold rounded-lg <%= perf_color[@performance_grade] %>"><%= @performance_grade %></span></p>
         <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-1.5">
-          총 <%= @grade_basis[:total_orders] %>건 · 연체 <%= @grade_basis[:overdue] %>건
+          <%= t("suppliers.kpi_basis", total: @grade_basis[:total_orders], overdue: @grade_basis[:overdue]) %>
         </p>
       <% elsif !@grade_basis[:sufficient] && @grade_basis[:total_orders] > 0 %>
-        <p class="mt-1"><span class="inline-flex px-2 py-1 text-xs font-medium rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">데이터 부족</span></p>
+        <p class="mt-1"><span class="inline-flex px-2 py-1 text-xs font-medium rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"><%= t("suppliers.kpi_no_data") %></span></p>
         <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-1.5">
-          <%= @grade_basis[:min_sample] %>건 이상 필요 (현재 <%= @grade_basis[:total_orders] %>건)
+          <%= t("suppliers.kpi_min_sample", min: @grade_basis[:min_sample], current: @grade_basis[:total_orders]) %>
         </p>
       <% else %>
         <p class="text-2xl font-bold text-gray-300 dark:text-gray-600 mt-1">-</p>
-        <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-1.5">거래 이력 없음</p>
+        <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-1.5"><%= t("suppliers.kpi_no_history") %></p>
       <% end %>
     </div>
   </div>
@@ -140,25 +140,25 @@
     <div class="border-b border-gray-200 dark:border-gray-700 px-4">
       <nav class="flex gap-6">
         <button @click="tab='contacts'" :class="tab==='contacts' ? 'border-primary text-primary' : 'border-transparent text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
-            class="py-3 border-b-2 text-sm font-medium transition-colors">담당자</button>
+            class="py-3 border-b-2 text-sm font-medium transition-colors"><%= t("suppliers.tab_contacts") %></button>
         <button @click="tab='products'" :class="tab==='products' ? 'border-primary text-primary' : 'border-transparent text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
-            class="py-3 border-b-2 text-sm font-medium transition-colors">납품 품목</button>
+            class="py-3 border-b-2 text-sm font-medium transition-colors"><%= t("suppliers.tab_products") %></button>
         <button @click="tab='orders'" :class="tab==='orders' ? 'border-primary text-primary' : 'border-transparent text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
-            class="py-3 border-b-2 text-sm font-medium transition-colors">납품 이력</button>
+            class="py-3 border-b-2 text-sm font-medium transition-colors"><%= t("suppliers.tab_orders") %></button>
       </nav>
     </div>
 
     <div x-show="tab==='contacts'" class="p-4">
       <div class="flex justify-between items-center mb-4">
-        <h3 class="font-medium text-gray-900 dark:text-white">담당자 목록</h3>
+        <h3 class="font-medium text-gray-900 dark:text-white"><%= t("suppliers.contacts_list_title") %></h3>
         <div class="flex items-center gap-2">
           <%= link_to contact_persons_path, class: "inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300" do %>
-            전체 보기
+            <%= t("suppliers.contacts_view_all") %>
           <% end %>
           <button onclick="document.getElementById('new-contact-form-<%= @supplier.id %>').classList.toggle('hidden')"
                   class="inline-flex items-center gap-1 text-sm text-primary hover:underline">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            담당자 추가
+            <%= t("suppliers.contacts_add_btn") %>
           </button>
         </div>
       </div>
@@ -172,13 +172,13 @@
           <%= render "contact_persons/row", contact_person: cp, contactable: @supplier %>
         <% end %>
         <% if @contact_persons.empty? %>
-          <p class="text-center text-gray-500 dark:text-gray-500 text-sm py-8">등록된 담당자가 없습니다.</p>
+          <p class="text-center text-gray-500 dark:text-gray-500 text-sm py-8"><%= t("suppliers.contacts_empty") %></p>
         <% end %>
       </div>
     </div>
 
     <div x-show="tab==='products'" class="p-4">
-      <h3 class="font-medium text-gray-900 dark:text-white mb-4">납품 가능 품목</h3>
+      <h3 class="font-medium text-gray-900 dark:text-white mb-4"><%= t("suppliers.products_title") %></h3>
       <div class="space-y-2">
         <% @supplier_products.each do |sp| %>
           <div class="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary/30 transition-colors">
@@ -189,7 +189,7 @@
             </div>
           </div>
         <% end %>
-        <% if @supplier_products.empty? %><p class="text-center text-gray-500 dark:text-gray-500 text-sm py-8">등록된 납품 품목이 없습니다.</p><% end %>
+        <% if @supplier_products.empty? %><p class="text-center text-gray-500 dark:text-gray-500 text-sm py-8"><%= t("suppliers.products_empty") %></p><% end %>
       </div>
     </div>
 
@@ -197,7 +197,7 @@
       <!-- 월별 납품 추이 차트 (FR-05) -->
       <% if @monthly_supply.any? { |m| m[:orders] > 0 || m[:delivered] > 0 } %>
         <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-          <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase mb-3">월별 납품 추이 (최근 12개월)</h4>
+          <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase mb-3"><%= t("suppliers.orders_chart_title") %></h4>
           <canvas id="supplierMonthlyChart" height="80"></canvas>
         </div>
         <script>
@@ -249,7 +249,7 @@
           <% rate_cls = @on_time_rate >= 90 ? 'text-green-600 dark:text-green-400' : @on_time_rate >= 75 ? 'text-orange-500 dark:text-orange-400' : 'text-red-500 dark:text-red-400' %>
           <div class="ml-auto flex items-center gap-1.5 bg-gray-50 dark:bg-gray-700/50 rounded-lg px-3 py-1">
             <svg class="w-3.5 h-3.5 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-            <span class="text-xs text-gray-500 dark:text-gray-500">납기준수율</span>
+            <span class="text-xs text-gray-500 dark:text-gray-500"><%= t("suppliers.orders_on_time_rate") %></span>
             <span class="text-sm font-bold <%= rate_cls %>"><%= @on_time_rate %>%</span>
           </div>
         <% end %>
@@ -258,31 +258,31 @@
       <!-- 기간/정렬/상태 필터 -->
       <%= form_with url: supplier_path(@supplier), method: :get, local: true, class: "flex flex-wrap gap-2 mb-4 items-center" do |f| %>
         <select name="period" onchange="this.form.submit()" class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none">
-          <option value="" <%= params[:period].blank? ? 'selected' : '' %>>전체 기간</option>
-          <option value="this_month" <%= params[:period]=="this_month" ? 'selected' : '' %>>이번 달</option>
-          <option value="3months"    <%= params[:period]=="3months"    ? 'selected' : '' %>>최근 3개월</option>
-          <option value="this_year"  <%= params[:period]=="this_year"  ? 'selected' : '' %>>올해</option>
+          <option value="" <%= params[:period].blank? ? 'selected' : '' %>><%= t("suppliers.filter_all_periods") %></option>
+          <option value="this_month" <%= params[:period]=="this_month" ? 'selected' : '' %>><%= t("suppliers.filter_this_month") %></option>
+          <option value="3months"    <%= params[:period]=="3months"    ? 'selected' : '' %>><%= t("suppliers.filter_3months") %></option>
+          <option value="this_year"  <%= params[:period]=="this_year"  ? 'selected' : '' %>><%= t("suppliers.filter_this_year") %></option>
         </select>
         <select name="order_status" onchange="this.form.submit()" class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none">
-          <option value="" <%= params[:order_status].blank? ? 'selected' : '' %>>전체 상태</option>
+          <option value="" <%= params[:order_status].blank? ? 'selected' : '' %>><%= t("suppliers.filter_all_statuses") %></option>
           <% Order::STATUS_LABELS.each do |k, v| %>
             <option value="<%= k %>" <%= params[:order_status]==k ? 'selected' : '' %>><%= v %></option>
           <% end %>
         </select>
         <select name="sort" onchange="this.form.submit()" class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none">
-          <option value="due_date" <%= (params[:sort].blank? || params[:sort]=="due_date") ? 'selected' : '' %>>납기일순</option>
-          <option value="value"    <%= params[:sort]=="value"    ? 'selected' : '' %>>금액순</option>
-          <option value="recent"   <%= params[:sort]=="recent"   ? 'selected' : '' %>>최신순</option>
+          <option value="due_date" <%= (params[:sort].blank? || params[:sort]=="due_date") ? 'selected' : '' %>><%= t("suppliers.sort_due_date") %></option>
+          <option value="value"    <%= params[:sort]=="value"    ? 'selected' : '' %>><%= t("suppliers.sort_value") %></option>
+          <option value="recent"   <%= params[:sort]=="recent"   ? 'selected' : '' %>><%= t("suppliers.sort_recent") %></option>
         </select>
         <% if params[:period].present? || params[:sort].present? || params[:order_status].present? %>
-          <%= link_to "초기화", supplier_path(@supplier), class: "text-xs text-gray-500 dark:text-gray-500 hover:text-primary px-2 py-1.5" %>
+          <%= link_to t("suppliers.filter_reset"), supplier_path(@supplier), class: "text-xs text-gray-500 dark:text-gray-500 hover:text-primary px-2 py-1.5" %>
         <% end %>
         <%= link_to supplier_path(@supplier, format: :csv, **request.query_parameters.except("format")),
             class: "inline-flex items-center gap-1 text-xs text-gray-500 dark:text-gray-500 hover:text-primary border border-gray-200 dark:border-gray-600 px-2 py-1.5 rounded-lg transition-colors" do %>
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           CSV
         <% end %>
-        <span class="ml-auto text-xs text-gray-500 dark:text-gray-500 self-center">총 <%= @orders.count %>건</span>
+        <span class="ml-auto text-xs text-gray-500 dark:text-gray-500 self-center"><%= t("suppliers.orders_total", count: @orders.count) %></span>
       <% end %>
 
       <!-- 납품 이력 목록 -->
@@ -329,12 +329,12 @@
               <span class="text-xs px-2 py-0.5 rounded-full text-white <%= status_colors[order.status] || 'bg-gray-400' %>">
                 <%= status_labels[order.status] || order.status %>
               </span>
-              <%= link_to "상세", order, class: "text-xs text-primary hover:underline" %>
+              <%= link_to t("suppliers.detail_link"), order, class: "text-xs text-primary hover:underline" %>
             </div>
           </div>
         <% end %>
         <% if @orders.empty? %>
-          <p class="text-center text-gray-500 dark:text-gray-500 text-sm py-8">납품 이력이 없습니다.</p>
+          <p class="text-center text-gray-500 dark:text-gray-500 text-sm py-8"><%= t("suppliers.orders_empty") %></p>
         <% end %>
       </div>
     </div>

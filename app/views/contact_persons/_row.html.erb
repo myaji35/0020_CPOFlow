@@ -13,7 +13,7 @@
           <div class="flex items-center gap-1.5 flex-wrap">
             <span class="font-medium text-sm text-gray-900 dark:text-white"><%= contact_person.name %></span>
             <% if contact_person.primary? %>
-              <span class="text-xs px-1 py-0.5 rounded bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400">주</span>
+              <span class="text-xs px-1 py-0.5 rounded bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400"><%= t("contact_persons.primary_badge") %></span>
             <% end %>
             <% if contact_person.title.present? %>
               <span class="text-xs text-gray-500 dark:text-gray-500"><%= contact_person.title %></span>
@@ -47,19 +47,19 @@
         <%# 연락처 정보 %>
         <% if contact_person.email.present? %>
           <div>
-            <dt class="text-xs font-semibold text-gray-500 dark:text-gray-500 mb-0.5">이메일</dt>
+            <dt class="text-xs font-semibold text-gray-500 dark:text-gray-500 mb-0.5"><%= t("contact_persons.detail_email") %></dt>
             <dd><a href="mailto:<%= contact_person.email %>" class="text-sm text-primary hover:underline"><%= contact_person.email %></a></dd>
           </div>
         <% end %>
         <% if contact_person.phone.present? %>
           <div>
-            <dt class="text-xs font-semibold text-gray-500 dark:text-gray-500 mb-0.5">사무실</dt>
+            <dt class="text-xs font-semibold text-gray-500 dark:text-gray-500 mb-0.5"><%= t("contact_persons.detail_office") %></dt>
             <dd><a href="tel:<%= contact_person.phone %>" class="text-sm text-gray-800 dark:text-gray-200 hover:text-primary"><%= contact_person.phone %></a></dd>
           </div>
         <% end %>
         <% if contact_person.mobile.present? %>
           <div>
-            <dt class="text-xs font-semibold text-gray-500 dark:text-gray-500 mb-0.5">모바일</dt>
+            <dt class="text-xs font-semibold text-gray-500 dark:text-gray-500 mb-0.5"><%= t("contact_persons.detail_mobile") %></dt>
             <dd><a href="tel:<%= contact_person.mobile %>" class="text-sm text-gray-800 dark:text-gray-200 hover:text-primary"><%= contact_person.mobile %></a></dd>
           </div>
         <% end %>
@@ -83,13 +83,13 @@
         <% end %>
         <% if contact_person.language.present? %>
           <div>
-            <dt class="text-xs font-semibold text-gray-500 dark:text-gray-500 mb-0.5">언어</dt>
+            <dt class="text-xs font-semibold text-gray-500 dark:text-gray-500 mb-0.5"><%= t("contact_persons.detail_language") %></dt>
             <dd class="text-sm text-gray-800 dark:text-gray-200"><%= contact_person.language_label %></dd>
           </div>
         <% end %>
         <% if contact_person.nationality.present? %>
           <div>
-            <dt class="text-xs font-semibold text-gray-500 dark:text-gray-500 mb-0.5">국적</dt>
+            <dt class="text-xs font-semibold text-gray-500 dark:text-gray-500 mb-0.5"><%= t("contact_persons.detail_nationality") %></dt>
             <dd class="text-sm text-gray-800 dark:text-gray-200"><%= contact_person.nationality %></dd>
           </div>
         <% end %>
@@ -97,7 +97,7 @@
 
       <% if contact_person.notes.present? %>
         <div class="mb-4 p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
-          <dt class="text-xs font-semibold text-gray-500 dark:text-gray-500 mb-1">메모</dt>
+          <dt class="text-xs font-semibold text-gray-500 dark:text-gray-500 mb-1"><%= t("contact_persons.detail_notes") %></dt>
           <dd class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap"><%= contact_person.notes %></dd>
         </div>
       <% end %>
@@ -108,13 +108,13 @@
             data: { turbo_stream: true },
             class: "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors" do %>
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          수정
+          <%= t("contact_persons.edit_btn") %>
         <% end %>
         <%= link_to contactable_contact_person_path(contactable, contact_person),
-            data: { turbo_method: :delete, turbo_confirm: "#{contact_person.name}을(를) 삭제할까요?\n관련 데이터는 복구할 수 없습니다." },
+            data: { turbo_method: :delete, turbo_confirm: t("contact_persons.delete_confirm", name: contact_person.name) + "\n관련 데이터는 복구할 수 없습니다." },
             class: "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors" do %>
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-          삭제
+          <%= t("contact_persons.delete_btn") %>
         <% end %>
       </div>
     </div>
