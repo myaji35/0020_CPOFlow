@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_02_030000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_02_040000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -847,20 +847,32 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_02_030000) do
   create_table "warnings", force: :cascade do |t|
     t.datetime "acknowledged_at"
     t.text "acknowledged_signature"
+    t.string "article_reference"
     t.string "category", default: "other", null: false
     t.datetime "created_at", null: false
     t.text "description"
     t.date "effective_until"
     t.integer "employee_id", null: false
+    t.text "employee_response"
+    t.boolean "gross_misconduct", default: false, null: false
     t.datetime "issued_at", null: false
     t.integer "issued_by_id"
+    t.boolean "mohre_reportable", default: false, null: false
+    t.datetime "mohre_reported_at"
+    t.datetime "notified_at"
+    t.datetime "response_received_at"
     t.string "severity", default: "verbal", null: false
     t.string "status", default: "active", null: false
     t.string "subject", null: false
+    t.integer "suspension_days"
     t.datetime "updated_at", null: false
+    t.boolean "visa_action_required", default: false, null: false
+    t.integer "wage_deduction_days"
     t.index ["employee_id", "issued_at"], name: "index_warnings_on_employee_id_and_issued_at"
     t.index ["employee_id"], name: "index_warnings_on_employee_id"
+    t.index ["gross_misconduct"], name: "index_warnings_on_gross_misconduct"
     t.index ["issued_by_id"], name: "index_warnings_on_issued_by_id"
+    t.index ["mohre_reportable"], name: "index_warnings_on_mohre_reportable"
     t.index ["status"], name: "index_warnings_on_status"
   end
 

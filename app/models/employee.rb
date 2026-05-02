@@ -11,6 +11,19 @@ class Employee < ApplicationRecord
   has_many :leaves, class_name: "Leave", dependent: :destroy
   has_many :warnings, class_name: "EmployeeWarning", dependent: :destroy  # ISS-332
 
+  # ISS-332+: UAE 노동법 — 활성 경고장 카운트 (3회 누적 시 해고 검토 권장)
+  def active_warnings_count
+    warnings.active.count
+  end
+
+  def warning_termination_threshold_reached?
+    active_warnings_count >= EmployeeWarning::TERMINATION_THRESHOLD
+  end
+
+  def has_gross_misconduct?
+    warnings.gross_misconduct.active.exists?
+  end
+
   EMPLOYMENT_TYPES = %w[regular contract dispatch].freeze
   NATIONALITIES = {
     "AE" => "UAE", "KR" => "한국", "US" => "미국", "GB" => "영국",

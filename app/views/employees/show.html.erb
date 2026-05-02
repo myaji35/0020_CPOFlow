@@ -459,10 +459,34 @@
       </div>
     </div>
 
-    <!-- 경고장 탭 (ISS-332) -->
+    <!-- 경고장 탭 (ISS-332+) UAE Federal Decree-Law 33/2021 -->
     <div x-show="tab==='warnings'" class="p-4">
+      <% active_count = @employee.active_warnings_count %>
+      <% threshold = EmployeeWarning::TERMINATION_THRESHOLD %>
+      <% has_gross = @employee.has_gross_misconduct? %>
+
+      <%# UAE 누적 알림 배너 %>
+      <% if active_count >= threshold || has_gross %>
+        <div class="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 rounded-lg p-3 flex items-start gap-2">
+          <svg class="w-5 h-5 text-red-600 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>
+          <div class="text-sm">
+            <p class="font-semibold text-red-800 dark:text-red-300">⚠️ 해고 검토 필요 (UAE 노동법)</p>
+            <% if has_gross %>
+              <p class="text-xs text-red-700 dark:text-red-400 mt-1">Art.44 즉시 해고 사유 활성 경고 존재 — 비자/추방 절차 검토</p>
+            <% end %>
+            <% if active_count >= threshold %>
+              <p class="text-xs text-red-700 dark:text-red-400 mt-1">활성 경고장 <%= active_count %>회 (기준 <%= threshold %>회 도달) — 실무 관행상 해고 검토 단계</p>
+            <% end %>
+          </div>
+        </div>
+      <% elsif active_count > 0 %>
+        <div class="mb-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-lg p-2.5 text-xs text-yellow-800 dark:text-yellow-300">
+          활성 경고장 <strong><%= active_count %>회</strong> / <%= threshold %>회 — 1회 누적당 위험 증가
+        </div>
+      <% end %>
+
       <div class="flex justify-between items-center mb-4">
-        <h3 class="font-medium text-gray-900 dark:text-white">경고장 이력</h3>
+        <h3 class="font-medium text-gray-900 dark:text-white">경고장 이력 (UAE Art.39/44)</h3>
         <% if current_user.member? || current_user.manager? || current_user.admin? %>
           <%= link_to new_employee_warning_path(@employee), class: "inline-flex items-center gap-1 text-sm text-primary hover:underline" do %>
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -474,13 +498,20 @@
         <% @warnings.each do |w| %>
           <div class="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary/30 transition-colors">
             <div class="flex items-center gap-3 min-w-0 flex-1">
-              <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full <%= w.severity_badge_class %>"><%= w.severity_label %></span>
+              <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full <%= w.severity_badge_class %>"><%= w.severity_label.split(":").first %></span>
               <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full <%= w.status_badge_class %>"><%= w.status_label %></span>
+              <% if w.gross_misconduct? %>
+                <span class="inline-flex px-2 py-0.5 text-xs font-bold rounded-full bg-red-100 text-red-800 border border-red-300">Art.44</span>
+              <% end %>
+              <% if w.visa_action_required? %>
+                <span class="inline-flex px-2 py-0.5 text-xs font-bold rounded-full bg-purple-100 text-purple-800 border border-purple-300">비자조치</span>
+              <% end %>
               <div class="min-w-0 flex-1">
                 <p class="text-sm font-medium text-gray-900 dark:text-white truncate"><%= w.subject %></p>
                 <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">
-                  <%= w.category_label %> · <%= w.issued_at.strftime("%Y.%m.%d") %>
+                  <%= w.category_label.split("(").first.strip %> · <%= w.issued_at.strftime("%Y.%m.%d") %>
                   <% if w.issued_by %> · 발급: <%= w.issued_by.name %><% end %>
+                  <% unless w.notification_complete? %><span class="text-amber-600">· ⚠ Art.41 통지 미완료</span><% end %>
                 </p>
               </div>
             </div>

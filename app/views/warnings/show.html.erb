@@ -1,38 +1,119 @@
-<div class="max-w-3xl mx-auto py-6 px-4">
-  <div class="flex items-center justify-between mb-4">
-    <h1 class="text-lg font-semibold text-gray-900"><%= @employee.name %> — <%= @warning.subject %></h1>
-    <div class="flex gap-2">
+<% content_for :title, "경고장 상세" %>
+<div class="max-w-4xl mx-auto py-6 px-4">
+  <%# Breadcrumb %>
+  <div class="flex items-center gap-2 text-sm text-gray-500 mb-4">
+    <%= link_to "직원 관리", employees_path, class: "hover:text-primary" %>
+    <span>/</span>
+    <%= link_to @employee.name, @employee, class: "hover:text-primary" %>
+    <span>/</span>
+    <%= link_to "경고장", employee_path(@employee, tab: "warnings"), class: "hover:text-primary" %>
+    <span>/</span>
+    <span><%= @warning.subject.truncate(40) %></span>
+  </div>
+
+  <%# 헤더 %>
+  <div class="flex items-start justify-between mb-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white"><%= @warning.subject %></h1>
+      <p class="text-xs text-gray-500 mt-1 font-mono"><%= @warning.article_reference %></p>
+    </div>
+    <div class="flex flex-col gap-1 items-end">
       <span class="text-xs px-2 py-0.5 rounded-full <%= @warning.severity_badge_class %>"><%= @warning.severity_label %></span>
       <span class="text-xs px-2 py-0.5 rounded-full <%= @warning.status_badge_class %>"><%= @warning.status_label %></span>
+      <% if @warning.gross_misconduct? %>
+        <span class="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-800 border border-red-300 font-bold">Art.44 Gross Misconduct</span>
+      <% end %>
+      <% if @warning.visa_action_required? %>
+        <span class="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-300 font-bold">비자 취소/추방 필요</span>
+      <% end %>
     </div>
   </div>
-  <dl class="bg-white border border-gray-200 rounded-lg p-4 grid grid-cols-2 gap-3 text-sm">
-    <div><dt class="text-gray-500 text-xs">분류</dt><dd class="font-medium"><%= @warning.category_label %></dd></div>
-    <div><dt class="text-gray-500 text-xs">발급</dt><dd class="font-medium"><%= @warning.issued_at.strftime("%Y-%m-%d %H:%M") %></dd></div>
-    <div><dt class="text-gray-500 text-xs">발급자</dt><dd class="font-medium"><%= @warning.issued_by&.name || "-" %></dd></div>
-    <div><dt class="text-gray-500 text-xs">유효 기한</dt><dd class="font-medium"><%= @warning.effective_until&.strftime("%Y-%m-%d") || "-" %></dd></div>
-    <div class="col-span-2"><dt class="text-gray-500 text-xs">상세</dt><dd class="font-medium whitespace-pre-line"><%= @warning.description.presence || "-" %></dd></div>
-    <% if @warning.documents.attached? %>
-      <div class="col-span-2"><dt class="text-gray-500 text-xs mb-2">첨부 문서</dt>
-        <div class="flex flex-wrap gap-2">
-          <% @warning.documents.each do |doc| %>
-            <%= link_to doc.filename.to_s, rails_blob_path(doc, disposition: "attachment"), class: "text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded hover:bg-blue-100" %>
-          <% end %>
-        </div>
+
+  <%# 기본 정보 %>
+  <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-4">
+    <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">기본 정보</h2>
+    <dl class="grid grid-cols-2 gap-3 text-sm">
+      <div><dt class="text-gray-500 text-xs">분류</dt><dd class="font-medium"><%= @warning.category_label %></dd></div>
+      <div><dt class="text-gray-500 text-xs">발급</dt><dd class="font-medium"><%= @warning.issued_at.strftime("%Y-%m-%d %H:%M") %></dd></div>
+      <div><dt class="text-gray-500 text-xs">발급자</dt><dd class="font-medium"><%= @warning.issued_by&.name || "-" %></dd></div>
+      <div><dt class="text-gray-500 text-xs">유효 기한</dt><dd class="font-medium"><%= @warning.effective_until&.strftime("%Y-%m-%d") || "-" %></dd></div>
+      <% if @warning.wage_deduction_days %>
+        <div><dt class="text-gray-500 text-xs">임금 감액</dt><dd class="font-medium"><%= @warning.wage_deduction_days %>일</dd></div>
+      <% end %>
+      <% if @warning.suspension_days %>
+        <div><dt class="text-gray-500 text-xs">정직</dt><dd class="font-medium"><%= @warning.suspension_days %>일</dd></div>
+      <% end %>
+      <div class="col-span-2"><dt class="text-gray-500 text-xs">상세 내용</dt><dd class="font-medium whitespace-pre-line"><%= @warning.description.presence || "-" %></dd></div>
+    </dl>
+  </div>
+
+  <%# UAE Art.41 절차 추적 %>
+  <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-4">
+    <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+      Art.41 절차 추적 (서면 통지 → 진술 청취 → 기록 보존)
+      <% if @warning.notification_complete? && @warning.employee_responded? %>
+        <span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-800">✓ 절차 완료</span>
+      <% else %>
+        <span class="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">⚠ 미완료</span>
+      <% end %>
+    </h2>
+    <dl class="grid grid-cols-2 gap-3 text-sm">
+      <div><dt class="text-gray-500 text-xs">서면 통지 일시</dt><dd class="font-medium"><%= @warning.notified_at&.strftime("%Y-%m-%d %H:%M") || "— 미통지 —" %></dd></div>
+      <div><dt class="text-gray-500 text-xs">진술 접수 일시</dt><dd class="font-medium"><%= @warning.response_received_at&.strftime("%Y-%m-%d %H:%M") || "— 미접수 —" %></dd></div>
+      <div class="col-span-2"><dt class="text-gray-500 text-xs">직원 진술 내용</dt><dd class="font-medium whitespace-pre-line"><%= @warning.employee_response.presence || "— 미기록 —" %></dd></div>
+    </dl>
+  </div>
+
+  <%# MoHRE / 비자 %>
+  <% if @warning.mohre_reportable? || @warning.visa_action_required? %>
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-4">
+      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">MoHRE / 외국인 근로자 조치</h2>
+      <dl class="grid grid-cols-2 gap-3 text-sm">
+        <% if @warning.mohre_reportable? %>
+          <div><dt class="text-gray-500 text-xs">MoHRE 보고</dt><dd class="font-medium">대상 — 보고 일시: <%= @warning.mohre_reported_at&.strftime("%Y-%m-%d") || "미보고" %></dd></div>
+        <% end %>
+        <% if @warning.visa_action_required? %>
+          <div><dt class="text-gray-500 text-xs">비자 조치</dt><dd class="font-medium text-red-700">취소/추방 절차 필요 — Immigration 부서 협의</dd></div>
+        <% end %>
+      </dl>
+    </div>
+  <% end %>
+
+  <%# 첨부 %>
+  <% if @warning.documents.attached? %>
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-4">
+      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">첨부 문서</h2>
+      <div class="flex flex-wrap gap-2">
+        <% @warning.documents.each do |doc| %>
+          <%= link_to doc.filename.to_s, rails_blob_path(doc, disposition: "attachment"), class: "text-xs px-3 py-1.5 bg-blue-50 text-blue-700 rounded hover:bg-blue-100" %>
+        <% end %>
       </div>
-    <% end %>
-    <% if @warning.acknowledged_at %>
-      <div class="col-span-2"><dt class="text-gray-500 text-xs">확인</dt><dd class="font-medium"><%= @warning.acknowledged_at.strftime("%Y-%m-%d %H:%M") %><% if @warning.acknowledged_signature.present? %> · 서명: <%= @warning.acknowledged_signature %><% end %></dd></div>
-    <% end %>
-  </dl>
-  <div class="mt-4 flex justify-between">
-    <%= link_to "← 직원으로", employee_path(@employee, tab: "warnings"), class: "text-sm text-gray-500 hover:text-primary" %>
+    </div>
+  <% end %>
+
+  <%# 직원 확인 %>
+  <% if @warning.acknowledged_at %>
+    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4 text-sm">
+      <p>✓ <strong><%= @warning.acknowledged_at.strftime("%Y-%m-%d %H:%M") %></strong>에 직원이 확인했습니다.</p>
+      <% if @warning.acknowledged_signature.present? %>
+        <p class="mt-1 text-xs text-gray-600">서명: <%= @warning.acknowledged_signature %></p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <%# 액션 %>
+  <div class="flex justify-between mt-6">
+    <%= link_to "← 직원 페이지로", employee_path(@employee, tab: "warnings"), class: "text-sm text-gray-500 hover:text-primary" %>
     <div class="flex gap-2">
       <% if @warning.status == "active" %>
-        <%= button_to "확인 처리", acknowledge_employee_warning_path(@employee, @warning), method: :patch, class: "text-xs px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700" %>
+        <%= button_to "확인 처리", acknowledge_employee_warning_path(@employee, @warning), method: :patch,
+            class: "text-xs px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700" %>
       <% end %>
-      <%= link_to "수정", edit_employee_warning_path(@employee, @warning), class: "text-xs px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50" %>
-      <%= button_to "삭제", employee_warning_path(@employee, @warning), method: :delete, data: { confirm: "정말 삭제하시겠습니까?" }, class: "text-xs px-3 py-1.5 border border-red-300 text-red-600 rounded hover:bg-red-50" %>
+      <%= link_to "수정", edit_employee_warning_path(@employee, @warning),
+          class: "text-xs px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50" %>
+      <%= button_to "삭제", employee_warning_path(@employee, @warning), method: :delete,
+          data: { confirm: "정말 삭제하시겠습니까?" },
+          class: "text-xs px-3 py-1.5 border border-red-300 text-red-600 rounded hover:bg-red-50" %>
     </div>
   </div>
 </div>

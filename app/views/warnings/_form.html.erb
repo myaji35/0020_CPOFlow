@@ -1,6 +1,8 @@
 <%
   form_url = @warning.persisted? ? employee_warning_path(@employee, @warning) : employee_warnings_path(@employee)
   form_method = @warning.persisted? ? :patch : :post
+  active_count = @employee.active_warnings_count
+  threshold = EmployeeWarning::TERMINATION_THRESHOLD
 %>
 <%= form_with model: @warning, url: form_url, method: form_method, scope: :warning, multipart: true, class: "flex flex-col gap-6" do |f| %>
   <% if @warning.errors.any? %>
@@ -8,6 +10,26 @@
       <% @warning.errors.full_messages.each do |msg| %><p><%= msg %></p><% end %>
     </div>
   <% end %>
+
+  <%# UAE 노동법 안내 배너 %>
+  <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2">
+    <svg class="w-4 h-4 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>
+    <div>
+      <p class="font-semibold mb-1">UAE Federal Decree-Law No. 33 of 2021 — Articles 39, 41, 44</p>
+      <ul class="list-disc list-inside space-y-0.5 text-[11px]">
+        <li><strong>Art.41 절차:</strong> 서면 통지 → 직원 진술 청취 → 기록 보존 (필수)</li>
+        <li><strong>Art.39 7단계:</strong> 구두주의 → 서면경고 → 임금감액(5일) → 정직(14일) → 보너스박탈 → 승진제한 → 해고</li>
+        <li><strong>Art.44 즉시 해고:</strong> 신분위조/폭행/기밀누설/회사손실/음주/무단결근(7일연속·20일단속)</li>
+        <li><strong>실무 관행:</strong> 활성 경고장 <strong><%= threshold %>회</strong> 누적 시 해고 검토 권장</li>
+      </ul>
+      <% if active_count > 0 %>
+        <p class="mt-2 font-semibold <%= active_count >= threshold ? 'text-red-700 dark:text-red-400' : '' %>">
+          현재 <%= @employee.name %>의 활성 경고장: <%= active_count %>회 / <%= threshold %>회
+          <% if active_count >= threshold %>— ⚠️ 해고 검토 권장 단계<% end %>
+        </p>
+      <% end %>
+    </div>
+  </div>
 
   <%= render "shared/form_with_documents", f: f, record: @warning do %>
     <div class="grid grid-cols-2 gap-4">
@@ -22,17 +44,33 @@
             class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
       </div>
       <div>
-        <%= f.label :category, "분류 *", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.label :category, "분류 (Category) *", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
         <%= f.select :category, EmployeeWarning::CATEGORIES.map { |c| [EmployeeWarning::CATEGORY_LABELS[c], c] }, {},
             required: true,
             class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+        <p class="text-[11px] text-gray-500 mt-1">Art.44 해당 사유는 즉시 해고 가능 (자동 표시)</p>
       </div>
       <div>
-        <%= f.label :severity, "중대도 *", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.label :severity, "징계 수위 (UAE Art.39) *", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
         <%= f.select :severity, EmployeeWarning::SEVERITIES.map { |s| [EmployeeWarning::SEVERITY_LABELS[s], s] }, {},
             required: true,
             class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
       </div>
+
+      <%# Art.39 추가 옵션: 임금감액일수 / 정직일수 %>
+      <div>
+        <%= f.label :wage_deduction_days, "임금 감액 일수 (1~5일)", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.number_field :wage_deduction_days, min: 1, max: 5,
+            class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+        <p class="text-[11px] text-gray-500 mt-1">severity=wage_deduction일 때 사용</p>
+      </div>
+      <div>
+        <%= f.label :suspension_days, "정직 일수 (1~14일)", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.number_field :suspension_days, min: 1, max: 14,
+            class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+        <p class="text-[11px] text-gray-500 mt-1">severity=suspension일 때 사용</p>
+      </div>
+
       <div class="col-span-2">
         <%= f.label :subject, "제목 *", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
         <%= f.text_field :subject, required: true,
@@ -41,10 +79,46 @@
       </div>
       <div class="col-span-2">
         <%= f.label :description, "상세 내용", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
-        <%= f.text_area :description, rows: 6,
-            placeholder: "사실관계, 위반사항, 시정조치 등",
+        <%= f.text_area :description, rows: 5,
+            placeholder: "사실관계, 위반사항, 시정조치, Art.39/44 적용 근거 등",
             class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
       </div>
+
+      <%# Art.41 절차 추적 %>
+      <div>
+        <%= f.label :notified_at, "서면 통지 일시 (Art.41)", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.datetime_local_field :notified_at,
+            class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+        <p class="text-[11px] text-gray-500 mt-1">직원에게 서면으로 통지한 시각</p>
+      </div>
+      <div>
+        <%= f.label :response_received_at, "직원 진술 접수 일시", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.datetime_local_field :response_received_at,
+            class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+      </div>
+      <div class="col-span-2">
+        <%= f.label :employee_response, "직원 진술 내용 (Art.41 — 진술 기회 제공 필수)", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.text_area :employee_response, rows: 3,
+            placeholder: "직원이 자신의 입장 / 변명 / 이의를 진술한 내용",
+            class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
+      </div>
+
+      <%# 외국인 근로자 관련 %>
+      <div class="col-span-2 grid grid-cols-3 gap-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+        <div class="flex items-center gap-2">
+          <%= f.check_box :mohre_reportable, class: "rounded border-gray-300" %>
+          <%= f.label :mohre_reportable, "MoHRE 보고 대상", class: "text-xs text-gray-700 dark:text-gray-300" %>
+        </div>
+        <div class="flex items-center gap-2">
+          <%= f.check_box :gross_misconduct, class: "rounded border-gray-300", disabled: true %>
+          <%= f.label :gross_misconduct, "Art.44 즉시 해고 사유 (자동)", class: "text-xs text-gray-700 dark:text-gray-300" %>
+        </div>
+        <div class="flex items-center gap-2">
+          <%= f.check_box :visa_action_required, class: "rounded border-gray-300" %>
+          <%= f.label :visa_action_required, "비자 취소/추방 처리 필요", class: "text-xs text-gray-700 dark:text-gray-300" %>
+        </div>
+      </div>
+
       <div class="col-span-2">
         <%= f.label :status, "상태", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
         <%= f.select :status, EmployeeWarning::STATUSES.map { |s| [EmployeeWarning::STATUS_LABELS[s], s] }, {},

@@ -58,8 +58,16 @@ class WarningsController < ApplicationController
   end
 
   def warning_params
-    params.require(:warning).permit(:issued_at, :category, :severity, :subject, :description,
-                                    :effective_until, :status, documents: [])
+    params.require(:warning).permit(
+      :issued_at, :category, :severity, :subject, :description,
+      :effective_until, :status,
+      # ISS-332+: UAE 노동법 필드
+      :notified_at, :employee_response, :response_received_at,
+      :mohre_reportable, :mohre_reported_at,
+      :wage_deduction_days, :suspension_days,
+      :gross_misconduct, :visa_action_required,
+      documents: []
+    )
   end
 
   def require_member!
