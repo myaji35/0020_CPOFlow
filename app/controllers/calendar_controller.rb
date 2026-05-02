@@ -32,10 +32,10 @@ class CalendarController < ApplicationController
       completed: month_orders.count { |o| o.done? || o.get_grn? }
     }
 
-    # ISS-208: 통합 이벤트 소스 (납기 / 비자 만료 / 계약 만료)
+    # ISS-208: 통합 이벤트 소스 (납기 / 비자 만료 / 계약 만료 / 휴가)
     # 기본은 전체 활성. params[:sources] (쉼표 구분) 지원
-    @event_sources = (params[:sources].to_s.split(",") & %w[orders visas contracts]).presence ||
-                     %w[orders visas contracts]
+    @event_sources = (params[:sources].to_s.split(",") & %w[orders visas contracts leaves]).presence ||
+                     %w[orders visas contracts leaves]
 
     range_start = (@view == "weekly") ? @week_start : grid_start
     range_end   = (@view == "weekly") ? @week_end   : grid_end
@@ -75,6 +75,22 @@ class CalendarController < ApplicationController
           path: employee_path(c.employee),
           object: c
         }
+      end
+    end
+    # ISS-305: 승인된 휴가를 캘린더에 통합 (기간 표시 — 시작일로 그룹)
+    if @event_sources.include?("leaves") && defined?(Leave)
+      Leave.approved.for_calendar(range_start, range_end)
+           .includes(:employee).each do |lv|
+        (lv.start_date..lv.end_date).each do |day|
+          next unless day >= range_start && day <= range_end
+          @calendar_events << {
+            type: "leave",
+            date: day,
+            title: "휴가: #{lv.employee&.name} (#{lv.leave_type_label})",
+            path: leave_path(lv),
+            object: lv
+          }
+        end
       end
     end
 

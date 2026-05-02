@@ -1,0 +1,50 @@
+<% content_for :title, t("leaves.balance.title") %>
+
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <%= link_to leaves_path, class: "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" do %>
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      <% end %>
+      <h1 class="text-xl font-bold text-gray-900 dark:text-white"><%= t("leaves.balance.title") %></h1>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 dark:bg-gray-700/40 border-b border-gray-200 dark:border-gray-700">
+        <tr>
+          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400"><%= t("leaves.balance.col_employee") %></th>
+          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400"><%= t("leaves.balance.col_type") %></th>
+          <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400"><%= t("leaves.balance.col_balance") %></th>
+          <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400"><%= t("leaves.balance.col_used") %></th>
+          <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400"><%= t("leaves.balance.col_remaining") %></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+        <% @employees.each do |emp| %>
+          <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/20 transition-colors">
+            <td class="px-4 py-3">
+              <div class="flex items-center gap-3">
+                <div class="w-7 h-7 rounded-full <%= emp.avatar_color %> flex items-center justify-center text-white text-xs font-bold shrink-0"><%= emp.initials %></div>
+                <div>
+                  <p class="font-medium text-gray-900 dark:text-white"><%= link_to emp.name, employee_path(emp), class: "hover:text-[#00A1E0]" %></p>
+                  <p class="text-xs text-gray-400 dark:text-gray-500"><%= emp.employment_type_label %></p>
+                </div>
+              </div>
+            </td>
+            <td class="px-4 py-3 text-gray-600 dark:text-gray-400"><%= emp.employment_type_label %></td>
+            <td class="px-4 py-3 text-right font-medium text-gray-900 dark:text-white"><%= emp.annual_leave_balance %></td>
+            <td class="px-4 py-3 text-right text-gray-600 dark:text-gray-400"><%= emp.used_annual_leave_this_year %></td>
+            <td class="px-4 py-3 text-right">
+              <% remaining = emp.remaining_annual_leave %>
+              <span class="font-semibold <%= remaining < 5 ? 'text-red-600 dark:text-red-400' : remaining < 10 ? 'text-yellow-600 dark:text-yellow-400' : 'text-green-600 dark:text-green-400' %>">
+                <%= remaining %>
+              </span>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

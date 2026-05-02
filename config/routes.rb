@@ -198,6 +198,20 @@ Rails.application.routes.draw do
     resources :certifications,       only: %i[new create edit update destroy]
   end
 
+  # ISS-305: 휴가/근태 Leave 모듈
+  resources :leaves do
+    member do
+      patch :approve_manager
+      patch :approve_admin
+      patch :reject
+      patch :cancel
+    end
+    collection do
+      get :calendar  # FullCalendar JSON
+      get :balance   # 직원별 잔여일수
+    end
+  end
+
   # 외부 담당자 전체 목록 + 상세
   resources :contact_persons, only: %i[index show] do
     collection do

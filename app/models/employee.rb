@@ -8,6 +8,7 @@ class Employee < ApplicationRecord
   has_many :employee_assignments, dependent: :destroy
   has_many :assigned_projects, through: :employee_assignments, source: :project
   has_many :certifications,       dependent: :destroy
+  has_many :leaves, class_name: "Leave", dependent: :destroy
 
   EMPLOYMENT_TYPES = %w[regular contract dispatch].freeze
   NATIONALITIES = {
@@ -66,6 +67,21 @@ class Employee < ApplicationRecord
 
   def employment_type_label
     { "regular" => "정규직", "contract" => "계약직", "dispatch" => "파견" }[employment_type] || employment_type
+  end
+
+  # 올해 사용한 연차 일수
+  def used_annual_leave_this_year
+    leaves.approved.annual.this_year.sum(:days_requested).to_f
+  end
+
+  # 잔여 연차 (캐시된 annual_leave_balance - 올해 사용량)
+  def remaining_annual_leave
+    (annual_leave_balance - used_annual_leave_this_year).round(1)
+  end
+
+  # 정규직의 경우 연간 30일로 잔여 초기화
+  def reset_annual_balance!(days = 30)
+    update!(annual_leave_balance: days)
   end
 
   def visa_expiring_soon?

@@ -1,0 +1,86 @@
+<% content_for :title, t("leaves.index.title") %>
+
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <h1 class="text-xl font-bold text-gray-900 dark:text-white"><%= t("leaves.index.title") %></h1>
+    <div class="flex items-center gap-2">
+      <% if current_user.manager? || current_user.admin? %>
+        <%= link_to balance_leaves_path, class: "inline-flex items-center gap-1.5 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 text-sm px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" do %>
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          <%= t("leaves.index.balance_btn") %>
+        <% end %>
+      <% end %>
+      <%= link_to new_leave_path, class: "inline-flex items-center gap-1.5 bg-[#00A1E0] hover:bg-[#008ec5] text-white text-sm font-semibold px-3 py-2 rounded-lg transition-colors" do %>
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <%= t("leaves.index.new_btn") %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- 탭 -->
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+    <div class="border-b border-gray-200 dark:border-gray-700 px-4">
+      <nav class="flex gap-6">
+        <%= link_to leaves_path(tab: "mine"),
+            class: "py-3 border-b-2 text-sm font-medium transition-colors #{params[:tab].blank? || params[:tab] == 'mine' ? 'border-[#00A1E0] text-[#00A1E0]' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}" do %>
+          <%= t("leaves.index.tab_mine") %>
+        <% end %>
+        <% if current_user.manager? || current_user.admin? %>
+          <%= link_to leaves_path(tab: "pending"),
+              class: "py-3 border-b-2 text-sm font-medium transition-colors #{params[:tab] == 'pending' ? 'border-[#00A1E0] text-[#00A1E0]' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}" do %>
+            <%= t("leaves.index.tab_pending") %>
+          <% end %>
+        <% end %>
+        <% if current_user.admin? %>
+          <%= link_to leaves_path(tab: "all"),
+              class: "py-3 border-b-2 text-sm font-medium transition-colors #{params[:tab] == 'all' ? 'border-[#00A1E0] text-[#00A1E0]' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}" do %>
+            <%= t("leaves.index.tab_all") %>
+          <% end %>
+        <% end %>
+      </nav>
+    </div>
+
+    <div class="divide-y divide-gray-100 dark:divide-gray-700">
+      <% if @leaves.none? %>
+        <div class="flex flex-col items-center justify-center py-16 gap-3">
+          <svg class="w-12 h-12 text-gray-200 dark:text-gray-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <p class="text-sm text-gray-500 dark:text-gray-400"><%= t("leaves.index.empty") %></p>
+          <%= link_to new_leave_path, class: "inline-flex items-center gap-1.5 text-sm text-[#00A1E0] border border-[#00A1E0]/30 rounded-lg px-3 py-1.5 hover:bg-[#00A1E0]/5 transition-colors" do %>
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <%= t("leaves.index.new_btn") %>
+          <% end %>
+        </div>
+      <% else %>
+        <% @leaves.each do |leave| %>
+          <div class="flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+            <div class="flex items-center gap-4 min-w-0">
+              <!-- 종류 + 상태 배지 -->
+              <div class="flex flex-col gap-1">
+                <span class="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full text-white" style="background: <%= leave.leave_type_color %>"><%= leave.leave_type_label %></span>
+                <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full <%= leave.status_badge_class %>"><%= leave.status_label %></span>
+              </div>
+              <!-- 직원 (관리자 탭) -->
+              <% if params[:tab].in?(%w[pending all]) %>
+                <div class="w-7 h-7 rounded-full <%= leave.employee.avatar_color %> flex items-center justify-center text-white text-xs font-bold shrink-0"><%= leave.employee.initials %></div>
+                <p class="text-sm font-medium text-gray-700 dark:text-gray-300 truncate"><%= leave.employee.name %></p>
+              <% end %>
+              <!-- 기간 -->
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-gray-900 dark:text-white">
+                  <%= leave.start_date.strftime("%Y.%m.%d") %> ~ <%= leave.end_date.strftime("%Y.%m.%d") %>
+                  <span class="text-gray-400 dark:text-gray-500 text-xs ml-1">(<%= leave.days_requested %><%= t("leaves.days_unit") %>)</span>
+                </p>
+                <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 truncate"><%= leave.reason.presence&.truncate(60) || "—" %></p>
+              </div>
+            </div>
+            <%= link_to leave, class: "text-xs text-gray-400 hover:text-[#00A1E0] transition-colors shrink-0 ml-4" do %>
+              <%= t("actions.view_all") %>
+              <svg class="w-3.5 h-3.5 inline ml-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            <% end %>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</div>

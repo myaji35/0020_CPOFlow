@@ -1,0 +1,65 @@
+<%= form_with model: leave, local: true, class: "space-y-5" do |f| %>
+  <% if leave.errors.any? %>
+    <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+      <p class="text-sm font-semibold text-red-700 dark:text-red-300 mb-1"><%= t("leaves.form.error_count", count: leave.errors.count) %></p>
+      <ul class="text-sm text-red-600 dark:text-red-400 list-disc list-inside space-y-0.5">
+        <% leave.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <!-- 휴가 종류 -->
+  <div>
+    <%= f.label :leave_type, t("leaves.form.leave_type"), class: "block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5" %>
+    <%= f.select :leave_type,
+        Leave::LEAVE_TYPES.map { |lt| [t("leaves.leave_type_#{lt}", default: lt.capitalize), lt] },
+        { prompt: t("leaves.form.select_type") },
+        class: "w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]" %>
+  </div>
+
+  <!-- 기간 -->
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <%= f.label :start_date, t("leaves.form.start_date"), class: "block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5" %>
+      <%= f.date_field :start_date,
+          class: "w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]" %>
+    </div>
+    <div>
+      <%= f.label :end_date, t("leaves.form.end_date"), class: "block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5" %>
+      <%= f.date_field :end_date,
+          class: "w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]" %>
+    </div>
+  </div>
+
+  <!-- 일수 -->
+  <div>
+    <%= f.label :days_requested, t("leaves.form.days_requested"), class: "block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5" %>
+    <%= f.number_field :days_requested, min: 0.5, step: 0.5, value: leave.days_requested.presence || 1,
+        class: "w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]" %>
+    <p class="text-xs text-gray-500 dark:text-gray-500 mt-1"><%= t("leaves.form.days_hint") %></p>
+  </div>
+
+  <!-- 사유 -->
+  <div>
+    <%= f.label :reason, t("leaves.form.reason"), class: "block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5" %>
+    <%= f.text_area :reason, rows: 3,
+        placeholder: t("leaves.form.reason_placeholder"),
+        class: "w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0] resize-none" %>
+  </div>
+
+  <!-- 첨부 (진단서 등) -->
+  <div>
+    <%= f.label :documents, t("leaves.form.documents"), class: "block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5" %>
+    <%= f.file_field :documents, multiple: true, accept: "image/*,.pdf,.doc,.docx",
+        class: "block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#00A1E0]/10 file:text-[#00A1E0] hover:file:bg-[#00A1E0]/20 cursor-pointer" %>
+    <p class="text-xs text-gray-500 dark:text-gray-500 mt-1"><%= t("leaves.form.documents_hint") %></p>
+  </div>
+
+  <!-- 액션 버튼 -->
+  <div class="flex items-center gap-3 pt-2">
+    <%= f.submit t("leaves.form.submit"), class: "inline-flex items-center gap-2 bg-[#00A1E0] hover:bg-[#008ec5] text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors cursor-pointer" %>
+    <%= link_to t("actions.cancel"), leaves_path, class: "text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" %>
+  </div>
+<% end %>

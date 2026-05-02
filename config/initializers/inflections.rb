@@ -14,4 +14,5 @@
 # 라우트와 일치시키기 위한 설정
 ActiveSupport::Inflector.inflections(:en) do |inflect|
   inflect.irregular "contact_person", "contact_persons"
+  inflect.irregular "leave", "leaves"
 end

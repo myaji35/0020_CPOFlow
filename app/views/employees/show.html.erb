@@ -158,6 +158,8 @@
             class="py-3 border-b-2 text-sm font-medium transition-colors">현장 배정 (<%= @assignments.count %>)</button>
         <button @click="switchTab('certs')" :class="tab==='certs' ? 'border-primary text-primary' : 'border-transparent text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
             class="py-3 border-b-2 text-sm font-medium transition-colors">자격증 (<%= @certifications.count %>)</button>
+        <button @click="switchTab('leaves')" :class="tab==='leaves' ? 'border-primary text-primary' : 'border-transparent text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
+            class="py-3 border-b-2 text-sm font-medium transition-colors">휴가 (<%= @employee.leaves.count %>)</button>
       </nav>
     </div>
 
@@ -500,6 +502,56 @@
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               자격증 추가
             <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- 휴가 탭 (ISS-305) -->
+    <div x-show="tab==='leaves'" class="p-4">
+      <!-- 잔여 연차 KPI (정규직) -->
+      <% if @employee.employment_type == "regular" %>
+        <div class="grid grid-cols-3 gap-4 mb-4">
+          <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg px-4 py-3 text-center">
+            <p class="text-xs text-gray-500 dark:text-gray-400">부여 연차</p>
+            <p class="text-xl font-bold text-gray-900 dark:text-white mt-1"><%= @employee.annual_leave_balance.to_f.to_s.delete('.0') == @employee.annual_leave_balance.to_f.to_s ? @employee.annual_leave_balance.to_i : @employee.annual_leave_balance %>일</p>
+          </div>
+          <div class="bg-orange-50 dark:bg-orange-900/20 rounded-lg px-4 py-3 text-center">
+            <p class="text-xs text-gray-500 dark:text-gray-400">올해 사용</p>
+            <p class="text-xl font-bold text-orange-600 dark:text-orange-400 mt-1"><%= @employee.used_annual_leave_this_year %>일</p>
+          </div>
+          <div class="bg-green-50 dark:bg-green-900/20 rounded-lg px-4 py-3 text-center">
+            <p class="text-xs text-gray-500 dark:text-gray-400">잔여 연차</p>
+            <p class="text-xl font-bold text-green-600 dark:text-green-400 mt-1"><%= @employee.remaining_annual_leave %>일</p>
+          </div>
+        </div>
+      <% end %>
+
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="font-medium text-gray-900 dark:text-white">휴가 이력</h3>
+        <%= link_to new_leave_path, class: "inline-flex items-center gap-1 text-sm text-primary hover:underline" do %>
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          휴가 신청
+        <% end %>
+      </div>
+      <div class="space-y-2">
+        <% @employee.leaves.order(requested_at: :desc).limit(20).each do |lv| %>
+          <div class="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary/30 transition-colors">
+            <div class="flex items-center gap-3">
+              <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full text-white" style="background: <%= lv.leave_type_color %>"><%= lv.leave_type_label %></span>
+              <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full <%= lv.status_badge_class %>"><%= lv.status_label %></span>
+              <div>
+                <p class="text-sm font-medium text-gray-900 dark:text-white"><%= lv.start_date.strftime("%Y.%m.%d") %> ~ <%= lv.end_date.strftime("%Y.%m.%d") %> (<%= lv.days_requested %>일)</p>
+                <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5"><%= lv.reason.presence&.truncate(50) || "사유 없음" %></p>
+              </div>
+            </div>
+            <%= link_to leave_path(lv), class: "text-xs text-gray-400 hover:text-primary" do %>상세<% end %>
+          </div>
+        <% end %>
+        <% if @employee.leaves.empty? %>
+          <div class="flex flex-col items-center justify-center py-10 gap-3">
+            <svg class="w-10 h-10 text-gray-200 dark:text-gray-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <p class="text-sm text-gray-500 dark:text-gray-500">휴가 이력이 없습니다.</p>
           </div>
         <% end %>
       </div>

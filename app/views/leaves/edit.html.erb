@@ -1,0 +1,14 @@
+<% content_for :title, t("leaves.edit.title") %>
+
+<div class="max-w-2xl mx-auto">
+  <div class="flex items-center gap-3 mb-6">
+    <%= link_to @leave, class: "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" do %>
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    <% end %>
+    <h1 class="text-xl font-bold text-gray-900 dark:text-white"><%= t("leaves.edit.title") %></h1>
+  </div>
+
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
+    <%= render "form", leave: @leave %>
+  </div>
+</div>

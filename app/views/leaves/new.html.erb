@@ -1,0 +1,33 @@
+<% content_for :title, t("leaves.new.title") %>
+
+<div class="max-w-2xl mx-auto">
+  <!-- Header -->
+  <div class="flex items-center gap-3 mb-6">
+    <%= link_to leaves_path, class: "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" do %>
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    <% end %>
+    <div>
+      <h1 class="text-xl font-bold text-gray-900 dark:text-white"><%= t("leaves.new.title") %></h1>
+      <% if @employee %>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5"><%= @employee.name %> — <%= t("leaves.new.subtitle") %></p>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- 잔여 연차 힌트 (정규직) -->
+  <% if @employee && @employee.employment_type == "regular" %>
+    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl px-4 py-3 mb-6 flex items-center gap-3">
+      <svg class="w-5 h-5 text-[#00A1E0] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <p class="text-sm text-blue-700 dark:text-blue-300">
+        <%= t("leaves.new.balance_hint",
+              balance: @employee.annual_leave_balance,
+              used: @employee.used_annual_leave_this_year,
+              remaining: @employee.remaining_annual_leave) %>
+      </p>
+    </div>
+  <% end %>
+
+  <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
+    <%= render "form", leave: @leave %>
+  </div>
+</div>

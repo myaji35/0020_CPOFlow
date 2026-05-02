@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_01_110000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_01_120001) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -321,6 +321,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_01_110000) do
 
   create_table "employees", force: :cascade do |t|
     t.boolean "active", default: true, null: false
+    t.decimal "annual_leave_balance", precision: 5, scale: 1, default: "0.0", null: false
     t.datetime "created_at", null: false
     t.date "date_of_birth"
     t.string "department"
@@ -423,6 +424,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_01_110000) do
     t.index ["kanban_board_id", "key"], name: "index_kanban_columns_on_kanban_board_id_and_key", unique: true
     t.index ["kanban_board_id", "position"], name: "index_kanban_columns_on_kanban_board_id_and_position"
     t.index ["kanban_board_id"], name: "index_kanban_columns_on_kanban_board_id"
+  end
+
+  create_table "leaves", force: :cascade do |t|
+    t.datetime "admin_approved_at"
+    t.bigint "admin_approved_by_id"
+    t.datetime "created_at", null: false
+    t.decimal "days_requested", precision: 4, scale: 1, default: "1.0", null: false
+    t.integer "employee_id", null: false
+    t.date "end_date", null: false
+    t.string "leave_type", null: false
+    t.datetime "manager_approved_at"
+    t.bigint "manager_approved_by_id"
+    t.text "reason"
+    t.datetime "rejected_at"
+    t.bigint "rejected_by_id"
+    t.text "rejection_reason"
+    t.datetime "requested_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.date "start_date", null: false
+    t.string "status", default: "requested", null: false
+    t.datetime "updated_at", null: false
+    t.index ["employee_id", "start_date"], name: "index_leaves_on_employee_id_and_start_date"
+    t.index ["employee_id"], name: "index_leaves_on_employee_id"
+    t.index ["start_date"], name: "index_leaves_on_start_date"
+    t.index ["status"], name: "index_leaves_on_status"
   end
 
   create_table "menu_permissions", force: :cascade do |t|
@@ -827,6 +852,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_01_110000) do
   add_foreign_key "import_logs", "users"
   add_foreign_key "kanban_boards", "users", column: "owner_id"
   add_foreign_key "kanban_columns", "kanban_boards"
+  add_foreign_key "leaves", "employees"
+  add_foreign_key "leaves", "users", column: "admin_approved_by_id"
+  add_foreign_key "leaves", "users", column: "manager_approved_by_id"
+  add_foreign_key "leaves", "users", column: "rejected_by_id"
   add_foreign_key "order_links", "users", column: "created_by_id"
   add_foreign_key "orders", "card_statuses"
   add_foreign_key "orders", "clients"

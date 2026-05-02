@@ -77,6 +77,7 @@
       <%= nav_link_to projects_path, icon: "lni lni-map-marker", label: t("nav.projects", default: "현장") %>
       <%= nav_link_to employees_path, icon: "lni lni-user", label: t("nav.employees", default: "직원 관리") %>
       <%= nav_link_to org_chart_path, icon: "lni lni-graph", label: t("nav.org_chart", default: "조직도") %>
+      <%= nav_link_to leaves_path, icon: "lni lni-calendar", label: t("nav.leaves", default: "휴가 관리") %>
     </div>
 
     <% if current_user.manager? || current_user.admin? %>
