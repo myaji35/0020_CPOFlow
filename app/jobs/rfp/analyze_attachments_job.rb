@@ -43,6 +43,9 @@ module Rfp
       # ISS-334: Ariba 첨부에서 메타데이터 (due_date / owner / event_type) 자동 추출
       enrich_from_ariba(order, relevant_attachments)
 
+      # ISS-335: client_id 자동 매핑 (sender_domain → Client 마스터)
+      enrich_client_id(order)
+
       # 1) 텍스트 추출
       extracted = relevant_attachments.map do |att|
         Rfp::AttachmentExtractor.call(att).merge(attachment_id: att.id)
@@ -135,6 +138,20 @@ module Rfp
       Rails.logger.info("[Rfp::AribaPageParser] order=#{order.id} parsed meta: owner=#{meta[:owner]} event_type=#{meta[:event_type]} commodity=#{meta[:commodity]}") if meta[:owner].present? || meta[:event_type].present?
     rescue => e
       Rails.logger.warn("[Rfp::AnalyzeAttachmentsJob] enrich_from_ariba error: #{e.message}")
+    end
+
+    # ISS-335: 자동 client 매핑
+    def enrich_client_id(order)
+      return if order.client_id.present?
+      result = Rfp::ClientMatcher.call(order)
+      if result[:client]
+        order.update_column(:client_id, result[:client].id)
+        Rails.logger.info("[Rfp::ClientMatcher] order=#{order.id} → client=#{result[:client].id} (#{result[:source]}, conf=#{result[:confidence]})")
+      else
+        Rails.logger.info("[Rfp::ClientMatcher] order=#{order.id} no match: #{result[:reason]}")
+      end
+    rescue => e
+      Rails.logger.warn("[Rfp::ClientMatcher] order=#{order.id} error: #{e.message}")
     end
 
     def create_fallback_task(order, reason)
