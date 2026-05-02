@@ -40,6 +40,9 @@ module Rfp
         return
       end
 
+      # ISS-334: Ariba 첨부에서 메타데이터 (due_date / owner / event_type) 자동 추출
+      enrich_from_ariba(order, relevant_attachments)
+
       # 1) 텍스트 추출
       extracted = relevant_attachments.map do |att|
         Rfp::AttachmentExtractor.call(att).merge(attachment_id: att.id)
@@ -105,6 +108,34 @@ module Rfp
     end
 
     private
+
+    # ISS-334: Ariba 첨부 메타데이터 자동 추출 → Order 업데이트
+    # 기존 값 보존 (덮어쓰기 안 함). due_date 미설정 + Ariba에서 발견 시에만 채움.
+    def enrich_from_ariba(order, attachments)
+      ariba_attachment = attachments.find do |att|
+        ct = att.blob.content_type.to_s
+        fn = att.blob.filename.to_s.downcase
+        (ct.include?("html") || fn.end_with?(".doc", ".html", ".htm")) &&
+          (fn.match?(/\A\d{10}/) || order.source_type.to_s == "ariba")
+      end
+      return unless ariba_attachment
+
+      meta = Rfp::AribaPageParser.call(ariba_attachment)
+      updates = {}
+      updates[:due_date] = meta[:due_date] if meta[:due_date].present? && order.due_date.blank?
+      updates[:ariba_event_id] = meta[:ariba_event_id] if meta[:ariba_event_id].present? && order.ariba_event_id.blank?
+
+      if updates.any?
+        order.update_columns(updates)
+        Rails.logger.info("[Rfp::AribaPageParser] order=#{order.id} enriched: #{updates.inspect}")
+      end
+
+      # owner / event_type / commodity는 future Hash field 또는 메모로 저장 가능
+      # 현재는 로그만 남기고 추후 컬럼 추가 시 반영
+      Rails.logger.info("[Rfp::AribaPageParser] order=#{order.id} parsed meta: owner=#{meta[:owner]} event_type=#{meta[:event_type]} commodity=#{meta[:commodity]}") if meta[:owner].present? || meta[:event_type].present?
+    rescue => e
+      Rails.logger.warn("[Rfp::AnalyzeAttachmentsJob] enrich_from_ariba error: #{e.message}")
+    end
 
     def create_fallback_task(order, reason)
       order.tasks.create!(
