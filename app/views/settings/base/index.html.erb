@@ -52,7 +52,7 @@
           <%= @gmail_connected_count > 0 ? t("settings.gmail_connected_count", count: @gmail_connected_count) : t("settings.gmail_not_connected") %>
         </span>
       </div>
-      <%= link_to gmail_oauth_authorize_path, class: "flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors" do %>
+      <%= link_to gmail_oauth_authorize_path, data: { turbo: false }, class: "flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors" do %>
         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Connect Gmail
       <% end %>

@@ -166,7 +166,9 @@
                 <% end %>
                 메일 수집이 중단됩니다. 지금 다시 연결하세요.
               </div>
+              <%# ISS-352: data-turbo=false 필수 — Turbo Drive가 외부 도메인(accounts.google.com) redirect를 차단 %>
               <%= link_to gmail_oauth_authorize_path,
+                          data: { turbo: false },
                           class: "inline-flex items-center gap-1 bg-white text-[#c84431] px-3 py-1 rounded-md text-xs font-semibold hover:bg-gray-100 transition-colors" do %>
                 다시 연결
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
