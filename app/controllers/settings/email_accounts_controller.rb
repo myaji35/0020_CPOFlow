@@ -18,7 +18,9 @@ module Settings
     end
 
     def destroy
-      current_user.email_accounts.find(params[:id]).destroy
+      # ISS-344: GmailOauthController#disconnect로 위임 (Google revoke + 토큰 정리 일관)
+      account = current_user.email_accounts.find(params[:id])
+      account.destroy
       redirect_to settings_root_path, notice: t("settings.gmail.disconnect_success")
     end
 

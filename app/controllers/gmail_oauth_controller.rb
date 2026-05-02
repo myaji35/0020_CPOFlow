@@ -29,9 +29,9 @@ class GmailOauthController < ApplicationController
 
       email = fetch_gmail_email(client.access_token)
 
-      # 글로벌 중복 방지: email 기준으로 기존 레코드 찾기 (어떤 user로 등록됐든 통합)
-      account = EmailAccount.find_or_initialize_by(email: email)
-      account.user = current_user
+      # ISS-344 (C): user별 분리 — 같은 email을 다른 user가 각자 connect할 수 있게
+      # 기존 레코드는 (email, user_id) 조합으로만 매칭. user_id 덮어쓰기 방지.
+      account = EmailAccount.find_or_initialize_by(email: email, user: current_user)
 
       # refresh_token: Google는 최초 동의 시에만 발급 → 기존 값 보존
       new_refresh_token = client.refresh_token.presence || (account.persisted? ? account.gmail_refresh_token : nil)
@@ -53,10 +53,21 @@ class GmailOauthController < ApplicationController
     end
   end
 
-  # Step 3 (optional): Disconnect a Gmail account
+  # Step 3: Disconnect a Gmail account
+  # ISS-344 (B): refresh_token까지 제거 + Google revoke API 호출 → 완전 disconnect
   def disconnect
     account = current_user.email_accounts.find(params[:id])
-    account.update!(connected: false, gmail_access_token: nil)
+
+    # Google 서버에 token revoke 요청 (best-effort, 실패해도 DB 정리는 진행)
+    revoke_google_token(account.gmail_refresh_token.presence || account.gmail_access_token)
+
+    account.update!(
+      connected: false,
+      gmail_access_token: nil,
+      gmail_refresh_token: nil,
+      token_expires_at: nil,
+      oauth_scope: nil
+    )
     redirect_to settings_root_path, notice: t("settings.gmail.disconnect_success")
   rescue ActiveRecord::RecordNotFound
     redirect_to settings_root_path, alert: "Account not found."
@@ -75,6 +86,18 @@ class GmailOauthController < ApplicationController
       access_type:            "offline",
       prompt:                 "consent"   # force refresh_token on every consent
     )
+  end
+
+  # ISS-344 (B): Google 측 권한 revoke. Google 계정 → 보안 → 타사 앱 목록에서도 제거됨.
+  # 다음 Connect 시 동의 화면이 다시 표시됨.
+  def revoke_google_token(token)
+    return if token.blank?
+    require "net/http"
+    uri = URI("https://oauth2.googleapis.com/revoke")
+    res = Net::HTTP.post_form(uri, token: token)
+    Rails.logger.info "[GmailOauth] revoke response: #{res.code}"
+  rescue => e
+    Rails.logger.warn "[GmailOauth] revoke failed (continuing): #{e.message}"
   end
 
   def fetch_gmail_email(access_token)
