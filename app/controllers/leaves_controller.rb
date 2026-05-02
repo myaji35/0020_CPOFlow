@@ -10,15 +10,15 @@ class LeavesController < ApplicationController
     base = Leave.includes(:employee).order(requested_at: :desc)
 
     @leaves = case @tab
-              when "pending"
+    when "pending"
                 require_manager_inline { return } || base.pending
-              when "all"
+    when "all"
                 require_admin_inline { return } || base
-              else
+    else
                 # "mine" — 연결된 employee의 휴가만
                 my_employee = Employee.find_by(user_id: current_user.id)
                 my_employee ? base.where(employee: my_employee) : base.none
-              end
+    end
 
     @pagy, @leaves = pagy(@leaves, items: 30) if respond_to?(:pagy)
   end

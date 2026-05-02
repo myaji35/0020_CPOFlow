@@ -11,15 +11,15 @@ class CreateLeaves < ActiveRecord::Migration[8.1]
       t.datetime :requested_at, null: false, default: -> { "CURRENT_TIMESTAMP" }
 
       # 2단계 승인
-      t.bigint  :manager_approved_by_id
+      t.bigint :manager_approved_by_id
       t.datetime :manager_approved_at
-      t.bigint  :admin_approved_by_id
+      t.bigint :admin_approved_by_id
       t.datetime :admin_approved_at
 
       # 반려
-      t.bigint  :rejected_by_id
+      t.bigint :rejected_by_id
       t.datetime :rejected_at
-      t.text    :rejection_reason
+      t.text :rejection_reason
 
       t.timestamps
     end
