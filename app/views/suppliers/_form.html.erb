@@ -67,7 +67,13 @@
     <%= f.select :default_assignee_id,
         options_for_select([["(없음)", ""]] + User.where(role: [:member, :manager, :admin]).order(:name).map { |u| [u.name, u.id] }, @supplier.default_assignee_id),
         {}, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
-    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">이 거래처로 들어오는 Order의 기본 담당자</p>
+    <% if @supplier.default_assignee_id.blank? %>
+      <p class="mt-1 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded px-2 py-1">
+        ⚠️ 기본 담당자가 없으면 신규 Order가 미배정 상태로 누적됩니다
+      </p>
+    <% else %>
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">이 거래처로 들어오는 Order의 기본 담당자</p>
+    <% end %>
   </div>
 
   <div class="flex gap-3 pt-2">
