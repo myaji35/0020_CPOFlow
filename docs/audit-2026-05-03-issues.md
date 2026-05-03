@@ -8,22 +8,42 @@
 
 ## 🔴 P0 — Critical (즉시)
 
-### AUDIT-000 — 북극성 지표 부재: "견적 처리 48h → 10min" 같은 시간 단축 목표 미기획 ⭐ NEW
+### AUDIT-000 — 클라이언트 합의 북극성 "RFQ 처리 48h → 10min" 미문서화 ⭐ NEW (정정)
 - **타입**: NORTH_STAR / SCOPE_DEFINE / FEATURE_PLAN
-- **증상**: brand-dna.json 아젠다는 "**빠르게** 처리"라는 정성적 표현만 있고, 측정 가능한 KPI(time-to-quote, lead time per stage)가 모든 플랜 문서에 부재. 검색 결과 `48시간`/`10분`/`TTQ`/`time-to-quote`/`북극성`/`north star` 모두 0건 매치.
-- **근본 원인 가설**: AUDIT-001~003(11,838건 누적, 미배정 58%, due NULL 99.4%)은 모두 "처리 시간 측정·목표 부재 → 무한 누적"의 동일 증상. 측정·목표가 없는데 "빠르게" 처리될 수 없음.
+- **사실 정정**: 직전 답변에서 "기획되지 않았다"고 했으나 **틀렸음**. 대표님 증언으로 **클라이언트와 "기존 48시간 → 10분 이내" 합의 사실 존재**. 또한 어제(2026-05-02) `docs/biz-automation-opportunities-2026-05-02.md`에 단계별 baseline·자동화 후 시간이 이미 분석되어 있음.
+- **현 상태**: 합의·분석 둘 다 존재하지만 **공식 플랜 문서(brand-dna.json/getting-started.md/dashboard KPI)에 흡수가 안 됨** → 코드·UI에 측정·표시 없음 → AUDIT-001~003 같은 누적 증상 발생.
+
+**클라이언트 합의 (대표님 증언)**:
+- Baseline: **RFQ 수신 → 견적 발송 평균 48시간**
+- Target: **10분 이내**
+- 단축 비율: **288배 (≈99.65%)**
+
+**기존 자동화 분석 결과 (`docs/biz-automation-opportunities-2026-05-02.md`)**:
+| 단계 | 현재 부담 | 자동화 후 | ROI |
+|---|---|---|---|
+| make_quo A: 과거 단가 견적 초안 | 15~20분 | 2~3분 | ★★★★★ |
+| make_quo B: 공급사 자동 추천 | 20~30분 | 3분 | ★★★★★ |
+| make_quo C: 다수 공급사 견적 일괄 발송 | 30~45분 | 5분 | ★★★★☆ |
+| pending_po D: PO 수신 자동 인식 | 10~15분 | 1~2분 | ★★★★★ |
+| pending_po E: PO 번호 자동 추출 | 5분 | ~0분 | ★★★★★ |
+| **단계별 합산 (자동화 후)** | — | **~10~15분** | — |
+
+→ 자동화 후 시간 합산이 정확히 **10분대 (목표와 일치)**. 즉 클라이언트 합의는 이미 기술 분석으로 뒷받침되어 있음.
+
 - **요구**:
-  1. **9단계별 목표 SLA 정의** (예: `new_rfq → make_quo` 4h, `make_quo → pending_po` 24h, `pending_po → new_po` 48h …)
-  2. **북극성 지표 1개 선언** (예: "RFQ 수신 → 견적 발송 평균 시간 < N시간")
-  3. **현재 baseline 측정** — `Order` 모델에 `status_changed_at` 또는 별도 `OrderStatusHistory` 테이블 → 단계별 평균 lead time 산출
-  4. 대시보드 KPI 카드에 baseline + 목표 동시 표시 (예: "현재: 평균 36h / 목표: 4h")
-- **파일 후보**: `brand-dna.json`(정성 → 정량 목표 추가), `app/models/order.rb`(status_changed_at 추가), `db/migrate/`(OrderStatusHistory 마이그레이션 검토), `app/views/dashboards/index.html.erb`(KPI 카드 추가)
-- **검증**:
-  - brand-dna.json에 `target_metrics` 섹션 추가 (각 단계 목표 시간)
-  - Order에 단계 진입 시각 기록 → 단계별 평균/95p 산출 가능
-  - 대시보드 상단에 "RFQ → 견적 평균 lead time" 표시 + 목표 대비 진행률
-- **선결 조건**: 대표님이 "각 단계별 목표 시간"을 결정. (제가 결정할 사항 아님 — 대표님 비즈니스 판단)
-- **블로킹**: 본 이슈가 정의되지 않으면 AUDIT-001/002/003 모두 "어디까지 줄여야 성공인지" 모호한 채 진행됨.
+  1. **brand-dna.json에 `north_star_metric` 섹션 추가** — `{baseline: "48h", target: "10min", scope: "RFQ 수신 → 견적 발송"}`
+  2. **`docs/north-star.md` 새 문서** — 클라이언트 합의 맥락 + 단계별 자동화 후 분배 시간 + 측정 방법
+  3. **Order에 단계 진입 시각 기록** — `status_changed_at` 또는 `OrderStatusHistory` (이거 없으면 baseline 측정 불가능)
+  4. **대시보드 상단 북극성 KPI 카드** — "지난 7일 평균 RFQ→견적 시간: NN분 (목표: 10분)" + 추세 스파크라인
+  5. **AUDIT-001~003 우선순위 재조정** — 북극성 달성 경로상 직접 영향 있는 것이 P0, 나머지는 P1로 격하
+- **파일 후보**: `brand-dna.json`, `docs/north-star.md`(신규), `db/migrate/...status_changed_at.rb`(신규) 또는 `db/migrate/...order_status_histories.rb`(신규), `app/models/order.rb`, `app/views/dashboards/index.html.erb`
+- **검증 (Goal-Driven)**:
+  - brand-dna.json에 north_star_metric 추가 ✓
+  - 새 Order의 단계 전환 시각 기록 동작 확인 (`Order.status_changed_at` 또는 history row 생성) ✓
+  - 대시보드에서 평균 lead time 숫자 노출 ✓
+  - 자동화 로드맵(Q1~Q4) 항목과 north star 진행률 연결 ✓
+- **블로킹 해소**: AUDIT-001/002/003은 본 이슈가 먼저 정의돼야 "어디까지 줄여야 성공인지" 명확해짐. AUDIT-000이 데이터 측정 인프라(status_changed_at)도 함께 깔아주므로 후속 이슈의 baseline 측정 도구로도 작동.
+- **이전 답변 정정**: 직전 응답("플랜에 부재")은 plan 문서 기준 검색 결과를 보고했지만, **사람의 합의 + 분석 자료는 존재**했음. plan 문서 동기화가 누락된 케이스. 이런 종류의 갭을 잡기 위해 AUDIT-000-meta로 "구두 합의 → plan 문서 흡수 누락" 유형의 갭 점검 hook도 검토 가치 있음.
 
 ### AUDIT-001 — 칸반 `new_rfq` 11,838건 정리 정책
 - **타입**: BIZ_DATA_HYGIENE
