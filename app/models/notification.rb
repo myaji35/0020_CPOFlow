@@ -22,6 +22,7 @@ class Notification < ApplicationRecord
     /^contract_/          => "contract",
     /^due_date_d\d+$/     => "due_date",
     "due_date_risk"       => "due_date",
+    "role_promoted"       => "system",
     "overdue_unassigned_escalation" => "overdue_escalation",
     /^ecount_slip_failed/ => "ecount_slip_failed",
     "new_oauth_user"      => "oauth_signup"

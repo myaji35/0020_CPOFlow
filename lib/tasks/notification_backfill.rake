@@ -42,4 +42,33 @@ namespace :notifications do
     counts.sort_by { |_, v| -v }.each { |type, cnt| puts "  #{type}: #{cnt}" }
     puts "남은 nil: #{Notification.where(notification_type: nil).count}건"
   end
+
+  desc "전체 notification_type → category 매핑 tally 출력 (AUDIT-004 검증용)"
+  task category_tally: :environment do
+    puts "=== notification_type 분포 및 category 매핑 ==="
+    Notification.group(:notification_type).count.sort_by { |_, v| -v }.each do |type, cnt|
+      cat = Notification.new(notification_type: type).category
+      puts "  #{type.inspect} → [#{cat}]: #{cnt}건"
+    end
+
+    puts "\n=== 카테고리별 집계 ==="
+    cat_counts = Hash.new(0)
+    Notification.group(:notification_type).count.each do |type, cnt|
+      cat = Notification.new(notification_type: type).category
+      cat_counts[cat] += cnt
+    end
+    cat_counts.sort_by { |_, v| -v }.each { |cat, cnt| puts "  #{cat}: #{cnt}건" }
+
+    # 미매칭: CATEGORY_LABELS에 없는 카테고리 탐지
+    unmatched_types = Notification.distinct.pluck(:notification_type).compact.reject do |t|
+      Notification::CATEGORY_LABELS.key?(Notification.new(notification_type: t).category)
+    end
+    if unmatched_types.any?
+      puts "\n미매칭 type (CATEGORY_LABELS에 없음): #{unmatched_types.inspect}"
+    else
+      puts "\n미매칭 type: 없음 — 전체 카테고리 매핑 OK"
+    end
+
+    puts "nil type: #{Notification.where(notification_type: nil).count}건"
+  end
 end
