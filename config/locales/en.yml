@@ -1002,6 +1002,7 @@ en:
       email_unlinked: "Unlinked"
       email_already_linked: "Already linked"
       email_hint: "%{unlinked} unlinked · %{linked} already linked. Click the field to see suggestions."
+      email_missing_warning: "Without an email, automatic user mapping won't work."
       label_emergency_contact: "Emergency Contact (Name)"
       label_emergency_phone: "Emergency Phone"
       section_job: "Job Info"

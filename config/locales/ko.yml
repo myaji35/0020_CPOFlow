@@ -1000,6 +1000,7 @@ ko:
       email_unlinked: "미연결"
       email_already_linked: "이미 연결됨"
       email_hint: "미연결 시스템 계정 %{unlinked}개 · 이미 연결됨 %{linked}개. 입력 칸 클릭 시 후보가 표시됩니다."
+      email_missing_warning: "이메일이 없으면 사용자 자동 매핑을 받을 수 없습니다."
       label_emergency_contact: "비상 연락처 (이름)"
       label_emergency_phone: "비상 연락전화"
       section_job: "직무 정보"

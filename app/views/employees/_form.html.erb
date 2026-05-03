@@ -51,7 +51,11 @@
         <%= f.text_field :phone, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary", placeholder: "+971-50-0000000" %>
       </div>
       <div>
-        <%= f.label :email, t("employees.form.label_email"), class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <div class="flex items-center gap-1 mb-1">
+          <%= f.label :email, class: "block text-xs font-medium text-gray-600 dark:text-gray-500" do %>
+            <%= t("employees.form.label_email") %><span class="text-amber-500 ml-0.5">*</span>
+          <% end %>
+        </div>
         <%
           # 자동완성 후보: 미연결 User 우선 + 이미 연결된 User 후순위
           linked_user_ids = Employee.where.not(user_id: nil).where.not(id: employee.id || 0).pluck(:user_id).uniq
@@ -72,9 +76,16 @@
             <option value="<%= u.email %>"><%= u.display_name %> · <%= t("employees.form.email_already_linked") %></option>
           <% end %>
         </datalist>
-        <p class="text-xs text-gray-500 mt-1">
-          <%= t("employees.form.email_hint", unlinked: unlinked_users.size, linked: linked_users.size) %>
-        </p>
+        <% if employee.email.blank? %>
+          <div class="mt-1.5 flex items-start gap-1.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-md px-2.5 py-1.5 text-xs text-amber-700 dark:text-amber-400">
+            <svg class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <%= t("employees.form.email_missing_warning") %>
+          </div>
+        <% else %>
+          <p class="text-xs text-gray-500 mt-1">
+            <%= t("employees.form.email_hint", unlinked: unlinked_users.size, linked: linked_users.size) %>
+          </p>
+        <% end %>
       </div>
       <div>
         <%= f.label :emergency_contact, t("employees.form.label_emergency_contact"), class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>

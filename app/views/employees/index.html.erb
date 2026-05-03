@@ -54,15 +54,18 @@
 
   <%# AUDIT-005: 미매핑 직원 경고 카드 — admin만 표시 %>
   <% if current_user.admin? && @stats[:unmapped] > 0 %>
-    <div class="flex items-center gap-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl px-4 py-3">
-      <svg class="w-5 h-5 text-orange-600 dark:text-orange-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <div class="flex items-start gap-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl px-4 py-3">
+      <svg class="w-5 h-5 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       <div class="flex-1">
         <p class="text-sm font-semibold text-orange-800 dark:text-orange-300">
           <%= t("employees.unmapped_banner", count: @stats[:unmapped]) %>
         </p>
         <p class="text-xs text-orange-700 dark:text-orange-400 mt-0.5"><%= t("employees.unmapped_banner_desc") %></p>
+        <p class="text-xs text-orange-600 dark:text-orange-500 mt-1.5 font-mono bg-orange-100 dark:bg-orange-900/40 rounded px-2 py-1 inline-block select-all">
+          bin/rails employee:auto_link_users
+        </p>
       </div>
-      <%= link_to employees_path(filter: "unmapped"), class: "text-xs font-medium text-orange-700 dark:text-orange-400 hover:text-orange-900 dark:hover:text-orange-200 underline flex-shrink-0" do %>
+      <%= link_to employees_path(filter: "unmapped"), class: "text-xs font-medium text-orange-700 dark:text-orange-400 hover:text-orange-900 dark:hover:text-orange-200 underline flex-shrink-0 mt-0.5" do %>
         <%= t("employees.unmapped_view_targets") %>
       <% end %>
     </div>
