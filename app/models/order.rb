@@ -152,6 +152,8 @@ class Order < ApplicationRecord
   before_validation :ensure_card_status, on: :create
   before_validation :backfill_customer_name_from_client
   after_save :sync_legacy_tracking_columns_to_numbers
+  # AUDIT-002: 신규 Order 생성 시 담당자 미배정이면 자동 배정 시도
+  after_create_commit :auto_assign_if_blank
 
   # 저장 후 자동 배정: 수동 지정 없으면 규칙 재평가
   after_save :maybe_auto_assign_card_status, if: :should_auto_reassign?
@@ -422,6 +424,12 @@ class Order < ApplicationRecord
   after_create_commit { SuggestOrderLinksJob.perform_later(id) }
 
   private
+
+  def auto_assign_if_blank
+    AutoAssignerService.new(self).call
+  rescue => e
+    Rails.logger.warn "[AutoAssigner] order##{id} 배정 실패: #{e.message}"
+  end
 
   def ensure_card_status
     self.card_status ||= CardStatus.default

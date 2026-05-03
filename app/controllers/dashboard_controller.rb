@@ -11,6 +11,13 @@ class DashboardController < ApplicationController
                                  .where(updated_at: Time.current.beginning_of_month..)
                                  .count
 
+    # AUDIT-002: 미배정 Order 카운트 (active + not finished)
+    @unassigned_count = orders.active
+                              .left_joins(:assignments)
+                              .where(assignments: { id: nil })
+                              .distinct
+                              .count
+
     @urgent_orders  = orders.urgent.by_due_date.limit(5).includes(:assignees)
     @recent_orders  = orders.order(created_at: :desc).limit(8).includes(:assignees, :tasks)
     @kanban_counts  = orders.group(:status).count

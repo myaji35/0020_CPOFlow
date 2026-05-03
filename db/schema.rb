@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_02_040000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_03_010000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -197,6 +197,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_02_040000) do
     t.datetime "created_at", null: false
     t.string "credit_grade"
     t.string "currency", default: "USD"
+    t.integer "default_assignee_id"
     t.string "ecount_code"
     t.json "ecount_snapshot"
     t.datetime "ecount_synced_at"
@@ -208,6 +209,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_02_040000) do
     t.string "website"
     t.index ["code"], name: "index_clients_on_code", unique: true
     t.index ["country"], name: "index_clients_on_country"
+    t.index ["default_assignee_id"], name: "index_clients_on_default_assignee_id"
     t.index ["ecount_code"], name: "index_clients_on_ecount_code"
   end
 
@@ -743,6 +745,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_02_040000) do
     t.datetime "created_at", null: false
     t.string "credit_grade"
     t.string "currency", default: "USD"
+    t.integer "default_assignee_id"
     t.string "ecount_code"
     t.json "ecount_snapshot"
     t.datetime "ecount_synced_at"
@@ -754,6 +757,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_02_040000) do
     t.datetime "updated_at", null: false
     t.string "website"
     t.index ["code"], name: "index_suppliers_on_code", unique: true
+    t.index ["default_assignee_id"], name: "index_suppliers_on_default_assignee_id"
     t.index ["ecount_code"], name: "index_suppliers_on_ecount_code"
   end
 
@@ -888,6 +892,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_02_040000) do
   add_foreign_key "card_statuses", "kanban_boards"
   add_foreign_key "certifications", "employees"
   add_foreign_key "classification_logs", "orders"
+  add_foreign_key "clients", "users", column: "default_assignee_id"
   add_foreign_key "comments", "orders"
   add_foreign_key "comments", "users"
   add_foreign_key "companies", "countries"
@@ -920,6 +925,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_02_040000) do
   add_foreign_key "rfq_feedbacks", "users"
   add_foreign_key "supplier_products", "products"
   add_foreign_key "supplier_products", "suppliers"
+  add_foreign_key "suppliers", "users", column: "default_assignee_id"
   add_foreign_key "tasks", "orders"
   add_foreign_key "tasks", "users", column: "assignee_id"
   add_foreign_key "tracking_numbers", "orders"

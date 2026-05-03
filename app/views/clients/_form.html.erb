@@ -81,6 +81,14 @@
     <%= f.text_area :notes, rows: 3, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
   </div>
 
+  <div>
+    <%= f.label :default_assignee_id, "기본 담당자", class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" %>
+    <%= f.select :default_assignee_id,
+        options_for_select([["(없음)", ""]] + User.where(role: [:member, :manager, :admin]).order(:name).map { |u| [u.name, u.id] }, @client.default_assignee_id),
+        {}, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" %>
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">이 발주처로 들어오는 Order의 기본 담당자</p>
+  </div>
+
   <div class="flex items-center gap-2">
     <%= f.check_box :active, class: "rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary" %>
     <%= f.label :active, t("clients.form_active"), class: "text-sm font-medium text-gray-700 dark:text-gray-300" %>

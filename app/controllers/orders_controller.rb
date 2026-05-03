@@ -21,6 +21,11 @@ class OrdersController < ApplicationController
     @orders = @orders.where(orders: { project_id: params[:project_id] })   if params[:project_id].present?
     @orders = @orders.joins(:assignments).where(assignments: { employee_id: params[:employee_id] }) if params[:employee_id].present?
 
+    # AUDIT-002: 미배정 필터
+    if params[:filter] == "unassigned"
+      @orders = @orders.left_joins(:assignments).where(assignments: { id: nil }).distinct
+    end
+
     # 납기일 범위 필터
     @orders = @orders.where("orders.due_date >= ?", params[:due_from]) if params[:due_from].present?
     @orders = @orders.where("orders.due_date <= ?", params[:due_to])   if params[:due_to].present?
