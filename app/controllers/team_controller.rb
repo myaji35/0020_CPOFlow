@@ -99,7 +99,20 @@ class TeamController < ApplicationController
   def update_role
     redirect_to team_index_path, alert: "권한이 없습니다." and return unless current_user.admin?
 
+    previous_role = @member.role
     @member.update!(role: params[:role])
+
+    # AUDIT-006: viewer → member/manager/admin 승격 시 사용자에게 알림
+    if previous_role == "viewer" && @member.role != "viewer"
+      role_label = I18n.t("activerecord.attributes.user.role_#{@member.role}", default: @member.role)
+      Notification.create!(
+        user: @member,
+        notification_type: "role_promoted",
+        title: "권한이 #{role_label}(으)로 승격되었습니다",
+        body: "이제 #{role_label} 권한으로 모든 기능을 사용할 수 있습니다."
+      )
+    end
+
     redirect_to team_index_path, notice: "#{@member.display_name} 역할이 변경되었습니다."
   rescue ActiveRecord::RecordInvalid => e
     redirect_to team_index_path, alert: "변경 실패: #{e.message}"
