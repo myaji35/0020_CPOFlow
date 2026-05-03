@@ -8,6 +8,23 @@
 
 ## 🔴 P0 — Critical (즉시)
 
+### AUDIT-000 — 북극성 지표 부재: "견적 처리 48h → 10min" 같은 시간 단축 목표 미기획 ⭐ NEW
+- **타입**: NORTH_STAR / SCOPE_DEFINE / FEATURE_PLAN
+- **증상**: brand-dna.json 아젠다는 "**빠르게** 처리"라는 정성적 표현만 있고, 측정 가능한 KPI(time-to-quote, lead time per stage)가 모든 플랜 문서에 부재. 검색 결과 `48시간`/`10분`/`TTQ`/`time-to-quote`/`북극성`/`north star` 모두 0건 매치.
+- **근본 원인 가설**: AUDIT-001~003(11,838건 누적, 미배정 58%, due NULL 99.4%)은 모두 "처리 시간 측정·목표 부재 → 무한 누적"의 동일 증상. 측정·목표가 없는데 "빠르게" 처리될 수 없음.
+- **요구**:
+  1. **9단계별 목표 SLA 정의** (예: `new_rfq → make_quo` 4h, `make_quo → pending_po` 24h, `pending_po → new_po` 48h …)
+  2. **북극성 지표 1개 선언** (예: "RFQ 수신 → 견적 발송 평균 시간 < N시간")
+  3. **현재 baseline 측정** — `Order` 모델에 `status_changed_at` 또는 별도 `OrderStatusHistory` 테이블 → 단계별 평균 lead time 산출
+  4. 대시보드 KPI 카드에 baseline + 목표 동시 표시 (예: "현재: 평균 36h / 목표: 4h")
+- **파일 후보**: `brand-dna.json`(정성 → 정량 목표 추가), `app/models/order.rb`(status_changed_at 추가), `db/migrate/`(OrderStatusHistory 마이그레이션 검토), `app/views/dashboards/index.html.erb`(KPI 카드 추가)
+- **검증**:
+  - brand-dna.json에 `target_metrics` 섹션 추가 (각 단계 목표 시간)
+  - Order에 단계 진입 시각 기록 → 단계별 평균/95p 산출 가능
+  - 대시보드 상단에 "RFQ → 견적 평균 lead time" 표시 + 목표 대비 진행률
+- **선결 조건**: 대표님이 "각 단계별 목표 시간"을 결정. (제가 결정할 사항 아님 — 대표님 비즈니스 판단)
+- **블로킹**: 본 이슈가 정의되지 않으면 AUDIT-001/002/003 모두 "어디까지 줄여야 성공인지" 모호한 채 진행됨.
+
 ### AUDIT-001 — 칸반 `new_rfq` 11,838건 정리 정책
 - **타입**: BIZ_DATA_HYGIENE
 - **증상**: 칸반 첫 컬럼(`new_rfq`)에 Order 11,838건 누적. UI 렌더링 부담 + 사용자 행동 불가.
