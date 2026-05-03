@@ -136,7 +136,7 @@ class ClientsController < ApplicationController
     params.require(:client).permit(
       :name, :code, :country, :industry, :address, :website,
       :credit_grade, :contract_start_date, :payment_terms, :currency,
-      :ecount_code, :notes, :active
+      :ecount_code, :notes, :active, :default_assignee_id
     )
   end
 

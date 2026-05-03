@@ -3,6 +3,7 @@ class Supplier < ApplicationRecord
   has_many :supplier_products, dependent: :destroy
   has_many :products,          through: :supplier_products
   has_many :orders,            dependent: :nullify
+  belongs_to :default_assignee, class_name: "User", optional: true
 
   CREDIT_GRADES = %w[A B C D].freeze
   PAYMENT_TERMS = %w[NET30 NET60 NET90 COD Advance].freeze

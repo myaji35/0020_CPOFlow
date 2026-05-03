@@ -2,6 +2,7 @@ class Client < ApplicationRecord
   has_many :projects,        dependent: :destroy
   has_many :orders,          dependent: :nullify
   has_many :contact_persons, as: :contactable, dependent: :destroy
+  belongs_to :default_assignee, class_name: "User", optional: true
 
   INDUSTRIES = %w[nuclear hydro tunnel gtx construction general].freeze
   CREDIT_GRADES = %w[A B C D].freeze

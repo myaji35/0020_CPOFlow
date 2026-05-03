@@ -158,7 +158,7 @@ class SuppliersController < ApplicationController
     params.require(:supplier).permit(
       :name, :code, :country, :email, :phone, :notes, :active, :ecount_code,
       :address, :website, :credit_grade, :payment_terms, :lead_time_days,
-      :currency, :industry
+      :currency, :industry, :default_assignee_id
     )
   end
 end
