@@ -71,8 +71,10 @@ class KanbanController < ApplicationController
         # 구매보드: 기존 status 기반
         if col_key == "new_rfq"
           # new_rfq(접수함): 방금 등록한 발주가 맨 위로 — 최근 생성 우선
-          base.where(status: :new_rfq, rfq_status: Order::KANBAN_VISIBLE_RFQ_STATUSES)
-              .reorder(created_at: :desc)
+          # AUDIT-001: show_stale=true 시 전체 표시, 기본은 최근 30일만
+          rfq_base = base.where(status: :new_rfq, rfq_status: Order::KANBAN_VISIBLE_RFQ_STATUSES)
+          rfq_base = rfq_base.recent_new_rfq unless params[:show_stale] == "true"
+          rfq_base.reorder(created_at: :desc)
         else
           base.where(status: col_key)
         end
@@ -104,6 +106,14 @@ class KanbanController < ApplicationController
     # async 결과 수확 — to_a / value 호출 시점에 결과 대기
     @columns = @columns.transform_values(&:to_a)
     @column_totals = @column_totals.transform_values(&:value)
+
+    # AUDIT-001: new_rfq 컬럼 stale/recent 카운트 (헤더 표시용)
+    @new_rfq_recent_count = board_scoped_orders.recent_new_rfq
+                              .where(rfq_status: Order::KANBAN_VISIBLE_RFQ_STATUSES)
+                              .count
+    @new_rfq_stale_count  = board_scoped_orders.stale_new_rfq
+                              .where(rfq_status: Order::KANBAN_VISIBLE_RFQ_STATUSES)
+                              .count
 
     @filter_employees = Employee.active.by_name
     @card_statuses = @current_board.card_statuses.order(:position)
@@ -156,8 +166,10 @@ class KanbanController < ApplicationController
     relation = if @current_board.is_default? || @current_board.board_type == "purchase"
       if status == "new_rfq"
         # new_rfq(접수함): 최근 생성 우선 — index와 동일 정렬
-        base.where(status: :new_rfq, rfq_status: Order::KANBAN_VISIBLE_RFQ_STATUSES)
-            .reorder(created_at: :desc)
+        # AUDIT-001: show_stale=true 시 전체 표시, 기본은 최근 30일만
+        rfq_base = base.where(status: :new_rfq, rfq_status: Order::KANBAN_VISIBLE_RFQ_STATUSES)
+        rfq_base = rfq_base.recent_new_rfq unless params[:show_stale] == "true"
+        rfq_base.reorder(created_at: :desc)
       else
         base.where(status: status)
       end

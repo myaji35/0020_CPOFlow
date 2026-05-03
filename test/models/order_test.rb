@@ -110,6 +110,33 @@ class OrderTest < ActiveSupport::TestCase
     assert_nothing_raised { Order.critical.count }
   end
 
+  # AUDIT-001: stale/recent new_rfq 스코프
+  test "scope :stale_new_rfq — SQL 실행 오류 없음" do
+    assert_nothing_raised { Order.stale_new_rfq.count }
+  end
+
+  test "scope :recent_new_rfq — SQL 실행 오류 없음" do
+    assert_nothing_raised { Order.recent_new_rfq.count }
+  end
+
+  test "scope :stale_new_rfq — 30일 이내 updated_at 건은 포함되지 않음" do
+    order = Order.create!(user: @owner, title: "Recent RFQ", customer_name: "X",
+                          status: :new_rfq, updated_at: 1.day.ago)
+    assert_not Order.stale_new_rfq.exists?(order.id)
+  ensure
+    order&.reload&.destroy
+  end
+
+  test "scope :recent_new_rfq — 31일 전 updated_at 건은 포함되지 않음" do
+    order = Order.new(user: @owner, title: "Stale RFQ", customer_name: "X", status: :new_rfq)
+    order.save!(validate: false)
+    order.update_columns(updated_at: 31.days.ago)
+    assert_not Order.recent_new_rfq.exists?(order.id)
+    assert Order.stale_new_rfq.exists?(order.id)
+  ensure
+    order&.reload&.destroy
+  end
+
   test "scope :critical — done/get_grn/give_up 제외" do
     # done 상태 + urgent + overdue는 critical에 포함되지 않아야 함
     order = Order.create!(user: @owner, title: "Done Critical", customer_name: "X",

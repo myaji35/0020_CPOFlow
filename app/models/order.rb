@@ -182,6 +182,10 @@ class Order < ApplicationRecord
   scope :not_archived,  -> { where(archived_at: nil) }
   scope :archived,      -> { where.not(archived_at: nil) }
 
+  # AUDIT-001: new_rfq 컬럼 누적 정리 — 30일 기준으로 stale/recent 분리
+  scope :stale_new_rfq,  -> { where(status: :new_rfq).where("updated_at < ?", 30.days.ago) }
+  scope :recent_new_rfq, -> { where(status: :new_rfq).where("updated_at >= ?", 30.days.ago) }
+
   def archived?
     archived_at.present?
   end
@@ -283,6 +287,25 @@ class Order < ApplicationRecord
   end
 
   KANBAN_COLUMNS = %w[new_rfq make_quo pending_po new_po delivery_items problem get_grn give_up done].freeze
+
+  # AUDIT-003: 단계별 기본 SLA 일수 — 추후 Settings에서 관리 가능하도록 단순 hash 유지
+  DEFAULT_SLA_DAYS = {
+    new_rfq:        3,
+    make_quo:       5,
+    pending_po:     7,
+    new_po:         14,
+    delivery_items: 21,
+    problem:        7,
+    get_grn:        3
+  }.freeze
+
+  # AUDIT-003: due_date 미설정 Order의 기본 마감일 계산
+  # target_status 미지정 시 현재 status 기준으로 계산
+  def default_due_date_for(target_status = nil)
+    status_key = (target_status || status).to_sym
+    days = DEFAULT_SLA_DAYS[status_key] || 7
+    (created_at || Time.current) + days.days
+  end
 
   STATUS_LABELS = {
     "new_rfq"        => "New(신규)",

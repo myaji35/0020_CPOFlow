@@ -245,6 +245,26 @@
           <% end %>
         <% end %>
       </div>
+      <%# AUDIT-001: new_rfq 컬럼 stale 정보 표시 %>
+      <% if status == "new_rfq" && @new_rfq_stale_count.to_i > 0 %>
+        <div class="mb-2 px-1">
+          <p class="text-[10px] text-gray-400 dark:text-gray-500">
+            전체 <%= @new_rfq_stale_count + @new_rfq_recent_count %>건
+            (최근 30일 <%= @new_rfq_recent_count %>건 표시)
+          </p>
+          <% if params[:show_stale] != "true" %>
+            <%= link_to kanban_path(board_id: params[:board_id], show_stale: "true"),
+                  class: "text-[10px] text-amber-500 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 hover:underline" do %>
+              오래된 RFQ <%= @new_rfq_stale_count %>건 보기
+            <% end %>
+          <% else %>
+            <%= link_to kanban_path(board_id: params[:board_id]),
+                  class: "text-[10px] text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:underline" do %>
+              최근 30일만 보기
+            <% end %>
+          <% end %>
+        </div>
+      <% end %>
 
       <!-- Cards Container -->
       <div class="kanban-cards flex flex-col gap-2 flex-1 min-h-[60px] p-2 bg-ink-100 dark:bg-ink-800/60 rounded-lg"
