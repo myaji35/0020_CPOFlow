@@ -18,4 +18,17 @@ class NotificationTest < ActiveSupport::TestCase
       Notification.includes(:user).limit(5).to_a
     end
   end
+
+  # AUDIT-008: notification_type presence 검증
+  test "notification_type 없으면 invalid" do
+    n = Notification.new(notification_type: nil)
+    assert_not n.valid?
+    assert_includes n.errors[:notification_type], "은(는) 필수입니다"
+  end
+
+  test "notification_type 있으면 presence 검증 통과" do
+    n = Notification.new(notification_type: "system")
+    n.valid?
+    assert_empty n.errors[:notification_type]
+  end
 end

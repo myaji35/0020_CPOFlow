@@ -65,10 +65,11 @@ module CpoAgent
         user = assignee.respond_to?(:user) ? assignee.user : nil
         next unless user
         Notification.create!(
-          user: user,
-          notifiable: @order,
-          title: "[CPO Agent] 납기 위험: #{@order.title}",
-          body: "납기일 #{@order.due_date&.strftime('%Y-%m-%d')} — 즉시 조치 필요"
+          user:              user,
+          notifiable:        @order,
+          notification_type: "due_date_risk",
+          title:             "[CPO Agent] 납기 위험: #{@order.title}",
+          body:              "납기일 #{@order.due_date&.strftime('%Y-%m-%d')} — 즉시 조치 필요"
         )
       end
       create_auto_insight("담당자에게 납기 위험 알림을 자동 발송했습니다", "notification_sent")
