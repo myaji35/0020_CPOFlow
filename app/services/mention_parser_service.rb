@@ -35,6 +35,7 @@ class MentionParserService
         user:              mentioned_user,
         notifiable:        notifiable_order,
         notification_type: "mentioned",
+        title:             notification_title,
         body:              notification_body
       )
       notified_user_ids << mentioned_user.id
@@ -77,5 +78,16 @@ class MentionParserService
     when Task    then "#{who}님이 태스크에서 회원님을 멘션했습니다."
     else              "#{who}님이 회원님을 멘션했습니다."
     end
+  end
+
+  # ISS-멘션버그: Notification.title 비어 있어 헤더 드롭다운/알림 페이지에 빈 줄로 보이는 문제 수정.
+  #   주문 식별자(reference_no/po_no/quo_no/rfq_no/title)가 있으면 그것을 활용, 없으면 일반 문구.
+  def notification_title
+    order = notifiable_order
+    return "@멘션 알림" unless order
+
+    ref = order.po_no.presence || order.quo_no.presence || order.rfq_no.presence ||
+          order.reference_no.presence || order.title.presence
+    ref ? "@멘션: #{ref}" : "@멘션 알림"
   end
 end
