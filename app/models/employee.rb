@@ -67,6 +67,19 @@ class Employee < ApplicationRecord
   scope :active,     -> { where(active: true) }
   scope :by_name,    -> { order(:name) }
   scope :dispatched, -> { joins(:employee_assignments).where(employee_assignments: { status: "active" }).distinct }
+  scope :unmapped,   -> { where(user_id: nil) }
+
+  # AUDIT-005: 멘션 알림 미도달 방지 — user_id 미연결 직원에게 매핑 후보 제안
+  def suggested_user
+    return nil if user_id.present?
+    # 1순위: 이메일 정확 매칭
+    if email.present?
+      user = User.find_by("LOWER(email) = ?", email.downcase)
+      return user if user
+    end
+    # 2순위: 이름 정확 매칭
+    User.find_by(name: name)
+  end
 
   def current_contract   = employment_contracts.where(status: "active").order(start_date: :desc).first
   def current_assignment = employee_assignments.where(status: "active").order(start_date: :desc).first

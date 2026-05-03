@@ -18,6 +18,8 @@ class EmployeesController < ApplicationController
     @employees = @employees.where(employment_type: params[:type]) if params[:type].present?
     @employees = @employees.where(job_title: params[:job_title]) if params[:job_title].present?
     @employees = @employees.dispatched if params[:deployed] == "1"
+    # AUDIT-005: 미매핑 필터
+    @employees = @employees.unmapped if params[:filter] == "unmapped"
     if params[:expiring] == "visa"
       @employees = @employees.joins(:visas).merge(Visa.expiring_within(60)).distinct
     elsif params[:expiring] == "contract"
@@ -27,6 +29,7 @@ class EmployeesController < ApplicationController
     @stats = {
       total:             Employee.active.count,
       dispatched:        Employee.active.dispatched.count,
+      unmapped:          Employee.active.unmapped.count,  # AUDIT-005
       visa_expiring:     Employee.active.joins(:visas).merge(Visa.expiring_within(60)).distinct.count,
       # ISS-205: 갱신 미시작 카운트
       visa_renewal_needed: Employee.active.joins(:visas)
