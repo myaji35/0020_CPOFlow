@@ -63,9 +63,5 @@
     </div>
   <% end %>
 
-  <%# ── 회원가입 링크 ────────────────────────────────── %>
-  <p class="mt-5 text-center text-sm text-gray-500 dark:text-gray-500">
-    계정이 없으신가요?
-    <%= link_to "회원가입", new_registration_path(resource_name), class: "text-accent font-medium hover:underline" %>
-  </p>
+  <%# AUDIT-009: registrations 라우트 제거 — 회원가입 링크 삭제 (admin 초대 + Google OAuth만) %>
 </div>
