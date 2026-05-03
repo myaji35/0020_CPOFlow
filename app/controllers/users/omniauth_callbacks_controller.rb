@@ -12,7 +12,8 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
       set_flash_message(:notice, :success, kind: "Google") if is_navigational_format?
     else
       session["devise.google_data"] = request.env["omniauth.auth"].except("extra")
-      redirect_to new_user_registration_url, alert: @user.errors.full_messages.join(", ")
+      # AUDIT-009: registrations 라우트 제거 — sign_in으로 fallback
+      redirect_to new_user_session_path, alert: @user.errors.full_messages.join(", ")
     end
   end
 

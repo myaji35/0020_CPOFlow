@@ -1,5 +1,6 @@
 class User < ApplicationRecord
-  devise :database_authenticatable, :registerable,
+  # AUDIT-009: :registerable 제거 — 외부 회원가입 차단 (admin 초대 + Google OAuth 신규 가입만 허용)
+  devise :database_authenticatable,
          :recoverable, :rememberable, :validatable,
          :omniauthable, omniauth_providers: [ :google_oauth2 ]
 

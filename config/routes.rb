@@ -1,7 +1,7 @@
 Rails.application.routes.draw do
-  devise_for :users, controllers: {
+  # AUDIT-009: registrations 라우트 제거 — 외부 sign_up 차단 (admin 초대 + Google OAuth 신규 가입만)
+  devise_for :users, skip: [ :registrations ], controllers: {
     sessions: "users/sessions",
-    registrations: "users/registrations",
     omniauth_callbacks: "users/omniauth_callbacks"
   }
 
