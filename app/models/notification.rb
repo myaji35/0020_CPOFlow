@@ -22,7 +22,7 @@ class Notification < ApplicationRecord
     /^contract_/          => "contract",
     /^due_date_d\d+$/     => "due_date",
     "due_date_risk"       => "due_date",
-    "role_promoted"       => "system",
+    "role_promoted"       => "role_promoted",
     "overdue_unassigned_escalation" => "overdue_escalation",
     /^ecount_slip_failed/ => "ecount_slip_failed",
     "new_oauth_user"      => "oauth_signup"
@@ -40,6 +40,7 @@ class Notification < ApplicationRecord
     "overdue_escalation" => "미배정 에스컬",
     "ecount_slip_failed" => "eCount 오류",
     "oauth_signup"     => "신규 가입",
+    "role_promoted"    => "권한 변경",
     "system"           => "시스템"
   }.freeze
 
