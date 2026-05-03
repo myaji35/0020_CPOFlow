@@ -4,6 +4,10 @@
 # belong in git's global ignore instead:
 # `$XDG_CONFIG_HOME/git/ignore` or `~/.config/git/ignore`
 
+# Audit/CLI trigger 로컬 상태 (커밋 대상 아님)
+.claude/audit-log.json
+.claude/cli-trigger/
+
 # Ignore bundler config.
 /.bundle
 
