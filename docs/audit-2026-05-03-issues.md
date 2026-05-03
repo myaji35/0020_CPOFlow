@@ -8,6 +8,43 @@
 
 ## 🔴 P0 — Critical (즉시)
 
+### AUDIT-000 — 클라이언트 합의 북극성 "RFQ 처리 48h → 10min" 미문서화 ⭐ NEW (정정)
+- **타입**: NORTH_STAR / SCOPE_DEFINE / FEATURE_PLAN
+- **사실 정정**: 직전 답변에서 "기획되지 않았다"고 했으나 **틀렸음**. 대표님 증언으로 **클라이언트와 "기존 48시간 → 10분 이내" 합의 사실 존재**. 또한 어제(2026-05-02) `docs/biz-automation-opportunities-2026-05-02.md`에 단계별 baseline·자동화 후 시간이 이미 분석되어 있음.
+- **현 상태**: 합의·분석 둘 다 존재하지만 **공식 플랜 문서(brand-dna.json/getting-started.md/dashboard KPI)에 흡수가 안 됨** → 코드·UI에 측정·표시 없음 → AUDIT-001~003 같은 누적 증상 발생.
+
+**클라이언트 합의 (대표님 증언)**:
+- Baseline: **RFQ 수신 → 견적 발송 평균 48시간**
+- Target: **10분 이내**
+- 단축 비율: **288배 (≈99.65%)**
+
+**기존 자동화 분석 결과 (`docs/biz-automation-opportunities-2026-05-02.md`)**:
+| 단계 | 현재 부담 | 자동화 후 | ROI |
+|---|---|---|---|
+| make_quo A: 과거 단가 견적 초안 | 15~20분 | 2~3분 | ★★★★★ |
+| make_quo B: 공급사 자동 추천 | 20~30분 | 3분 | ★★★★★ |
+| make_quo C: 다수 공급사 견적 일괄 발송 | 30~45분 | 5분 | ★★★★☆ |
+| pending_po D: PO 수신 자동 인식 | 10~15분 | 1~2분 | ★★★★★ |
+| pending_po E: PO 번호 자동 추출 | 5분 | ~0분 | ★★★★★ |
+| **단계별 합산 (자동화 후)** | — | **~10~15분** | — |
+
+→ 자동화 후 시간 합산이 정확히 **10분대 (목표와 일치)**. 즉 클라이언트 합의는 이미 기술 분석으로 뒷받침되어 있음.
+
+- **요구**:
+  1. **brand-dna.json에 `north_star_metric` 섹션 추가** — `{baseline: "48h", target: "10min", scope: "RFQ 수신 → 견적 발송"}`
+  2. **`docs/north-star.md` 새 문서** — 클라이언트 합의 맥락 + 단계별 자동화 후 분배 시간 + 측정 방법
+  3. **Order에 단계 진입 시각 기록** — `status_changed_at` 또는 `OrderStatusHistory` (이거 없으면 baseline 측정 불가능)
+  4. **대시보드 상단 북극성 KPI 카드** — "지난 7일 평균 RFQ→견적 시간: NN분 (목표: 10분)" + 추세 스파크라인
+  5. **AUDIT-001~003 우선순위 재조정** — 북극성 달성 경로상 직접 영향 있는 것이 P0, 나머지는 P1로 격하
+- **파일 후보**: `brand-dna.json`, `docs/north-star.md`(신규), `db/migrate/...status_changed_at.rb`(신규) 또는 `db/migrate/...order_status_histories.rb`(신규), `app/models/order.rb`, `app/views/dashboards/index.html.erb`
+- **검증 (Goal-Driven)**:
+  - brand-dna.json에 north_star_metric 추가 ✓
+  - 새 Order의 단계 전환 시각 기록 동작 확인 (`Order.status_changed_at` 또는 history row 생성) ✓
+  - 대시보드에서 평균 lead time 숫자 노출 ✓
+  - 자동화 로드맵(Q1~Q4) 항목과 north star 진행률 연결 ✓
+- **블로킹 해소**: AUDIT-001/002/003은 본 이슈가 먼저 정의돼야 "어디까지 줄여야 성공인지" 명확해짐. AUDIT-000이 데이터 측정 인프라(status_changed_at)도 함께 깔아주므로 후속 이슈의 baseline 측정 도구로도 작동.
+- **이전 답변 정정**: 직전 응답("플랜에 부재")은 plan 문서 기준 검색 결과를 보고했지만, **사람의 합의 + 분석 자료는 존재**했음. plan 문서 동기화가 누락된 케이스. 이런 종류의 갭을 잡기 위해 AUDIT-000-meta로 "구두 합의 → plan 문서 흡수 누락" 유형의 갭 점검 hook도 검토 가치 있음.
+
 ### AUDIT-001 — 칸반 `new_rfq` 11,838건 정리 정책
 - **타입**: BIZ_DATA_HYGIENE
 - **증상**: 칸반 첫 컬럼(`new_rfq`)에 Order 11,838건 누적. UI 렌더링 부담 + 사용자 행동 불가.
@@ -101,6 +138,86 @@
   - (b) sign_up 유지하되 회사 도메인(`@ddtl.co.kr`, `@atoz2010.ae`) 화이트리스트 검증
   - (c) 현행 유지 (viewer로 차단됨)
 - **파일 후보**: `app/models/user.rb`, `config/routes.rb`, `app/controllers/users/registrations_controller.rb`
+
+---
+
+## 🔴 P0 — End-to-End 흐름 누락 (대표님 추가 지시 2026-05-03)
+
+### AUDIT-010 — "견적의뢰 → 발주 → 납품 → 수금" 종결 흐름 모델·단계 누락 ⭐ NEW
+- **타입**: SCOPE_DEFINE / FEATURE_PLAN / FOUNDATION
+- **대표님 지시**: "견적의뢰 받은 내용을 마지막까지 하려면 발주 후 납품, 수금까지 진행되어야 해. 이점도 점검해서 일괄적으로 처리하자."
+- **점검 결과 — 종결 흐름이 9단계 칸반에서 사실상 끊겨 있음**:
+
+#### 9단계 vs 실제 비즈니스 종결 흐름 매핑
+| 비즈니스 단계 | 칸반 단계 | 모델 흔적 | 평가 |
+|---|---|---|---|
+| RFQ 수신 | `new_rfq` | ✅ Order + email | OK |
+| 견적 작성 | `make_quo` | ✅ OrderQuote (unit_price/lead_time) | OK |
+| 고객 PO 대기 | `pending_po` | ✅ po_no 필드 | OK |
+| 공급사 발주 확정 | `new_po` | ✅ ecount_slip_no (전표 번호) | OK |
+| 납품 진행 | `delivery_items` | ⚠️ 컬럼만 있고 추적 없음 (운송장/ETA/실배송일 모두 부재) | **갭** |
+| 수령 확인 (GRN) | `get_grn` | ❌ GRN 모델 없음. 수령일·수령자·수령품목 추적 컬럼 0건 | **갭 Critical** |
+| 고객사 청구 / 세금계산서 발행 | **단계 없음** | ❌ Invoice/TaxInvoice 모델 없음. estimated_value 컬럼만 존재 (실제 청구 금액·발행일·번호 없음) | **단계 결손** |
+| 수금 / 입금 확인 | **단계 없음** | ❌ Payment/Receipt/Settlement/Receivable 모델 8종 모두 0건. 입금 확인·연체 추적 0% | **단계 결손** |
+| 종결 (Done) | `done` | ⚠️ done 3건 / 모두 estimated_value=NULL · ecount_synced_at=NULL → "종결" 의미 미정의 | **갭** |
+
+#### 운영 데이터 증거
+- `done` 단계 Order: 3건 (전체 11,899건 중 0.025%) → 거의 모든 발주가 종결되지 않은 채 누적
+- `done` Order 중 결제 완료/매출 인식 흔적 0건
+- `Client.payment_terms` 채워진 건 6/13 (반만 청구 조건 정의)
+- eCount API 코드: product/customer/inventory만 동기화. **invoice/payment/매출/수금 메서드 0건**
+- `OrderQuote` 테이블: 견적 단가/리드타임만 있고 청구·수금 흔적 0건
+- get_grn → done 평균 lead time: **9.5일** (3건 샘플, 작은 표본이지만 종결 자체가 거의 안 일어남)
+
+#### 비즈니스 의미
+- AUDIT-000(48h→10min)은 견적 발송까지의 **앞단** 시간만 다룸
+- 진짜 클라이언트 가치는 "발주 → 납품 → 수금"까지 종결되어야 발생 → 현재 시스템은 **수금까지 추적할 수단이 없음**
+- 회계(eCount ERP)와의 매출/수금 연동 없이는 회사 결산도 시스템 밖에서 일어남 → 데이터 분절·이중 입력
+- AUDIT-000 시간 단축이 성공해도 **종결률이 0.025%면 비즈니스 가치 미실현**
+
+#### 요구 — 일괄 처리 (3 sub-issue로 분해)
+
+**AUDIT-010-A — 9단계 → 11+단계로 칸반 확장 또는 라이프사이클 분리**
+- 옵션 (1) 칸반에 `invoiced` (청구) + `paid` (수금완료) 2단계 추가 → 11단계
+- 옵션 (2) 칸반은 9단계 유지 + 별도 "정산(Settlement)" 라이프사이클 모델 신설 (Order has_one Settlement)
+- 옵션 (3) `done`을 sub-status로 세분화 (`done_grn / done_invoiced / done_paid / done_archived`)
+- → **대표님 결정 필요** (UX 트레이드오프: 칸반 폭 vs 정보 가시성)
+
+**AUDIT-010-B — Invoice/Payment 모델 신설 + eCount 연동**
+- 신규 모델: `Invoice` (order_id, invoice_no, issued_at, amount, currency, vat_amount, due_date, ecount_slip_no, status[draft/issued/sent])
+- 신규 모델: `Payment` (invoice_id, received_at, amount, method[wire/cash/check], reference, ecount_receipt_no)
+- 신규 모델 후보: `Receivable` (미수금 추적) — Invoice 발행 후 미수 잔액 + 연체일 자동 계산
+- eCount API 추가 메서드: `create_sales_invoice`, `fetch_payment_status`, `create_receipt_voucher`
+- 권한: 청구·수금 등록은 manager+ 권한, 조회는 member+
+
+**AUDIT-010-C — 종결 KPI + 대시보드 + AUDIT-000과 통합**
+- 북극성 KPI 확장: AUDIT-000 "RFQ→견적 10분"에 더해 "**RFQ→수금 완료 lead time**" 추가
+- 대시보드: 9단계 칸반 우측에 "정산 패널" — Invoice 발행 대기/Invoice 발행됨/수금 대기/수금 완료/연체 카운트
+- 알림: 납기 후 N일 미수금 → admin/manager에 자동 알림 (`overdue_unpaid` notification_type)
+- 회계 리포트: 월별 매출/미수금/수금 보고서 (Google Sheets sync 또는 PDF 출력)
+
+- **검증 (Goal-Driven)**:
+  1. Invoice/Payment 모델 마이그레이션 적용 + 기존 done Order 3건 백필 시도 (가능한 만큼)
+  2. eCount sales_invoice API 호출 → 응답 확인 (sandbox)
+  3. 칸반 또는 별도 패널에서 "발행 대기 N건 / 미수금 N건" 가시화
+  4. AUDIT-000 + 본 이슈 통합 KPI 카드: "RFQ→수금 평균 N일 / 목표 N일"
+  5. 대표님 1주일 운영 후 "수금까지 추적되는가?" 정성 확인
+
+- **블로킹 / 의존성**:
+  - AUDIT-000 측정 인프라(`status_changed_at` / `OrderStatusHistory`)와 **공통 토대 공유** → 함께 설계해야 중복 마이그레이션 방지
+  - eCount API 추가 권한 필요 가능 (대표님이 eCount 측에 sales/receipt 메뉴 권한 확인 필요)
+  - UAE VAT 5% 자동 계산 (어제 자동화 분석 S단계) 본 이슈와 같이 진행 시 시너지
+
+- **파일 후보**:
+  - `db/migrate/...create_invoices.rb`, `...create_payments.rb`, `...add_status_changed_at_to_orders.rb`
+  - `app/models/invoice.rb`, `app/models/payment.rb`, `app/models/order.rb` (has_many invoices)
+  - `app/services/ecount_api/sales_invoice_service.rb` (신규), `app/services/ecount_api/receipt_service.rb` (신규)
+  - `app/controllers/invoices_controller.rb`, `app/controllers/payments_controller.rb`
+  - `app/views/dashboards/index.html.erb` (정산 패널 추가)
+  - `brand-dna.json` (north_star_metric에 "RFQ→수금" 추가), `docs/north-star.md`
+  - `app/models/notification.rb` (TYPES에 `overdue_unpaid` 추가 — AUDIT-004와 함께)
+
+- **우선순위 재조정 권고**: 본 이슈가 정의되면 **AUDIT-010이 P0 최상단**, AUDIT-000은 P0 하위(견적 단계까지의 측정 인프라로 본 이슈에 흡수), AUDIT-001~003은 P1로 이동.
 
 ---
 
