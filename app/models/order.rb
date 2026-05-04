@@ -185,8 +185,8 @@ class Order < ApplicationRecord
   scope :archived,      -> { where.not(archived_at: nil) }
 
   # AUDIT-001: new_rfq 컬럼 누적 정리 — 30일 기준으로 stale/recent 분리
-  scope :stale_new_rfq,  -> { where(status: :new_rfq).where("updated_at < ?", 30.days.ago) }
-  scope :recent_new_rfq, -> { where(status: :new_rfq).where("updated_at >= ?", 30.days.ago) }
+  scope :stale_new_rfq,  -> { where(status: :new_rfq).where("orders.updated_at < ?", 30.days.ago) }
+  scope :recent_new_rfq, -> { where(status: :new_rfq).where("orders.updated_at >= ?", 30.days.ago) }
 
   def archived?
     archived_at.present?
