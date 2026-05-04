@@ -19,9 +19,17 @@ class User < ApplicationRecord
       # 비밀번호 검증 스킵 (OmniAuth 유저)
       u.skip_confirmation! if u.respond_to?(:skip_confirmation!)
 
-      # AtoZ 직원만 사용: Employee 이메일 매칭 시 자동 활성화. 매칭 실패 시 pending 상태(active=false)
+      # AtoZ 직원만 사용:
+      # 로그인 이메일 == Employee 등록 이메일 → admin이 직원으로 등록한 사실 자체가 사용 자격 인증
+      # 매칭 성공: active=true + role=member (manager/admin 승격은 admin이 별도 수행)
+      # 매칭 실패: active=false (pending 안내 페이지)
       matched = Employee.find_by("LOWER(email) = ?", auth.info.email.to_s.downcase)
-      u.active = matched.present?
+      if matched
+        u.active = true
+        u.role   = :member
+      else
+        u.active = false
+      end
     end
 
     # 신규 사용자 + 매칭되는 Employee 있으면 양방향 연결 (Employee.user_id 채우기)
