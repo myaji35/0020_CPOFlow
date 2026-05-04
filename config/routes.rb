@@ -11,6 +11,9 @@ Rails.application.routes.draw do
   get "/privacy", to: "legal#privacy", as: :privacy_policy
   get "/terms",   to: "legal#terms",   as: :terms_of_service
 
+  # AtoZ 직원 등록 대기 안내 — Employee 매칭 안 된 사용자 차단 안내 페이지
+  get "/pending_approval", to: "users/pending#show", as: :pending_approval
+
   authenticated :user do
     root to: "dashboard#index", as: :authenticated_root
   end

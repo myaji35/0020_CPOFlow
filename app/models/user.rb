@@ -5,20 +5,31 @@ class User < ApplicationRecord
          :omniauthable, omniauth_providers: [ :google_oauth2 ]
 
   def self.from_omniauth(auth)
-    where(provider: auth.provider, uid: auth.uid).first_or_create do |user|
-      user.email    = auth.info.email
-      user.name     = auth.info.name
-      user.password = Devise.friendly_token[0, 20]
-      user.provider = auth.provider
-      user.uid      = auth.uid
+    user = where(provider: auth.provider, uid: auth.uid).first_or_create do |u|
+      u.email    = auth.info.email
+      u.name     = auth.info.name
+      u.password = Devise.friendly_token[0, 20]
+      u.provider = auth.provider
+      u.uid      = auth.uid
       # ISS-268: 이메일 도메인 기반 branch 자동 분기 — 모호 시 enum default(:abu_dhabi) 유지
       #   seoul 단서: .kr TLD, seoul/korea 서브도메인, 한국어 이름 힌트
       #   그 외: default(:abu_dhabi) — admin이 필요 시 수동 재배정
       inferred_branch = infer_branch_from_email(auth.info.email)
-      user.branch = inferred_branch if inferred_branch
+      u.branch = inferred_branch if inferred_branch
       # 비밀번호 검증 스킵 (OmniAuth 유저)
-      user.skip_confirmation! if user.respond_to?(:skip_confirmation!)
+      u.skip_confirmation! if u.respond_to?(:skip_confirmation!)
+
+      # AtoZ 직원만 사용: Employee 이메일 매칭 시 자동 활성화. 매칭 실패 시 pending 상태(active=false)
+      matched = Employee.find_by("LOWER(email) = ?", auth.info.email.to_s.downcase)
+      u.active = matched.present?
     end
+
+    # 신규 사용자 + 매칭되는 Employee 있으면 양방향 연결 (Employee.user_id 채우기)
+    if user.persisted? && user.employee.nil?
+      matched_employee = Employee.find_by("LOWER(email) = ?", auth.info.email.to_s.downcase)
+      matched_employee&.update_column(:user_id, user.id)
+    end
+    user
   end
 
   # ISS-268: 이메일 도메인 분석 → 추정 branch 반환 (확신 없으면 nil)
@@ -34,6 +45,10 @@ class User < ApplicationRecord
   # 기존 저장된 사용자 role은 변경하지 않음 — admin이 수동 승격해야 member 이상 권한 부여.
   enum :role, { viewer: 0, member: 1, manager: 2, admin: 3 }, default: :viewer
   enum :branch, { abu_dhabi: "abu_dhabi", seoul: "seoul" }, default: :abu_dhabi
+
+  # AtoZ 직원만 사용 가능 — Employee 매칭 안 된 사용자는 active=false (모든 페이지 차단, 안내만 표시)
+  # pending? = 가입은 했지만 직원 등록 대기 중
+  def pending? = !active?
 
   LOCALES = %w[en ko ar].freeze
   THEMES  = %w[light dark system].freeze

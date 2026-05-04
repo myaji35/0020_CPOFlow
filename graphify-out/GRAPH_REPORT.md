@@ -1,11 +1,11 @@
-# Graph Report - .  (2026-05-02)
+# Graph Report - .  (2026-05-04)
 
 ## Corpus Check
-- 495 files · ~806,509 words
+- 525 files · ~826,830 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2441 nodes · 2757 edges · 489 communities detected
+- 2662 nodes · 3003 edges · 519 communities detected
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
@@ -499,18 +499,48 @@
 - [[_COMMUNITY_Community 486|Community 486]]
 - [[_COMMUNITY_Community 487|Community 487]]
 - [[_COMMUNITY_Community 488|Community 488]]
+- [[_COMMUNITY_Community 489|Community 489]]
+- [[_COMMUNITY_Community 490|Community 490]]
+- [[_COMMUNITY_Community 491|Community 491]]
+- [[_COMMUNITY_Community 492|Community 492]]
+- [[_COMMUNITY_Community 493|Community 493]]
+- [[_COMMUNITY_Community 494|Community 494]]
+- [[_COMMUNITY_Community 495|Community 495]]
+- [[_COMMUNITY_Community 496|Community 496]]
+- [[_COMMUNITY_Community 497|Community 497]]
+- [[_COMMUNITY_Community 498|Community 498]]
+- [[_COMMUNITY_Community 499|Community 499]]
+- [[_COMMUNITY_Community 500|Community 500]]
+- [[_COMMUNITY_Community 501|Community 501]]
+- [[_COMMUNITY_Community 502|Community 502]]
+- [[_COMMUNITY_Community 503|Community 503]]
+- [[_COMMUNITY_Community 504|Community 504]]
+- [[_COMMUNITY_Community 505|Community 505]]
+- [[_COMMUNITY_Community 506|Community 506]]
+- [[_COMMUNITY_Community 507|Community 507]]
+- [[_COMMUNITY_Community 508|Community 508]]
+- [[_COMMUNITY_Community 509|Community 509]]
+- [[_COMMUNITY_Community 510|Community 510]]
+- [[_COMMUNITY_Community 511|Community 511]]
+- [[_COMMUNITY_Community 512|Community 512]]
+- [[_COMMUNITY_Community 513|Community 513]]
+- [[_COMMUNITY_Community 514|Community 514]]
+- [[_COMMUNITY_Community 515|Community 515]]
+- [[_COMMUNITY_Community 516|Community 516]]
+- [[_COMMUNITY_Community 517|Community 517]]
+- [[_COMMUNITY_Community 518|Community 518]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `Order` - 34 edges
-2. `OrdersController` - 33 edges
+1. `Order` - 37 edges
+2. `OrdersController` - 36 edges
 3. `SheetsService` - 29 edges
 4. `E2ETestRunner` - 25 edges
-5. `a()` - 24 edges
-6. `s()` - 22 edges
-7. `InboxController` - 21 edges
-8. `User` - 21 edges
-9. `t()` - 21 edges
-10. `ReportsController` - 20 edges
+5. `LeavesController` - 24 edges
+6. `a()` - 24 edges
+7. `Employee` - 23 edges
+8. `s()` - 22 edges
+9. `InboxController` - 21 edges
+10. `User` - 21 edges
 
 ## Surprising Connections (you probably didn't know these)
 - None detected - all connections are within the same source files.
@@ -522,11 +552,11 @@ Cohesion: 0.21
 Nodes (52): _(), a(), ae(), b(), be(), c(), ce(), d() (+44 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.1
+Cohesion: 0.09
 Nodes (2): is_purchase_board?(), OrdersController
 
 ### Community 2 - "Community 2"
-Cohesion: 0.06
+Cohesion: 0.05
 Nodes (1): Order
 
 ### Community 3 - "Community 3"
@@ -538,1928 +568,1928 @@ Cohesion: 0.21
 Nodes (1): E2ETestRunner
 
 ### Community 5 - "Community 5"
-Cohesion: 0.12
-Nodes (1): InboxController
+Cohesion: 0.11
+Nodes (1): LeavesController
 
 ### Community 6 - "Community 6"
-Cohesion: 0.18
-Nodes (19): _cancelPending(), _close(), _closeDropdown(), _csrfToken(), _detectAtMention(), disconnect(), _doFetch(), _escape() (+11 more)
+Cohesion: 0.08
+Nodes (1): Employee
 
 ### Community 7 - "Community 7"
 Cohesion: 0.12
-Nodes (1): User
+Nodes (1): InboxController
 
 ### Community 8 - "Community 8"
+Cohesion: 0.18
+Nodes (19): _cancelPending(), _close(), _closeDropdown(), _csrfToken(), _detectAtMention(), disconnect(), _doFetch(), _escape() (+11 more)
+
+### Community 9 - "Community 9"
+Cohesion: 0.12
+Nodes (1): User
+
+### Community 10 - "Community 10"
 Cohesion: 0.19
 Nodes (1): ReportsController
 
-### Community 9 - "Community 9"
+### Community 11 - "Community 11"
 Cohesion: 0.19
 Nodes (17): activateItem(), close(), closeOnBackdrop(), emptyHint(), fetchResults(), getRecentSearches(), handleKeydown(), highlightItem() (+9 more)
 
-### Community 10 - "Community 10"
+### Community 12 - "Community 12"
 Cohesion: 0.13
 Nodes (1): RfqDetectorService
 
-### Community 11 - "Community 11"
+### Community 13 - "Community 13"
 Cohesion: 0.17
 Nodes (15): clear(), _closeDropdown(), connect(), _fetchInitial(), _fetchResults(), _highlight(), _itemClick(), _itemHover() (+7 more)
 
-### Community 12 - "Community 12"
-Cohesion: 0.2
-Nodes (1): GmailService
-
-### Community 13 - "Community 13"
+### Community 14 - "Community 14"
 Cohesion: 0.16
 Nodes (1): ContactPersonsController
 
-### Community 14 - "Community 14"
-Cohesion: 0.12
-Nodes (1): Employee
-
 ### Community 15 - "Community 15"
+Cohesion: 0.18
+Nodes (1): GmailService
+
+### Community 16 - "Community 16"
 Cohesion: 0.24
 Nodes (1): EmailSignatureParserService
 
-### Community 16 - "Community 16"
+### Community 17 - "Community 17"
+Cohesion: 0.17
+Nodes (1): ApplicationController
+
+### Community 18 - "Community 18"
 Cohesion: 0.16
 Nodes (1): ClientsController
 
-### Community 17 - "Community 17"
+### Community 19 - "Community 19"
 Cohesion: 0.15
 Nodes (1): ReviewsController
 
-### Community 18 - "Community 18"
+### Community 20 - "Community 20"
 Cohesion: 0.23
 Nodes (1): EmailAttachmentExtractorService
 
-### Community 19 - "Community 19"
+### Community 21 - "Community 21"
 Cohesion: 0.18
 Nodes (1): EmailToOrderService
 
-### Community 20 - "Community 20"
+### Community 22 - "Community 22"
 Cohesion: 0.21
 Nodes (1): SonnetEscalatorService
 
-### Community 21 - "Community 21"
-Cohesion: 0.18
-Nodes (1): ApplicationController
+### Community 23 - "Community 23"
+Cohesion: 0.16
+Nodes (1): WarningsController
 
-### Community 22 - "Community 22"
+### Community 24 - "Community 24"
 Cohesion: 0.29
 Nodes (12): connect(), disconnect(), _filterOversize(), _onChange(), _onDragEnter(), _onDragLeave(), _onDrop(), _resetZone() (+4 more)
 
-### Community 23 - "Community 23"
+### Community 25 - "Community 25"
 Cohesion: 0.25
 Nodes (1): AttachmentExtractor
 
-### Community 24 - "Community 24"
-Cohesion: 0.17
-Nodes (1): ProjectsController
-
-### Community 25 - "Community 25"
+### Community 26 - "Community 26"
 Cohesion: 0.19
 Nodes (1): SuppliersController
 
-### Community 26 - "Community 26"
+### Community 27 - "Community 27"
+Cohesion: 0.17
+Nodes (1): ProjectsController
+
+### Community 28 - "Community 28"
 Cohesion: 0.15
 Nodes (1): DepartmentsController
 
-### Community 27 - "Community 27"
+### Community 29 - "Community 29"
 Cohesion: 0.18
 Nodes (1): CardStatusesController
 
-### Community 28 - "Community 28"
+### Community 30 - "Community 30"
 Cohesion: 0.23
 Nodes (4): ApiError, AuthError, BaseService, RateLimitError
 
-### Community 29 - "Community 29"
+### Community 31 - "Community 31"
 Cohesion: 0.24
 Nodes (1): ClassificationOrchestrator
 
-### Community 30 - "Community 30"
-Cohesion: 0.18
-Nodes (1): KanbanBoardsController
-
-### Community 31 - "Community 31"
-Cohesion: 0.33
-Nodes (11): #addHidden(), bulkAction(), bulkAssign(), clearAll(), #clearHidden(), connect(), exportCsv(), selectedIds() (+3 more)
-
 ### Community 32 - "Community 32"
-Cohesion: 0.26
-Nodes (1): OrderGraphBuilder
-
-### Community 33 - "Community 33"
 Cohesion: 0.2
 Nodes (1): EmployeesController
 
+### Community 33 - "Community 33"
+Cohesion: 0.23
+Nodes (1): NotificationsController
+
 ### Community 34 - "Community 34"
+Cohesion: 0.18
+Nodes (1): KanbanBoardsController
+
+### Community 35 - "Community 35"
+Cohesion: 0.33
+Nodes (11): #addHidden(), bulkAction(), bulkAssign(), clearAll(), #clearHidden(), connect(), exportCsv(), selectedIds() (+3 more)
+
+### Community 36 - "Community 36"
+Cohesion: 0.26
+Nodes (1): OrderGraphBuilder
+
+### Community 37 - "Community 37"
 Cohesion: 0.22
 Nodes (1): KanbanController
 
-### Community 35 - "Community 35"
+### Community 38 - "Community 38"
 Cohesion: 0.2
 Nodes (1): VisasController
 
-### Community 36 - "Community 36"
+### Community 39 - "Community 39"
 Cohesion: 0.2
 Nodes (1): CompaniesController
 
-### Community 37 - "Community 37"
+### Community 40 - "Community 40"
 Cohesion: 0.2
 Nodes (1): CountriesController
 
-### Community 38 - "Community 38"
+### Community 41 - "Community 41"
 Cohesion: 0.18
 Nodes (1): KanbanColumnsController
 
-### Community 39 - "Community 39"
+### Community 42 - "Community 42"
+Cohesion: 0.18
+Nodes (1): EmployeeWarning
+
+### Community 43 - "Community 43"
+Cohesion: 0.2
+Nodes (1): UrgentAlertService
+
+### Community 44 - "Community 44"
+Cohesion: 0.29
+Nodes (1): AribaPageParser
+
+### Community 45 - "Community 45"
+Cohesion: 0.33
+Nodes (1): ClientMatcher
+
+### Community 46 - "Community 46"
 Cohesion: 0.25
 Nodes (1): LlmRfqAnalyzerService
 
-### Community 40 - "Community 40"
+### Community 47 - "Community 47"
 Cohesion: 0.31
 Nodes (1): AribaScraperService
 
-### Community 41 - "Community 41"
+### Community 48 - "Community 48"
 Cohesion: 0.18
 Nodes (1): ShadowFnDetectorJobTest
 
-### Community 42 - "Community 42"
+### Community 49 - "Community 49"
 Cohesion: 0.22
 Nodes (1): CertificationsController
 
-### Community 43 - "Community 43"
+### Community 50 - "Community 50"
 Cohesion: 0.31
 Nodes (1): DashboardController
 
-### Community 44 - "Community 44"
+### Community 51 - "Community 51"
 Cohesion: 0.22
 Nodes (1): EmployeeAssignmentsController
 
-### Community 45 - "Community 45"
+### Community 52 - "Community 52"
 Cohesion: 0.22
 Nodes (1): EmploymentContractsController
 
-### Community 46 - "Community 46"
+### Community 53 - "Community 53"
 Cohesion: 0.27
 Nodes (1): ImportsController
 
-### Community 47 - "Community 47"
+### Community 54 - "Community 54"
 Cohesion: 0.2
 Nodes (1): TrackingCodesController
 
-### Community 48 - "Community 48"
+### Community 55 - "Community 55"
+Cohesion: 0.24
+Nodes (1): ChecklistItemsController
+
+### Community 56 - "Community 56"
 Cohesion: 0.38
 Nodes (9): addDept(), backdropClose(), close(), csrfToken(), deleteDept(), loadList(), open(), renderList() (+1 more)
 
-### Community 49 - "Community 49"
+### Community 57 - "Community 57"
 Cohesion: 0.38
 Nodes (9): addJobTitle(), backdropClose(), close(), csrfToken(), deleteJobTitle(), loadList(), open(), renderList() (+1 more)
 
-### Community 50 - "Community 50"
+### Community 58 - "Community 58"
+Cohesion: 0.33
+Nodes (1): AnalyzeAttachmentsJob
+
+### Community 59 - "Community 59"
 Cohesion: 0.27
 Nodes (1): ClassifyV2Day3Gate
 
-### Community 51 - "Community 51"
+### Community 60 - "Community 60"
 Cohesion: 0.31
 Nodes (1): LinkAnalyzerService
 
-### Community 52 - "Community 52"
+### Community 61 - "Community 61"
 Cohesion: 0.33
 Nodes (1): ReviewJsonSyncService
 
-### Community 53 - "Community 53"
+### Community 62 - "Community 62"
 Cohesion: 0.29
 Nodes (1): EcountParser
 
-### Community 54 - "Community 54"
+### Community 63 - "Community 63"
 Cohesion: 0.33
 Nodes (1): AutoActionService
 
-### Community 55 - "Community 55"
+### Community 64 - "Community 64"
 Cohesion: 0.25
 Nodes (1): OrderQuotesController
 
-### Community 56 - "Community 56"
-Cohesion: 0.22
-Nodes (1): NotificationsController
-
-### Community 57 - "Community 57"
+### Community 65 - "Community 65"
 Cohesion: 0.39
 Nodes (1): DueNotificationJob
 
-### Community 58 - "Community 58"
+### Community 66 - "Community 66"
 Cohesion: 0.22
 Nodes (1): SheetsSyncLog
 
-### Community 59 - "Community 59"
+### Community 67 - "Community 67"
+Cohesion: 0.25
+Nodes (1): MentionParserService
+
+### Community 68 - "Community 68"
 Cohesion: 0.31
 Nodes (1): RiskAssessmentService
 
-### Community 60 - "Community 60"
+### Community 69 - "Community 69"
 Cohesion: 0.33
 Nodes (1): SlipCreateService
 
-### Community 61 - "Community 61"
+### Community 70 - "Community 70"
+Cohesion: 0.33
+Nodes (1): UrgentQuoteEmailDrafter
+
+### Community 71 - "Community 71"
 Cohesion: 0.22
 Nodes (1): RfqReplyDraftService
 
-### Community 62 - "Community 62"
+### Community 72 - "Community 72"
 Cohesion: 0.28
 Nodes (1): RuleGate
 
-### Community 63 - "Community 63"
+### Community 73 - "Community 73"
 Cohesion: 0.25
 Nodes (1): OrderLinksController
 
-### Community 64 - "Community 64"
-Cohesion: 0.25
-Nodes (1): TasksController
-
-### Community 65 - "Community 65"
-Cohesion: 0.25
-Nodes (1): EmailAccountsController
-
-### Community 66 - "Community 66"
-Cohesion: 0.25
-Nodes (0): 
-
-### Community 67 - "Community 67"
-Cohesion: 0.25
-Nodes (1): Activity
-
-### Community 68 - "Community 68"
-Cohesion: 0.36
-Nodes (5): AppConfig, get(), sheets_enabled?(), sheets_spreadsheet_id(), sheets_spreadsheet_url()
-
-### Community 69 - "Community 69"
-Cohesion: 0.25
-Nodes (1): Client
-
-### Community 70 - "Community 70"
-Cohesion: 0.29
-Nodes (1): MentionParserService
-
-### Community 71 - "Community 71"
-Cohesion: 0.43
-Nodes (1): ProductImportStrategy
-
-### Community 72 - "Community 72"
-Cohesion: 0.32
-Nodes (1): RfqFeedbackService
-
-### Community 73 - "Community 73"
-Cohesion: 0.29
-Nodes (1): Gmail::SonnetEscalatorServiceTest
-
 ### Community 74 - "Community 74"
-Cohesion: 0.33
+Cohesion: 0.32
 Nodes (1): GmailOauthController
 
 ### Community 75 - "Community 75"
-Cohesion: 0.29
-Nodes (1): TrashController
+Cohesion: 0.25
+Nodes (1): TasksController
 
 ### Community 76 - "Community 76"
-Cohesion: 0.29
-Nodes (1): ProfileController
+Cohesion: 0.25
+Nodes (1): EmailAccountsController
 
 ### Community 77 - "Community 77"
-Cohesion: 0.52
-Nodes (6): connect(), hover(), labelFor(), leave(), render(), select()
+Cohesion: 0.25
+Nodes (0): 
 
 ### Community 78 - "Community 78"
-Cohesion: 0.38
-Nodes (3): disconnect(), leave(), removeTooltip()
+Cohesion: 0.39
+Nodes (5): _esc(), onFileSelect(), _renderHtml(), switch(), switchToObjectUrl()
 
 ### Community 79 - "Community 79"
-Cohesion: 0.43
-Nodes (1): AnalyzeAttachmentsJob
+Cohesion: 0.25
+Nodes (1): Activity
 
 ### Community 80 - "Community 80"
-Cohesion: 0.29
-Nodes (1): CardStatus
+Cohesion: 0.36
+Nodes (5): AppConfig, get(), sheets_enabled?(), sheets_spreadsheet_id(), sheets_spreadsheet_url()
 
 ### Community 81 - "Community 81"
-Cohesion: 0.29
-Nodes (1): ContactPerson
+Cohesion: 0.25
+Nodes (1): Client
 
 ### Community 82 - "Community 82"
-Cohesion: 0.38
-Nodes (1): EmailAccount
+Cohesion: 0.25
+Nodes (1): Leave
 
 ### Community 83 - "Community 83"
 Cohesion: 0.29
-Nodes (1): ImportLog
+Nodes (1): OrderPricingSuggester
 
 ### Community 84 - "Community 84"
-Cohesion: 0.29
-Nodes (1): Review
+Cohesion: 0.43
+Nodes (1): ProductImportStrategy
 
 ### Community 85 - "Community 85"
-Cohesion: 0.29
-Nodes (1): Project
+Cohesion: 0.39
+Nodes (1): AttachmentRelevanceFilter
 
 ### Community 86 - "Community 86"
-Cohesion: 0.33
-Nodes (1): EcountImportService
+Cohesion: 0.32
+Nodes (1): RfqFeedbackService
 
 ### Community 87 - "Community 87"
-Cohesion: 0.38
-Nodes (1): AuthService
+Cohesion: 0.29
+Nodes (1): Gmail::SonnetEscalatorServiceTest
 
 ### Community 88 - "Community 88"
-Cohesion: 0.48
-Nodes (1): ProductSyncService
+Cohesion: 0.29
+Nodes (1): TrashController
 
 ### Community 89 - "Community 89"
-Cohesion: 0.48
-Nodes (1): CustomerSyncService
+Cohesion: 0.29
+Nodes (1): ProfileController
 
 ### Community 90 - "Community 90"
-Cohesion: 0.29
-Nodes (1): CostGuard
+Cohesion: 0.52
+Nodes (6): connect(), hover(), labelFor(), leave(), render(), select()
 
 ### Community 91 - "Community 91"
-Cohesion: 0.43
-Nodes (1): CleanupNonRfqInboxOrders
+Cohesion: 0.38
+Nodes (3): disconnect(), leave(), removeTooltip()
 
 ### Community 92 - "Community 92"
-Cohesion: 0.57
-Nodes (5): findAndDownloadPdfs(), log(), performLogin(), saveScreenshot(), waitForStableUrl()
+Cohesion: 0.29
+Nodes (1): CardStatus
 
 ### Community 93 - "Community 93"
 Cohesion: 0.29
-Nodes (2): CpoAgentServiceTest, CpoAgent::ServiceTest
+Nodes (1): ContactPerson
 
 ### Community 94 - "Community 94"
+Cohesion: 0.38
+Nodes (1): EmailAccount
+
+### Community 95 - "Community 95"
+Cohesion: 0.29
+Nodes (1): ImportLog
+
+### Community 96 - "Community 96"
+Cohesion: 0.29
+Nodes (1): Review
+
+### Community 97 - "Community 97"
+Cohesion: 0.29
+Nodes (1): Project
+
+### Community 98 - "Community 98"
+Cohesion: 0.33
+Nodes (1): EcountImportService
+
+### Community 99 - "Community 99"
+Cohesion: 0.38
+Nodes (1): AuthService
+
+### Community 100 - "Community 100"
+Cohesion: 0.48
+Nodes (1): ProductSyncService
+
+### Community 101 - "Community 101"
+Cohesion: 0.48
+Nodes (1): CustomerSyncService
+
+### Community 102 - "Community 102"
+Cohesion: 0.29
+Nodes (1): CostGuard
+
+### Community 103 - "Community 103"
+Cohesion: 0.43
+Nodes (1): CleanupNonRfqInboxOrders
+
+### Community 104 - "Community 104"
+Cohesion: 0.57
+Nodes (5): findAndDownloadPdfs(), log(), performLogin(), saveScreenshot(), waitForStableUrl()
+
+### Community 105 - "Community 105"
+Cohesion: 0.29
+Nodes (2): CpoAgentServiceTest, CpoAgent::ServiceTest
+
+### Community 106 - "Community 106"
 Cohesion: 0.29
 Nodes (1): Gmail::ClassificationOrchestratorTest
 
-### Community 95 - "Community 95"
+### Community 107 - "Community 107"
 Cohesion: 0.33
 Nodes (1): AssignmentsController
 
-### Community 96 - "Community 96"
+### Community 108 - "Community 108"
 Cohesion: 0.33
 Nodes (1): TeamController
 
-### Community 97 - "Community 97"
+### Community 109 - "Community 109"
 Cohesion: 0.4
 Nodes (1): UsersController
 
-### Community 98 - "Community 98"
+### Community 110 - "Community 110"
 Cohesion: 0.4
 Nodes (1): Orders::BulkController
 
-### Community 99 - "Community 99"
+### Community 111 - "Community 111"
 Cohesion: 0.4
 Nodes (2): tx_filter_params(), tx_sort_link()
 
-### Community 100 - "Community 100"
+### Community 112 - "Community 112"
 Cohesion: 0.47
 Nodes (3): connect(), cytoscapeStyle(), render()
 
-### Community 101 - "Community 101"
+### Community 113 - "Community 113"
 Cohesion: 0.53
 Nodes (1): OverdueEscalationJob
 
-### Community 102 - "Community 102"
+### Community 114 - "Community 114"
 Cohesion: 0.33
 Nodes (1): Supplier
 
-### Community 103 - "Community 103"
+### Community 115 - "Community 115"
 Cohesion: 0.47
 Nodes (1): GoogleChatService
 
-### Community 104 - "Community 104"
+### Community 116 - "Community 116"
+Cohesion: 0.33
+Nodes (1): AutoAssignerService
+
+### Community 117 - "Community 117"
 Cohesion: 0.47
 Nodes (1): OrderImportStrategy
 
-### Community 105 - "Community 105"
+### Community 118 - "Community 118"
 Cohesion: 0.53
 Nodes (1): SupplierImportStrategy
 
-### Community 106 - "Community 106"
+### Community 119 - "Community 119"
+Cohesion: 0.47
+Nodes (1): AttachmentClassifier
+
+### Community 120 - "Community 120"
+Cohesion: 0.47
+Nodes (1): ItemExtractor
+
+### Community 121 - "Community 121"
+Cohesion: 0.4
+Nodes (1): AutoAssignerServiceTest
+
+### Community 122 - "Community 122"
 Cohesion: 0.4
 Nodes (1): OrgChart::CountriesControllerTest
 
-### Community 107 - "Community 107"
+### Community 123 - "Community 123"
 Cohesion: 0.4
 Nodes (1): CommentsController
 
-### Community 108 - "Community 108"
+### Community 124 - "Community 124"
 Cohesion: 0.4
 Nodes (1): AgentInsightsController
 
-### Community 109 - "Community 109"
+### Community 125 - "Community 125"
 Cohesion: 0.4
 Nodes (1): RfqStatsController
 
-### Community 110 - "Community 110"
+### Community 126 - "Community 126"
 Cohesion: 0.4
 Nodes (1): SheetsConfigController
 
-### Community 111 - "Community 111"
+### Community 127 - "Community 127"
 Cohesion: 0.8
 Nodes (4): build_csv_preview_html(), build_excel_preview_html(), build_text_preview_html(), preview_blob()
 
-### Community 112 - "Community 112"
+### Community 128 - "Community 128"
 Cohesion: 0.4
 Nodes (1): JobTitlesController
 
-### Community 113 - "Community 113"
+### Community 129 - "Community 129"
 Cohesion: 0.4
 Nodes (1): Orders::PdfController
 
-### Community 114 - "Community 114"
+### Community 130 - "Community 130"
 Cohesion: 0.4
 Nodes (1): MenuPermissionsController
 
-### Community 115 - "Community 115"
+### Community 131 - "Community 131"
 Cohesion: 0.4
 Nodes (1): ApiKeysController
 
-### Community 116 - "Community 116"
+### Community 132 - "Community 132"
 Cohesion: 0.5
 Nodes (1): Users::OmniauthCallbacksController
 
-### Community 117 - "Community 117"
-Cohesion: 0.4
-Nodes (0): 
-
-### Community 118 - "Community 118"
-Cohesion: 0.5
-Nodes (1): EmailSyncJob
-
-### Community 119 - "Community 119"
-Cohesion: 0.6
-Nodes (1): SuggestOrderLinksJob
-
-### Community 120 - "Community 120"
-Cohesion: 0.6
-Nodes (1): OrderMailer
-
-### Community 121 - "Community 121"
-Cohesion: 0.5
-Nodes (1): AppSetting
-
-### Community 122 - "Community 122"
-Cohesion: 0.7
-Nodes (1): Certification
-
-### Community 123 - "Community 123"
-Cohesion: 0.4
-Nodes (1): OrderQuote
-
-### Community 124 - "Community 124"
-Cohesion: 0.4
-Nodes (1): Visa
-
-### Community 125 - "Community 125"
-Cohesion: 0.4
-Nodes (1): EmploymentContract
-
-### Community 126 - "Community 126"
-Cohesion: 0.6
-Nodes (1): TranslationService
-
-### Community 127 - "Community 127"
-Cohesion: 0.5
-Nodes (2): AutoAssigner, CardStatus
-
-### Community 128 - "Community 128"
-Cohesion: 0.6
-Nodes (1): InventoryService
-
-### Community 129 - "Community 129"
-Cohesion: 0.6
-Nodes (1): ItemExtractor
-
-### Community 130 - "Community 130"
-Cohesion: 0.4
-Nodes (0): 
-
-### Community 131 - "Community 131"
-Cohesion: 0.5
-Nodes (1): BackfillOrdersCardStatus
-
-### Community 132 - "Community 132"
-Cohesion: 0.6
-Nodes (3): apply!(), current_theme(), find()
-
 ### Community 133 - "Community 133"
 Cohesion: 0.4
-Nodes (1): Gmail::EmailToOrderServiceTest
+Nodes (0): 
 
 ### Community 134 - "Community 134"
 Cohesion: 0.5
-Nodes (1): SuppliersControllerTest
+Nodes (1): EmailSyncJob
 
 ### Community 135 - "Community 135"
-Cohesion: 0.5
-Nodes (1): AgentInsightsControllerTest
+Cohesion: 0.6
+Nodes (1): SuggestOrderLinksJob
 
 ### Community 136 - "Community 136"
-Cohesion: 0.5
-Nodes (1): EmployeeAssignmentsControllerTest
+Cohesion: 0.6
+Nodes (1): OrderMailer
 
 ### Community 137 - "Community 137"
 Cohesion: 0.5
-Nodes (1): ClientsControllerTest
+Nodes (1): AppSetting
 
 ### Community 138 - "Community 138"
-Cohesion: 0.5
-Nodes (1): EmployeesControllerTest
+Cohesion: 0.7
+Nodes (1): Certification
 
 ### Community 139 - "Community 139"
-Cohesion: 0.5
-Nodes (1): CommentsControllerTest
+Cohesion: 0.4
+Nodes (1): OrderQuote
 
 ### Community 140 - "Community 140"
-Cohesion: 0.5
-Nodes (1): NotificationsControllerTest
+Cohesion: 0.4
+Nodes (1): Visa
 
 ### Community 141 - "Community 141"
-Cohesion: 0.5
-Nodes (1): ProjectsControllerTest
+Cohesion: 0.4
+Nodes (1): EmploymentContract
 
 ### Community 142 - "Community 142"
-Cohesion: 0.5
-Nodes (1): TasksControllerTest
+Cohesion: 0.6
+Nodes (1): TranslationService
 
 ### Community 143 - "Community 143"
 Cohesion: 0.5
-Nodes (1): ContactPersonsControllerTest
+Nodes (2): AutoAssigner, CardStatus
 
 ### Community 144 - "Community 144"
-Cohesion: 0.5
-Nodes (1): OrderQuotesControllerTest
+Cohesion: 0.6
+Nodes (1): InventoryService
 
 ### Community 145 - "Community 145"
-Cohesion: 0.5
-Nodes (1): AssignmentsControllerTest
+Cohesion: 0.4
+Nodes (0): 
 
 ### Community 146 - "Community 146"
 Cohesion: 0.5
-Nodes (1): VisasControllerTest
+Nodes (1): BackfillOrdersCardStatus
 
 ### Community 147 - "Community 147"
-Cohesion: 0.5
-Nodes (1): EmploymentContractsControllerTest
+Cohesion: 0.6
+Nodes (3): apply!(), current_theme(), find()
 
 ### Community 148 - "Community 148"
-Cohesion: 0.5
-Nodes (1): CertificationsControllerTest
+Cohesion: 0.4
+Nodes (1): Gmail::EmailToOrderServiceTest
 
 ### Community 149 - "Community 149"
 Cohesion: 0.5
-Nodes (1): Orders::BulkControllerTest
+Nodes (1): SuppliersControllerTest
 
 ### Community 150 - "Community 150"
 Cohesion: 0.5
-Nodes (1): OrgChart::CompaniesControllerTest
+Nodes (1): AgentInsightsControllerTest
 
 ### Community 151 - "Community 151"
 Cohesion: 0.5
-Nodes (1): OrgChart::DepartmentsControllerTest
+Nodes (1): EmployeeAssignmentsControllerTest
 
 ### Community 152 - "Community 152"
 Cohesion: 0.5
-Nodes (1): Orders::PdfControllerTest
+Nodes (1): ClientsControllerTest
 
 ### Community 153 - "Community 153"
-Cohesion: 0.4
-Nodes (1): Api::ReviewsControllerTest
+Cohesion: 0.5
+Nodes (1): EmployeesControllerTest
 
 ### Community 154 - "Community 154"
 Cohesion: 0.5
-Nodes (1): EcountSyncController
+Nodes (1): CommentsControllerTest
 
 ### Community 155 - "Community 155"
 Cohesion: 0.5
-Nodes (1): DuplicateOrdersController
+Nodes (1): NotificationsControllerTest
 
 ### Community 156 - "Community 156"
 Cohesion: 0.5
-Nodes (1): CustomersController
+Nodes (1): ProjectsControllerTest
 
 ### Community 157 - "Community 157"
 Cohesion: 0.5
-Nodes (1): TransactionsController
+Nodes (1): TasksControllerTest
 
 ### Community 158 - "Community 158"
 Cohesion: 0.5
-Nodes (1): ProductsController
+Nodes (1): ContactPersonsControllerTest
 
 ### Community 159 - "Community 159"
 Cohesion: 0.5
-Nodes (1): Users::RegistrationsController
+Nodes (1): OrderQuotesControllerTest
 
 ### Community 160 - "Community 160"
-Cohesion: 0.83
-Nodes (3): #patch(), saveDueDate(), saveStatus()
+Cohesion: 0.5
+Nodes (1): AssignmentsControllerTest
 
 ### Community 161 - "Community 161"
-Cohesion: 0.67
-Nodes (2): connect(), initSortable()
+Cohesion: 0.5
+Nodes (1): VisasControllerTest
 
 ### Community 162 - "Community 162"
-Cohesion: 0.67
-Nodes (1): EcountCustomerSyncJob
+Cohesion: 0.5
+Nodes (1): EmploymentContractsControllerTest
 
 ### Community 163 - "Community 163"
-Cohesion: 0.67
-Nodes (1): EcountProductSyncJob
+Cohesion: 0.5
+Nodes (1): CertificationsControllerTest
 
 ### Community 164 - "Community 164"
 Cohesion: 0.5
-Nodes (1): Company
+Nodes (1): Orders::BulkControllerTest
 
 ### Community 165 - "Community 165"
 Cohesion: 0.5
-Nodes (1): Department
+Nodes (1): OrgChart::CompaniesControllerTest
 
 ### Community 166 - "Community 166"
 Cohesion: 0.5
-Nodes (1): EmployeeAssignment
+Nodes (1): OrgChart::DepartmentsControllerTest
 
 ### Community 167 - "Community 167"
 Cohesion: 0.5
-Nodes (1): TrackingNumber
+Nodes (1): Orders::PdfControllerTest
 
 ### Community 168 - "Community 168"
-Cohesion: 0.5
-Nodes (1): AgentTrustLevel
+Cohesion: 0.4
+Nodes (1): Api::ReviewsControllerTest
 
 ### Community 169 - "Community 169"
-Cohesion: 0.83
-Nodes (3): decode(), decode_binary(), looks_like_base64url?()
+Cohesion: 0.5
+Nodes (1): LegalController
 
 ### Community 170 - "Community 170"
 Cohesion: 0.5
-Nodes (1): Service
+Nodes (1): EcountSyncController
 
 ### Community 171 - "Community 171"
 Cohesion: 0.5
-Nodes (1): PriceComparisonAnalyzer
+Nodes (1): DuplicateOrdersController
 
 ### Community 172 - "Community 172"
 Cohesion: 0.5
-Nodes (1): SupplierRiskAnalyzer
+Nodes (1): CustomersController
 
 ### Community 173 - "Community 173"
 Cohesion: 0.5
-Nodes (1): DueDateRiskAnalyzer
+Nodes (1): TransactionsController
 
 ### Community 174 - "Community 174"
 Cohesion: 0.5
-Nodes (1): CostSavingAnalyzer
+Nodes (1): ProductsController
 
 ### Community 175 - "Community 175"
 Cohesion: 0.5
-Nodes (1): DropOrdersPriority
+Nodes (1): Users::RegistrationsController
 
 ### Community 176 - "Community 176"
-Cohesion: 0.5
-Nodes (1): AddUniqueIndexToProductsEcountCode
+Cohesion: 0.83
+Nodes (3): #patch(), saveDueDate(), saveStatus()
 
 ### Community 177 - "Community 177"
-Cohesion: 0.5
-Nodes (1): CreateActiveStorageTables
+Cohesion: 0.67
+Nodes (2): connect(), initSortable()
 
 ### Community 178 - "Community 178"
-Cohesion: 0.5
-Nodes (1): AddInboxPerfIndexesToOrders
+Cohesion: 0.67
+Nodes (1): EcountCustomerSyncJob
 
 ### Community 179 - "Community 179"
-Cohesion: 0.5
-Nodes (1): AddRfqTriageSupport
+Cohesion: 0.67
+Nodes (1): EcountProductSyncJob
 
 ### Community 180 - "Community 180"
 Cohesion: 0.5
-Nodes (1): ChangeAiScoreToFloatOnRfqFeedbacks
+Nodes (1): Company
 
 ### Community 181 - "Community 181"
 Cohesion: 0.5
-Nodes (1): CommentTest
+Nodes (1): Department
 
 ### Community 182 - "Community 182"
 Cohesion: 0.5
-Nodes (1): AppSettingTest
+Nodes (1): EmployeeAssignment
 
 ### Community 183 - "Community 183"
 Cohesion: 0.5
-Nodes (1): DepartmentTest
+Nodes (1): TrackingNumber
 
 ### Community 184 - "Community 184"
 Cohesion: 0.5
-Nodes (1): EmailAccountTest
+Nodes (1): Notification
 
 ### Community 185 - "Community 185"
 Cohesion: 0.5
-Nodes (1): SupplierProductTest
+Nodes (1): ChecklistItem
 
 ### Community 186 - "Community 186"
 Cohesion: 0.5
-Nodes (1): AgentTrustLevelTest
+Nodes (1): AgentTrustLevel
 
 ### Community 187 - "Community 187"
-Cohesion: 0.5
-Nodes (1): ActivityTest
+Cohesion: 0.83
+Nodes (3): decode(), decode_binary(), looks_like_base64url?()
 
 ### Community 188 - "Community 188"
 Cohesion: 0.5
-Nodes (1): RfqFeedbackTest
+Nodes (1): Service
 
 ### Community 189 - "Community 189"
 Cohesion: 0.5
-Nodes (1): AssignmentTest
+Nodes (1): PriceComparisonAnalyzer
 
 ### Community 190 - "Community 190"
 Cohesion: 0.5
-Nodes (1): JobTitleTest
+Nodes (1): SupplierRiskAnalyzer
 
 ### Community 191 - "Community 191"
 Cohesion: 0.5
-Nodes (1): EmploymentContractTest
+Nodes (1): DueDateRiskAnalyzer
 
 ### Community 192 - "Community 192"
 Cohesion: 0.5
-Nodes (1): EmployeeAssignmentTest
+Nodes (1): CostSavingAnalyzer
 
 ### Community 193 - "Community 193"
 Cohesion: 0.5
-Nodes (1): CertificationTest
+Nodes (1): DropOrdersPriority
 
 ### Community 194 - "Community 194"
 Cohesion: 0.5
-Nodes (1): GoogleChatServiceTest
+Nodes (1): ChangeEmailAccountsUniqueToComposite
 
 ### Community 195 - "Community 195"
 Cohesion: 0.5
-Nodes (1): ClassifyV2Day3GateTest
+Nodes (1): AddUniqueIndexToProductsEcountCode
 
 ### Community 196 - "Community 196"
 Cohesion: 0.5
-Nodes (1): RiskAssessmentServiceTest
+Nodes (1): CreateActiveStorageTables
 
 ### Community 197 - "Community 197"
 Cohesion: 0.5
-Nodes (1): MentionParserServiceTest
+Nodes (1): AddInboxPerfIndexesToOrders
 
 ### Community 198 - "Community 198"
 Cohesion: 0.5
-Nodes (1): ReviewJsonSyncServiceTest
+Nodes (1): AddRfqTriageSupport
 
 ### Community 199 - "Community 199"
 Cohesion: 0.5
-Nodes (1): CpoAgent::DueDateRiskAnalyzerTest
+Nodes (1): ChangeAiScoreToFloatOnRfqFeedbacks
 
 ### Community 200 - "Community 200"
 Cohesion: 0.5
-Nodes (1): CpoAgent::PriceComparisonAnalyzerTest
+Nodes (1): CommentTest
 
 ### Community 201 - "Community 201"
 Cohesion: 0.5
-Nodes (1): CpoAgent::CostSavingAnalyzerTest
+Nodes (1): AppSettingTest
 
 ### Community 202 - "Community 202"
 Cohesion: 0.5
-Nodes (1): CpoAgent::SupplierRiskAnalyzerTest
+Nodes (1): DepartmentTest
 
 ### Community 203 - "Community 203"
 Cohesion: 0.5
-Nodes (1): CpoAgent::AutoActionServiceTest
+Nodes (1): EmailAccountTest
 
 ### Community 204 - "Community 204"
 Cohesion: 0.5
-Nodes (1): Gmail::RfqDetectorServiceTest
+Nodes (1): SupplierProductTest
 
 ### Community 205 - "Community 205"
 Cohesion: 0.5
-Nodes (1): Gmail::RfqReplyDraftServiceTest
+Nodes (1): AgentTrustLevelTest
 
 ### Community 206 - "Community 206"
 Cohesion: 0.5
-Nodes (1): Gmail::GmailServiceTest
+Nodes (1): ActivityTest
 
 ### Community 207 - "Community 207"
 Cohesion: 0.5
-Nodes (1): Ecount::Strategies::OrderImportStrategyTest
+Nodes (1): RfqFeedbackTest
 
 ### Community 208 - "Community 208"
 Cohesion: 0.5
-Nodes (1): Ecount::Strategies::SupplierImportStrategyTest
+Nodes (1): AssignmentTest
 
 ### Community 209 - "Community 209"
 Cohesion: 0.5
-Nodes (1): Ecount::Strategies::ProductImportStrategyTest
+Nodes (1): JobTitleTest
 
 ### Community 210 - "Community 210"
 Cohesion: 0.5
-Nodes (1): EcountApi::SlipCreateServiceTest
+Nodes (1): EmploymentContractTest
 
 ### Community 211 - "Community 211"
-Cohesion: 0.67
-Nodes (1): OrdersControllerTest
+Cohesion: 0.5
+Nodes (1): EmployeeAssignmentTest
 
 ### Community 212 - "Community 212"
-Cohesion: 0.67
-Nodes (1): KanbanControllerTest
+Cohesion: 0.5
+Nodes (1): CertificationTest
 
 ### Community 213 - "Community 213"
-Cohesion: 0.67
-Nodes (1): CalendarControllerTest
+Cohesion: 0.5
+Nodes (1): GoogleChatServiceTest
 
 ### Community 214 - "Community 214"
-Cohesion: 0.67
-Nodes (1): TeamControllerTest
+Cohesion: 0.5
+Nodes (1): ClassifyV2Day3GateTest
 
 ### Community 215 - "Community 215"
-Cohesion: 0.67
-Nodes (1): DashboardControllerTest
+Cohesion: 0.5
+Nodes (1): RiskAssessmentServiceTest
 
 ### Community 216 - "Community 216"
-Cohesion: 0.67
-Nodes (1): UsersControllerTest
+Cohesion: 0.5
+Nodes (1): MentionParserServiceTest
 
 ### Community 217 - "Community 217"
-Cohesion: 0.67
-Nodes (1): GmailOauthControllerTest
+Cohesion: 0.5
+Nodes (1): ReviewJsonSyncServiceTest
 
 ### Community 218 - "Community 218"
-Cohesion: 0.67
-Nodes (1): InboxControllerTest
+Cohesion: 0.5
+Nodes (1): CpoAgent::DueDateRiskAnalyzerTest
 
 ### Community 219 - "Community 219"
-Cohesion: 0.67
-Nodes (1): ReportsControllerTest
+Cohesion: 0.5
+Nodes (1): CpoAgent::PriceComparisonAnalyzerTest
 
 ### Community 220 - "Community 220"
-Cohesion: 0.67
-Nodes (1): SearchControllerTest
+Cohesion: 0.5
+Nodes (1): CpoAgent::CostSavingAnalyzerTest
 
 ### Community 221 - "Community 221"
-Cohesion: 0.67
-Nodes (1): OrgChartControllerTest
+Cohesion: 0.5
+Nodes (1): CpoAgent::SupplierRiskAnalyzerTest
 
 ### Community 222 - "Community 222"
-Cohesion: 0.67
-Nodes (1): Settings::ProfileControllerTest
+Cohesion: 0.5
+Nodes (1): CpoAgent::AutoActionServiceTest
 
 ### Community 223 - "Community 223"
-Cohesion: 0.67
-Nodes (1): Settings::BaseControllerTest
+Cohesion: 0.5
+Nodes (1): Gmail::RfqDetectorServiceTest
 
 ### Community 224 - "Community 224"
-Cohesion: 0.67
-Nodes (1): OrderFlowsControllerTest
+Cohesion: 0.5
+Nodes (1): Gmail::RfqReplyDraftServiceTest
 
 ### Community 225 - "Community 225"
-Cohesion: 0.67
-Nodes (1): OrdersControllerPreviewByRefTest
+Cohesion: 0.5
+Nodes (1): Gmail::GmailServiceTest
 
 ### Community 226 - "Community 226"
-Cohesion: 0.67
-Nodes (1): OrderLinksControllerTest
+Cohesion: 0.5
+Nodes (1): Ecount::Strategies::OrderImportStrategyTest
 
 ### Community 227 - "Community 227"
-Cohesion: 0.67
-Nodes (1): Admin::ImportsControllerTest
+Cohesion: 0.5
+Nodes (1): Ecount::Strategies::SupplierImportStrategyTest
 
 ### Community 228 - "Community 228"
-Cohesion: 0.67
-Nodes (1): Admin::DuplicateOrdersControllerTest
+Cohesion: 0.5
+Nodes (1): Ecount::Strategies::ProductImportStrategyTest
 
 ### Community 229 - "Community 229"
-Cohesion: 0.67
-Nodes (1): Admin::EcountSyncControllerTest
+Cohesion: 0.5
+Nodes (1): EcountApi::SlipCreateServiceTest
 
 ### Community 230 - "Community 230"
 Cohesion: 0.67
-Nodes (1): Admin::RfqStatsControllerTest
+Nodes (1): OrdersControllerTest
 
 ### Community 231 - "Community 231"
 Cohesion: 0.67
-Nodes (1): Admin::SheetsConfigControllerTest
+Nodes (1): KanbanControllerTest
 
 ### Community 232 - "Community 232"
-Cohesion: 0.5
-Nodes (1): Admin::ReviewsControllerTest
+Cohesion: 0.67
+Nodes (1): CalendarControllerTest
 
 ### Community 233 - "Community 233"
 Cohesion: 0.67
-Nodes (1): Employees::DepartmentsControllerTest
+Nodes (1): TeamControllerTest
 
 ### Community 234 - "Community 234"
 Cohesion: 0.67
-Nodes (1): Employees::JobTitlesControllerTest
+Nodes (1): DashboardControllerTest
 
 ### Community 235 - "Community 235"
 Cohesion: 0.67
-Nodes (1): Settings::MenuPermissionsControllerTest
+Nodes (1): UsersControllerTest
 
 ### Community 236 - "Community 236"
 Cohesion: 0.67
-Nodes (1): Settings::NotificationsControllerTest
+Nodes (1): GmailOauthControllerTest
 
 ### Community 237 - "Community 237"
 Cohesion: 0.67
-Nodes (1): Settings::AgentTrustControllerTest
+Nodes (1): InboxControllerTest
 
 ### Community 238 - "Community 238"
 Cohesion: 0.67
-Nodes (1): Settings::ApiKeysControllerTest
+Nodes (1): ReportsControllerTest
 
 ### Community 239 - "Community 239"
 Cohesion: 0.67
-Nodes (1): Settings::EmailAccountsControllerTest
+Nodes (1): SearchControllerTest
 
 ### Community 240 - "Community 240"
 Cohesion: 0.67
-Nodes (1): Settings::CardStatusesControllerTest
+Nodes (1): OrgChartControllerTest
 
 ### Community 241 - "Community 241"
-Cohesion: 0.5
-Nodes (1): OrderMailerTest
+Cohesion: 0.67
+Nodes (1): Settings::ProfileControllerTest
 
 ### Community 242 - "Community 242"
-Cohesion: 0.5
-Nodes (1): AuthenticationFlowTest
+Cohesion: 0.67
+Nodes (1): Settings::BaseControllerTest
 
 ### Community 243 - "Community 243"
 Cohesion: 0.67
-Nodes (1): KanbanAccessTest
+Nodes (1): OrderFlowsControllerTest
 
 ### Community 244 - "Community 244"
-Cohesion: 0.5
-Nodes (1): DueNotificationJobTest
+Cohesion: 0.67
+Nodes (1): OrdersControllerPreviewByRefTest
 
 ### Community 245 - "Community 245"
-Cohesion: 0.5
-Nodes (1): RfqReplyDraftJobTest
+Cohesion: 0.67
+Nodes (1): OrderLinksControllerTest
 
 ### Community 246 - "Community 246"
-Cohesion: 0.5
-Nodes (1): EcountSlipCreateJobTest
+Cohesion: 0.67
+Nodes (1): Admin::ImportsControllerTest
 
 ### Community 247 - "Community 247"
-Cohesion: 0.5
-Nodes (1): AribaFetchJobTest
+Cohesion: 0.67
+Nodes (1): Admin::DuplicateOrdersControllerTest
 
 ### Community 248 - "Community 248"
-Cohesion: 0.5
-Nodes (1): ContactPersonsHelperTest
+Cohesion: 0.67
+Nodes (1): Admin::EcountSyncControllerTest
 
 ### Community 249 - "Community 249"
 Cohesion: 0.67
-Nodes (1): CalendarController
+Nodes (1): Admin::RfqStatsControllerTest
 
 ### Community 250 - "Community 250"
 Cohesion: 0.67
-Nodes (1): SearchController
+Nodes (1): Admin::SheetsConfigControllerTest
 
 ### Community 251 - "Community 251"
-Cohesion: 0.67
-Nodes (1): OrgChartController
+Cohesion: 0.5
+Nodes (1): Admin::ReviewsControllerTest
 
 ### Community 252 - "Community 252"
 Cohesion: 0.67
-Nodes (1): OrderFlowsController
+Nodes (1): Employees::DepartmentsControllerTest
 
 ### Community 253 - "Community 253"
 Cohesion: 0.67
-Nodes (1): BaseController
+Nodes (1): Employees::JobTitlesControllerTest
 
 ### Community 254 - "Community 254"
 Cohesion: 0.67
-Nodes (1): AgentTrustController
+Nodes (1): Settings::MenuPermissionsControllerTest
 
 ### Community 255 - "Community 255"
 Cohesion: 0.67
-Nodes (0): 
+Nodes (1): Settings::NotificationsControllerTest
 
 ### Community 256 - "Community 256"
 Cohesion: 0.67
-Nodes (0): 
+Nodes (1): Settings::AgentTrustControllerTest
 
 ### Community 257 - "Community 257"
-Cohesion: 1.0
-Nodes (2): applyPreset(), refresh()
+Cohesion: 0.67
+Nodes (1): Settings::ApiKeysControllerTest
 
 ### Community 258 - "Community 258"
 Cohesion: 0.67
-Nodes (1): BackfillEmailSignatureJob
+Nodes (1): Settings::EmailAccountsControllerTest
 
 ### Community 259 - "Community 259"
 Cohesion: 0.67
-Nodes (1): GoogleChatNotifyJob
+Nodes (1): Settings::CardStatusesControllerTest
 
 ### Community 260 - "Community 260"
-Cohesion: 0.67
-Nodes (1): ShadowFnDetectorJob
+Cohesion: 0.5
+Nodes (1): OrderMailerTest
 
 ### Community 261 - "Community 261"
-Cohesion: 0.67
-Nodes (1): EcountImportJob
+Cohesion: 0.5
+Nodes (1): AuthenticationFlowTest
 
 ### Community 262 - "Community 262"
 Cohesion: 0.67
-Nodes (1): AribaFetchJob
+Nodes (1): KanbanAccessTest
 
 ### Community 263 - "Community 263"
-Cohesion: 0.67
-Nodes (1): EcountSlipCreateJob
+Cohesion: 0.5
+Nodes (1): DueNotificationJobTest
 
 ### Community 264 - "Community 264"
-Cohesion: 0.67
-Nodes (1): HrExpiryNotificationJob
+Cohesion: 0.5
+Nodes (1): RfqReplyDraftJobTest
 
 ### Community 265 - "Community 265"
-Cohesion: 0.67
-Nodes (1): CardStatusAutoAssignJob
+Cohesion: 0.5
+Nodes (1): EcountSlipCreateJobTest
 
 ### Community 266 - "Community 266"
-Cohesion: 0.67
-Nodes (1): RfqReplyDraftJob
+Cohesion: 0.5
+Nodes (1): AribaFetchJobTest
 
 ### Community 267 - "Community 267"
-Cohesion: 0.67
-Nodes (1): RiskAssessmentJob
+Cohesion: 0.5
+Nodes (1): ContactPersonsHelperTest
 
 ### Community 268 - "Community 268"
 Cohesion: 0.67
-Nodes (1): SheetsSyncJob
+Nodes (1): CalendarController
 
 ### Community 269 - "Community 269"
 Cohesion: 0.67
-Nodes (1): AgentInsightJob
+Nodes (1): SearchController
 
 ### Community 270 - "Community 270"
 Cohesion: 0.67
-Nodes (1): KanbanBoard
+Nodes (1): OrgChartController
 
 ### Community 271 - "Community 271"
 Cohesion: 0.67
-Nodes (1): Country
+Nodes (1): OrderFlowsController
 
 ### Community 272 - "Community 272"
 Cohesion: 0.67
-Nodes (1): Task
+Nodes (1): BaseController
 
 ### Community 273 - "Community 273"
 Cohesion: 0.67
-Nodes (1): EcountSyncLog
+Nodes (1): AgentTrustController
 
 ### Community 274 - "Community 274"
 Cohesion: 0.67
-Nodes (1): TrackingCode
+Nodes (0): 
 
 ### Community 275 - "Community 275"
 Cohesion: 0.67
-Nodes (1): KanbanColumn
+Nodes (0): 
 
 ### Community 276 - "Community 276"
 Cohesion: 0.67
-Nodes (1): JobTitle
+Nodes (0): 
 
 ### Community 277 - "Community 277"
-Cohesion: 0.67
-Nodes (1): MenuPermission
+Cohesion: 1.0
+Nodes (2): applyPreset(), refresh()
 
 ### Community 278 - "Community 278"
 Cohesion: 0.67
-Nodes (1): Notification
+Nodes (1): BackfillEmailSignatureJob
 
 ### Community 279 - "Community 279"
 Cohesion: 0.67
-Nodes (1): RfqFeedback
+Nodes (1): GoogleChatNotifyJob
 
 ### Community 280 - "Community 280"
 Cohesion: 0.67
-Nodes (1): SupplierProduct
+Nodes (1): ShadowFnDetectorJob
 
 ### Community 281 - "Community 281"
 Cohesion: 0.67
-Nodes (1): AgentInsight
+Nodes (1): EcountImportJob
 
 ### Community 282 - "Community 282"
 Cohesion: 0.67
-Nodes (1): ReferenceNumberExtractor
+Nodes (1): AribaFetchJob
 
 ### Community 283 - "Community 283"
 Cohesion: 0.67
-Nodes (1): DeviseCreateUsers
+Nodes (1): EcountSlipCreateJob
 
 ### Community 284 - "Community 284"
 Cohesion: 0.67
-Nodes (1): CreateClassificationLogs
+Nodes (1): HrExpiryNotificationJob
 
 ### Community 285 - "Community 285"
 Cohesion: 0.67
-Nodes (1): CreateEmailAccounts
+Nodes (1): CardStatusAutoAssignJob
 
 ### Community 286 - "Community 286"
 Cohesion: 0.67
-Nodes (1): AddLockVersionToOrders
+Nodes (1): RfqReplyDraftJob
 
 ### Community 287 - "Community 287"
 Cohesion: 0.67
-Nodes (1): CreateOrders
+Nodes (1): RiskAssessmentJob
 
 ### Community 288 - "Community 288"
 Cohesion: 0.67
-Nodes (1): AddEmailToEmployees
+Nodes (1): SheetsSyncJob
 
 ### Community 289 - "Community 289"
 Cohesion: 0.67
-Nodes (1): CreateTasks
+Nodes (1): AgentInsightJob
 
 ### Community 290 - "Community 290"
 Cohesion: 0.67
-Nodes (1): CreateComments
+Nodes (1): KanbanBoard
 
 ### Community 291 - "Community 291"
 Cohesion: 0.67
-Nodes (1): AddRfpAnalysisFields
+Nodes (1): Country
 
 ### Community 292 - "Community 292"
 Cohesion: 0.67
-Nodes (1): CreateActivities
+Nodes (1): Task
 
 ### Community 293 - "Community 293"
 Cohesion: 0.67
-Nodes (1): CreateAssignments
+Nodes (1): EcountSyncLog
 
 ### Community 294 - "Community 294"
 Cohesion: 0.67
-Nodes (1): CreateCardStatuses
+Nodes (1): TrackingCode
 
 ### Community 295 - "Community 295"
 Cohesion: 0.67
-Nodes (1): CreateProducts
+Nodes (1): KanbanColumn
 
 ### Community 296 - "Community 296"
 Cohesion: 0.67
-Nodes (1): AddActiveToUsers
+Nodes (1): JobTitle
 
 ### Community 297 - "Community 297"
 Cohesion: 0.67
-Nodes (1): CreateSuppliers
+Nodes (1): MenuPermission
 
 ### Community 298 - "Community 298"
 Cohesion: 0.67
-Nodes (1): AddCardStatusToOrders
+Nodes (1): RfqFeedback
 
 ### Community 299 - "Community 299"
 Cohesion: 0.67
-Nodes (1): CreateImportLogs
+Nodes (1): SupplierProduct
 
 ### Community 300 - "Community 300"
 Cohesion: 0.67
-Nodes (1): AddClassifierFieldsToOrders
+Nodes (1): AgentInsight
 
 ### Community 301 - "Community 301"
 Cohesion: 0.67
-Nodes (1): ExtendImportLogs
+Nodes (1): ReferenceNumberExtractor
 
 ### Community 302 - "Community 302"
 Cohesion: 0.67
-Nodes (1): CreateClients
+Nodes (1): DeviseCreateUsers
 
 ### Community 303 - "Community 303"
 Cohesion: 0.67
-Nodes (1): CreateProjects
+Nodes (1): CreateClassificationLogs
 
 ### Community 304 - "Community 304"
 Cohesion: 0.67
-Nodes (1): CreateContactPersons
+Nodes (1): CreateEmailAccounts
 
 ### Community 305 - "Community 305"
 Cohesion: 0.67
-Nodes (1): AddArchivedAtToOrders
+Nodes (1): AddLockVersionToOrders
 
 ### Community 306 - "Community 306"
 Cohesion: 0.67
-Nodes (1): CreateSupplierProducts
+Nodes (1): CreateOrders
 
 ### Community 307 - "Community 307"
 Cohesion: 0.67
-Nodes (1): ExtendSuppliers
+Nodes (1): AddEmailToEmployees
 
 ### Community 308 - "Community 308"
 Cohesion: 0.67
-Nodes (1): CreateKanbanBoards
+Nodes (1): CreateTasks
 
 ### Community 309 - "Community 309"
 Cohesion: 0.67
-Nodes (1): AddFksToOrders
+Nodes (1): CreateComments
 
 ### Community 310 - "Community 310"
 Cohesion: 0.67
-Nodes (1): CreateEmployees
+Nodes (1): AddRfpAnalysisFields
 
 ### Community 311 - "Community 311"
 Cohesion: 0.67
-Nodes (1): CreateKanbanColumns
+Nodes (1): CreateActivities
 
 ### Community 312 - "Community 312"
 Cohesion: 0.67
-Nodes (1): CreateVisas
+Nodes (1): CreateLeaves
 
 ### Community 313 - "Community 313"
 Cohesion: 0.67
-Nodes (1): CreateEmploymentContracts
+Nodes (1): CreateAssignments
 
 ### Community 314 - "Community 314"
 Cohesion: 0.67
-Nodes (1): CreateEmployeeAssignments
+Nodes (1): CreateCardStatuses
 
 ### Community 315 - "Community 315"
 Cohesion: 0.67
-Nodes (1): AddKanbanPerfIndexesToOrders
+Nodes (1): CreateProducts
 
 ### Community 316 - "Community 316"
 Cohesion: 0.67
-Nodes (1): CreateCertifications
+Nodes (1): AddActiveToUsers
 
 ### Community 317 - "Community 317"
 Cohesion: 0.67
-Nodes (1): AddViewedAtToOrders
+Nodes (1): CreateSuppliers
 
 ### Community 318 - "Community 318"
 Cohesion: 0.67
-Nodes (1): CreateMenuPermissions
+Nodes (1): AddCardStatusToOrders
 
 ### Community 319 - "Community 319"
 Cohesion: 0.67
-Nodes (1): CreateCountries
+Nodes (1): CreateImportLogs
 
 ### Community 320 - "Community 320"
 Cohesion: 0.67
-Nodes (1): AddRenewalFieldsToVisas
+Nodes (1): AddClassifierFieldsToOrders
 
 ### Community 321 - "Community 321"
 Cohesion: 0.67
-Nodes (1): CreateCompanies
+Nodes (1): ExtendImportLogs
 
 ### Community 322 - "Community 322"
 Cohesion: 0.67
-Nodes (1): AddSavedFiltersToUsers
+Nodes (1): CreateClients
 
 ### Community 323 - "Community 323"
 Cohesion: 0.67
-Nodes (1): CreateDepartments
+Nodes (1): CreateProjects
 
 ### Community 324 - "Community 324"
 Cohesion: 0.67
-Nodes (1): CreateReviews
+Nodes (1): CreateChecklistItems
 
 ### Community 325 - "Community 325"
 Cohesion: 0.67
-Nodes (1): AddDepartmentIdToEmployees
+Nodes (1): CreateContactPersons
 
 ### Community 326 - "Community 326"
 Cohesion: 0.67
-Nodes (1): AddCompanyIdToUsers
+Nodes (1): AddArchivedAtToOrders
 
 ### Community 327 - "Community 327"
 Cohesion: 0.67
-Nodes (1): CreateSheetsSyncLogs
+Nodes (1): CreateSupplierProducts
 
 ### Community 328 - "Community 328"
 Cohesion: 0.67
-Nodes (1): AddOmniauthAndCompanyNameToUsers
+Nodes (1): ExtendSuppliers
 
 ### Community 329 - "Community 329"
 Cohesion: 0.67
-Nodes (1): AddContactPersonIdToOrders
+Nodes (1): CreateKanbanBoards
 
 ### Community 330 - "Community 330"
 Cohesion: 0.67
-Nodes (1): AddThemeToUsers
+Nodes (1): AddFksToOrders
 
 ### Community 331 - "Community 331"
 Cohesion: 0.67
-Nodes (1): CreateAppConfigs
+Nodes (1): CreateWarnings
 
 ### Community 332 - "Community 332"
 Cohesion: 0.67
-Nodes (1): AddLlmAnalysisToOrders
+Nodes (1): CreateEmployees
 
 ### Community 333 - "Community 333"
 Cohesion: 0.67
-Nodes (1): AddRiskToOrders
+Nodes (1): CreateKanbanColumns
 
 ### Community 334 - "Community 334"
 Cohesion: 0.67
-Nodes (1): CreateNotifications
+Nodes (1): CreateVisas
 
 ### Community 335 - "Community 335"
 Cohesion: 0.67
-Nodes (1): CreateOrderQuotes
+Nodes (1): CreateEmploymentContracts
 
 ### Community 336 - "Community 336"
 Cohesion: 0.67
-Nodes (1): AddTranslatedFieldsToOrders
+Nodes (1): AddLeaveBalanceToEmployees
 
 ### Community 337 - "Community 337"
 Cohesion: 0.67
-Nodes (1): CreateTrackingCodesAndNumbers
+Nodes (1): CreateEmployeeAssignments
 
 ### Community 338 - "Community 338"
 Cohesion: 0.67
-Nodes (1): AddExtractedFieldsToOrders
+Nodes (1): AddKanbanPerfIndexesToOrders
 
 ### Community 339 - "Community 339"
 Cohesion: 0.67
-Nodes (1): AddHtmlBodyToOrders
+Nodes (1): CreateCertifications
 
 ### Community 340 - "Community 340"
 Cohesion: 0.67
-Nodes (1): AddRfqStatusToOrders
+Nodes (1): AddViewedAtToOrders
 
 ### Community 341 - "Community 341"
 Cohesion: 0.67
-Nodes (1): CreateRfqFeedbacks
+Nodes (1): CreateMenuPermissions
 
 ### Community 342 - "Community 342"
 Cohesion: 0.67
-Nodes (1): AddAribaFieldsToOrders
+Nodes (1): CreateCountries
 
 ### Community 343 - "Community 343"
 Cohesion: 0.67
-Nodes (1): CreateEcountSyncLogs
+Nodes (1): AddRenewalFieldsToVisas
 
 ### Community 344 - "Community 344"
 Cohesion: 0.67
-Nodes (1): AddEcountApiFields
+Nodes (1): CreateCompanies
 
 ### Community 345 - "Community 345"
 Cohesion: 0.67
-Nodes (1): CreateAppSettings
+Nodes (1): AddSavedFiltersToUsers
 
 ### Community 346 - "Community 346"
 Cohesion: 0.67
-Nodes (1): AddUniqueIndexToEmailAccounts
+Nodes (1): CreateDepartments
 
 ### Community 347 - "Community 347"
 Cohesion: 0.67
-Nodes (1): AddEmployeeIdToAssignments
+Nodes (1): CreateReviews
 
 ### Community 348 - "Community 348"
 Cohesion: 0.67
-Nodes (1): AddKanbanColumnIdToOrders
+Nodes (1): AddDepartmentIdToEmployees
 
 ### Community 349 - "Community 349"
 Cohesion: 0.67
-Nodes (1): AddFieldsToContactPersons
+Nodes (1): AddCompanyIdToUsers
 
 ### Community 350 - "Community 350"
 Cohesion: 0.67
-Nodes (1): AddEmailSignatureToOrders
+Nodes (1): CreateSheetsSyncLogs
 
 ### Community 351 - "Community 351"
 Cohesion: 0.67
-Nodes (1): AddEcountSnapshotToSuppliers
+Nodes (1): AddOmniauthAndCompanyNameToUsers
 
 ### Community 352 - "Community 352"
 Cohesion: 0.67
-Nodes (1): CreateJobTitles
+Nodes (1): AddContactPersonIdToOrders
 
 ### Community 353 - "Community 353"
 Cohesion: 0.67
-Nodes (1): AddReferenceNoToOrders
+Nodes (1): AddThemeToUsers
 
 ### Community 354 - "Community 354"
 Cohesion: 0.67
-Nodes (1): AddEcountSnapshotToClients
+Nodes (1): CreateAppConfigs
 
 ### Community 355 - "Community 355"
 Cohesion: 0.67
-Nodes (1): AddGmailThreadIdToOrders
+Nodes (1): AddLlmAnalysisToOrders
 
 ### Community 356 - "Community 356"
 Cohesion: 0.67
-Nodes (1): AddParentOrderIdToOrders
+Nodes (1): AddRiskToOrders
 
 ### Community 357 - "Community 357"
 Cohesion: 0.67
-Nodes (1): AddSapPortalLinksToOrders
+Nodes (1): CreateNotifications
 
 ### Community 358 - "Community 358"
 Cohesion: 0.67
-Nodes (1): AddNotificationPreferencesToUsers
+Nodes (1): CreateOrderQuotes
 
 ### Community 359 - "Community 359"
 Cohesion: 0.67
-Nodes (1): CreateAgentInsights
+Nodes (1): AddTranslatedFieldsToOrders
 
 ### Community 360 - "Community 360"
 Cohesion: 0.67
-Nodes (1): CreateAgentTrustLevels
+Nodes (1): CreateTrackingCodesAndNumbers
 
 ### Community 361 - "Community 361"
 Cohesion: 0.67
-Nodes (1): AddTrackingNumbersToOrders
+Nodes (1): AddExtractedFieldsToOrders
 
 ### Community 362 - "Community 362"
 Cohesion: 0.67
-Nodes (1): AddFieldChangesToActivities
+Nodes (1): AddHtmlBodyToOrders
 
 ### Community 363 - "Community 363"
 Cohesion: 0.67
-Nodes (1): AddEmailReceivedAtToOrders
+Nodes (1): AddRfqStatusToOrders
 
 ### Community 364 - "Community 364"
 Cohesion: 0.67
-Nodes (1): CreateOrderLinks
+Nodes (1): CreateRfqFeedbacks
 
 ### Community 365 - "Community 365"
 Cohesion: 0.67
-Nodes (1): RemoveDuplicateOrderLinkIndexes
+Nodes (1): AddAribaFieldsToOrders
 
 ### Community 366 - "Community 366"
 Cohesion: 0.67
-Nodes (1): CountryTest
+Nodes (1): CreateEcountSyncLogs
 
 ### Community 367 - "Community 367"
 Cohesion: 0.67
-Nodes (1): CompanyTest
+Nodes (1): AddEcountApiFields
 
 ### Community 368 - "Community 368"
 Cohesion: 0.67
-Nodes (1): MenuPermissionTest
+Nodes (1): CreateAppSettings
 
 ### Community 369 - "Community 369"
 Cohesion: 0.67
-Nodes (1): ReviewTest
+Nodes (1): AddUniqueIndexToEmailAccounts
 
 ### Community 370 - "Community 370"
 Cohesion: 0.67
-Nodes (1): SheetsSyncLogTest
+Nodes (1): AddChecklistSummaryToOrders
 
 ### Community 371 - "Community 371"
 Cohesion: 0.67
-Nodes (1): ImportLogTest
+Nodes (1): AddEmployeeIdToAssignments
 
 ### Community 372 - "Community 372"
 Cohesion: 0.67
-Nodes (1): ClassificationLogTest
+Nodes (1): AddKanbanColumnIdToOrders
 
 ### Community 373 - "Community 373"
 Cohesion: 0.67
-Nodes (1): SheetsServiceTest
+Nodes (1): AddFieldsToContactPersons
 
 ### Community 374 - "Community 374"
 Cohesion: 0.67
-Nodes (1): Gmail::EmailAttachmentExtractorServiceTest
+Nodes (1): AddEmailSignatureToOrders
 
 ### Community 375 - "Community 375"
 Cohesion: 0.67
-Nodes (1): Gmail::ClassificationResultTest
+Nodes (1): AddEcountSnapshotToSuppliers
 
 ### Community 376 - "Community 376"
 Cohesion: 0.67
-Nodes (1): Gmail::LlmRfqAnalyzerServiceTest
+Nodes (1): CreateJobTitles
 
 ### Community 377 - "Community 377"
 Cohesion: 0.67
-Nodes (1): Ecount::EcountImportServiceTest
+Nodes (1): AddUaeLawFieldsToWarnings
 
 ### Community 378 - "Community 378"
 Cohesion: 0.67
-Nodes (1): EcountApi::AuthServiceTest
+Nodes (1): AddReferenceNoToOrders
 
 ### Community 379 - "Community 379"
 Cohesion: 0.67
-Nodes (1): EcountApi::InventoryServiceTest
+Nodes (1): AddEcountSnapshotToClients
 
 ### Community 380 - "Community 380"
 Cohesion: 0.67
-Nodes (1): CardStatusManagementTest
+Nodes (1): AddGmailThreadIdToOrders
 
 ### Community 381 - "Community 381"
 Cohesion: 0.67
-Nodes (1): ReviewsControllerTest
+Nodes (1): AddParentOrderIdToOrders
 
 ### Community 382 - "Community 382"
 Cohesion: 0.67
-Nodes (1): Admin::Ecount::ProductsControllerTest
+Nodes (1): AddSapPortalLinksToOrders
 
 ### Community 383 - "Community 383"
 Cohesion: 0.67
-Nodes (1): Admin::Ecount::TransactionsControllerTest
+Nodes (1): AddNotificationPreferencesToUsers
 
 ### Community 384 - "Community 384"
 Cohesion: 0.67
-Nodes (1): EmailSyncJobTest
+Nodes (1): CreateAgentInsights
 
 ### Community 385 - "Community 385"
-Cohesion: 1.0
-Nodes (1): Users::SessionsController
+Cohesion: 0.67
+Nodes (1): CreateAgentTrustLevels
 
 ### Community 386 - "Community 386"
-Cohesion: 1.0
-Nodes (0): 
+Cohesion: 0.67
+Nodes (1): AddTrackingNumbersToOrders
 
 ### Community 387 - "Community 387"
-Cohesion: 1.0
-Nodes (0): 
+Cohesion: 0.67
+Nodes (1): AddFieldChangesToActivities
 
 ### Community 388 - "Community 388"
-Cohesion: 1.0
-Nodes (1): ApplicationJob
+Cohesion: 0.67
+Nodes (1): AddDefaultAssigneeToClientsAndSuppliers
 
 ### Community 389 - "Community 389"
-Cohesion: 1.0
-Nodes (1): ApplicationMailer
+Cohesion: 0.67
+Nodes (1): AddEmailReceivedAtToOrders
 
 ### Community 390 - "Community 390"
-Cohesion: 1.0
-Nodes (1): ClassificationLog
+Cohesion: 0.67
+Nodes (1): CreateOrderLinks
 
 ### Community 391 - "Community 391"
-Cohesion: 1.0
-Nodes (1): ApplicationRecord
+Cohesion: 0.67
+Nodes (1): RemoveDuplicateOrderLinkIndexes
 
 ### Community 392 - "Community 392"
-Cohesion: 1.0
-Nodes (1): Assignment
+Cohesion: 0.67
+Nodes (1): CountryTest
 
 ### Community 393 - "Community 393"
-Cohesion: 1.0
-Nodes (1): Comment
+Cohesion: 0.67
+Nodes (1): CompanyTest
 
 ### Community 394 - "Community 394"
-Cohesion: 1.0
-Nodes (1): Product
+Cohesion: 0.67
+Nodes (1): MenuPermissionTest
 
 ### Community 395 - "Community 395"
-Cohesion: 1.0
-Nodes (1): OrderLink
+Cohesion: 0.67
+Nodes (1): ReviewTest
 
 ### Community 396 - "Community 396"
-Cohesion: 1.0
-Nodes (0): 
+Cohesion: 0.67
+Nodes (1): SheetsSyncLogTest
 
 ### Community 397 - "Community 397"
-Cohesion: 1.0
-Nodes (0): 
+Cohesion: 0.67
+Nodes (1): ImportLogTest
 
 ### Community 398 - "Community 398"
-Cohesion: 1.0
-Nodes (1): Application
+Cohesion: 0.67
+Nodes (1): ClassificationLogTest
 
 ### Community 399 - "Community 399"
-Cohesion: 1.0
-Nodes (1): Rack::Attack
+Cohesion: 0.67
+Nodes (1): SheetsServiceTest
 
 ### Community 400 - "Community 400"
-Cohesion: 1.0
-Nodes (0): 
+Cohesion: 0.67
+Nodes (1): Rfp::AttachmentRelevanceFilterTest
 
 ### Community 401 - "Community 401"
-Cohesion: 1.0
-Nodes (1): ActiveSupport::TestCase
+Cohesion: 0.67
+Nodes (1): Gmail::EmailAttachmentExtractorServiceTest
 
 ### Community 402 - "Community 402"
-Cohesion: 1.0
-Nodes (1): ApplicationSystemTestCase
+Cohesion: 0.67
+Nodes (1): Gmail::ClassificationResultTest
 
 ### Community 403 - "Community 403"
-Cohesion: 1.0
-Nodes (1): OrderTest
+Cohesion: 0.67
+Nodes (1): Gmail::LlmRfqAnalyzerServiceTest
 
 ### Community 404 - "Community 404"
-Cohesion: 1.0
-Nodes (1): UserTest
+Cohesion: 0.67
+Nodes (1): Ecount::EcountImportServiceTest
 
 ### Community 405 - "Community 405"
-Cohesion: 1.0
-Nodes (1): ProjectTest
+Cohesion: 0.67
+Nodes (1): EcountApi::AuthServiceTest
 
 ### Community 406 - "Community 406"
-Cohesion: 1.0
-Nodes (1): CardStatusTest
+Cohesion: 0.67
+Nodes (1): EcountApi::InventoryServiceTest
 
 ### Community 407 - "Community 407"
-Cohesion: 1.0
-Nodes (1): VisaTest
+Cohesion: 0.67
+Nodes (1): CardStatusManagementTest
 
 ### Community 408 - "Community 408"
-Cohesion: 1.0
-Nodes (1): TaskTest
+Cohesion: 0.67
+Nodes (1): ReviewsControllerTest
 
 ### Community 409 - "Community 409"
-Cohesion: 1.0
-Nodes (1): ClientTest
+Cohesion: 0.67
+Nodes (1): Admin::Ecount::ProductsControllerTest
 
 ### Community 410 - "Community 410"
-Cohesion: 1.0
-Nodes (1): SupplierTest
+Cohesion: 0.67
+Nodes (1): Admin::Ecount::TransactionsControllerTest
 
 ### Community 411 - "Community 411"
-Cohesion: 1.0
-Nodes (1): NotificationTest
+Cohesion: 0.67
+Nodes (1): EmailSyncJobTest
 
 ### Community 412 - "Community 412"
 Cohesion: 1.0
-Nodes (1): EmployeeTest
+Nodes (1): Users::SessionsController
 
 ### Community 413 - "Community 413"
 Cohesion: 1.0
-Nodes (1): OrderExtendedTest
+Nodes (0): 
 
 ### Community 414 - "Community 414"
 Cohesion: 1.0
-Nodes (1): EmployeeExtendedTest
+Nodes (0): 
 
 ### Community 415 - "Community 415"
 Cohesion: 1.0
-Nodes (1): ContactPersonTest
+Nodes (1): ApplicationJob
 
 ### Community 416 - "Community 416"
 Cohesion: 1.0
-Nodes (1): AppConfigTest
+Nodes (1): ApplicationMailer
 
 ### Community 417 - "Community 417"
 Cohesion: 1.0
-Nodes (1): ProductTest
+Nodes (1): ClassificationLog
 
 ### Community 418 - "Community 418"
 Cohesion: 1.0
-Nodes (1): TaskExtendedTest
+Nodes (1): ApplicationRecord
 
 ### Community 419 - "Community 419"
 Cohesion: 1.0
-Nodes (1): ClientExtendedTest
+Nodes (1): Assignment
 
 ### Community 420 - "Community 420"
 Cohesion: 1.0
-Nodes (1): SupplierExtendedTest
+Nodes (1): Comment
 
 ### Community 421 - "Community 421"
 Cohesion: 1.0
-Nodes (1): AgentInsightTest
+Nodes (1): Product
 
 ### Community 422 - "Community 422"
 Cohesion: 1.0
-Nodes (1): EcountSyncLogTest
+Nodes (1): OrderLink
 
 ### Community 423 - "Community 423"
 Cohesion: 1.0
-Nodes (1): OrderLinkTest
+Nodes (0): 
 
 ### Community 424 - "Community 424"
 Cohesion: 1.0
-Nodes (1): OrderQuoteTest
+Nodes (0): 
 
 ### Community 425 - "Community 425"
 Cohesion: 1.0
-Nodes (1): KanbanBoardTest
+Nodes (1): Application
 
 ### Community 426 - "Community 426"
 Cohesion: 1.0
-Nodes (1): KanbanColumnTest
+Nodes (1): Rack::Attack
 
 ### Community 427 - "Community 427"
 Cohesion: 1.0
-Nodes (1): GraphNodeTest
+Nodes (0): 
 
 ### Community 428 - "Community 428"
 Cohesion: 1.0
-Nodes (1): OrderGraphBuilderTest
+Nodes (1): ActiveSupport::TestCase
 
 ### Community 429 - "Community 429"
 Cohesion: 1.0
-Nodes (1): TranslationServiceTest
+Nodes (1): ApplicationSystemTestCase
 
 ### Community 430 - "Community 430"
 Cohesion: 1.0
-Nodes (1): LinkAnalyzerServiceTest
+Nodes (1): OrderTest
 
 ### Community 431 - "Community 431"
 Cohesion: 1.0
-Nodes (1): CardStatus::AutoAssignerTest
+Nodes (1): UserTest
 
 ### Community 432 - "Community 432"
 Cohesion: 1.0
-Nodes (1): Gmail::ReferenceNumberExtractorTest
+Nodes (1): ProjectTest
 
 ### Community 433 - "Community 433"
 Cohesion: 1.0
-Nodes (1): Gmail::CostGuardTest
+Nodes (1): CardStatusTest
 
 ### Community 434 - "Community 434"
 Cohesion: 1.0
-Nodes (1): Gmail::BodyDecoderTest
+Nodes (1): VisaTest
 
 ### Community 435 - "Community 435"
 Cohesion: 1.0
-Nodes (1): Gmail::EmailSignatureParserServiceTest
+Nodes (1): TaskTest
 
 ### Community 436 - "Community 436"
 Cohesion: 1.0
-Nodes (1): Gmail::RfqFeedbackServiceTest
+Nodes (1): ClientTest
 
 ### Community 437 - "Community 437"
 Cohesion: 1.0
-Nodes (1): Gmail::Stage1::RuleGateTest
+Nodes (1): SupplierTest
 
 ### Community 438 - "Community 438"
 Cohesion: 1.0
-Nodes (1): Ecount::EcountParserTest
+Nodes (1): NotificationTest
 
 ### Community 439 - "Community 439"
 Cohesion: 1.0
-Nodes (1): EcountApi::CustomerSyncServiceTest
+Nodes (1): EmployeeTest
 
 ### Community 440 - "Community 440"
 Cohesion: 1.0
-Nodes (1): EcountApi::BaseServiceTest
+Nodes (1): OrderExtendedTest
 
 ### Community 441 - "Community 441"
 Cohesion: 1.0
-Nodes (1): EcountApi::ProductSyncServiceTest
+Nodes (1): EmployeeExtendedTest
 
 ### Community 442 - "Community 442"
 Cohesion: 1.0
-Nodes (1): Sheets::SheetsServiceTest
+Nodes (1): ContactPersonTest
 
 ### Community 443 - "Community 443"
 Cohesion: 1.0
-Nodes (1): Sap::AribaScraperServiceTest
+Nodes (1): AppConfigTest
 
 ### Community 444 - "Community 444"
 Cohesion: 1.0
-Nodes (1): OverdueEscalationJobTest
+Nodes (1): ProductTest
 
 ### Community 445 - "Community 445"
 Cohesion: 1.0
-Nodes (1): AgentInsightJobTest
+Nodes (1): TaskExtendedTest
 
 ### Community 446 - "Community 446"
 Cohesion: 1.0
-Nodes (1): CardStatusAutoAssignJobTest
+Nodes (1): ClientExtendedTest
 
 ### Community 447 - "Community 447"
 Cohesion: 1.0
-Nodes (1): SuggestOrderLinksJobTest
+Nodes (1): SupplierExtendedTest
 
 ### Community 448 - "Community 448"
 Cohesion: 1.0
-Nodes (1): HrExpiryNotificationJobTest
+Nodes (1): AgentInsightTest
 
 ### Community 449 - "Community 449"
 Cohesion: 1.0
-Nodes (1): RiskAssessmentJobTest
+Nodes (1): EcountSyncLogTest
 
 ### Community 450 - "Community 450"
 Cohesion: 1.0
-Nodes (1): SheetsSyncJobTest
+Nodes (1): OrderLinkTest
 
 ### Community 451 - "Community 451"
 Cohesion: 1.0
-Nodes (1): EcountImportJobTest
+Nodes (1): OrderQuoteTest
 
 ### Community 452 - "Community 452"
 Cohesion: 1.0
-Nodes (1): BackfillEmailSignatureJobTest
+Nodes (1): KanbanBoardTest
 
 ### Community 453 - "Community 453"
 Cohesion: 1.0
-Nodes (1): EcountCustomerSyncJobTest
+Nodes (1): KanbanColumnTest
 
 ### Community 454 - "Community 454"
 Cohesion: 1.0
-Nodes (1): EcountProductSyncJobTest
+Nodes (1): ChecklistItemTest
 
 ### Community 455 - "Community 455"
 Cohesion: 1.0
-Nodes (1): CardStatusThemesTest
+Nodes (1): GraphNodeTest
 
 ### Community 456 - "Community 456"
 Cohesion: 1.0
-Nodes (1): ApplicationHelperTest
+Nodes (1): OrderGraphBuilderTest
 
 ### Community 457 - "Community 457"
 Cohesion: 1.0
-Nodes (1): ReportsHelperTest
+Nodes (1): TranslationServiceTest
 
 ### Community 458 - "Community 458"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): LinkAnalyzerServiceTest
 
 ### Community 459 - "Community 459"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): CardStatus::AutoAssignerTest
 
 ### Community 460 - "Community 460"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): Gmail::ReferenceNumberExtractorTest
 
 ### Community 461 - "Community 461"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): Gmail::CostGuardTest
 
 ### Community 462 - "Community 462"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): Gmail::BodyDecoderTest
 
 ### Community 463 - "Community 463"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): Gmail::EmailSignatureParserServiceTest
 
 ### Community 464 - "Community 464"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): Gmail::RfqFeedbackServiceTest
 
 ### Community 465 - "Community 465"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): Gmail::Stage1::RuleGateTest
 
 ### Community 466 - "Community 466"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): Ecount::EcountParserTest
 
 ### Community 467 - "Community 467"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): EcountApi::CustomerSyncServiceTest
 
 ### Community 468 - "Community 468"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): EcountApi::BaseServiceTest
 
 ### Community 469 - "Community 469"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): EcountApi::ProductSyncServiceTest
 
 ### Community 470 - "Community 470"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): Sheets::SheetsServiceTest
 
 ### Community 471 - "Community 471"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): Sap::AribaScraperServiceTest
 
 ### Community 472 - "Community 472"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): OverdueEscalationJobTest
 
 ### Community 473 - "Community 473"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): AgentInsightJobTest
 
 ### Community 474 - "Community 474"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): CardStatusAutoAssignJobTest
 
 ### Community 475 - "Community 475"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): SuggestOrderLinksJobTest
 
 ### Community 476 - "Community 476"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): HrExpiryNotificationJobTest
 
 ### Community 477 - "Community 477"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): RiskAssessmentJobTest
 
 ### Community 478 - "Community 478"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): SheetsSyncJobTest
 
 ### Community 479 - "Community 479"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): EcountImportJobTest
 
 ### Community 480 - "Community 480"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): BackfillEmailSignatureJobTest
 
 ### Community 481 - "Community 481"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): EcountCustomerSyncJobTest
 
 ### Community 482 - "Community 482"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): EcountProductSyncJobTest
 
 ### Community 483 - "Community 483"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): CardStatusThemesTest
 
 ### Community 484 - "Community 484"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): ApplicationHelperTest
 
 ### Community 485 - "Community 485"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): ReportsHelperTest
 
 ### Community 486 - "Community 486"
 Cohesion: 1.0
@@ -2473,232 +2503,358 @@ Nodes (0):
 Cohesion: 1.0
 Nodes (0): 
 
+### Community 489 - "Community 489"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 490 - "Community 490"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 491 - "Community 491"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 492 - "Community 492"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 493 - "Community 493"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 494 - "Community 494"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 495 - "Community 495"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 496 - "Community 496"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 497 - "Community 497"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 498 - "Community 498"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 499 - "Community 499"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 500 - "Community 500"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 501 - "Community 501"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 502 - "Community 502"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 503 - "Community 503"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 504 - "Community 504"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 505 - "Community 505"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 506 - "Community 506"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 507 - "Community 507"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 508 - "Community 508"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 509 - "Community 509"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 510 - "Community 510"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 511 - "Community 511"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 512 - "Community 512"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 513 - "Community 513"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 514 - "Community 514"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 515 - "Community 515"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 516 - "Community 516"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 517 - "Community 517"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 518 - "Community 518"
+Cohesion: 1.0
+Nodes (0): 
+
 ## Knowledge Gaps
-- **72 isolated node(s):** `Users::SessionsController`, `ApplicationJob`, `ApplicationMailer`, `ClassificationLog`, `ApplicationRecord` (+67 more)
+- **73 isolated node(s):** `Users::SessionsController`, `ApplicationJob`, `ApplicationMailer`, `ClassificationLog`, `ApplicationRecord` (+68 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **Thin community `Community 385`** (2 nodes): `sessions_controller.rb`, `Users::SessionsController`
+- **Thin community `Community 412`** (2 nodes): `sessions_controller.rb`, `Users::SessionsController`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 386`** (2 nodes): `reports_helper.rb`, `delta_badge()`
+- **Thin community `Community 413`** (2 nodes): `reports_helper.rb`, `delta_badge()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 387`** (2 nodes): `hello_controller.js`, `connect()`
+- **Thin community `Community 414`** (2 nodes): `hello_controller.js`, `connect()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 388`** (2 nodes): `application_job.rb`, `ApplicationJob`
+- **Thin community `Community 415`** (2 nodes): `application_job.rb`, `ApplicationJob`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 389`** (2 nodes): `application_mailer.rb`, `ApplicationMailer`
+- **Thin community `Community 416`** (2 nodes): `application_mailer.rb`, `ApplicationMailer`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 390`** (2 nodes): `classification_log.rb`, `ClassificationLog`
+- **Thin community `Community 417`** (2 nodes): `classification_log.rb`, `ClassificationLog`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 391`** (2 nodes): `application_record.rb`, `ApplicationRecord`
+- **Thin community `Community 418`** (2 nodes): `application_record.rb`, `ApplicationRecord`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 392`** (2 nodes): `assignment.rb`, `Assignment`
+- **Thin community `Community 419`** (2 nodes): `assignment.rb`, `Assignment`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 393`** (2 nodes): `comment.rb`, `Comment`
+- **Thin community `Community 420`** (2 nodes): `comment.rb`, `Comment`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 394`** (2 nodes): `product.rb`, `Product`
+- **Thin community `Community 421`** (2 nodes): `product.rb`, `Product`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 395`** (2 nodes): `order_link.rb`, `OrderLink`
+- **Thin community `Community 422`** (2 nodes): `order_link.rb`, `OrderLink`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 396`** (2 nodes): `graph_node.rb`, `linked_nodes()`
+- **Thin community `Community 423`** (2 nodes): `graph_node.rb`, `linked_nodes()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 397`** (2 nodes): `document_attachable.rb`, `validate_documents_safety()`
+- **Thin community `Community 424`** (2 nodes): `document_attachable.rb`, `validate_documents_safety()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 398`** (2 nodes): `Application`, `application.rb`
+- **Thin community `Community 425`** (2 nodes): `Application`, `application.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 399`** (2 nodes): `rack_attack.rb`, `Rack::Attack`
+- **Thin community `Community 426`** (2 nodes): `rack_attack.rb`, `Rack::Attack`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 400`** (2 nodes): `find()`, `card_status_color_presets.rb`
+- **Thin community `Community 427`** (2 nodes): `find()`, `card_status_color_presets.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 401`** (2 nodes): `ActiveSupport::TestCase`, `test_helper.rb`
+- **Thin community `Community 428`** (2 nodes): `ActiveSupport::TestCase`, `test_helper.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 402`** (2 nodes): `ApplicationSystemTestCase`, `application_system_test_case.rb`
+- **Thin community `Community 429`** (2 nodes): `ApplicationSystemTestCase`, `application_system_test_case.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 403`** (2 nodes): `OrderTest`, `order_test.rb`
+- **Thin community `Community 430`** (2 nodes): `OrderTest`, `order_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 404`** (2 nodes): `user_test.rb`, `UserTest`
+- **Thin community `Community 431`** (2 nodes): `user_test.rb`, `UserTest`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 405`** (2 nodes): `ProjectTest`, `project_test.rb`
+- **Thin community `Community 432`** (2 nodes): `ProjectTest`, `project_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 406`** (2 nodes): `CardStatusTest`, `card_status_test.rb`
+- **Thin community `Community 433`** (2 nodes): `CardStatusTest`, `card_status_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 407`** (2 nodes): `visa_test.rb`, `VisaTest`
+- **Thin community `Community 434`** (2 nodes): `visa_test.rb`, `VisaTest`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 408`** (2 nodes): `TaskTest`, `task_test.rb`
+- **Thin community `Community 435`** (2 nodes): `TaskTest`, `task_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 409`** (2 nodes): `ClientTest`, `client_test.rb`
+- **Thin community `Community 436`** (2 nodes): `ClientTest`, `client_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 410`** (2 nodes): `SupplierTest`, `supplier_test.rb`
+- **Thin community `Community 437`** (2 nodes): `SupplierTest`, `supplier_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 411`** (2 nodes): `NotificationTest`, `notification_test.rb`
+- **Thin community `Community 438`** (2 nodes): `NotificationTest`, `notification_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 412`** (2 nodes): `EmployeeTest`, `employee_test.rb`
+- **Thin community `Community 439`** (2 nodes): `EmployeeTest`, `employee_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 413`** (2 nodes): `OrderExtendedTest`, `order_extended_test.rb`
+- **Thin community `Community 440`** (2 nodes): `OrderExtendedTest`, `order_extended_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 414`** (2 nodes): `EmployeeExtendedTest`, `employee_extended_test.rb`
+- **Thin community `Community 441`** (2 nodes): `EmployeeExtendedTest`, `employee_extended_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 415`** (2 nodes): `ContactPersonTest`, `contact_person_test.rb`
+- **Thin community `Community 442`** (2 nodes): `ContactPersonTest`, `contact_person_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 416`** (2 nodes): `AppConfigTest`, `app_config_test.rb`
+- **Thin community `Community 443`** (2 nodes): `AppConfigTest`, `app_config_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 417`** (2 nodes): `ProductTest`, `product_test.rb`
+- **Thin community `Community 444`** (2 nodes): `ProductTest`, `product_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 418`** (2 nodes): `TaskExtendedTest`, `task_extended_test.rb`
+- **Thin community `Community 445`** (2 nodes): `TaskExtendedTest`, `task_extended_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 419`** (2 nodes): `ClientExtendedTest`, `client_extended_test.rb`
+- **Thin community `Community 446`** (2 nodes): `ClientExtendedTest`, `client_extended_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 420`** (2 nodes): `SupplierExtendedTest`, `supplier_extended_test.rb`
+- **Thin community `Community 447`** (2 nodes): `SupplierExtendedTest`, `supplier_extended_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 421`** (2 nodes): `AgentInsightTest`, `agent_insight_test.rb`
+- **Thin community `Community 448`** (2 nodes): `AgentInsightTest`, `agent_insight_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 422`** (2 nodes): `EcountSyncLogTest`, `ecount_sync_log_test.rb`
+- **Thin community `Community 449`** (2 nodes): `EcountSyncLogTest`, `ecount_sync_log_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 423`** (2 nodes): `OrderLinkTest`, `order_link_test.rb`
+- **Thin community `Community 450`** (2 nodes): `OrderLinkTest`, `order_link_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 424`** (2 nodes): `OrderQuoteTest`, `order_quote_test.rb`
+- **Thin community `Community 451`** (2 nodes): `OrderQuoteTest`, `order_quote_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 425`** (2 nodes): `KanbanBoardTest`, `kanban_board_test.rb`
+- **Thin community `Community 452`** (2 nodes): `KanbanBoardTest`, `kanban_board_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 426`** (2 nodes): `KanbanColumnTest`, `kanban_column_test.rb`
+- **Thin community `Community 453`** (2 nodes): `KanbanColumnTest`, `kanban_column_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 427`** (2 nodes): `GraphNodeTest`, `graph_node_test.rb`
+- **Thin community `Community 454`** (2 nodes): `ChecklistItemTest`, `checklist_item_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 428`** (2 nodes): `OrderGraphBuilderTest`, `order_graph_builder_test.rb`
+- **Thin community `Community 455`** (2 nodes): `GraphNodeTest`, `graph_node_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 429`** (2 nodes): `translation_service_test.rb`, `TranslationServiceTest`
+- **Thin community `Community 456`** (2 nodes): `OrderGraphBuilderTest`, `order_graph_builder_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 430`** (2 nodes): `LinkAnalyzerServiceTest`, `link_analyzer_service_test.rb`
+- **Thin community `Community 457`** (2 nodes): `translation_service_test.rb`, `TranslationServiceTest`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 431`** (2 nodes): `CardStatus::AutoAssignerTest`, `auto_assigner_test.rb`
+- **Thin community `Community 458`** (2 nodes): `LinkAnalyzerServiceTest`, `link_analyzer_service_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 432`** (2 nodes): `Gmail::ReferenceNumberExtractorTest`, `reference_number_extractor_test.rb`
+- **Thin community `Community 459`** (2 nodes): `CardStatus::AutoAssignerTest`, `auto_assigner_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 433`** (2 nodes): `Gmail::CostGuardTest`, `cost_guard_test.rb`
+- **Thin community `Community 460`** (2 nodes): `Gmail::ReferenceNumberExtractorTest`, `reference_number_extractor_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 434`** (2 nodes): `Gmail::BodyDecoderTest`, `body_decoder_test.rb`
+- **Thin community `Community 461`** (2 nodes): `Gmail::CostGuardTest`, `cost_guard_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 435`** (2 nodes): `Gmail::EmailSignatureParserServiceTest`, `email_signature_parser_service_test.rb`
+- **Thin community `Community 462`** (2 nodes): `Gmail::BodyDecoderTest`, `body_decoder_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 436`** (2 nodes): `Gmail::RfqFeedbackServiceTest`, `rfq_feedback_service_test.rb`
+- **Thin community `Community 463`** (2 nodes): `Gmail::EmailSignatureParserServiceTest`, `email_signature_parser_service_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 437`** (2 nodes): `Gmail::Stage1::RuleGateTest`, `rule_gate_test.rb`
+- **Thin community `Community 464`** (2 nodes): `Gmail::RfqFeedbackServiceTest`, `rfq_feedback_service_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 438`** (2 nodes): `Ecount::EcountParserTest`, `ecount_parser_test.rb`
+- **Thin community `Community 465`** (2 nodes): `Gmail::Stage1::RuleGateTest`, `rule_gate_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 439`** (2 nodes): `EcountApi::CustomerSyncServiceTest`, `customer_sync_service_test.rb`
+- **Thin community `Community 466`** (2 nodes): `Ecount::EcountParserTest`, `ecount_parser_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 440`** (2 nodes): `EcountApi::BaseServiceTest`, `base_service_test.rb`
+- **Thin community `Community 467`** (2 nodes): `EcountApi::CustomerSyncServiceTest`, `customer_sync_service_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 441`** (2 nodes): `EcountApi::ProductSyncServiceTest`, `product_sync_service_test.rb`
+- **Thin community `Community 468`** (2 nodes): `EcountApi::BaseServiceTest`, `base_service_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 442`** (2 nodes): `Sheets::SheetsServiceTest`, `sheets_service_test.rb`
+- **Thin community `Community 469`** (2 nodes): `EcountApi::ProductSyncServiceTest`, `product_sync_service_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 443`** (2 nodes): `Sap::AribaScraperServiceTest`, `ariba_scraper_service_test.rb`
+- **Thin community `Community 470`** (2 nodes): `Sheets::SheetsServiceTest`, `sheets_service_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 444`** (2 nodes): `OverdueEscalationJobTest`, `overdue_escalation_job_test.rb`
+- **Thin community `Community 471`** (2 nodes): `Sap::AribaScraperServiceTest`, `ariba_scraper_service_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 445`** (2 nodes): `AgentInsightJobTest`, `agent_insight_job_test.rb`
+- **Thin community `Community 472`** (2 nodes): `OverdueEscalationJobTest`, `overdue_escalation_job_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 446`** (2 nodes): `CardStatusAutoAssignJobTest`, `card_status_auto_assign_job_test.rb`
+- **Thin community `Community 473`** (2 nodes): `AgentInsightJobTest`, `agent_insight_job_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 447`** (2 nodes): `SuggestOrderLinksJobTest`, `suggest_order_links_job_test.rb`
+- **Thin community `Community 474`** (2 nodes): `CardStatusAutoAssignJobTest`, `card_status_auto_assign_job_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 448`** (2 nodes): `HrExpiryNotificationJobTest`, `hr_expiry_notification_job_test.rb`
+- **Thin community `Community 475`** (2 nodes): `SuggestOrderLinksJobTest`, `suggest_order_links_job_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 449`** (2 nodes): `RiskAssessmentJobTest`, `risk_assessment_job_test.rb`
+- **Thin community `Community 476`** (2 nodes): `HrExpiryNotificationJobTest`, `hr_expiry_notification_job_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 450`** (2 nodes): `SheetsSyncJobTest`, `sheets_sync_job_test.rb`
+- **Thin community `Community 477`** (2 nodes): `RiskAssessmentJobTest`, `risk_assessment_job_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 451`** (2 nodes): `EcountImportJobTest`, `ecount_import_job_test.rb`
+- **Thin community `Community 478`** (2 nodes): `SheetsSyncJobTest`, `sheets_sync_job_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 452`** (2 nodes): `BackfillEmailSignatureJobTest`, `backfill_email_signature_job_test.rb`
+- **Thin community `Community 479`** (2 nodes): `EcountImportJobTest`, `ecount_import_job_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 453`** (2 nodes): `EcountCustomerSyncJobTest`, `ecount_customer_sync_job_test.rb`
+- **Thin community `Community 480`** (2 nodes): `BackfillEmailSignatureJobTest`, `backfill_email_signature_job_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 454`** (2 nodes): `EcountProductSyncJobTest`, `ecount_product_sync_job_test.rb`
+- **Thin community `Community 481`** (2 nodes): `EcountCustomerSyncJobTest`, `ecount_customer_sync_job_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 455`** (2 nodes): `CardStatusThemesTest`, `card_status_themes_test.rb`
+- **Thin community `Community 482`** (2 nodes): `EcountProductSyncJobTest`, `ecount_product_sync_job_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 456`** (2 nodes): `ApplicationHelperTest`, `application_helper_test.rb`
+- **Thin community `Community 483`** (2 nodes): `CardStatusThemesTest`, `card_status_themes_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 457`** (2 nodes): `ReportsHelperTest`, `reports_helper_test.rb`
+- **Thin community `Community 484`** (2 nodes): `ApplicationHelperTest`, `application_helper_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 458`** (1 nodes): `application.js`
+- **Thin community `Community 485`** (2 nodes): `ReportsHelperTest`, `reports_helper_test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 459`** (1 nodes): `application.js`
+- **Thin community `Community 486`** (1 nodes): `application.js`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 460`** (1 nodes): `service-worker.js`
+- **Thin community `Community 487`** (1 nodes): `application.js`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 461`** (1 nodes): `boot.rb`
+- **Thin community `Community 488`** (1 nodes): `service-worker.js`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 462`** (1 nodes): `routes.rb`
+- **Thin community `Community 489`** (1 nodes): `boot.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 463`** (1 nodes): `ci.rb`
+- **Thin community `Community 490`** (1 nodes): `routes.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 464`** (1 nodes): `environment.rb`
+- **Thin community `Community 491`** (1 nodes): `ci.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 465`** (1 nodes): `importmap.rb`
+- **Thin community `Community 492`** (1 nodes): `environment.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 466`** (1 nodes): `puma.rb`
+- **Thin community `Community 493`** (1 nodes): `importmap.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 467`** (1 nodes): `development.rb`
+- **Thin community `Community 494`** (1 nodes): `puma.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 468`** (1 nodes): `production.rb`
+- **Thin community `Community 495`** (1 nodes): `development.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 469`** (1 nodes): `test.rb`
+- **Thin community `Community 496`** (1 nodes): `production.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 470`** (1 nodes): `assets.rb`
+- **Thin community `Community 497`** (1 nodes): `test.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 471`** (1 nodes): `content_security_policy.rb`
+- **Thin community `Community 498`** (1 nodes): `assets.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 472`** (1 nodes): `devise.rb`
+- **Thin community `Community 499`** (1 nodes): `locale.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 473`** (1 nodes): `filter_parameter_logging.rb`
+- **Thin community `Community 500`** (1 nodes): `content_security_policy.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 474`** (1 nodes): `inflections.rb`
+- **Thin community `Community 501`** (1 nodes): `devise.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 475`** (1 nodes): `lockbox.rb`
+- **Thin community `Community 502`** (1 nodes): `sentry.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 476`** (1 nodes): `wicked_pdf.rb`
+- **Thin community `Community 503`** (1 nodes): `filter_parameter_logging.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 477`** (1 nodes): `sqlite_wal.rb`
+- **Thin community `Community 504`** (1 nodes): `inflections.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 478`** (1 nodes): `locale.rb`
+- **Thin community `Community 505`** (1 nodes): `error_monitoring.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 479`** (1 nodes): `error_monitoring.rb`
+- **Thin community `Community 506`** (1 nodes): `lockbox.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 480`** (1 nodes): `cable_schema.rb`
+- **Thin community `Community 507`** (1 nodes): `wicked_pdf.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 481`** (1 nodes): `schema.rb`
+- **Thin community `Community 508`** (1 nodes): `sqlite_wal.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 482`** (1 nodes): `cache_schema.rb`
+- **Thin community `Community 509`** (1 nodes): `cable_schema.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 483`** (1 nodes): `seeds.rb`
+- **Thin community `Community 510`** (1 nodes): `schema.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 484`** (1 nodes): `queue_schema.rb`
+- **Thin community `Community 511`** (1 nodes): `cache_schema.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 485`** (1 nodes): `mockup_data.rb`
+- **Thin community `Community 512`** (1 nodes): `seeds.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 486`** (1 nodes): `card_statuses.rb`
+- **Thin community `Community 513`** (1 nodes): `queue_schema.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 487`** (1 nodes): `tracking_codes.rb`
+- **Thin community `Community 514`** (1 nodes): `mockup_data.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 488`** (1 nodes): `audit_attachments_since_2025_10.rb`
+- **Thin community `Community 515`** (1 nodes): `checklist_items.rb`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 516`** (1 nodes): `card_statuses.rb`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 517`** (1 nodes): `tracking_codes.rb`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 518`** (1 nodes): `audit_attachments_since_2025_10.rb`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **What connects `Users::SessionsController`, `ApplicationJob`, `ApplicationMailer` to the rest of the system?**
-  _72 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _73 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.1 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.09 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**
-  _Cohesion score 0.06 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05 - nodes in this community are weakly interconnected._
 - **Should `Community 3` be split into smaller, more focused modules?**
   _Cohesion score 0.14 - nodes in this community are weakly interconnected._
 - **Should `Community 5` be split into smaller, more focused modules?**
-  _Cohesion score 0.12 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.11 - nodes in this community are weakly interconnected._
+- **Should `Community 6` be split into smaller, more focused modules?**
+  _Cohesion score 0.08 - nodes in this community are weakly interconnected._
 - **Should `Community 7` be split into smaller, more focused modules?**
   _Cohesion score 0.12 - nodes in this community are weakly interconnected._
-- **Should `Community 10` be split into smaller, more focused modules?**
-  _Cohesion score 0.13 - nodes in this community are weakly interconnected._

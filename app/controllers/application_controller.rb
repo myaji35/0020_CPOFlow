@@ -5,6 +5,7 @@ class ApplicationController < ActionController::Base
   stale_when_importmap_changes
 
   before_action :authenticate_user!
+  before_action :enforce_active_account
   before_action :set_locale
   before_action :set_sentry_context, if: -> { defined?(Sentry) }
 
@@ -12,6 +13,18 @@ class ApplicationController < ActionController::Base
   rescue_from ActiveRecord::StaleObjectError, with: :handle_stale_object_error
 
   private
+
+  # AtoZ 직원만 사용: Employee 매칭 안 된 사용자는 /pending_approval 안내 페이지만 보이게 차단.
+  # 통과 조건: current_user.active? (Employee 매칭 시 자동 활성화) 또는 허용 라우트
+  def enforce_active_account
+    return unless current_user
+    return if current_user.active?
+    # 차단 예외 라우트: 안내 페이지, 로그아웃, 법적 페이지
+    allowed_paths = [ pending_approval_path, destroy_user_session_path, privacy_policy_path, terms_of_service_path ]
+    return if allowed_paths.include?(request.path)
+    return if request.path.start_with?("/users/sign_out", "/rails/")
+    redirect_to pending_approval_path
+  end
 
   def set_sentry_context
     return unless current_user

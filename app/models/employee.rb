@@ -46,7 +46,8 @@ class Employee < ApplicationRecord
   before_save :sync_user_by_email, if: :will_save_change_to_email?
 
   # ISS-296: active 또는 termination_date 변경 시 연결된 User 계정 활성화 상태 동기화
-  after_save :sync_user_account_status, if: -> { saved_change_to_active? || saved_change_to_termination_date? }
+  # AtoZ 직원만 사용: user_id 새로 연결 시에도 활성화
+  after_save :sync_user_account_status, if: -> { saved_change_to_active? || saved_change_to_termination_date? || saved_change_to_user_id? }
 
   def sync_user_by_email
     if email.present?
