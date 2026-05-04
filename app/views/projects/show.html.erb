@@ -74,9 +74,11 @@
         <!-- 헤더: 추가 버튼 -->
         <div class="flex justify-between items-center mb-3">
           <h3 class="font-medium text-gray-900 dark:text-white"><%= t("projects.orders_title") %></h3>
-          <%= link_to new_order_path(project_id: @project.id), class: "inline-flex items-center gap-1 text-sm text-primary hover:underline" do %>
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <%= t("projects.orders_add_btn") %>
+          <% if can_create?("orders") %>
+            <%= link_to new_order_path(project_id: @project.id), class: "inline-flex items-center gap-1 text-sm text-primary hover:underline" do %>
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <%= t("projects.orders_add_btn") %>
+            <% end %>
           <% end %>
         </div>
         <!-- FR-04: 상태별 뱃지 -->
