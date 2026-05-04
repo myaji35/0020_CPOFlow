@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+# bin/smoke-test — 전 GET 라우트 5xx 게이트
+#
+# 사용:
+#   bin/smoke-test [BASE_URL] [--login=email:password]
+#   기본 BASE_URL: http://127.0.0.1:3000
+#   기본 LOGIN: env SMOKE_LOGIN_EMAIL/SMOKE_LOGIN_PASSWORD
+#
+# 종료 코드:
+#   0 — 모든 페이지 5xx 없음
+#   1 — 5xx 1건 이상 발견 (배포 차단)
+#   2 — 부팅/세션 실패
+#
+# 출력: tmp/smoke-{date}.log + 표준 출력 요약
+set -euo pipefail
+
+BASE_URL="${1:-http://127.0.0.1:3000}"
+LOG_DIR="tmp"
+mkdir -p "$LOG_DIR"
+LOG_FILE="$LOG_DIR/smoke-$(date +%Y%m%d-%H%M%S).log"
+COOKIE_JAR="$(mktemp -t smoke-cookie.XXXXXX)"
+trap "rm -f $COOKIE_JAR" EXIT
+
+EMAIL="${SMOKE_LOGIN_EMAIL:-admin@atozone.com}"
+PASSWORD="${SMOKE_LOGIN_PASSWORD:-}"
+
+echo "==> Smoke Test :: $(date)" | tee "$LOG_FILE"
+echo "    BASE_URL = $BASE_URL"  | tee -a "$LOG_FILE"
+echo "    EMAIL    = $EMAIL"     | tee -a "$LOG_FILE"
+
+# 1. 로그인 (CSRF 토큰 추출 후 POST)
+if [[ -n "$PASSWORD" ]]; then
+  echo "==> Logging in..."  | tee -a "$LOG_FILE"
+  csrf=$(curl -s -c "$COOKIE_JAR" -b "$COOKIE_JAR" "$BASE_URL/users/sign_in" \
+    | grep -oE 'name="authenticity_token" value="[^"]+"' \
+    | head -1 \
+    | sed -E 's/.*value="([^"]+)".*/\1/')
+  if [[ -z "$csrf" ]]; then
+    echo "  [FATAL] CSRF token not found — server not booted?" | tee -a "$LOG_FILE"
+    exit 2
+  fi
+  login_status=$(curl -s -o /dev/null -w "%{http_code}" \
+    -c "$COOKIE_JAR" -b "$COOKIE_JAR" \
+    -d "user[email]=$EMAIL" -d "user[password]=$PASSWORD" \
+    -d "authenticity_token=$csrf" \
+    "$BASE_URL/users/sign_in")
+  if [[ "$login_status" != "302" && "$login_status" != "303" ]]; then
+    echo "  [FATAL] Login failed (status=$login_status) — check SMOKE_LOGIN_PASSWORD" | tee -a "$LOG_FILE"
+    exit 2
+  fi
+  echo "  [OK] Logged in" | tee -a "$LOG_FILE"
+else
+  echo "==> No password — testing as anonymous (will hit redirects)" | tee -a "$LOG_FILE"
+fi
+
+# 2. GET 라우트 추출 (동적 :param 은 샘플값으로 치환)
+ROUTES=$(bin/rails routes 2>/dev/null \
+  | awk 'NR>1 && $2 == "GET" {print $3}' \
+  | sed 's/(\.:format)$//' \
+  | grep -vE '^/rails/(active_storage|action_mailbox|conductor|info)' \
+  | grep -vE 'oauth/callback|oauth/authorize' \
+  | grep -vE '\*[a-z]' \
+  | sort -u)
+
+# :id, :client_id 등 동적 파라미터를 샘플값(1)으로 치환
+ROUTES=$(echo "$ROUTES" | sed -E 's@:[a-z_]+@1@g')
+
+TOTAL=0
+PASS=0
+WARN=0
+FAIL=0
+FAIL_LIST=""
+
+# 3. 각 URL 호출
+echo "==> Hitting $(echo "$ROUTES" | wc -l | tr -d ' ') routes..." | tee -a "$LOG_FILE"
+while IFS= read -r path; do
+  [[ -z "$path" ]] && continue
+  TOTAL=$((TOTAL+1))
+  url="$BASE_URL$path"
+  status=$(curl -s -o /dev/null -w "%{http_code}" \
+    -L --max-redirs 3 \
+    -b "$COOKIE_JAR" -c "$COOKIE_JAR" \
+    --max-time 30 \
+    "$url" || echo "000")
+
+  case "$status" in
+    2*|3*)
+      PASS=$((PASS+1))
+      printf "  [%s] %s\n" "$status" "$path" >> "$LOG_FILE"
+      ;;
+    4*)
+      WARN=$((WARN+1))
+      printf "  [%s] %s ← WARN\n" "$status" "$path" | tee -a "$LOG_FILE"
+      ;;
+    5*|000)
+      FAIL=$((FAIL+1))
+      FAIL_LIST+="  $status $path"$'\n'
+      printf "  [%s] %s ← FAIL\n" "$status" "$path" | tee -a "$LOG_FILE"
+      ;;
+  esac
+done <<< "$ROUTES"
+
+# 4. 요약
+echo "" | tee -a "$LOG_FILE"
+echo "━━━ Smoke Result ━━━" | tee -a "$LOG_FILE"
+printf "  Total: %d | Pass(2xx/3xx): %d | Warn(4xx): %d | Fail(5xx): %d\n" \
+  "$TOTAL" "$PASS" "$WARN" "$FAIL" | tee -a "$LOG_FILE"
+
+if [[ "$FAIL" -gt 0 ]]; then
+  echo "" | tee -a "$LOG_FILE"
+  echo "FAILED ROUTES:" | tee -a "$LOG_FILE"
+  echo "$FAIL_LIST" | tee -a "$LOG_FILE"
+  echo "" | tee -a "$LOG_FILE"
+  echo "Log: $LOG_FILE" | tee -a "$LOG_FILE"
+  exit 1
+fi
+
+echo "Log: $LOG_FILE" | tee -a "$LOG_FILE"
+exit 0

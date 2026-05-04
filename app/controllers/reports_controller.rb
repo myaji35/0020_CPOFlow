@@ -182,19 +182,19 @@ class ReportsController < ApplicationController
 
   # ── Top 10 ─────────────────────────────────────────────────
   def build_by_client(range)
-    report_scoped_orders.joins(:client).where(created_at: range)
+    report_scoped_orders.joins(:client).where(orders: { created_at: range })
          .group("clients.name").sum(:estimated_value)
          .sort_by { |_, v| -(v || 0) }.first(10)
   end
 
   def build_by_supplier(range)
-    report_scoped_orders.joins(:supplier).where(created_at: range)
+    report_scoped_orders.joins(:supplier).where(orders: { created_at: range })
          .group("suppliers.name").count
          .sort_by { |_, v| -v }.first(10)
   end
 
   def build_by_project(range)
-    report_scoped_orders.joins(:project).where(created_at: range)
+    report_scoped_orders.joins(:project).where(orders: { created_at: range })
          .group("projects.name").sum(:estimated_value)
          .sort_by { |_, v| -(v || 0) }.first(10)
   end
