@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# bin/canary — 배포 직후 prod 핵심 페이지 헬스체크
+#
+# 사용:
+#   bin/canary [BASE_URL]
+#   기본 BASE_URL: https://cpoflow.ddtl.co.kr
+#
+# 종료 코드:
+#   0 — 모든 페이지 정상 (2xx/3xx)
+#   1 — 5xx 발견 (호출자에서 rollback 결정)
+#
+# 인증 필요한 페이지는 sign_in 페이지로 redirect되므로 200 응답 자체가 부팅 OK 신호.
+set -euo pipefail
+
+BASE_URL="${1:-https://cpoflow.ddtl.co.kr}"
+LOG_DIR="tmp"
+mkdir -p "$LOG_DIR"
+LOG_FILE="$LOG_DIR/canary-$(date +%Y%m%d-%H%M%S).log"
+
+# 핵심 10개 페이지 — 인증 redirect는 정상으로 간주
+PAGES=(
+  "/"
+  "/users/sign_in"
+  "/dashboard"
+  "/kanban"
+  "/clients"
+  "/suppliers"
+  "/orders"
+  "/reports"
+  "/employees"
+  "/inbox"
+)
+
+echo "==> Canary :: $(date)"          | tee "$LOG_FILE"
+echo "    BASE_URL = $BASE_URL"        | tee -a "$LOG_FILE"
+
+FAIL=0
+FAIL_LIST=""
+
+for path in "${PAGES[@]}"; do
+  url="$BASE_URL$path"
+  status=$(curl -s -o /dev/null -w "%{http_code}" \
+    -L --max-redirs 3 \
+    --max-time 30 \
+    "$url" || echo "000")
+
+  case "$status" in
+    2*|3*)
+      printf "  [%s] %s\n" "$status" "$path" | tee -a "$LOG_FILE"
+      ;;
+    *)
+      FAIL=$((FAIL+1))
+      FAIL_LIST+="  $status $path"$'\n'
+      printf "  [%s] %s ← FAIL\n" "$status" "$path" | tee -a "$LOG_FILE"
+      ;;
+  esac
+done
+
+echo "" | tee -a "$LOG_FILE"
+echo "━━━ Canary Result ━━━" | tee -a "$LOG_FILE"
+printf "  Pages: %d | Fail: %d\n" "${#PAGES[@]}" "$FAIL" | tee -a "$LOG_FILE"
+
+if [[ "$FAIL" -gt 0 ]]; then
+  echo "" | tee -a "$LOG_FILE"
+  echo "FAILED PAGES:" | tee -a "$LOG_FILE"
+  echo "$FAIL_LIST" | tee -a "$LOG_FILE"
+  echo "Log: $LOG_FILE" | tee -a "$LOG_FILE"
+  exit 1
+fi
+
+echo "Log: $LOG_FILE" | tee -a "$LOG_FILE"
+exit 0

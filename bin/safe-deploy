@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+# bin/safe-deploy — 안전 배포 래퍼
+#
+# 흐름:
+#   1. (선택) bin/smoke-test 로컬 production-like 환경에서 → 5xx 차단
+#   2. kamal deploy 실행
+#   3. bin/canary prod 핵심 페이지 검증 → 5xx 시 즉시 kamal rollback
+#
+# 사용:
+#   bin/safe-deploy             # 기본 (canary만)
+#   bin/safe-deploy --smoke     # 로컬 스모크 + 배포 + 캐너리
+#   bin/safe-deploy --no-canary # 캐너리 생략 (kamal deploy 단독)
+#
+# 환경변수:
+#   SMOKE_LOGIN_EMAIL, SMOKE_LOGIN_PASSWORD — 로컬 스모크 로그인 (선택)
+#   PROD_BASE_URL                            — 캐너리 대상 (기본 https://cpoflow.ddtl.co.kr)
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+RUN_SMOKE=false
+RUN_CANARY=true
+PROD_URL="${PROD_BASE_URL:-https://cpoflow.ddtl.co.kr}"
+
+for arg in "$@"; do
+  case "$arg" in
+    --smoke)     RUN_SMOKE=true ;;
+    --no-canary) RUN_CANARY=false ;;
+    --help|-h)
+      grep '^#' "$0" | sed 's/^# \{0,1\}//'
+      exit 0
+      ;;
+  esac
+done
+
+# ── 1. 로컬 스모크 (선택) ────────────────────────────────────
+if [[ "$RUN_SMOKE" == "true" ]]; then
+  echo "━━━ [1/3] 로컬 스모크 테스트 ━━━"
+  if ! bin/smoke-test http://127.0.0.1:3000; then
+    echo ""
+    echo "❌ 로컬 스모크 실패 — 배포 차단"
+    echo "   tmp/smoke-*.log 확인 후 5xx 페이지 fix 후 재시도"
+    exit 1
+  fi
+  echo "✅ 로컬 스모크 통과"
+  echo ""
+fi
+
+# ── 2. Kamal 배포 ────────────────────────────────────────────
+echo "━━━ [2/3] Kamal Deploy ━━━"
+if ! bundle exec kamal deploy; then
+  echo ""
+  echo "❌ Kamal 배포 실패 (자동 롤백 진행됨)"
+  exit 1
+fi
+echo "✅ Kamal 배포 성공"
+echo ""
+
+# ── 3. Prod 캐너리 ───────────────────────────────────────────
+if [[ "$RUN_CANARY" == "true" ]]; then
+  echo "━━━ [3/3] Prod 캐너리 ━━━"
+  sleep 3  # kamal-proxy switch 안정화 대기
+  if ! bin/canary "$PROD_URL"; then
+    echo ""
+    echo "❌ 캐너리 실패 — 자동 롤백 시작"
+    echo ""
+    if bundle exec kamal rollback; then
+      echo "✅ 롤백 성공 — 이전 버전으로 복구됨"
+      echo "   배포한 코드는 main에 남아있음 (수동 revert 필요 시 git revert HEAD)"
+    else
+      echo "🚨 롤백 실패 — 수동 개입 필요"
+      echo "   ssh root@158.247.235.31 → docker ps → 이전 컨테이너 수동 시작"
+    fi
+    exit 1
+  fi
+  echo "✅ 캐너리 통과 — prod 정상"
+fi
+
+echo ""
+echo "🎉 배포 완료"
