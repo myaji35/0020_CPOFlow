@@ -75,10 +75,11 @@ proxy:
   response_timeout: 60
   healthcheck:
     interval: 5
-    timeout: 120
+    timeout: 180
 
-# Deploy timeout (seconds) - 원격 빌드로 부팅 시간 단축됨
-deploy_timeout: 60
+# Deploy timeout (seconds) - 부팅 느림 진단 전까지 임시 180초 (원래 60초)
+# 원인: kamal-proxy healthcheck가 새 컨테이너에서 60초 안에 통과 못함 (PERF 이슈로 별도 추적)
+deploy_timeout: 180
 
 # Use SSH as root
 ssh:
