@@ -199,7 +199,7 @@ class ContactPersonsController < ApplicationController
     end
     # 정렬: primary 우선 → 풀네임(공백 포함) 우선(자동import dot-name 후순위) → name ASC
     scope = scope.select("contact_persons.*, CASE WHEN name LIKE '% %' THEN 0 ELSE 1 END AS _name_priority")
-                 .order(Arel.sql("primary DESC, _name_priority ASC, LOWER(name) ASC"))
+                 .order(Arel.sql('"contact_persons"."primary" DESC, _name_priority ASC, LOWER(name) ASC'))
     limit = q.present? ? 50 : (params[:client_id].present? ? 100 : 30)
     results = scope.limit(limit).map do |cp|
       pretty = humanize_contact_name(cp.name)
