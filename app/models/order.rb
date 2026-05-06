@@ -164,7 +164,7 @@ class Order < ApplicationRecord
   }, default: :email
 
   validates :title, presence: true
-  validates :customer_name, presence: true
+  validates :customer_name, presence: true, unless: -> { client_id.present? }
   validates :status, presence: true
 
   scope :active, -> { where.not(status: [ :get_grn, :give_up, :done ]) }

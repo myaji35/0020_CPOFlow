@@ -1566,6 +1566,10 @@ ko:
 
   activerecord:
     attributes:
+      order:
+        title: "주문 제목"
+        customer_name: "발주처명"
+        status: "상태"
       review:
         rating: "만족도"
         body:   "의견"
