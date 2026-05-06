@@ -84,7 +84,7 @@ class GmailOauthController < ApplicationController
       scope:                  EmailAccount::GMAIL_SCOPES,
       redirect_uri:           gmail_oauth_callback_url,
       access_type:            "offline",
-      prompt:                 "consent"   # force refresh_token on every consent
+      prompt:                 "select_account consent"  # 계정 선택 화면 강제 → 새 계정 추가 및 refresh_token 재발급
     )
   end
 
