@@ -45,13 +45,16 @@ class UsersController < ApplicationController
                         .limit(8)
 
     items = employees.map { |e|
+      # CEO 페르소나로 전환한 사용자는 멘션에서 "(CEO)" 라벨로 표시
+      is_self        = e.user_id == current_user.id
+      persona_suffix = (is_self && ceo_mode?) ? " (CEO)" : ""
       {
         id:           e.user_id,
         employee_id:  e.id,
-        display_name: e.display_name,
+        display_name: e.display_name + persona_suffix,
         initials:     e.initials,
         branch:       e.nationality.to_s,
-        job_title:    e.job_title.to_s,
+        job_title:    ceo_mode? && is_self ? "CEO" : e.job_title.to_s,
         source:       "employee"
       }
     }

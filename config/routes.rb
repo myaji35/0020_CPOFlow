@@ -14,6 +14,9 @@ Rails.application.routes.draw do
   # AtoZ 직원 등록 대기 안내 — Employee 매칭 안 된 사용자 차단 안내 페이지
   get "/pending_approval", to: "users/pending#show", as: :pending_approval
 
+  # 페르소나 전환 (admin 전용) — PATCH /persona/:key
+  patch "persona/:key", to: "personas#update", as: :persona
+
   authenticated :user do
     root to: "dashboard#index", as: :authenticated_root
   end

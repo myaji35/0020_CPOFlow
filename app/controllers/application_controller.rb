@@ -69,6 +69,30 @@ class ApplicationController < ActionController::Base
   end
   helper_method :gmail_connection_health
 
+  # ── 페르소나 (CEO / Admin 전환) ─────────────────────────────────────
+  # kds@ 계정처럼 다중 역할을 가진 사용자를 위한 세션 기반 페르소나 전환.
+  # DB role은 변경하지 않고 session[:persona]만 사용.
+  PERSONAS = {
+    "admin" => { label: "Admin",  icon: "⚙️",  key: "admin" },
+    "ceo"   => { label: "CEO",    icon: "👔",  key: "ceo"   }
+  }.freeze
+
+  def current_persona
+    return @_current_persona if defined?(@_current_persona)
+    # admin 유저만 페르소나 전환 가능, 그 외는 항상 자신의 role
+    @_current_persona = if current_user&.admin?
+      session[:persona].presence&.to_s.in?(PERSONAS.keys) ? session[:persona].to_s : "admin"
+    else
+      current_user&.role.to_s
+    end
+  end
+  helper_method :current_persona
+
+  def ceo_mode?
+    current_persona == "ceo"
+  end
+  helper_method :ceo_mode?
+
   # Branch 데이터 격리: current_user의 branch에 속한 Order만 반환
   # admin은 전체 접근 가능
   def scoped_orders
