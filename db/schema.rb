@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_03_010000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_07_012639) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -384,6 +384,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_03_010000) do
     t.index ["employee_id"], name: "index_employment_contracts_on_employee_id"
     t.index ["end_date"], name: "index_employment_contracts_on_end_date"
     t.index ["project_id"], name: "index_employment_contracts_on_project_id"
+  end
+
+  create_table "impersonation_tokens", force: :cascade do |t|
+    t.integer "admin_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.integer "target_user_id", null: false
+    t.string "token", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "used_at"
+    t.index ["admin_id"], name: "index_impersonation_tokens_on_admin_id"
+    t.index ["target_user_id"], name: "index_impersonation_tokens_on_target_user_id"
+    t.index ["token"], name: "index_impersonation_tokens_on_token", unique: true
   end
 
   create_table "import_logs", force: :cascade do |t|
@@ -904,6 +917,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_03_010000) do
   add_foreign_key "employees", "users"
   add_foreign_key "employment_contracts", "employees"
   add_foreign_key "employment_contracts", "projects"
+  add_foreign_key "impersonation_tokens", "users", column: "admin_id"
+  add_foreign_key "impersonation_tokens", "users", column: "target_user_id"
   add_foreign_key "import_logs", "users"
   add_foreign_key "kanban_boards", "users", column: "owner_id"
   add_foreign_key "kanban_columns", "kanban_boards"

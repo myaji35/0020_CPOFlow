@@ -231,6 +231,17 @@
             <td class="px-4 py-3 text-right">
               <div class="flex items-center justify-end gap-3">
                 <%= link_to t("employees.detail_link"), emp, class: "text-xs text-primary hover:underline" %>
+                <% if current_real_user.admin? && emp.user_id.present? && !emp.user&.admin? %>
+                  <%# ISS-352: 직원 환경 보기 — 새 탭으로 열림 %>
+                  <%= button_to impersonations_path(user_id: emp.user_id),
+                      method: :post,
+                      form: { target: "_blank", data: { turbo: false } },
+                      class: "inline-flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200 opacity-0 group-hover:opacity-100 transition-opacity",
+                      title: "#{emp.display_name} 환경으로 보기" do %>
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    보기
+                  <% end %>
+                <% end %>
                 <% if current_user.manager? || current_user.admin? %>
                   <%= link_to t("employees.edit_link"), edit_employee_path(emp),
                       class: "text-xs text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" %>

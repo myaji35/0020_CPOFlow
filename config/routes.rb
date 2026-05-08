@@ -17,6 +17,11 @@ Rails.application.routes.draw do
   # 페르소나 전환 (admin 전용) — PATCH /persona/:key
   patch "persona/:key", to: "personas#update", as: :persona
 
+  # ISS-352: Impersonation (직원 환경 가장) — admin 전용
+  post   "impersonations",       to: "impersonations#create",  as: :impersonations
+  get    "impersonations/enter", to: "impersonations#enter",   as: :impersonations_enter
+  delete "impersonations",       to: "impersonations#destroy", as: :stop_impersonating
+
   authenticated :user do
     root to: "dashboard#index", as: :authenticated_root
   end

@@ -151,6 +151,21 @@
             </div>
           <% end %>
 
+          <%# ISS-352: Impersonation 배너 — 가장 중일 때 항상 표시 %>
+          <% if impersonating? %>
+            <div class="flex items-center gap-3 bg-amber-500 text-white px-4 py-2 text-sm border-b border-amber-600">
+              <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <span class="flex-1">
+                <strong><%= current_user.display_name %></strong> 계정으로 보는 중
+                <span class="opacity-75 text-xs ml-1">(관리자: <%= current_real_user.display_name %>)</span>
+              </span>
+              <%= button_to "← 내 계정으로 돌아가기", stop_impersonating_path,
+                  method: :delete,
+                  data: { turbo: false },
+                  class: "bg-white text-amber-600 text-xs font-semibold px-3 py-1 rounded-md hover:bg-amber-50 transition-colors" %>
+            </div>
+          <% end %>
+
           <%# ISS-271: Gmail 토큰 만료/연결 끊김 전역 배너 %>
           <% health = gmail_connection_health %>
           <% if health[:needs_action] %>
