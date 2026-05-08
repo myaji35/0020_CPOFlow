@@ -236,6 +236,7 @@ module RfqAuto
 
       enriched = items.map.with_index do |item, idx|
         missing = check_required_fields(item, combined_text)
+        excerpt = pick(item, :source_excerpt, :source, :evidence).to_s
         {
           idx: idx + 1,
           name:           pick(item, :name, :product_name, :item_name),
@@ -244,6 +245,8 @@ module RfqAuto
           quantity:       pick(item, :quantity, :qty),
           unit:           pick(item, :unit, :uom),
           certification:  pick(item, :certification, :cert),
+          source_file:    find_source_file(excerpt),
+          source_excerpt: excerpt[0, 160],
           missing_fields: missing,
           missing_count:  missing.size,
           confidence:     pick(item, :confidence) || 0.7
@@ -302,15 +305,37 @@ module RfqAuto
       nil
     end
 
+    # 파일별 마커를 삽입한 결합 텍스트 생성. 각 chunk는 [SOURCE: filename] ... [END SOURCE] 형식.
+    # @file_chunks에 [{filename:, text:}] 인덱스 저장 → source_excerpt → 파일명 매칭에 사용.
     def build_combined_text
+      @file_chunks = []
       texts = []
       @order.attachments.each do |att|
         next unless att.blob.byte_size.to_i < 10.megabytes
-        text = Rfp::AttachmentExtractor.new(att).call rescue nil
-        texts << text if text.present?
+        result = Rfp::AttachmentExtractor.new(att).call rescue nil
+        text = result.is_a?(Hash) ? result[:text] : result
+        next unless text.present?
+        filename = att.blob.filename.to_s
+        @file_chunks << { filename: filename, text: text }
+        texts << "[SOURCE: #{filename}]\n#{text}\n[END SOURCE]"
       end
-      texts << @order.original_email_body if @order.original_email_body.present?
-      texts.compact.join("\n\n---\n\n")
+      if @order.original_email_body.present?
+        @file_chunks << { filename: "(이메일 본문)", text: @order.original_email_body }
+        texts << "[SOURCE: (이메일 본문)]\n#{@order.original_email_body}\n[END SOURCE]"
+      end
+      texts.compact.join("\n\n")
+    end
+
+    # source_excerpt(원문 인용)에서 어느 파일에서 왔는지 추정.
+    # 일치 안 되면 첫 chunk(가장 큰 가능성)로 fallback.
+    def find_source_file(excerpt)
+      return nil if excerpt.blank? || @file_chunks.blank?
+      needle = excerpt.to_s.strip[0, 60]  # 처음 60자만 비교 — 충분히 unique
+      @file_chunks.each do |chunk|
+        return chunk[:filename] if chunk[:text].to_s.include?(needle)
+      end
+      # fallback — 가장 긴 chunk(주 첨부일 가능성 높음)
+      @file_chunks.max_by { |c| c[:text].to_s.length }&.dig(:filename)
     end
 
     def check_required_fields(item, full_text)
