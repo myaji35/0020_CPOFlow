@@ -1,5 +1,7 @@
-# syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1.7
 # check=error=true
+# 2026-05-08: docker/dockerfile:1 floating tag → 1.7 핀. Docker Hub TLS timeout 빈발 시
+# 일단 캐시된 specific 버전을 우선 사용해 빌드 안정성 확보.
 
 # This Dockerfile is designed for production, not development. Use with Kamal or build'n'run by hand:
 # docker build -t cpoflow .
