@@ -309,18 +309,44 @@
     <% end %>
 
     <% if step4["suppliers"].is_a?(Array) && step4["suppliers"].any? %>
-      <%# 소스별 그룹핑 %>
-      <% sources = step4["suppliers"].group_by { |s| s["source"] } %>
-      <div class="space-y-3">
-        <% sources.each do |source, sups| %>
-          <div>
-            <div class="text-[11px] font-semibold text-ink-700 dark:text-ink-200 mb-1">
-              <% case source
-                 when "local_db" %>🏠 자체 DB <span class="text-ink-500 font-normal">(신뢰도 90 — 과거 거래처)</span>
-              <% when "web_search" %>🔍 인터넷 리서치 <span class="text-ink-500 font-normal">(Anthropic Web Search — 모델 검증)</span>
-              <% when "datago" %>🇰🇷 한국 조달청 <span class="text-ink-500 font-normal">(신뢰도 70 — 나라장터)</span>
-              <% when "google_cse" %>🌐 Google CSE <span class="text-ink-500 font-normal">(신뢰도 40 — Custom Search)</span>
-              <% else %><%= source %><% end %>
+      <%# 품목별 그룹핑 — 같은 품목의 공급사들이 모여 있어 사용자가 품목 단위로 선택 가능.
+          매칭은 step2 items의 idx와 매핑 시도. 매칭 안 되면 '기타'에 모음. %>
+      <% items_step2 = (steps["step2_items"] || {})["items"] || [] %>
+      <% sup_groups = step4["suppliers"].group_by do |sup|
+           kw = sup["item_keyword"].to_s.downcase
+           # step2 items 중 가장 가까운 것 찾기
+           match = items_step2.find { |it| it["name"].to_s.downcase.include?(kw) || kw.include?(it["name"].to_s.downcase) } if kw.present?
+           match ? [ match["idx"], match["name"] ] : [ 0, sup["item_keyword"].presence || "기타" ]
+         end %>
+      <%# 정렬: 품목 idx 순 %>
+      <% sup_groups = sup_groups.sort_by { |(idx, _name), _| idx.to_i } %>
+      <div class="space-y-4">
+        <% sup_groups.each do |(item_idx, item_name), sups| %>
+          <div class="border-l-4 border-brand-400 dark:border-brand-600 pl-3">
+            <%# 품목 헤더 %>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-[14px] font-bold text-ink-900 dark:text-white">
+                <% if item_idx > 0 %>#<%= item_idx %>. <% end %><%= item_name %>
+              </span>
+              <span class="text-[10px] text-ink-500">공급사 <%= sups.size %>건</span>
+              <%# 소스별 카운트 %>
+              <% sups.group_by { |s| s["source"] }.each do |src, list| %>
+                <span class="text-[10px] px-1.5 py-0.5 rounded
+                  <% case src
+                     when 'local_db' %>bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300
+                  <% when 'web_search' %>bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300
+                  <% when 'datago' %>bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300
+                  <% else %>bg-ink-100 dark:bg-ink-800 text-ink-600 dark:text-ink-300
+                  <% end %>">
+                  <% case src
+                     when 'local_db' %>🏠 DB
+                  <% when 'web_search' %>🔍 Web
+                  <% when 'datago' %>🇰🇷 조달청
+                  <% when 'google_cse' %>🌐 Google
+                  <% else %><%= src %><% end %>
+                  <%= list.size %>
+                </span>
+              <% end %>
             </div>
             <div class="overflow-x-auto rounded-md border border-ink-150 dark:border-ink-800">
               <table class="w-full text-[11px]">
@@ -328,12 +354,12 @@
                   <tr>
                     <th class="px-2 py-1.5 text-center w-8">선택</th>
                     <th class="px-2 py-1.5 text-left">업체명</th>
+                    <th class="px-2 py-1.5 text-left w-16">소스</th>
                     <th class="px-2 py-1.5 text-left w-20">거래이력</th>
                     <th class="px-2 py-1.5 text-left w-12">신뢰도</th>
                     <th class="px-2 py-1.5 text-left">이메일</th>
                     <th class="px-2 py-1.5 text-left">웹사이트</th>
                     <th class="px-2 py-1.5 text-left w-12">국가</th>
-                    <th class="px-2 py-1.5 text-left w-24">매칭 키워드</th>
                     <th class="px-2 py-1.5 text-left w-16">출처</th>
                   </tr>
                 </thead>
@@ -368,6 +394,16 @@
                         <% end %>
                       </td>
                       <td class="px-2 py-1.5 font-semibold text-ink-900 dark:text-white truncate max-w-[200px]" title="<%= sup["name"] %>"><%= sup["name"] %></td>
+                      <%# 소스 배지 — 출처 시각 구분 %>
+                      <td class="px-2 py-1.5">
+                        <% src = sup["source"].to_s %>
+                        <% case src
+                           when 'local_db' %><span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300">🏠 DB</span>
+                        <% when 'web_search' %><span class="text-[10px] px-1.5 py-0.5 rounded bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300">🔍 Web</span>
+                        <% when 'datago' %><span class="text-[10px] px-1.5 py-0.5 rounded bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300">🇰🇷 조달</span>
+                        <% when 'google_cse' %><span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300">🌐 GCSE</span>
+                        <% else %><span class="text-[10px] text-ink-400"><%= src %></span><% end %>
+                      </td>
                       <%# D-7 거래이력 (자체 DB 매칭에만) %>
                       <td class="px-2 py-1.5">
                         <% if sup["order_count"].to_i > 0 %>
@@ -392,7 +428,6 @@
                         <% if sup["website"].present? %><a href="<%= sup["website"] %>" target="_blank" rel="noopener" class="hover:underline text-brand-600"><%= sup["website"].sub(/^https?:\/\//, "")[0, 28] %></a><% else %>—<% end %>
                       </td>
                       <td class="px-2 py-1.5 text-ink-500"><%= sup["country"].presence || "—" %></td>
-                      <td class="px-2 py-1.5 text-[10px] text-ink-500 font-mono truncate max-w-[150px]"><%= sup["item_keyword"].to_s.truncate(20) %></td>
                       <td class="px-2 py-1.5">
                         <% if sup["source_url"].present? %>
                           <a href="<%= sup["source_url"] %>" target="_blank" rel="noopener" class="text-[10px] text-cyan-600 hover:underline" title="<%= sup["source_url"] %>">🔗 출처</a>
