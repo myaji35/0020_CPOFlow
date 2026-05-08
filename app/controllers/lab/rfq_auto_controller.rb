@@ -5,7 +5,7 @@
 # 분석은 동기 실행 (Phase 2에서 ActiveJob + Turbo Stream 진행률 스트리밍 도입).
 class Lab::RfqAutoController < ApplicationController
   before_action :require_admin_or_manager!
-  before_action :load_order, only: %i[show analyze apply feedback upload destroy_attachment]
+  before_action :load_order, only: %i[show analyze apply feedback upload destroy_attachment select_supplier send_rfq_emails]
 
   # GET /lab/rfq_auto — new_rfq 카드 + 샌드박스 카드 목록
   def index
@@ -125,6 +125,115 @@ class Lab::RfqAutoController < ApplicationController
     redirect_to lab_rfq_auto_path(@order), alert: "첨부를 찾을 수 없습니다."
   end
 
+  # POST /lab/rfq_auto/:id/select_supplier — D-5 공급사 선택/해제 (토글)
+  # params: analysis_id, item_idx, supplier_name, contact_email, website, country, source, confidence, supplier_id?
+  def select_supplier
+    analysis = @order.rfq_auto_analyses.find(params[:analysis_id])
+    item_idx = params[:item_idx].to_i
+    sup_name = params[:supplier_name].to_s.strip
+    return redirect_to lab_rfq_auto_path(@order), alert: "공급사 정보 부족" if sup_name.blank? || item_idx.zero?
+
+    existing = analysis.supplier_selections.find_by(item_idx: item_idx, supplier_name: sup_name)
+    if existing
+      existing.destroy
+      redirect_to lab_rfq_auto_path(@order), notice: "선택 해제: #{sup_name}"
+    else
+      analysis.supplier_selections.create!(
+        item_idx:           item_idx,
+        item_keyword:       params[:item_keyword],
+        supplier_name:      sup_name,
+        supplier_id:        params[:supplier_id].presence,
+        contact_email:      params[:contact_email],
+        contact_phone:      params[:contact_phone],
+        website:            params[:website],
+        country:            params[:country],
+        source:             params[:source],
+        confidence:         params[:confidence].to_i,
+        source_url:         params[:source_url],
+        selected_by_user_id: current_user.id
+      )
+      redirect_to lab_rfq_auto_path(@order), notice: "선택: #{sup_name}"
+    end
+  end
+
+  # POST /lab/rfq_auto/:id/send_rfq_emails — D-6 선택된 공급사들에게 멀티 이메일
+  def send_rfq_emails
+    analysis = @order.rfq_auto_analyses.find(params[:analysis_id])
+    selections = analysis.supplier_selections.pending_email.where.not(contact_email: [ nil, "" ])
+    return redirect_to lab_rfq_auto_path(@order), alert: "이메일 보낼 선택 공급사 없음 (이메일 주소 누락 또는 이미 발송)" if selections.empty?
+
+    items = (analysis.steps_data["step2_items"] || {})["items"] || []
+    attachments_data = @order.attachments_attachments.includes(:blob).first(5).map do |att|
+      next nil if att.blob.byte_size > 10.megabytes
+      { filename: att.blob.filename.to_s, content_type: att.blob.content_type, body: att.blob.download }
+    rescue StandardError
+      nil
+    end.compact
+
+    sent = 0
+    failed = []
+    selections.each do |sel|
+      RfqAutoMailer.with(
+        selection:        sel,
+        order:            @order,
+        items:            items,
+        attachments_data: attachments_data,
+        from_user:        current_user
+      ).rfq_inquiry.deliver_later
+      sel.update!(emailed_at: Time.current)
+      sent += 1
+    rescue StandardError => e
+      failed << "#{sel.supplier_name}: #{e.message.truncate(80)}"
+    end
+
+    msg = "이메일 발송 큐잉: #{sent}건"
+    msg += " · 실패 #{failed.size}건 (#{failed.first(3).join('; ')})" if failed.any?
+    redirect_to lab_rfq_auto_path(@order), notice: msg
+  end
+
+  # GET/POST /lab/rfq_auto/import_suppliers — D-4 CSV/표 붙여넣기
+  # params: text (TSV/CSV with headers: 품목,업체명,이메일,홈페이지[,전화,국가])
+  def import_suppliers
+    if request.post?
+      raw = params[:text].to_s
+      return redirect_to import_suppliers_lab_rfq_auto_index_path, alert: "텍스트 비어 있음" if raw.strip.blank?
+
+      rows = parse_tsv_or_csv(raw)
+      return redirect_to import_suppliers_lab_rfq_auto_index_path, alert: "헤더 행 인식 실패 (품목/업체명/이메일/홈페이지 필요)" if rows.blank?
+
+      saved = 0
+      skipped = 0
+      rows.each do |row|
+        name = row["업체명"] || row["company"] || row["name"]
+        item = row["품목"]   || row["item"]
+        next if name.to_s.strip.blank?
+
+        normalized = name.to_s.strip.downcase
+        if Supplier.where("LOWER(TRIM(name)) = ?", normalized).exists?
+          skipped += 1
+          next
+        end
+
+        Supplier.create!(
+          name:           name.to_s.strip[0, 200],
+          contact_email:  (row["이메일"] || row["email"]).to_s[0, 100],
+          contact_phone:  (row["전화"]   || row["phone"]).to_s[0, 50],
+          website:        (row["홈페이지"] || row["website"]).to_s[0, 250],
+          country:        (row["국가"]   || row["country"]).to_s[0, 10],
+          auto_imported:  true,
+          import_source:  "csv_upload",
+          discovered_for: item.to_s[0, 200],
+          notes:          "CSV/표 import — by #{current_user.display_name}"
+        )
+        saved += 1
+      end
+      redirect_to import_suppliers_lab_rfq_auto_index_path,
+                  notice: "import 완료: 신규 #{saved}건 / 중복 skip #{skipped}건"
+    else
+      @recent_imports = Supplier.where(import_source: "csv_upload").order("suppliers.created_at DESC").limit(20)
+    end
+  end
+
   # POST /lab/rfq_auto/:id/feedback?value=correct/wrong/partial
   def feedback
     analysis_id = params[:analysis_id].to_i
@@ -175,6 +284,18 @@ class Lab::RfqAutoController < ApplicationController
     end
 
     { tasks: created_tasks, items: items.size }
+  end
+
+  # TSV(탭 구분) 또는 CSV 본문을 hash 배열로. 첫 줄 헤더.
+  def parse_tsv_or_csv(text)
+    lines = text.split(/\r?\n/).map(&:strip).reject(&:blank?)
+    return [] if lines.size < 2
+    sep = lines.first.include?("\t") ? "\t" : ","
+    headers = lines.shift.split(sep).map(&:strip)
+    lines.map do |line|
+      vals = line.split(sep).map(&:strip)
+      headers.zip(vals).to_h
+    end
   end
 
   def require_admin_or_manager!

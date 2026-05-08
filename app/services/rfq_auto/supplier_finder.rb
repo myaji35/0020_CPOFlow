@@ -52,11 +52,16 @@ module RfqAuto
     private
 
     # ── Anthropic Web Search Tool — 신뢰도 60~90 (모델 추정) ────
+    # D-3: 신뢰도 70+ 결과를 Supplier 테이블에 자동 저장 → 다음 분석부터 자체 DB hit.
     def search_web
       result = RfqAuto::WebSupplierFinder.new(@items, max_per_item: @max).call
       @web_cost_usd  = result[:cost_usd].to_f
       @web_model     = result[:model]
       @web_citations = result[:citations] || []
+
+      # D-3: 신뢰도 70+ 자동 저장
+      auto_save_high_confidence(result[:suppliers] || [])
+
       result
     rescue RfqAuto::WebSupplierFinder::AnthropicCreditError => e
       @web_error = "❗ Anthropic 잔액 부족 — 충전 후 재시도 (#{e.message.truncate(100)})"
@@ -68,20 +73,74 @@ module RfqAuto
       { suppliers: [] }
     end
 
+    # 신뢰도 70+ + 이름/이메일/홈페이지 중 2개 이상 있으면 자동 저장.
+    # 같은 이름 이미 있으면 skip (중복 차단).
+    def auto_save_high_confidence(web_suppliers)
+      return if web_suppliers.blank?
+      saved = 0
+      web_suppliers.each do |s|
+        next if s[:confidence].to_i < 70
+        next if s[:name].to_s.strip.blank?
+        present_fields = [ s[:email], s[:website] ].count(&:present?)
+        next if present_fields < 1  # 최소 이메일 또는 홈페이지
+
+        # 이름 정규화 매칭 (대소문자/공백 무시)
+        normalized = s[:name].to_s.strip.downcase
+        existing = Supplier.where("LOWER(TRIM(name)) = ?", normalized).first
+        next if existing  # 이미 있으면 skip
+
+        Supplier.create!(
+          name:           s[:name].to_s.strip[0, 200],
+          contact_email:  s[:email].to_s[0, 100],
+          contact_phone:  s[:phone].to_s[0, 50],
+          website:        s[:website].to_s[0, 250],
+          country:        s[:country].to_s[0, 10],
+          auto_imported:  true,
+          import_source:  "web_search",
+          discovered_for: s[:item_keyword].to_s[0, 200],
+          source_url:     s[:source_url].to_s[0, 500],
+          notes:          "자동 import — Web Search (신뢰도 #{s[:confidence]}). #{s[:notes]}".strip[0, 500]
+        )
+        saved += 1
+      end
+      Rails.logger.info "[SupplierFinder] auto-imported #{saved} suppliers from web_search" if saved > 0
+    rescue StandardError => e
+      Rails.logger.warn "[SupplierFinder] auto_save 실패: #{e.class}: #{e.message}"
+    end
+
     # ── 자체 Supplier DB — 신뢰도 90 ─────────────────────────────
+    # D-7: 과거 거래이력 메타 함께 반환 (Order 건수, 총 추정가, 최근 거래일)
+    # auto_imported 자동 등록은 60점 (검증 안 된 자동 import — 실 거래 시 90으로 승격).
     def search_local(keyword)
       Supplier.where("name LIKE ? OR ecount_code LIKE ?", "%#{keyword}%", "%#{keyword}%")
               .limit(@max)
               .map do |s|
+        order_count = (s.orders.count rescue 0)
+        order_value = (s.orders.sum(:estimated_value).to_f rescue 0.0)
+        last_order  = (s.orders.maximum(:created_at) rescue nil)
+        confidence = if s.try(:auto_imported) && order_count == 0
+                       60  # 자동 import 미검증
+                     elsif order_count >= 5
+                       95  # 다회 거래 검증됨
+                     else
+                       85  # 일반 등록
+                     end
         {
           source:        "local_db",
-          confidence:    90,
+          confidence:    confidence,
           name:          s.name,
-          email:         s.try(:email),
-          phone:         s.try(:phone),
+          email:         s.try(:contact_email) || s.try(:email),
+          phone:         s.try(:contact_phone) || s.try(:phone),
           website:       s.try(:website),
           country:       s.try(:country),
-          item_keyword:  keyword
+          item_keyword:  keyword,
+          source_url:    s.try(:source_url),
+          # D-7 거래이력
+          order_count:   order_count,
+          order_value:   order_value,
+          last_order_at: last_order,
+          auto_imported: s.try(:auto_imported) || false,
+          supplier_id:   s.id  # D-5/D-6 선택/이메일 발송용
         }
       end
     rescue StandardError => e

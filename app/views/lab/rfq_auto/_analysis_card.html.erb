@@ -5,6 +5,8 @@
 %>
 <% steps = (transient_steps if defined?(transient_steps) && transient_steps.is_a?(Hash) && transient_steps.any?) || analysis.steps_data %>
 <% summary = analysis.summary_data %>
+<%# D-5 선택된 공급사 인덱스 — (item_idx, supplier_name) → selection 객체 %>
+<% selections_index = analysis.supplier_selections.includes(:supplier).index_by { |s| [ s.item_idx, s.supplier_name ] } rescue {} %>
 
 <div id="rfq-auto-analysis-<%= analysis.id %>"
      data-status="<%= analysis.status %>">
@@ -324,10 +326,11 @@
               <table class="w-full text-[11px]">
                 <thead class="bg-ink-50 dark:bg-ink-800 text-[10px] uppercase tracking-wider text-ink-600 dark:text-ink-300">
                   <tr>
+                    <th class="px-2 py-1.5 text-center w-8">선택</th>
                     <th class="px-2 py-1.5 text-left">업체명</th>
+                    <th class="px-2 py-1.5 text-left w-20">거래이력</th>
                     <th class="px-2 py-1.5 text-left w-12">신뢰도</th>
                     <th class="px-2 py-1.5 text-left">이메일</th>
-                    <th class="px-2 py-1.5 text-left">전화</th>
                     <th class="px-2 py-1.5 text-left">웹사이트</th>
                     <th class="px-2 py-1.5 text-left w-12">국가</th>
                     <th class="px-2 py-1.5 text-left w-24">매칭 키워드</th>
@@ -335,9 +338,48 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-ink-100 dark:divide-ink-800 bg-white dark:bg-ink-900">
-                  <% sups.first(10).each do |sup| %>
-                    <tr>
+                  <% sups.first(10).each_with_index do |sup, sup_idx| %>
+                    <% items_step = (steps["step2_items"] || {})["items"] || [] %>
+                    <% matching_item = items_step.find { |it| it["name"].to_s.downcase.include?(sup["item_keyword"].to_s.downcase) || sup["item_keyword"].to_s.downcase.include?(it["name"].to_s.downcase) } %>
+                    <% item_idx = matching_item ? matching_item["idx"] : (sup_idx + 1) %>
+                    <% sel = selections_index[[ item_idx, sup["name"] ]] %>
+                    <% selected = !sel.nil? %>
+                    <tr class="<%= 'bg-emerald-50/30 dark:bg-emerald-900/10' if selected %>">
+                      <%# D-5 선택 체크박스 (button_to 토글) %>
+                      <td class="px-2 py-1.5 text-center">
+                        <%= button_to select_supplier_lab_rfq_auto_path(analysis.order, analysis_id: analysis.id),
+                                method: :post,
+                                params: {
+                                  item_idx:       item_idx,
+                                  item_keyword:   sup["item_keyword"],
+                                  supplier_name:  sup["name"],
+                                  supplier_id:    sup["supplier_id"],
+                                  contact_email:  sup["email"],
+                                  contact_phone:  sup["phone"],
+                                  website:        sup["website"],
+                                  country:        sup["country"],
+                                  source:         sup["source"],
+                                  confidence:     sup["confidence"],
+                                  source_url:     sup["source_url"]
+                                },
+                                class: "inline-flex items-center justify-center w-6 h-6 rounded border #{selected ? 'bg-emerald-500 border-emerald-600 text-white' : 'border-ink-300 hover:border-brand-400'}",
+                                title: selected ? "선택 해제" : "선택" do %>
+                          <%= selected ? "✓" : "" %>
+                        <% end %>
+                      </td>
                       <td class="px-2 py-1.5 font-semibold text-ink-900 dark:text-white truncate max-w-[200px]" title="<%= sup["name"] %>"><%= sup["name"] %></td>
+                      <%# D-7 거래이력 (자체 DB 매칭에만) %>
+                      <td class="px-2 py-1.5">
+                        <% if sup["order_count"].to_i > 0 %>
+                          <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300" title="총 거래액 $<%= number_with_delimiter(sup["order_value"].to_i) rescue sup["order_value"] %>">
+                            <%= sup["order_count"] %>건<% if sup["last_order_at"] %> · <%= time_ago_in_words(sup["last_order_at"]) rescue '' %><% end %>
+                          </span>
+                        <% elsif sup["auto_imported"] %>
+                          <span class="text-[10px] px-1.5 py-0.5 rounded bg-fuchsia-50 dark:bg-fuchsia-900/30 text-fuchsia-700 dark:text-fuchsia-300" title="자동 import — 미검증">자동</span>
+                        <% else %>
+                          <span class="text-[10px] text-ink-400">신규</span>
+                        <% end %>
+                      </td>
                       <td class="px-2 py-1.5">
                         <% conf = sup["confidence"].to_i %>
                         <% conf_color = conf >= 80 ? "emerald" : (conf >= 60 ? "amber" : "ink") %>
@@ -346,7 +388,6 @@
                       <td class="px-2 py-1.5 text-ink-700 dark:text-ink-200 truncate max-w-[180px]">
                         <% if sup["email"].present? %><a href="mailto:<%= sup["email"] %>" class="hover:underline text-brand-600"><%= sup["email"] %></a><% else %>—<% end %>
                       </td>
-                      <td class="px-2 py-1.5 text-ink-700 dark:text-ink-200"><%= sup["phone"].presence || "—" %></td>
                       <td class="px-2 py-1.5 truncate max-w-[200px]">
                         <% if sup["website"].present? %><a href="<%= sup["website"] %>" target="_blank" rel="noopener" class="hover:underline text-brand-600"><%= sup["website"].sub(/^https?:\/\//, "")[0, 28] %></a><% else %>—<% end %>
                       </td>
@@ -388,6 +429,27 @@
           품목 0개로 탐색 skip — 품목 추출 후 다시 분석해주세요.
         </div>
       <% end %>
+    <% end %>
+
+    <%# D-5/D-6 선택 요약 + 멀티 발송 %>
+    <% selected_count = selections_index.size %>
+    <% pending_email = selections_index.values.count { |s| s.contact_email.present? && !s.emailed? } rescue 0 %>
+    <% emailed = selections_index.values.count(&:emailed?) rescue 0 %>
+    <% if selected_count > 0 || pending_email > 0 %>
+      <div class="mt-3 p-3 rounded-md bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700 flex items-center justify-between gap-3 flex-wrap">
+        <div class="text-[12px] text-emerald-800 dark:text-emerald-200">
+          ✅ 선택된 공급사 <strong><%= selected_count %></strong>건 ·
+          📨 발송 대기 <strong><%= pending_email %></strong>건 ·
+          ✓ 발송 완료 <strong><%= emailed %></strong>건
+        </div>
+        <% if pending_email > 0 %>
+          <%= button_to send_rfq_emails_lab_rfq_auto_path(analysis.order, analysis_id: analysis.id), method: :post,
+                  data: { turbo_confirm: "선택된 공급사 #{pending_email}곳에 RFQ 견적 요청 이메일을 발송합니다. 계속하시겠습니까?" },
+                  class: "shrink-0 inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] font-semibold rounded transition-colors" do %>
+            📨 선택 공급사 <%= pending_email %>곳에 RFQ 발송
+          <% end %>
+        <% end %>
+      </div>
     <% end %>
     <% end %>
 

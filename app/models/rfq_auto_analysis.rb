@@ -8,6 +8,8 @@ class RfqAutoAnalysis < ApplicationRecord
 
   belongs_to :order
   belongs_to :user
+  has_many :supplier_selections, class_name: "RfqAutoSupplierSelection",
+                                  foreign_key: :rfq_auto_analysis_id, dependent: :destroy
 
   validates :status, inclusion: { in: STATUSES }
   validates :feedback, inclusion: { in: FEEDBACKS }, allow_nil: true

@@ -1,0 +1,59 @@
+<% content_for :page_title, "🔬 LAB · 공급사 마스터 import" %>
+
+<div class="px-6 py-6 max-w-[1000px] mx-auto">
+  <header class="mb-5">
+    <div class="flex items-center gap-2 mb-1">
+      <%= link_to "← LAB 목록", lab_rfq_auto_index_path, class: "text-[12px] text-ink-500 hover:text-brand-600" %>
+      <span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300">LAB · D-4</span>
+    </div>
+    <h1 class="text-lg font-semibold text-ink-900 dark:text-white">📋 공급사 마스터 import</h1>
+    <p class="text-[12px] text-ink-600 dark:text-ink-300 mt-1">
+      BNPP 품목별 거래처 리스트 같은 사람 큐레이션 데이터를 일괄 등록 — 다음 분석부터 자체 DB에서 hit.
+    </p>
+  </header>
+
+  <%= form_with url: import_suppliers_lab_rfq_auto_index_path, method: :post, local: true, data: { turbo: false }, class: "mb-6" do |f| %>
+    <div class="mb-3">
+      <label class="block text-[12px] font-semibold mb-1">붙여넣을 표 (TSV — 탭 구분 / CSV — 콤마 구분)</label>
+      <p class="text-[11px] text-ink-500 mb-2">
+        첫 줄은 헤더. 필수: <code>품목</code> 또는 <code>item</code>, <code>업체명</code> 또는 <code>name</code>.<br>
+        선택: <code>이메일</code>/<code>email</code>, <code>홈페이지</code>/<code>website</code>, <code>전화</code>/<code>phone</code>, <code>국가</code>/<code>country</code>
+      </p>
+      <textarea name="text" rows="14"
+                class="w-full font-mono text-[12px] border border-ink-200 dark:border-ink-700 rounded-md p-3 bg-white dark:bg-ink-800"
+                placeholder="품목&#9;업체명&#9;이메일&#9;홈페이지&#9;국가&#10;Electric Motor (SR)&#9;Meidensha Korea&#9;sales_kr@meidensha.com&#9;www.meidensha.co.kr&#9;KR&#10;Electric Motor (SR)&#9;Doosan Enerbility&#9;nuclear.sales@doosan.com&#9;www.doosanenerbility.com&#9;KR&#10;..."></textarea>
+    </div>
+    <%= f.submit "📋 import 실행",
+            class: "inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[13px] font-semibold rounded-md cursor-pointer" %>
+    <span class="ml-2 text-[11px] text-ink-500">중복 업체명은 자동 skip — 안전</span>
+  <% end %>
+
+  <%# 최근 import 이력 %>
+  <% if @recent_imports.any? %>
+    <h2 class="text-[13px] font-semibold mb-2 text-ink-900 dark:text-white">최근 import (CSV)</h2>
+    <div class="overflow-x-auto rounded-md border border-ink-150 dark:border-ink-800">
+      <table class="w-full text-[12px]">
+        <thead class="bg-ink-50 dark:bg-ink-800 text-[10px] uppercase tracking-wider text-ink-600 dark:text-ink-300">
+          <tr>
+            <th class="px-2 py-1.5 text-left">업체명</th>
+            <th class="px-2 py-1.5 text-left">품목 키워드</th>
+            <th class="px-2 py-1.5 text-left">이메일</th>
+            <th class="px-2 py-1.5 text-left">홈페이지</th>
+            <th class="px-2 py-1.5 text-left">등록</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-ink-100 dark:divide-ink-800 bg-white dark:bg-ink-900">
+          <% @recent_imports.each do |s| %>
+            <tr>
+              <td class="px-2 py-1.5 font-semibold text-ink-900 dark:text-white"><%= s.name %></td>
+              <td class="px-2 py-1.5 text-ink-700 dark:text-ink-200"><%= s.try(:discovered_for) %></td>
+              <td class="px-2 py-1.5"><%= s.contact_email %></td>
+              <td class="px-2 py-1.5"><%= s.website %></td>
+              <td class="px-2 py-1.5 text-ink-500"><%= time_ago_in_words(s.created_at) rescue '' %> 전</td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+</div>

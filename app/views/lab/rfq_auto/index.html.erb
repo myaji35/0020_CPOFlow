@@ -24,13 +24,20 @@
       <% end %>
     <% end %>
 
-    <%# Sandbox 카드 생성 — 임의 파일 업로드 + 분석 점검용 %>
-    <%= button_to sandbox_lab_rfq_auto_index_path, method: :post,
-            data: { turbo_confirm: "운영에 영향 없는 LAB 전용 Sandbox 카드를 생성합니다." },
-            class: "inline-flex items-center gap-2 px-3 py-2 text-[13px] font-semibold rounded-md bg-fuchsia-600 hover:bg-fuchsia-700 text-white transition-colors shadow-sh-1" do %>
-      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      🧪 Sandbox 생성 (테스트용)
-    <% end %>
+    <div class="flex items-center gap-2">
+      <%# 마스터 import — 사람 큐레이션 데이터 시드 %>
+      <%= link_to import_suppliers_lab_rfq_auto_index_path,
+              class: "inline-flex items-center gap-2 px-3 py-2 text-[13px] font-semibold rounded-md bg-blue-600 hover:bg-blue-700 text-white transition-colors shadow-sh-1" do %>
+        📋 공급사 마스터 import
+      <% end %>
+      <%# Sandbox 카드 생성 — 임의 파일 업로드 + 분석 점검용 %>
+      <%= button_to sandbox_lab_rfq_auto_index_path, method: :post,
+              data: { turbo_confirm: "운영에 영향 없는 LAB 전용 Sandbox 카드를 생성합니다." },
+              class: "inline-flex items-center gap-2 px-3 py-2 text-[13px] font-semibold rounded-md bg-fuchsia-600 hover:bg-fuchsia-700 text-white transition-colors shadow-sh-1" do %>
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        🧪 Sandbox 생성 (테스트용)
+      <% end %>
+    </div>
   </div>
 
   <div class="bg-white dark:bg-ink-900 border border-ink-150 dark:border-ink-800 rounded-lg overflow-hidden shadow-sh-1">

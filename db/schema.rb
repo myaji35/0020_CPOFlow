@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_08_031846) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_08_064104) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -724,6 +724,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_08_031846) do
     t.index ["user_id", "created_at"], name: "index_rfq_auto_analyses_on_user_id_and_created_at"
   end
 
+  create_table "rfq_auto_supplier_selections", force: :cascade do |t|
+    t.integer "confidence"
+    t.string "contact_email"
+    t.string "contact_phone"
+    t.string "country"
+    t.datetime "created_at", null: false
+    t.datetime "emailed_at"
+    t.integer "item_idx", null: false
+    t.string "item_keyword"
+    t.integer "rfq_auto_analysis_id", null: false
+    t.integer "selected_by_user_id", null: false
+    t.string "source"
+    t.string "source_url"
+    t.integer "supplier_id"
+    t.string "supplier_name", null: false
+    t.datetime "updated_at", null: false
+    t.string "website"
+    t.index ["rfq_auto_analysis_id", "item_idx", "supplier_name"], name: "idx_rfq_supplier_sel_unique", unique: true
+    t.index ["rfq_auto_analysis_id"], name: "idx_rfq_supplier_sel_analysis"
+  end
+
   create_table "rfq_feedbacks", force: :cascade do |t|
     t.float "ai_score"
     t.datetime "created_at", null: false
@@ -773,6 +794,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_08_031846) do
   create_table "suppliers", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.string "address"
+    t.boolean "auto_imported", default: false, null: false
     t.string "code"
     t.string "contact_email"
     t.string "contact_phone"
@@ -781,19 +803,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_08_031846) do
     t.string "credit_grade"
     t.string "currency", default: "USD"
     t.integer "default_assignee_id"
+    t.string "discovered_for"
     t.string "ecount_code"
     t.json "ecount_snapshot"
     t.datetime "ecount_synced_at"
+    t.string "import_source"
     t.string "industry"
     t.integer "lead_time_days"
     t.string "name"
     t.text "notes"
     t.string "payment_terms"
+    t.string "source_url"
     t.datetime "updated_at", null: false
     t.string "website"
+    t.index ["auto_imported"], name: "index_suppliers_on_auto_imported"
     t.index ["code"], name: "index_suppliers_on_code", unique: true
     t.index ["default_assignee_id"], name: "index_suppliers_on_default_assignee_id"
     t.index ["ecount_code"], name: "index_suppliers_on_ecount_code"
+    t.index ["import_source"], name: "index_suppliers_on_import_source"
   end
 
   create_table "tasks", force: :cascade do |t|

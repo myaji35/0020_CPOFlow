@@ -33,60 +33,89 @@ module RfqAuto
     class AnthropicCreditError < StandardError; end
 
     SYSTEM_PROMPT = <<~PROMPT.freeze
-      You are a procurement researcher. Use web search to find verified suppliers.
+      You are a procurement researcher specializing in B2B suppliers for industrial/MRO procurement.
 
-      For each item below, search the web and return suppliers focusing on:
-      - South Korea and UAE first (primary markets)
-      - Manufacturer/distributor official websites preferred over directories
-      - Verify contact info (email, phone) from the actual company page
+      Search the web thoroughly to find verified suppliers. For EACH item, find suppliers from
+      MULTIPLE markets:
+      - 🇰🇷 South Korea (manufacturers + distributors — Hyosung, LS, Doosan, Samsung, etc.)
+      - 🇦🇪 UAE (local distributors and importers — Dubai/Abu Dhabi based)
+      - 🌐 Global (US/EU/JP OEMs — DuPont, 3M, Schneider, ABB, Siemens, etc.)
+
+      Search strategy:
+      - Try multiple search queries per item (manufacturer, distributor, "buy", "supplier", "+UAE")
+      - Visit official company sites to verify contact info
+      - Prefer manufacturer/authorized distributor over generic marketplaces
 
       Return ONLY a JSON object (no markdown, no commentary):
       {
         "suppliers": [
           {
             "item_keyword": "product name searched",
-            "name": "Company Name",
-            "country": "KR / AE / US / DE / CN / etc",
-            "website": "https://...",
-            "contact_email": "sales@...",
+            "name": "Company Name (subsidiary if relevant, e.g. 'DuPont Korea')",
+            "country": "KR / AE / US / DE / JP / CN / etc",
+            "website": "https://www.example.com (official, not directory)",
+            "contact_email": "sales@example.com",
             "phone": "+82-2-...",
             "source_url": "URL where you found this info",
-            "confidence": 75
+            "confidence": 75,
+            "notes": "official manufacturer / authorized distributor / general distributor"
           }
         ]
       }
 
       Rules:
-      - 3-5 suppliers per item maximum
+      - 5-10 suppliers per item (다양한 출처 보장 — KR + UAE + Global 골고루)
       - confidence 0-100 (90+ = official site verified, 70+ = directory listing, 50+ = mentioned in catalog)
-      - skip if no real supplier found (don't hallucinate)
+      - skip if no real supplier found (don't hallucinate). 빈 배열 OK.
       - source_url is REQUIRED for verification
+      - Korean companies: prefer .co.kr / .kr domains
+      - UAE companies: prefer .ae / .com domains with UAE address
     PROMPT
 
-    def initialize(items, max_per_item: 5)
-      @items = items.is_a?(Array) ? items.first(3) : []  # 비용 통제 — 최대 3품목/호출
+    # D-1: 한 번에 1개 품목만 처리 — 깊이 있는 검색 보장 (이전: 3품목 묶음 → 첫 품목만 깊게)
+    def initialize(items, max_per_item: 8)
+      @items = items.is_a?(Array) ? items : []
       @max_per_item = max_per_item
     end
 
     def call
       return empty_result(reason: "no items") if @items.empty?
 
-      keywords = @items.map { |i| (i.is_a?(Hash) ? (i[:name] || i["name"]) : nil).to_s.strip }.reject(&:blank?)
-      return empty_result(reason: "no keywords") if keywords.empty?
-
       token_info = ClaudeTokenResolver.resolve
       return empty_result(reason: "no api key") if token_info.nil?
 
-      user_msg = "Find suppliers for these procurement items (search the web):\n\n" +
-                 keywords.map.with_index(1) { |k, i| "#{i}. #{k}" }.join("\n")
+      all_suppliers = []
+      total_input  = 0
+      total_output = 0
+      all_citations = []
 
-      response = post_messages(token_info, user_msg)
-      return empty_result(reason: "api failed") unless response
+      # D-1: 품목당 개별 호출 — 각 품목마다 max_uses 검색 회수 보장
+      @items.first(5).each do |item|  # 최대 5품목 (비용 통제)
+        keyword = (item.is_a?(Hash) ? (item[:name] || item["name"]) : nil).to_s.strip
+        next if keyword.blank?
 
-      input_tokens, output_tokens, suppliers, citations = parse_response(response)
-      cost = (input_tokens.to_f * INPUT_PER_MTOK + output_tokens.to_f * OUTPUT_PER_MTOK) / 1_000_000
+        user_msg = "Find verified suppliers for this procurement item (search web in KR, UAE, global):\n\nItem: #{keyword}"
+        if item.is_a?(Hash)
+          spec = item[:spec] || item["spec"]
+          user_msg += "\nSpec: #{spec}" if spec.present?
+        end
 
-      enriched = suppliers.map do |s|
+        response = post_messages(token_info, user_msg)
+        next unless response
+
+        input_tokens, output_tokens, suppliers, citations = parse_response(response)
+        total_input  += input_tokens
+        total_output += output_tokens
+        all_citations.concat(citations)
+
+        # 모델이 item_keyword 안 채우면 우리가 채움
+        suppliers.each { |s| s["item_keyword"] ||= keyword }
+        all_suppliers.concat(suppliers)
+      end
+
+      cost = (total_input.to_f * INPUT_PER_MTOK + total_output.to_f * OUTPUT_PER_MTOK) / 1_000_000
+
+      enriched = all_suppliers.map do |s|
         {
           source:        "web_search",
           confidence:    (s["confidence"] || 60).to_i,
@@ -96,7 +125,8 @@ module RfqAuto
           website:       s["website"],
           country:       s["country"],
           item_keyword:  s["item_keyword"],
-          source_url:    s["source_url"]
+          source_url:    s["source_url"],
+          notes:         s["notes"]
         }
       end
 
@@ -104,9 +134,9 @@ module RfqAuto
         suppliers:     enriched,
         cost_usd:      cost.round(4),
         model:         MODEL,
-        input_tokens:  input_tokens,
-        output_tokens: output_tokens,
-        citations:     citations
+        input_tokens:  total_input,
+        output_tokens: total_output,
+        citations:     all_citations
       }
     end
 
@@ -136,8 +166,8 @@ module RfqAuto
         model:      MODEL,
         max_tokens: MAX_TOKENS,
         system:     SYSTEM_PROMPT,
-        # Anthropic web_search tool — 모델이 직접 google fetch + 인용
-        tools:      [ { type: "web_search_20250305", name: "web_search", max_uses: 5 } ],
+        # D-2: max_uses 5→10 — 한 품목당 다양한 시장(KR/UAE/Global) 검색 보장
+        tools:      [ { type: "web_search_20250305", name: "web_search", max_uses: 10 } ],
         messages:   [ { role: "user", content: user_msg } ]
       }.to_json
 

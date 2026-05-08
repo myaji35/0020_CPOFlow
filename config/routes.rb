@@ -126,13 +126,17 @@ Rails.application.routes.draw do
   namespace :lab do
     resources :rfq_auto, only: %i[index show] do
       collection do
-        post :sandbox    # 새 샌드박스 Order 생성
+        post :sandbox          # 새 샌드박스 Order 생성
+        get  :import_suppliers # CSV/표 import 폼
+        post :import_suppliers # CSV/표 import 처리
       end
       member do
         post   :analyze                                # 분석 실행
         post   :apply                                  # 결과를 Order에 반영
         post   :feedback                               # 사용자 피드백
         post   :upload                                 # 첨부 업로드 (+ 즉시 분석 옵션)
+        post   :select_supplier                        # D-5 공급사 선택/해제 (토글)
+        post   :send_rfq_emails                        # D-6 선택된 공급사들에게 RFQ 이메일 발송
         delete "attachments/:attachment_id", to: "rfq_auto#destroy_attachment", as: :attachment
       end
     end
