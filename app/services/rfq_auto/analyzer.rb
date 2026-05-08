@@ -149,27 +149,67 @@ module RfqAuto
       (base * (confidence || 0.5)).round
     end
 
-    # ── Step 2 — 품목 + 11항목 누락 체크 ──────────────────────────
+    # ── Step 2 — 품목 + 11항목 누락 체크 (Phase 4: A+C 적용) ───────
+    # 흐름:
+    #   1. 텍스트 추출 (build_combined_text — pdf/docx/.doc/xlsx/html/txt)
+    #   2. 텍스트 < 50자면 OCR fallback 시도 (자체 서버 tesseract, 무료)
+    #   3. ItemExtractor (Sonnet 4.6) 호출 → 비용/토큰 누적
+    #   4. 0건이면 Opus 4.7 escalate 1회 (RFP_ITEM_MODEL=claude-opus-4-7 임시 override)
+    #   5. 그래도 0건 + PDF/이미지 첨부 있으면 Vision 폴백 (Sonnet)
     def step2_extract_items
       combined_text = build_combined_text
-      text_preview  = combined_text.to_s.strip[0, 2000]
       text_chars    = combined_text.to_s.length
 
-      return { status: "skipped", reason: "텍스트 추출 실패 — PDF 도면이거나 OCR 필요", items: [],
-               text_preview: nil, text_chars: 0, doc_level_missing: REQUIRED_FIELDS.dup,
-               doc_level_missing_labels: REQUIRED_FIELDS.map { |f| REQUIRED_FIELD_LABELS[f] } } if combined_text.blank?
-
-      llm_error = nil
-      raw = begin
-        Rfp::ItemExtractor.call(combined_text) if combined_text.length >= 50
-      rescue StandardError => e
-        llm_error = "#{e.class}: #{e.message}"
-        Rails.logger.warn "[RfqAuto::Analyzer] step2 ItemExtractor 실패: #{llm_error}"
-        nil
+      # OCR 폴백 — 텍스트 < 50자이고 OCR 가능 첨부가 있을 때
+      ocr_used = false
+      if text_chars < 50 && @order.attachments.any? { |a| a.blob.filename.to_s.match?(/\.(pdf|png|jpg|jpeg|tiff|bmp)$/i) }
+        ocr_text = RfqAuto::OcrTextExtractor.new(@order, max_pages: 5).call rescue nil
+        if ocr_text.present? && ocr_text.length > 50
+          combined_text = "#{combined_text}\n\n=== OCR 추출 ===\n#{ocr_text}"
+          text_chars = combined_text.length
+          ocr_used = true
+          Rails.logger.info "[RfqAuto::Analyzer] OCR 폴백 성공: #{ocr_text.length}자 추출"
+        end
       end
-      items = (raw.is_a?(Hash) ? raw[:items] : raw) || []
 
-      # Vision 폴백 — 텍스트 < 50자 또는 품목 0개 + PDF/이미지 첨부 있을 때 Sonnet Vision 호출.
+      text_preview = combined_text.to_s.strip[0, 2000]
+
+      if combined_text.blank?
+        return { status: "skipped", reason: "텍스트 추출 실패 — OCR 미설치 또는 인식 불가", items: [],
+                 text_preview: nil, text_chars: 0, doc_level_missing: REQUIRED_FIELDS.dup,
+                 doc_level_missing_labels: REQUIRED_FIELDS.map { |f| REQUIRED_FIELD_LABELS[f] },
+                 ocr_used: ocr_used, vision_used: false }
+      end
+
+      # 1차 ItemExtractor (Sonnet 기본)
+      llm_error = nil
+      raw = run_item_extractor(combined_text) { |err| llm_error = err }
+      items = (raw.is_a?(Hash) ? raw["items"] : nil) || []
+      llm_cost = raw.is_a?(Hash) ? raw["_cost_usd"].to_f : 0.0
+      llm_model = raw.is_a?(Hash) ? raw["_model"] : nil
+      @total_cost += llm_cost
+
+      # Opus escalation — Sonnet이 0건이면 Opus로 1회 재시도
+      escalated = false
+      escalation_cost = 0.0
+      if items.empty? && llm_error.nil? && combined_text.length >= 50
+        ENV["RFP_ITEM_MODEL"] = "claude-opus-4-7"
+        begin
+          retry_raw = run_item_extractor(combined_text) { |err| llm_error = err }
+          if retry_raw.is_a?(Hash) && retry_raw["items"].is_a?(Array) && retry_raw["items"].any?
+            items = retry_raw["items"]
+            escalated = true
+            escalation_cost = retry_raw["_cost_usd"].to_f
+            llm_model = retry_raw["_model"]
+            @total_cost += escalation_cost
+            Rails.logger.info "[RfqAuto::Analyzer] Opus escalation 성공: #{items.size}품 cost=$#{escalation_cost}"
+          end
+        ensure
+          ENV.delete("RFP_ITEM_MODEL")
+        end
+      end
+
+      # Vision 폴백 — 그래도 0건 + 이미지/PDF 첨부 있을 때
       vision_used = false
       vision_cost = 0.0
       vision_pages = 0
@@ -233,8 +273,14 @@ module RfqAuto
         text_chars:               text_chars,
         text_preview:             text_preview,
         llm_error:                llm_error,
+        llm_model:                llm_model,
+        llm_cost_usd:             llm_cost.round(4),
         doc_level_missing:        doc_missing,
         doc_level_missing_labels: doc_missing.map { |f| REQUIRED_FIELD_LABELS[f] },
+        ocr_used:                 ocr_used,
+        # Opus escalation 메타
+        escalated:                escalated,
+        escalation_cost_usd:      escalation_cost.round(4),
         # Vision 폴백 메타 정보
         vision_used:              vision_used,
         vision_cost_usd:          vision_cost,
@@ -242,6 +288,18 @@ module RfqAuto
         vision_model:             vision_model,
         vision_error:             vision_error
       }
+    end
+
+    # ItemExtractor 호출 + 예외 격리 — 잔액 부족은 위로 전파.
+    def run_item_extractor(text)
+      result = Rfp::ItemExtractor.call(text)
+      result
+    rescue StandardError => e
+      msg = "#{e.class}: #{e.message}"
+      Rails.logger.warn "[RfqAuto::Analyzer] ItemExtractor 실패: #{msg}"
+      yield(msg) if block_given?
+      raise if e.message.to_s.include?("잔액 부족")
+      nil
     end
 
     def build_combined_text

@@ -27,7 +27,8 @@ RUN apt-get update -qq && \
       libxcomposite1 libxdamage1 libxrandr2 libgbm1 libpango-1.0-0 \
       libcairo2 libasound2 libxshmfence1 \
       fonts-liberation fonts-nanum fonts-noto-cjk fonts-noto-core fonts-hosny-amiri \
-      poppler-utils && \
+      poppler-utils antiword catdoc \
+      tesseract-ocr tesseract-ocr-eng tesseract-ocr-kor && \
     fc-cache -f && \
     ln -s /usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2 /usr/local/lib/libjemalloc.so && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives

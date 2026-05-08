@@ -35,6 +35,9 @@ module Rfp
 
       text = if pdf?(content_type, ext)
         extract_pdf(path)
+      elsif legacy_doc?(content_type, ext)
+        # .doc (Word 1997~2003 바이너리) — antiword/catdoc CLI 사용
+        extract_legacy_doc(path)
       elsif docx?(content_type, ext)
         extract_docx(path)
       elsif xlsx?(content_type, ext)
@@ -85,6 +88,26 @@ module Rfp
       nil
     end
 
+    # Word 97~2003 .doc — Linux 환경에서는 antiword/catdoc, macOS는 textutil
+    def extract_legacy_doc(path)
+      require "open3"
+      candidates = [
+        [ "antiword", path ],
+        [ "catdoc", path ],
+        [ "textutil", "-stdout", "-cat", "txt", path ]
+      ]
+      candidates.each do |cmd|
+        next unless system("which #{cmd.first} > /dev/null 2>&1")
+        stdout, _stderr, status = Open3.capture3(*cmd)
+        return stdout.strip.presence if status.success? && stdout.strip.length > 10
+      end
+      Rails.logger.warn("[Rfp::AttachmentExtractor] .doc 추출 실패 — antiword/catdoc/textutil 모두 사용 불가 또는 결과 빈 값")
+      nil
+    rescue => e
+      Rails.logger.warn("[Rfp::AttachmentExtractor] DOC read error: #{e.message}")
+      nil
+    end
+
     def extract_xlsx(path)
       require "roo"
       workbook = Roo::Spreadsheet.open(path, extension: :xlsx)
@@ -116,8 +139,14 @@ module Rfp
       ct.include?("pdf") || ext == ".pdf"
     end
 
+    # 최신 .docx (Open XML zip)
     def docx?(ct, ext)
-      ct.include?("wordprocessingml") || ct.include?("msword") || %w[.docx .doc].include?(ext)
+      ct.include?("wordprocessingml") || ext == ".docx"
+    end
+
+    # Word 97~2003 바이너리 .doc — zip 파싱 안 됨, 별도 CLI 필요
+    def legacy_doc?(ct, ext)
+      ext == ".doc" || (ct.include?("msword") && ext != ".docx")
     end
 
     def xlsx?(ct, ext)

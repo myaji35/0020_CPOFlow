@@ -81,12 +81,29 @@
     <%# 항상 표시 — 11항목 매트릭스. 품목별 또는 문서 단위 fallback %>
     <% if step2.is_a?(Hash) && (step2["items"].present? || step2["doc_level_missing"].present?) %>
       <div class="ml-9 -mt-2 mb-4">
-        <%# Vision 폴백 정보 %>
-        <% if step2["vision_used"] %>
-          <div class="mb-3 p-2 text-[11px] bg-fuchsia-50 dark:bg-fuchsia-900/20 border border-fuchsia-200 dark:border-fuchsia-800 rounded">
-            👁 <strong>Vision 모드</strong> 자동 폴백 — 모델 <%= step2["vision_model"] %>, <%= step2["vision_pages"] %>페이지, 비용 $<%= step2["vision_cost_usd"] %>
-          </div>
-        <% end %>
+        <%# 추출 모드 정보 (LLM / OCR / Escalation / Vision) %>
+        <div class="mb-3 flex flex-wrap gap-1.5 text-[10px]">
+          <% if step2["llm_model"].present? %>
+            <span class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300">
+              🤖 <%= step2["llm_model"] %> · $<%= step2["llm_cost_usd"] %>
+            </span>
+          <% end %>
+          <% if step2["ocr_used"] %>
+            <span class="px-2 py-0.5 rounded bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300">
+              📷 OCR (tesseract)
+            </span>
+          <% end %>
+          <% if step2["escalated"] %>
+            <span class="px-2 py-0.5 rounded bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300">
+              ⬆ Opus escalate · $<%= step2["escalation_cost_usd"] %>
+            </span>
+          <% end %>
+          <% if step2["vision_used"] %>
+            <span class="px-2 py-0.5 rounded bg-fuchsia-50 dark:bg-fuchsia-900/20 text-fuchsia-700 dark:text-fuchsia-300">
+              👁 Vision <%= step2["vision_model"] %> · <%= step2["vision_pages"] %>p · $<%= step2["vision_cost_usd"] %>
+            </span>
+          <% end %>
+        </div>
         <% if step2["vision_error"].present? %>
           <div class="mb-3 p-2 text-[11px] bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-red-700 dark:text-red-300 font-mono">
             <%= step2["vision_error"] %>
