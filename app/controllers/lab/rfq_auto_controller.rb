@@ -30,7 +30,7 @@ class Lab::RfqAutoController < ApplicationController
     @latest   = @analyses.first
   end
 
-  # POST /lab/rfq_auto/:id/analyze
+  # POST /lab/rfq_auto/:id/analyze — 비동기 실행, Turbo Stream으로 진행률 갱신
   def analyze
     analysis = RfqAutoAnalysis.create!(
       order:      @order,
@@ -39,14 +39,31 @@ class Lab::RfqAutoController < ApplicationController
       llm_model:  ENV.fetch("RFQ_LLM_MODEL", "claude-haiku-4-5-20251001"),
       started_at: Time.current
     )
-    RfqAuto::Analyzer.new(analysis).call
-    redirect_to lab_rfq_auto_path(@order), notice: analysis.completed? ? "자동 분석 완료" : "자동 분석 실패 — 결과 확인"
+    RfqAutoAnalyzeJob.perform_later(analysis.id)
+    redirect_to lab_rfq_auto_path(@order), notice: "자동 분석을 시작했습니다 — 결과는 자동으로 갱신됩니다."
   end
 
-  # POST /lab/rfq_auto/:id/apply — Phase 2+: 결과를 Order/Task에 반영
+  # POST /lab/rfq_auto/:id/apply?analysis_id=N
+  # LAB 분석 결과를 실제 Order에 반영 — 품목 누락 항목을 Task로 자동 생성.
+  # 안전장치: completed 상태만 적용 가능 + 이미 적용된 분석은 거부 (중복 Task 차단).
   def apply
+    analysis = @order.rfq_auto_analyses.find(params[:analysis_id])
+    unless analysis.completed?
+      return redirect_to lab_rfq_auto_path(@order), alert: "완료된 분석만 적용 가능합니다 (status=#{analysis.status})."
+    end
+    if analysis.summary_data["applied_at"].present?
+      return redirect_to lab_rfq_auto_path(@order), alert: "이미 적용된 분석입니다."
+    end
+
+    created = apply_analysis_to_order!(analysis)
+
     redirect_to lab_rfq_auto_path(@order),
-                alert: "Phase 2 — 적용 기능 준비 중. 현재 LAB 결과만 검토 가능."
+                notice: "적용 완료 — Task #{created[:tasks]}건 자동 생성"
+  rescue ActiveRecord::RecordNotFound
+    redirect_to lab_rfq_auto_path(@order), alert: "분석 기록을 찾을 수 없습니다."
+  rescue StandardError => e
+    Rails.logger.error "[Lab::RfqAuto#apply] #{e.class}: #{e.message}"
+    redirect_to lab_rfq_auto_path(@order), alert: "적용 중 오류: #{e.message}"
   end
 
   # POST /lab/rfq_auto/:id/feedback?value=correct/wrong/partial
@@ -63,6 +80,43 @@ class Lab::RfqAutoController < ApplicationController
   end
 
   private
+
+  # 분석 결과 → Order Task. 누락 항목 1건당 Task 1개. auto_generated=true.
+  # 트랜잭션으로 일괄 처리. summary에 applied_at + tasks_created 기록 → 중복 적용 차단.
+  def apply_analysis_to_order!(analysis)
+    items_step = analysis.steps_data["step2_items"] || {}
+    tasks_step = analysis.steps_data["step3_tasks"] || {}
+
+    items   = items_step["items"].is_a?(Array) ? items_step["items"] : []
+    tasks   = tasks_step["tasks"].is_a?(Array) ? tasks_step["tasks"] : []
+    created_tasks = 0
+
+    ActiveRecord::Base.transaction do
+      tasks.select { |t| t["status"] == "missing" }.each do |t|
+        title = "[#{t["item_name"].presence || "품목 #{t["item_idx"]}"}] #{t["label"]} 확인"
+        # 같은 title 이미 있으면 skip — 중복 차단
+        next if @order.tasks.where(title: title).exists?
+
+        @order.tasks.create!(
+          title:          title,
+          description:    "RFQ Auto 분석에 의해 자동 생성된 누락 항목 점검 Task. (분석 ID #{analysis.id})",
+          completed:      false,
+          auto_generated: true
+        )
+        created_tasks += 1
+      end
+
+      summary_payload = analysis.summary_data.merge(
+        "applied_at"     => Time.current.iso8601,
+        "applied_by"     => current_user.id,
+        "tasks_created"  => created_tasks,
+        "items_applied"  => items.size
+      )
+      analysis.update!(summary: summary_payload.to_json)
+    end
+
+    { tasks: created_tasks, items: items.size }
+  end
 
   def require_admin_or_manager!
     return if current_user&.admin? || current_user&.manager?

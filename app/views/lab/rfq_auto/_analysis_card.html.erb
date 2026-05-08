@@ -1,0 +1,181 @@
+<%# 분석 결과 카드 — Turbo Stream으로 부분 갱신.
+    locals:
+      analysis        — RfqAutoAnalysis 인스턴스 (저장 시점 데이터)
+      transient_steps — Analyzer 진행 중 메모리 상태 (선택, 우선 적용)
+%>
+<% steps = (transient_steps if defined?(transient_steps) && transient_steps.is_a?(Hash) && transient_steps.any?) || analysis.steps_data %>
+<% summary = analysis.summary_data %>
+
+<div id="rfq-auto-analysis-<%= analysis.id %>"
+     data-status="<%= analysis.status %>">
+  <%# 상태 배지 + 메트릭 카드 %>
+  <div class="flex items-center gap-3 mb-4">
+    <% case analysis.status
+       when "running" %>
+      <span class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[12px] font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300">
+        <svg class="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="40 80"></circle></svg>
+        분석 중...
+      </span>
+    <% when "completed" %>
+      <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-semibold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300">
+        ✓ 분석 완료
+      </span>
+    <% when "failed" %>
+      <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-semibold bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300">
+        ✗ 실패
+      </span>
+    <% else %>
+      <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-semibold bg-ink-100 dark:bg-ink-800 text-ink-600 dark:text-ink-300">
+        대기 중
+      </span>
+    <% end %>
+    <span class="text-[11px] text-ink-500"><%= analysis.user&.display_name %> · <%= time_ago_in_words(analysis.created_at) rescue '' %> 전</span>
+    <% if summary["applied_at"].present? %>
+      <span class="text-[11px] px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">📌 카드에 적용됨 · Task <%= summary["tasks_created"] %>건</span>
+    <% end %>
+  </div>
+
+  <% if analysis.status != "running" %>
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5">
+      <% s = summary %>
+      <% [
+        ["첨부",     "#{s['attachments_relevant'].to_i}/#{s['attachments_total'].to_i}", "관련/전체"],
+        ["품목",     "#{s['items_count'].to_i}",                                          "추출"],
+        ["누락 항목", "#{s['items_missing_total'].to_i}",                                  "필수 11항목"],
+        ["공급사",   "#{s['suppliers_total'].to_i}",                                      "탐색 결과"],
+        ["소요/비용", "#{s['elapsed_seconds']}s · $#{s['cost_usd']}",                     "LLM"]
+      ].each do |label, val, sub| %>
+        <div class="bg-white dark:bg-ink-900 border border-ink-150 dark:border-ink-800 rounded-md p-3">
+          <div class="text-[10px] uppercase tracking-wider text-ink-500"><%= label %></div>
+          <div class="text-[18px] font-semibold text-ink-900 dark:text-white mt-0.5 font-mono"><%= val %></div>
+          <div class="text-[10px] text-ink-400 mt-0.5"><%= sub %></div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <%# 5단계 카드 %>
+  <div class="space-y-4">
+    <% step1 = steps["step1_attachments"] || {} %>
+    <%= render "step_header", num: 1, title: "첨부 파일 인식", step: step1, badge: step1.empty? ? nil : "#{step1['relevant'].to_i}/#{step1['total'].to_i} 관련" %>
+    <% if step1["items"].is_a?(Array) && step1["items"].any? %>
+      <div class="ml-9 -mt-2 mb-4 space-y-1.5">
+        <% step1["items"].each do |it| %>
+          <div class="flex items-center justify-between text-[12px] px-3 py-2 bg-ink-50 dark:bg-ink-900 rounded border border-ink-100 dark:border-ink-800">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="font-mono text-ink-700 dark:text-ink-200 truncate max-w-[420px]"><%= it["filename"] %></span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"><%= it["type"] %></span>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="text-[10px] text-ink-500">관련도 <%= it["relevance_score"] %></span>
+              <span class="w-12 h-1 bg-ink-100 rounded-full overflow-hidden"><span class="block h-full bg-brand-500" style="width: <%= [it["relevance_score"].to_i, 100].min %>%"></span></span>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <% step2 = steps["step2_items"] || {} %>
+    <%= render "step_header", num: 2, title: "품목 추출 + 필수 11항목 점검", step: step2, badge: step2.empty? ? nil : "#{step2['count'].to_i}품" %>
+    <% if step2["items"].is_a?(Array) && step2["items"].any? %>
+      <div class="ml-9 -mt-2 mb-4 space-y-2">
+        <% step2["items"].each do |item| %>
+          <div class="border border-ink-150 dark:border-ink-800 rounded-md p-3 bg-white dark:bg-ink-900">
+            <div class="flex items-start justify-between gap-3 mb-2">
+              <div class="min-w-0">
+                <div class="text-[13px] font-semibold text-ink-900 dark:text-white">
+                  #<%= item["idx"] %>. <%= item["name"].presence || "(품명 없음)" %>
+                  <% if item["model"].present? %><span class="text-ink-500 font-normal text-[12px]">/ <%= item["model"] %></span><% end %>
+                </div>
+                <div class="text-[11px] text-ink-500 mt-0.5"><%= item["spec"] %></div>
+              </div>
+              <div class="text-right shrink-0">
+                <div class="text-[12px] font-mono text-ink-700 dark:text-ink-200"><%= item["quantity"] %> <%= item["unit"] %></div>
+                <% if item["missing_count"].to_i > 0 %>
+                  <span class="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 mt-1 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300">
+                    ⚠ 누락 <%= item["missing_count"] %>
+                  </span>
+                <% else %>
+                  <span class="text-[10px] px-1.5 py-0.5 mt-1 rounded bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300">완비</span>
+                <% end %>
+              </div>
+            </div>
+            <% missing = (item["missing_fields"] || []) %>
+            <% if missing.any? %>
+              <div class="flex flex-wrap gap-1 mt-2 pt-2 border-t border-ink-100 dark:border-ink-800">
+                <% missing.each do |field| %>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300">
+                    ✗ <%= RfqAuto::Analyzer::REQUIRED_FIELD_LABELS[field] || field %>
+                  </span>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <% step3 = steps["step3_tasks"] || {} %>
+    <%= render "step_header", num: 3, title: "Task 목록 후보 (dry-run)", step: step3,
+               badge: step3.empty? ? nil : "#{step3['count'].to_i}건 / 결손 #{step3['missing_count'].to_i}" %>
+
+    <% step4 = steps["step4_suppliers"] || {} %>
+    <%= render "step_header", num: 4, title: "공급사 탐색", step: step4, badge: step4.empty? ? nil : "#{step4['count'].to_i}건" %>
+    <% if step4["suppliers"].is_a?(Array) && step4["suppliers"].any? %>
+      <div class="ml-9 -mt-2 mb-4 space-y-1.5">
+        <% step4["suppliers"].first(10).each do |sup| %>
+          <div class="flex items-center justify-between text-[12px] px-3 py-2 bg-ink-50 dark:bg-ink-900 rounded border border-ink-100 dark:border-ink-800">
+            <div class="min-w-0">
+              <div class="font-semibold text-ink-900 dark:text-white"><%= sup["name"] %></div>
+              <div class="text-[10px] text-ink-500"><%= sup["email"] %> · <%= sup["phone"] %> · <%= sup["website"] %></div>
+            </div>
+            <div class="shrink-0 flex items-center gap-2">
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300">신뢰도 <%= sup["confidence"] %></span>
+              <span class="text-[10px] text-ink-400"><%= sup["source"] %></span>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+    <% if step4.is_a?(Hash) && (step4["status"] == "skipped" || (step4["count"].to_i == 0 && step4["status"] != "error")) %>
+      <div class="ml-9 -mt-2 mb-4 text-[11px] text-ink-500">
+        Phase 1: 자체 Supplier DB 검색만 동작. 한국 조달청·UAE 검색은 Phase 3 예정.
+      </div>
+    <% end %>
+
+    <% step5 = steps["step5_summary"] || {} %>
+    <%= render "step_header", num: 5, title: "종합 보고서", step: step5, badge: step5.empty? ? nil : "완료" %>
+  </div>
+
+  <%# 액션 + 피드백 (완료 상태에서만) %>
+  <% if analysis.completed? %>
+    <div class="mt-6 pt-4 border-t border-ink-150 dark:border-ink-800 flex items-center justify-between gap-4 flex-wrap">
+      <div class="flex items-center gap-2">
+        <% if summary["applied_at"].blank? %>
+          <%= button_to apply_lab_rfq_auto_path(analysis.order, analysis_id: analysis.id), method: :post,
+                  data: { turbo_confirm: "분석 결과를 카드에 적용합니다. 누락 항목당 Task 1개씩 자동 생성됩니다. 계속하시겠습니까?" },
+                  class: "inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[13px] font-semibold rounded-md transition-colors" do %>
+            📌 카드에 적용 (Task 자동 생성)
+          <% end %>
+        <% else %>
+          <span class="text-[12px] text-emerald-700 dark:text-emerald-300 font-semibold">📌 적용 완료 — Task <%= summary["tasks_created"] %>건 생성됨</span>
+        <% end %>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-[11px] text-ink-500 mr-2">분석 정확도:</span>
+        <% %w[correct partial wrong].each do |val| %>
+          <%= button_to feedback_lab_rfq_auto_path(analysis.order, value: val, analysis_id: analysis.id), method: :post,
+                  class: "text-[12px] px-3 py-1.5 rounded border #{analysis.feedback == val ? 'bg-brand-600 text-white border-brand-600' : 'border-ink-200 hover:border-brand-400'}" do %>
+            <%= { "correct" => "✓ 정확", "partial" => "△ 부분", "wrong" => "✗ 틀림" }[val] %>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  <% elsif analysis.failed? %>
+    <div class="mt-6 pt-4 border-t border-ink-150 dark:border-ink-800">
+      <div class="text-[12px] text-red-600 dark:text-red-400">
+        실패 원인: <span class="font-mono"><%= analysis.error_message %></span>
+      </div>
+    </div>
+  <% end %>
+</div>

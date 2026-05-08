@@ -50,10 +50,16 @@ module RfqAuto
     end
 
     def call
+      broadcast_progress!  # 시작 시점 — UI에 running 표시
+
       run_step("step1_attachments") { step1_classify_attachments }
+      broadcast_progress!
       run_step("step2_items")       { step2_extract_items }
+      broadcast_progress!
       run_step("step3_tasks")       { step3_build_task_candidates }
+      broadcast_progress!
       run_step("step4_suppliers")   { step4_find_suppliers }
+      broadcast_progress!
       run_step("step5_summary")     { step5_build_summary }
 
       @analysis.update!(
@@ -64,6 +70,7 @@ module RfqAuto
         latency_ms:   ((Time.current - @t0) * 1000).round,
         completed_at: Time.current
       )
+      broadcast_progress!  # 최종 — completed 표시
     rescue StandardError => e
       Rails.logger.error "[RfqAuto::Analyzer] FATAL #{e.class}: #{e.message}\n#{e.backtrace.first(3).join("\n")}"
       @analysis.update!(
@@ -73,9 +80,25 @@ module RfqAuto
         latency_ms:    ((Time.current - @t0) * 1000).round,
         completed_at:  Time.current
       )
+      broadcast_progress!
     end
 
     private
+
+    # Turbo Stream 진행률 broadcast — 단계 완료 직후 호출.
+    # rfq_auto_analysis_<id> 채널로 partial 부분 갱신 송출.
+    # 실패는 silent — 분석 자체를 중단시키지 않음.
+    def broadcast_progress!
+      # @analysis가 아직 transient steps을 모르므로 in-memory 상태로 임시 partial 렌더
+      Turbo::StreamsChannel.broadcast_replace_to(
+        "rfq_auto_analysis_#{@analysis.id}",
+        target:  "rfq-auto-analysis-#{@analysis.id}",
+        partial: "lab/rfq_auto/analysis_card",
+        locals:  { analysis: @analysis, transient_steps: @steps_result }
+      )
+    rescue StandardError => e
+      Rails.logger.warn "[RfqAuto::Analyzer] broadcast failed: #{e.class}: #{e.message}"
+    end
 
     # 단계 실행 + 격리. 한 단계 실패해도 결과 채우고 다음 진행.
     def run_step(key)
