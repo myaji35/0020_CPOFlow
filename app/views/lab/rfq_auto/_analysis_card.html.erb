@@ -57,7 +57,7 @@
   <%# 5단계 카드 %>
   <div class="space-y-4">
     <% step1 = steps["step1_attachments"] || {} %>
-    <%= render "step_header", num: 1, title: "첨부 파일 인식", step: step1, badge: step1.empty? ? nil : "#{step1['relevant'].to_i}/#{step1['total'].to_i} 관련" %>
+    <%= render "lab/rfq_auto/step_header", num: 1, title: "첨부 파일 인식", step: step1, badge: step1.empty? ? nil : "#{step1['relevant'].to_i}/#{step1['total'].to_i} 관련" %>
     <% if step1["items"].is_a?(Array) && step1["items"].any? %>
       <div class="ml-9 -mt-2 mb-4 space-y-1.5">
         <% step1["items"].each do |it| %>
@@ -76,7 +76,7 @@
     <% end %>
 
     <% step2 = steps["step2_items"] || {} %>
-    <%= render "step_header", num: 2, title: "품목 추출 + 필수 11항목 점검", step: step2, badge: step2.empty? ? nil : "#{step2['count'].to_i}품" %>
+    <%= render "lab/rfq_auto/step_header", num: 2, title: "품목 추출 + 필수 11항목 점검", step: step2, badge: step2.empty? ? nil : "#{step2['count'].to_i}품" %>
     <% if step2["items"].is_a?(Array) && step2["items"].any? %>
       <div class="ml-9 -mt-2 mb-4 space-y-2">
         <% step2["items"].each do |item| %>
@@ -116,11 +116,11 @@
     <% end %>
 
     <% step3 = steps["step3_tasks"] || {} %>
-    <%= render "step_header", num: 3, title: "Task 목록 후보 (dry-run)", step: step3,
+    <%= render "lab/rfq_auto/step_header", num: 3, title: "Task 목록 후보 (dry-run)", step: step3,
                badge: step3.empty? ? nil : "#{step3['count'].to_i}건 / 결손 #{step3['missing_count'].to_i}" %>
 
     <% step4 = steps["step4_suppliers"] || {} %>
-    <%= render "step_header", num: 4, title: "공급사 탐색", step: step4, badge: step4.empty? ? nil : "#{step4['count'].to_i}건" %>
+    <%= render "lab/rfq_auto/step_header", num: 4, title: "공급사 탐색", step: step4, badge: step4.empty? ? nil : "#{step4['count'].to_i}건" %>
     <% if step4["suppliers"].is_a?(Array) && step4["suppliers"].any? %>
       <div class="ml-9 -mt-2 mb-4 space-y-1.5">
         <% step4["suppliers"].first(10).each do |sup| %>
@@ -144,7 +144,7 @@
     <% end %>
 
     <% step5 = steps["step5_summary"] || {} %>
-    <%= render "step_header", num: 5, title: "종합 보고서", step: step5, badge: step5.empty? ? nil : "완료" %>
+    <%= render "lab/rfq_auto/step_header", num: 5, title: "종합 보고서", step: step5, badge: step5.empty? ? nil : "완료" %>
   </div>
 
   <%# 액션 + 피드백 (완료 상태에서만) %>
