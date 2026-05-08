@@ -25,8 +25,13 @@
 # Any libraries that use a connection pool or another resource pool should
 # be configured to provide at least as many connections as the number of
 # threads. This includes Active Record's `pool` parameter in `database.yml`.
-threads_count = ENV.fetch("RAILS_MAX_THREADS", 3)
+# 기본 3 → 5 (SQLite WAL는 read 동시성 OK. 쓰기는 busy_timeout 5s가 흡수).
+# Solid Queue는 Puma 안에서 동거 — 워커 멀티화 대신 thread 수만 확장하여 GVL+SQLite 경합 최소화.
+threads_count = ENV.fetch("RAILS_MAX_THREADS", 5)
 threads threads_count, threads_count
+
+# Active Record connection pool은 thread 수와 동일하게 유지 (database.yml의 max_connections).
+ENV["RAILS_MAX_THREADS"] ||= threads_count.to_s
 
 # Specifies the `port` that Puma will listen on to receive requests; default is 3000.
 port ENV.fetch("PORT", 3000)

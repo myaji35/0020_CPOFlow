@@ -92,6 +92,9 @@ COPY --chown=rails:rails --from=build /rails /rails
 # Entrypoint prepares the database.
 ENTRYPOINT ["/rails/bin/docker-entrypoint"]
 
-# Start server via Thruster by default, this can be overwritten at runtime
+# Start server via Thruster — 정적 자산 압축/캐시/X-Sendfile 가속.
+# Thruster는 PORT(80) 노출, app은 내부 3000. proxy(kamal-proxy)는 :80을 가리켜야 함.
+# 기존 설정 호환을 위해 PORT=3000으로 고정.
 EXPOSE 3000
-CMD ["./bin/rails", "server", "-b", "0.0.0.0"]
+ENV PORT=3000
+CMD ["./bin/thrust", "./bin/rails", "server", "-b", "0.0.0.0"]

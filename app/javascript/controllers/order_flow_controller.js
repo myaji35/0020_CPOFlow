@@ -8,24 +8,44 @@ import { Controller } from "@hotwired/stimulus"
 //   data-order-flow-order-id-value="<id>"
 // Targets:
 //   data-order-flow-target="canvas"
+//
+// Cytoscape/dagre는 페이지 진입 시점에 lazy load (전 페이지 1MB 다운로드 차단).
+// loadCytoscape()가 멱등 — 여러 인스턴스 동시 mount 안전.
+let _cyLoadPromise = null
+function loadCytoscape() {
+  if (typeof window.cytoscape !== "undefined") return Promise.resolve()
+  if (_cyLoadPromise) return _cyLoadPromise
+
+  const inject = (src) => new Promise((resolve, reject) => {
+    const s = document.createElement("script")
+    s.src = src
+    s.async = false
+    s.onload = resolve
+    s.onerror = () => reject(new Error("failed to load " + src))
+    document.head.appendChild(s)
+  })
+
+  _cyLoadPromise = inject("https://unpkg.com/cytoscape@3.30.2/dist/cytoscape.min.js")
+    .then(() => inject("https://unpkg.com/dagre@0.8.5/dist/dagre.min.js"))
+    .then(() => inject("https://unpkg.com/cytoscape-dagre@2.5.0/cytoscape-dagre.js"))
+  return _cyLoadPromise
+}
+
 export default class extends Controller {
   static targets = ["canvas"]
   static values  = { graph: Object, orderId: Number }
 
   connect() {
-    if (typeof window.cytoscape === "undefined") {
-      // CDN 미로드 — 짧은 재시도 1회 (defer 스크립트가 늦게 로드될 수 있음)
-      this._retry = setTimeout(() => this.render(), 300)
-      return
-    }
-    this.render()
+    loadCytoscape()
+      .then(() => this.render())
+      .catch(() => {
+        if (this.hasCanvasTarget) {
+          this.canvasTarget.innerHTML = '<div class="p-4 text-sm" style="color:#16325C;">Cytoscape 로드 실패</div>'
+        }
+      })
   }
 
   disconnect() {
-    if (this._retry) {
-      clearTimeout(this._retry)
-      this._retry = null
-    }
     if (this.cy) {
       try { this.cy.destroy() } catch (_) {}
       this.cy = null
