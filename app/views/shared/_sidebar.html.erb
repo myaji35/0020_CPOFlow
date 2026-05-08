@@ -83,7 +83,8 @@
       </div>
     <% end %>
 
-    <% if current_user.manager? || current_user.admin? %>
+    <%# 페르소나 인지: viewer/member 시뮬레이션 시 관리 그룹 숨김 %>
+    <% if current_user.admin? && %w[ceo admin manager].include?(current_persona) %>
       <!-- Group: 관리 (CEO 모드에서는 경영 리포트만 표시) -->
       <div class="px-3 pt-4 pb-1 text-[10px] font-semibold tracking-[1.2px] uppercase text-blue-200/60 transition-opacity"
            :class="collapsed ? 'opacity-0 h-0 pt-0 pb-0 overflow-hidden' : 'opacity-100'">
@@ -130,7 +131,8 @@
         <% end %>
       </div>
     <% end %>
-    <% if current_user.admin? && !ceo_mode? %>
+    <%# 페르소나 인지: admin 페르소나에서만 관리자 전용 메뉴 노출 %>
+    <% if current_user.admin? && current_persona == "admin" %>
       <div class="flex flex-col px-2 gap-px mt-px">
         <%= nav_link_to settings_menu_permissions_path, icon: "lni lni-shield", label: t("nav.menu_permissions", default: "메뉴 권한") %>
         <%= nav_link_to admin_reviews_path, icon: "lni lni-comments-alt", label: t("nav.feedback_admin", default: "피드백 관리") %>
@@ -159,16 +161,17 @@
       </div>
       <div class="flex-1 min-w-0 transition-opacity" :class="collapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'">
         <p class="text-[12px] font-medium text-white truncate"><%= current_user.display_name %></p>
-        <%# admin 유저만 페르소나 전환 콤보박스 표시 %>
+        <%# admin 유저는 5개 페르소나 콤보박스 — 다중 역할 시뮬레이션 (kds@ 등) %>
         <% if current_user.admin? %>
+          <% current_info = ApplicationController::PERSONAS[current_persona] || ApplicationController::PERSONAS["admin"] %>
           <div class="relative mt-0.5" x-data="{ open: false }">
             <button type="button" @click="open = !open" @click.outside="open = false"
                     class="flex items-center gap-1 text-[11px] <%= ceo_mode? ? 'text-amber-300' : 'text-blue-200/70' %> hover:text-white transition-colors">
-              <span><%= ceo_mode? ? '👔 CEO' : '⚙️ Admin' %></span>
+              <span><%= current_info[:icon] %> <%= current_info[:label] %></span>
               <svg class="w-2.5 h-2.5 transition-transform" :class="open ? 'rotate-180' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div x-show="open" x-transition
-                 class="absolute bottom-7 left-0 w-36 bg-gray-900 border border-white/10 rounded-lg shadow-xl overflow-hidden z-50">
+                 class="absolute bottom-7 left-0 w-40 bg-gray-900 border border-white/10 rounded-lg shadow-xl overflow-hidden z-50">
               <% ApplicationController::PERSONAS.each do |key, info| %>
                 <%= button_to persona_path(key: key), method: :patch, data: { turbo: false },
                     class: "w-full flex items-center gap-2 px-3 py-2 text-[12px] hover:bg-white/10 transition-colors #{current_persona == key ? 'text-white font-semibold bg-white/5' : 'text-blue-200/80'}" do %>

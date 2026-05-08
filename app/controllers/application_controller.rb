@@ -69,17 +69,51 @@ class ApplicationController < ActionController::Base
   end
   helper_method :gmail_connection_health
 
-  # ── 페르소나 (CEO / Admin 전환) ─────────────────────────────────────
-  # kds@ 계정처럼 다중 역할을 가진 사용자를 위한 세션 기반 페르소나 전환.
-  # DB role은 변경하지 않고 session[:persona]만 사용.
+  # ── Impersonation (직원 환경 가장) ──────────────────────────────────
+  # admin이 직원관리에서 [👁 보기] 클릭 시 해당 직원의 current_user로 앱을 봄.
+  # 실제 Devise 세션은 건드리지 않고 세션 키만 오버라이드.
+  def current_user
+    return @_current_user if defined?(@_current_user)
+    @_current_user = if session[:impersonating_user_id].present?
+      User.find_by(id: session[:impersonating_user_id]) || super
+    else
+      super
+    end
+  end
+  helper_method :current_user
+
+  # 가장 중일 때 실제 admin 유저 반환 (배너/권한 체크용)
+  def current_real_user
+    return @_current_real_user if defined?(@_current_real_user)
+    @_current_real_user = if session[:impersonator_id].present?
+      User.find_by(id: session[:impersonator_id])
+    else
+      current_user
+    end
+  end
+  helper_method :current_real_user
+
+  def impersonating?
+    session[:impersonating_user_id].present?
+  end
+  helper_method :impersonating?
+
+  # ── 페르소나 (다중 역할 콤보박스) ─────────────────────────────────
+  # kds@ 등 다중 역할 계정용 세션 기반 페르소나 전환. DB role은 불변, session[:persona]만 사용.
+  # admin 사용자는 ceo + 4개 권한 페르소나(admin/manager/member/viewer)로 전환 가능.
+  # 비-admin은 항상 자기 role.
+  # ceo: 시각 표시 전용(타이틀/배지). 권한은 admin과 동일.
+  # 권한 페르소나 전환 시 메뉴 가시성/CRUD 버튼은 해당 role 기준 — 단, 백엔드 검증은 실제 사용자 role을 그대로 사용.
   PERSONAS = {
-    "admin" => { label: "Admin",  icon: "⚙️",  key: "admin" },
-    "ceo"   => { label: "CEO",    icon: "👔",  key: "ceo"   }
+    "ceo"     => { label: "CEO",     icon: "👔", key: "ceo",     role: "admin"   },
+    "admin"   => { label: "Admin",   icon: "⚙️", key: "admin",   role: "admin"   },
+    "manager" => { label: "Manager", icon: "🛠️", key: "manager", role: "manager" },
+    "member"  => { label: "Member",  icon: "👤", key: "member",  role: "member"  },
+    "viewer"  => { label: "Viewer",  icon: "👁️", key: "viewer",  role: "viewer"  }
   }.freeze
 
   def current_persona
     return @_current_persona if defined?(@_current_persona)
-    # admin 유저만 페르소나 전환 가능, 그 외는 항상 자신의 role
     @_current_persona = if current_user&.admin?
       session[:persona].presence&.to_s.in?(PERSONAS.keys) ? session[:persona].to_s : "admin"
     else
@@ -87,6 +121,13 @@ class ApplicationController < ActionController::Base
     end
   end
   helper_method :current_persona
+
+  # 현재 페르소나가 시뮬레이션하는 role — menu_permission 조회 키.
+  # 비-admin은 자기 role 그대로.
+  def effective_role
+    PERSONAS[current_persona]&.dig(:role) || current_user&.role.to_s
+  end
+  helper_method :effective_role
 
   def ceo_mode?
     current_persona == "ceo"
@@ -136,20 +177,28 @@ class ApplicationController < ActionController::Base
   def menu_permission_for(menu_key)
     return nil unless user_signed_in?
     @_menu_permissions ||= {}
+    # 페르소나 인지: admin이 다른 role 페르소나로 전환하면 그 role의 permission 조회 → 화면이 그 role처럼 보임.
     @_menu_permissions[menu_key.to_s] ||= MenuPermission.find_by(
-      role: current_user.role, menu_key: menu_key.to_s
+      role: effective_role, menu_key: menu_key.to_s
     )
   end
 
-  def can_read?(menu_key)   = current_user&.admin? || menu_permission_for(menu_key)&.can_read?   || false
-  def can_create?(menu_key) = current_user&.admin? || menu_permission_for(menu_key)&.can_create? || false
-  def can_update?(menu_key) = current_user&.admin? || menu_permission_for(menu_key)&.can_update? || false
-  def can_delete?(menu_key) = current_user&.admin? || menu_permission_for(menu_key)&.can_delete? || false
+  # admin/ceo 페르소나만 무조건 통과. 나머지 페르소나는 menu_permission 따름.
+  # 백엔드 강제 가드(require_admin! 등)는 변경 없이 실제 current_user.role을 사용 → 권한 상승 차단.
+  def admin_persona?
+    current_persona == "admin" || current_persona == "ceo"
+  end
+  helper_method :admin_persona?
+
+  def can_read?(menu_key)   = admin_persona? || menu_permission_for(menu_key)&.can_read?   || false
+  def can_create?(menu_key) = admin_persona? || menu_permission_for(menu_key)&.can_create? || false
+  def can_update?(menu_key) = admin_persona? || menu_permission_for(menu_key)&.can_update? || false
+  def can_delete?(menu_key) = admin_persona? || menu_permission_for(menu_key)&.can_delete? || false
 
   helper_method :can_read?, :can_create?, :can_update?, :can_delete?
 
   def can_access_board?(board)
-    return true if current_user&.admin?
+    return true if admin_persona?
     return true if board&.owner_id == current_user&.id
     return can_read?(:kanban) if board&.is_default?
     can_read?(:kanban)
