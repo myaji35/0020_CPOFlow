@@ -1,2 +1,15 @@
-#!/usr/bin/env ruby
-exec "./bin/rails", "server", *ARGV
+#!/usr/bin/env bash
+# bin/dev — Procfile.dev 기반 web + tailwind watcher 동시 실행 (foreman).
+# foreman 미설치 시 자동 설치. 인자가 있으면 기존처럼 rails server passthrough.
+set -e
+
+if [ "$#" -gt 0 ]; then
+  exec ./bin/rails server "$@"
+fi
+
+if ! command -v foreman >/dev/null 2>&1 && ! gem list --installed --silent foreman >/dev/null 2>&1; then
+  echo "Installing foreman..."
+  gem install foreman
+fi
+
+exec foreman start -f Procfile.dev
