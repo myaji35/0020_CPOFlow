@@ -402,14 +402,27 @@ module RfqAuto
       { tasks: tasks, count: tasks.size, missing_count: tasks.count { |t| t[:status] == "missing" } }
     end
 
-    # ── Step 4 — 공급사 탐색 (Phase 3: 자체 DB → 한국 조달청 → Google CSE) ──────
-    # 키 미설정 소스는 graceful skip. SupplierFinder에 위임.
+    # ── Step 4 — 공급사 탐색 (Phase 4: 자체 DB → web_search → datago/google_cse) ──
+    # web_search는 Anthropic Sonnet + web_search tool. 자체 DB가 비면 자동 발동.
     def step4_find_suppliers
       items = @steps_result.dig("step2_items", :items) || []
       return { status: "skipped", reason: "no items", suppliers: [] } if items.empty?
 
-      candidates = RfqAuto::SupplierFinder.new(items, max_per_source: 5).call
-      { suppliers: candidates, count: candidates.size, sources: candidates.map { |c| c[:source] }.tally }
+      finder = RfqAuto::SupplierFinder.new(items, max_per_source: 5)
+      candidates = finder.call
+
+      # 웹 검색 비용을 전체 cost에 누적
+      @total_cost += finder.web_cost_usd if finder.web_cost_usd > 0
+
+      {
+        suppliers:    candidates,
+        count:        candidates.size,
+        sources:      candidates.map { |c| c[:source] }.tally,
+        web_cost_usd: finder.web_cost_usd,
+        web_model:    finder.web_model,
+        web_citations: finder.web_citations || [],
+        web_error:    finder.web_error
+      }
     end
 
     # ── Step 5 — 종합 보고서 ─────────────────────────────────────

@@ -14,28 +14,59 @@ require "cgi"
 
 module RfqAuto
   class SupplierFinder
-    SOURCES = %w[local_db datago google_cse].freeze
+    SOURCES = %w[local_db web_search datago google_cse].freeze
     HTTP_TIMEOUT = 5  # seconds — 외부 API는 단계별 5초 cap
 
-    def initialize(items, max_per_source: 5)
+    attr_reader :web_cost_usd, :web_model, :web_citations, :web_error
+
+    def initialize(items, max_per_source: 5, enable_web: true)
       @items = items.is_a?(Array) ? items : []
       @max   = max_per_source
+      @enable_web = enable_web
+      @web_cost_usd = 0.0
+      @web_citations = []
+      @web_error = nil
     end
 
     def call
       results = []
+
+      # 1. 자체 DB — 키워드별 검색
       @items.first(3).each do |item|
         keyword = item[:name].to_s.presence || (item.is_a?(Hash) && item["name"].to_s.presence)
         next if keyword.blank?
-
         results.concat(search_local(keyword))
         results.concat(search_datago(keyword))
         results.concat(search_google(keyword))
       end
+
+      # 2. Web Search (Anthropic) — 자체 DB가 비어있거나 미흡하면 발동
+      if @enable_web && results.count { |r| r[:source] == "local_db" } == 0
+        web_result = search_web
+        results.concat(web_result[:suppliers] || [])
+      end
+
       results.uniq { |r| [ r[:source], r[:name] ] }
     end
 
     private
+
+    # ── Anthropic Web Search Tool — 신뢰도 60~90 (모델 추정) ────
+    def search_web
+      result = RfqAuto::WebSupplierFinder.new(@items, max_per_item: @max).call
+      @web_cost_usd  = result[:cost_usd].to_f
+      @web_model     = result[:model]
+      @web_citations = result[:citations] || []
+      result
+    rescue RfqAuto::WebSupplierFinder::AnthropicCreditError => e
+      @web_error = "❗ Anthropic 잔액 부족 — 충전 후 재시도 (#{e.message.truncate(100)})"
+      Rails.logger.warn "[SupplierFinder] #{@web_error}"
+      { suppliers: [] }
+    rescue StandardError => e
+      @web_error = "#{e.class}: #{e.message.truncate(160)}"
+      Rails.logger.warn "[SupplierFinder] web_search 실패: #{@web_error}"
+      { suppliers: [] }
+    end
 
     # ── 자체 Supplier DB — 신뢰도 90 ─────────────────────────────
     def search_local(keyword)
