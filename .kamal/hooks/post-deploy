@@ -10,7 +10,20 @@ if [ "${KAMAL_COMMAND:-}" = "rollback" ]; then
   exit 0
 fi
 
-# bin/canary는 5xx 발견 시 exit 1.
+# 1) prod 컨테이너에서 pending migration 검사 — 2026-05-08 incident 재발 방지.
+#    (impersonation_tokens 마이그레이션 미적용으로 /impersonations 500 발생)
+echo "[post-deploy] checking pending migrations on prod..."
+if kamal app exec --reuse "bin/rails db:abort_if_pending_migrations" 2>&1 | tail -5; then
+  echo "[post-deploy] ✅ no pending migrations"
+else
+  echo "[post-deploy] ⚠ pending migrations 감지 — db:migrate 자동 실행"
+  kamal app exec --reuse "bin/rails db:migrate" || {
+    echo "[post-deploy] ❌ migrate 실패 — 수동 개입 필요"
+    exit 1
+  }
+fi
+
+# 2) bin/canary는 5xx 발견 시 exit 1.
 if [ -x "bin/canary" ]; then
   echo "[post-deploy] running canary..."
   if bin/canary; then

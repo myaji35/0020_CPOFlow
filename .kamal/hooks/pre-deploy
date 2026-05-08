@@ -32,10 +32,30 @@ if [ -n "$SUSPECT" ]; then
   exit 1
 fi
 
-echo "[pre-deploy] gate 2: pending migration check"
-PENDING=$(ls db/migrate/*.rb 2>/dev/null | wc -l | tr -d ' ')
-SCHEMA=$(grep -c "^  create_table" db/schema.rb 2>/dev/null || echo 0)
-echo "  migrations: $PENDING / schema tables: $SCHEMA"
+echo "[pre-deploy] gate 2: schema.rb ↔ migration 동기화 검증"
+# schema.rb의 version과 최신 migration 파일 timestamp 비교 — 어긋나면 schema 미갱신 = prod 깨짐 직결.
+# 2026-05-08 incident: impersonation_tokens 마이그레이션이 schema에는 있었으나 prod 컨테이너의
+# docker-entrypoint가 db:prepare를 발동 못해 테이블 미생성 → /impersonations 500.
+SCHEMA_VERSION=$(grep -oE 'version: [0-9_]+' db/schema.rb | head -1 | awk '{print $2}' | tr -d '_')
+LATEST_MIG=$(ls db/migrate/*.rb 2>/dev/null | sort | tail -1 | grep -oE '[0-9]{14}' | head -1)
+
+if [ -z "$SCHEMA_VERSION" ] || [ -z "$LATEST_MIG" ]; then
+  echo "[pre-deploy] WARN — schema/migration version 추출 실패 (skip)"
+else
+  echo "  schema.rb version=$SCHEMA_VERSION / latest migration=$LATEST_MIG"
+  if [ "$SCHEMA_VERSION" != "$LATEST_MIG" ]; then
+    echo "[pre-deploy] FAIL — schema.rb가 최신 마이그레이션과 동기화되지 않음."
+    echo "  로컬에서 'bin/rails db:migrate' 실행 후 schema.rb를 커밋하세요."
+    exit 1
+  fi
+fi
+
+echo "[pre-deploy] gate 3: docker-entrypoint가 ./bin/rails server 인자 매칭하는지"
+# CMD 변경 시 entrypoint의 db:prepare 발동 조건이 깨질 수 있음 (2026-05-08 incident 방지)
+if ! grep -q "rails.*server\|server.*rails" bin/docker-entrypoint 2>/dev/null; then
+  echo "[pre-deploy] FAIL — bin/docker-entrypoint에 server 매칭 로직이 없음"
+  exit 1
+fi
 
 echo "[pre-deploy] all gates passed"
 exit 0

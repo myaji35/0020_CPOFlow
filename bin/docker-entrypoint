@@ -1,7 +1,10 @@
 #!/bin/bash -e
 
-# If running the rails server then create or migrate existing database
-if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
+# DB 자동 prepare — Rails 서버 부팅 시 (Thruster 경유 포함) 마이그레이션 발동.
+# Thruster CMD 변경(2026-05-08) 후 기존 "${@: -2:1}" == "./bin/rails" 매칭이 깨져
+# impersonation_tokens 마이그레이션이 prod에 미적용 → /impersonations 500 발생.
+# 이제 인자 어디에든 ./bin/rails server가 있으면 db:prepare 실행.
+if printf '%s\n' "$@" | grep -qx './bin/rails' && printf '%s\n' "$@" | grep -qx 'server'; then
   ./bin/rails db:prepare
 fi
 
