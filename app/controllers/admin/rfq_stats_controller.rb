@@ -17,10 +17,11 @@ module Admin
       load_classify_v2_metrics
 
       # ISS-209: 최근 AI 오판 (observability → actionability)
+      # ambiguous column 차단: includes가 JOIN으로 승격될 때 orders/users 모두 created_at 보유
       recent_fb = RfqFeedback.with_ai_score
-                             .where("created_at >= ?", window.days.ago)
+                             .where("rfq_feedbacks.created_at >= ?", window.days.ago)
                              .includes(:order, :user)
-                             .order(created_at: :desc)
+                             .order("rfq_feedbacks.created_at DESC")
                              .limit(100)
                              .to_a
       @mismatches = recent_fb.reject(&:ai_correct?)
@@ -38,7 +39,7 @@ module Admin
       window = 7 if window <= 0 || window > 30
 
       feedbacks = RfqFeedback.with_ai_score
-                             .where("created_at >= ?", window.days.ago)
+                             .where("rfq_feedbacks.created_at >= ?", window.days.ago)
                              .includes(:order)
                              .to_a
       targets = feedbacks.reject(&:ai_correct?).map(&:order).compact.uniq
