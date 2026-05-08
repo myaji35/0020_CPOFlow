@@ -8,86 +8,13 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
-    <!-- TailwindCSS CDN (dark mode via class strategy) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            colors: {
-              // Legacy 토큰 — 기존 클래스 호환 유지 (점진 마이그레이션)
-              primary:   { DEFAULT: '#1E3A5F', light: '#2D5282', dark: '#142844' },
-              accent:    { DEFAULT: '#00A1E0', light: '#33b5e8' },
-              danger:    '#D93025',
-              warning:   '#F4A83A',
-              success:   '#1E8E3E',
-              // ── Redesign 토큰 (Phase 1) ──
-              // Neutrals — cool gray, procurement shell 용
-              ink: {
-                50:  '#fafbfc',
-                75:  '#f5f6f8',
-                100: '#eff1f4',
-                150: '#e7eaee',
-                200: '#dde1e6',
-                300: '#c1c7d0',
-                400: '#97a0ad',
-                500: '#6b7585',
-                600: '#4a5361',
-                700: '#2b323d',
-                800: '#1e242d',
-                900: '#151a21',
-                950: '#0c1014',
-              },
-              // Deep Teal brand (OKLCH 195 equivalent hex)
-              brand: {
-                50:  '#e6f4f4',
-                100: '#c7e7e8',
-                200: '#99d2d4',
-                400: '#3f9ba1',
-                500: '#1f8389',
-                600: '#166c72',
-                700: '#11555a',
-                900: '#072d31',
-              },
-              ok:     { 50: '#e9f6ed', 100: '#c6e7d0', 500: '#2e9856', 700: '#1f6f3f' },
-              warn:   { 50: '#fdf2dc', 100: '#fbdea1', 500: '#d99a2a', 700: '#9a6a17' },
-              dangerx:{ 50: '#fbe6e3', 100: '#f5c1b8', 500: '#c84431', 700: '#933123' },
-              info:   { 50: '#e8edfb', 100: '#c3cef1', 500: '#3d5cc9', 700: '#293f93' },
-              accentx:{ 50: '#f1e5fb', 500: '#8348c5' },
-              // Stage-specific (9 procurement stages)
-              stage: {
-                new:     '#4a64d6',   // indigo
-                quo:     '#894fc4',   // violet
-                pending: '#d0962e',   // amber
-                po:      '#1a7079',   // teal (brand 계열)
-                deliver: '#2d8a4e',   // green
-                problem: '#c54431',   // red
-                grn:     '#2c7040',   // green-dark
-                giveup:  '#7a7b82',   // gray
-                done:    '#2b3e42',   // deep slate
-              },
-            },
-            fontFamily: {
-              sans: ['Inter Tight', 'Pretendard Variable', 'Pretendard', '-apple-system', 'Segoe UI', 'sans-serif'],
-              mono: ['JetBrains Mono', 'SF Mono', 'ui-monospace', 'Menlo', 'monospace'],
-            },
-            borderRadius: {
-              xs: '3px', sm: '5px', md: '7px', lg: '10px',
-            },
-            boxShadow: {
-              'sh-1': '0 1px 2px rgba(12,16,20,.06), 0 1px 1px rgba(12,16,20,.04)',
-              'sh-2': '0 2px 6px rgba(12,16,20,.06), 0 1px 2px rgba(12,16,20,.08)',
-              'sh-3': '0 8px 24px rgba(12,16,20,.08), 0 2px 6px rgba(12,16,20,.06)',
-              'sh-4': '0 24px 48px rgba(12,16,20,.14), 0 8px 16px rgba(12,16,20,.08)',
-            },
-          }
-        }
-      }
-    </script>
-    <!-- Inter Tight + Pretendard (디자인 타이포그래피) -->
+    <%# Tailwind CSS — precompiled (config/tailwind.config.js). 인라인 config 제거 = JIT 비용 0. %>
+    <!-- 외부 CDN preconnect — TLS handshake 비용 사전 절감 (UAE/한국 leg 0.3~0.5s) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://cdn.lineicons.com" crossorigin>
+    <!-- Inter Tight + Pretendard (디자인 타이포그래피) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
     <!-- Dark mode initializer (prevent flash) -->
@@ -110,12 +37,10 @@
     <!-- Line Icons 공식 CDN (cdn.lineicons.com) — jsdelivr는 폰트 경로 문제로 아이콘 미노출 -->
     <link rel="stylesheet" href="https://cdn.lineicons.com/4.0/lineicons.css" />
 
-    <%# Cytoscape.js + dagre layout (Procurement Ontology M2 — Drawer Flow 탭) %>
-    <script src="https://unpkg.com/cytoscape@3.30.2/dist/cytoscape.min.js" defer></script>
-    <script src="https://unpkg.com/dagre@0.8.5/dist/dagre.min.js" defer></script>
-    <script src="https://unpkg.com/cytoscape-dagre@2.5.0/cytoscape-dagre.js" defer></script>
+    <%# Cytoscape/dagre는 Drawer Flow 탭 진입 시 order_flow_controller.js에서 lazy load (657KB 절감). %>
 
-    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
 
     <%= yield :head %>
