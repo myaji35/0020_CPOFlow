@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_08_022219) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_08_031846) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -569,6 +569,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_08_022219) do
     t.string "item_name"
     t.integer "kanban_board_id"
     t.integer "kanban_column_id"
+    t.boolean "lab_sandbox", default: false, null: false
     t.text "llm_analysis"
     t.datetime "llm_analyzed_at"
     t.integer "lock_version", default: 0, null: false
@@ -628,6 +629,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_08_022219) do
     t.index ["kanban_board_id", "archived_at", "parent_order_id", "status"], name: "idx_orders_kanban_board_status"
     t.index ["kanban_board_id"], name: "index_orders_on_kanban_board_id"
     t.index ["kanban_column_id"], name: "index_orders_on_kanban_column_id"
+    t.index ["lab_sandbox"], name: "index_orders_on_lab_sandbox"
     t.index ["parent_order_id"], name: "index_orders_on_parent_order_id"
     t.index ["project_id"], name: "index_orders_on_project_id"
     t.index ["reference_no"], name: "index_orders_on_reference_no"

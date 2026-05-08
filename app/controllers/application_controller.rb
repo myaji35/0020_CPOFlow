@@ -149,13 +149,21 @@ class ApplicationController < ActionController::Base
   helper_method :ceo_mode?
 
   # Branch 데이터 격리: current_user의 branch에 속한 Order만 반환
-  # admin은 전체 접근 가능
+  # admin은 전체 접근 가능. LAB 샌드박스 Order는 운영 영역에서 자동 제외.
   def scoped_orders
-    base = Order.not_archived
+    base = Order.not_archived.not_sandbox
     return base if current_user.admin?
     base.joins(:user).where(users: { branch: current_user.branch })
   end
   helper_method :scoped_orders
+
+  # LAB 전용 — sandbox 포함. admin/manager만 접근.
+  def lab_scoped_orders
+    base = Order.not_archived
+    return base if current_user.admin?
+    base.joins(:user).where(users: { branch: current_user.branch })
+  end
+  helper_method :lab_scoped_orders
 
   def set_locale
     if user_signed_in?

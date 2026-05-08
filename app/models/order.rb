@@ -185,6 +185,10 @@ class Order < ApplicationRecord
   scope :inbox_triaged, -> { where(rfq_status: :rfq_triage) }
   scope :not_archived,  -> { where(archived_at: nil) }
   scope :archived,      -> { where.not(archived_at: nil) }
+  # LAB / RFQ Auto — 샌드박스 Order는 운영 화면(칸반/inbox/리포트)에서 제외.
+  # 운영 영역에서 무조건 .not_sandbox 적용 (scoped_orders가 자동 적용).
+  scope :not_sandbox,   -> { where(lab_sandbox: false) }
+  scope :sandbox_only,  -> { where(lab_sandbox: true) }
 
   # AUDIT-001: new_rfq 컬럼 누적 정리 — 30일 기준으로 stale/recent 분리
   scope :stale_new_rfq,  -> { where(status: :new_rfq).where("orders.updated_at < ?", 30.days.ago) }

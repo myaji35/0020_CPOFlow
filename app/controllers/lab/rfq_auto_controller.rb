@@ -5,23 +5,42 @@
 # 분석은 동기 실행 (Phase 2에서 ActiveJob + Turbo Stream 진행률 스트리밍 도입).
 class Lab::RfqAutoController < ApplicationController
   before_action :require_admin_or_manager!
-  before_action :load_order, only: %i[show analyze apply feedback]
+  before_action :load_order, only: %i[show analyze apply feedback upload destroy_attachment]
 
-  # GET /lab/rfq_auto — new_rfq 카드 목록 (분석 안 한 것 우선)
+  # GET /lab/rfq_auto — new_rfq 카드 + 샌드박스 카드 목록
   def index
-    base = scoped_orders.where(status: :new_rfq)
-                        .includes(:user, :assignees, :client, attachments_attachments: :blob)
-                        .order("orders.created_at DESC")
-    base = base.where("title LIKE :q OR reference_no LIKE :q OR customer_name LIKE :q",
+    base = lab_scoped_orders.where("orders.status = ? OR orders.lab_sandbox = ?",
+                                   Order.statuses[:new_rfq], true)
+                            .includes(:user, :assignees, :client, attachments_attachments: :blob)
+                            .order("orders.lab_sandbox DESC, orders.created_at DESC")
+    base = base.where("orders.title LIKE :q OR orders.reference_no LIKE :q OR orders.customer_name LIKE :q",
                       q: "%#{params[:q]}%") if params[:q].present?
-    @orders = base.limit(50)
+    @orders = base.limit(80)
 
-    # 각 Order의 가장 최근 분석 — N+1 방지: 한 번에 SELECT
     order_ids = @orders.map(&:id)
     @latest_analysis_by_order = RfqAutoAnalysis.where(order_id: order_ids)
                                                .order("rfq_auto_analyses.id DESC")
                                                .group_by(&:order_id)
                                                .transform_values(&:first)
+  end
+
+  # POST /lab/rfq_auto/sandbox — 빈 샌드박스 Order 생성 → show로 이동
+  def sandbox
+    order = Order.new(
+      title:           "[LAB Sandbox] #{Time.current.strftime('%Y-%m-%d %H:%M')}",
+      status:          :new_rfq,
+      rfq_status:      :rfq_pending,
+      lab_sandbox:     true,
+      user_id:         current_user.id,
+      customer_name:   "LAB Sandbox",
+      reference_no:    "LAB-#{Time.current.to_i.to_s(36)}"
+    )
+    # 일부 검증 면제 — sandbox는 운영 영역에서 안 보이므로 필수값 우회
+    if order.save(validate: false)
+      redirect_to lab_rfq_auto_path(order), notice: "샌드박스 카드 생성 — 임의 첨부파일을 업로드해 분석을 시도해보세요."
+    else
+      redirect_to lab_rfq_auto_index_path, alert: "샌드박스 생성 실패: #{order.errors.full_messages.join(', ')}"
+    end
   end
 
   # GET /lab/rfq_auto/:id
@@ -64,6 +83,46 @@ class Lab::RfqAutoController < ApplicationController
   rescue StandardError => e
     Rails.logger.error "[Lab::RfqAuto#apply] #{e.class}: #{e.message}"
     redirect_to lab_rfq_auto_path(@order), alert: "적용 중 오류: #{e.message}"
+  end
+
+  # POST /lab/rfq_auto/:id/upload — 임의 첨부파일 업로드 (단일/복수)
+  # params[:files] = 파일 배열, params[:auto_analyze] = "1"이면 업로드 직후 분석 트리거
+  def upload
+    files = Array(params[:files]).reject(&:blank?)
+    if files.empty?
+      return redirect_to lab_rfq_auto_path(@order), alert: "파일을 선택해주세요."
+    end
+
+    attached = 0
+    files.each do |f|
+      next unless f.respond_to?(:original_filename)
+      @order.attachments.attach(io: f.tempfile, filename: f.original_filename, content_type: f.content_type)
+      attached += 1
+    end
+
+    if params[:auto_analyze] == "1"
+      analysis = RfqAutoAnalysis.create!(
+        order: @order, user: current_user, status: "running",
+        llm_model: ENV.fetch("RFQ_LLM_MODEL", "claude-haiku-4-5-20251001"),
+        started_at: Time.current
+      )
+      RfqAutoAnalyzeJob.perform_later(analysis.id)
+      redirect_to lab_rfq_auto_path(@order), notice: "#{attached}개 파일 업로드 + 자동 분석 시작."
+    else
+      redirect_to lab_rfq_auto_path(@order), notice: "#{attached}개 파일 업로드 완료. '🔬 자동 분석 시작' 버튼으로 분석하세요."
+    end
+  rescue StandardError => e
+    Rails.logger.error "[Lab::RfqAuto#upload] #{e.class}: #{e.message}"
+    redirect_to lab_rfq_auto_path(@order), alert: "업로드 실패: #{e.message}"
+  end
+
+  # DELETE /lab/rfq_auto/:id/attachments/:attachment_id — 첨부 1건 삭제
+  def destroy_attachment
+    att = @order.attachments_attachments.find(params[:attachment_id])
+    att.purge_later
+    redirect_to lab_rfq_auto_path(@order), notice: "첨부 1건 삭제 요청."
+  rescue ActiveRecord::RecordNotFound
+    redirect_to lab_rfq_auto_path(@order), alert: "첨부를 찾을 수 없습니다."
   end
 
   # POST /lab/rfq_auto/:id/feedback?value=correct/wrong/partial
@@ -124,6 +183,6 @@ class Lab::RfqAutoController < ApplicationController
   end
 
   def load_order
-    @order = scoped_orders.find(params[:id])
+    @order = lab_scoped_orders.find(params[:id])
   end
 end

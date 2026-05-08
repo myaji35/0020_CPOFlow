@@ -125,10 +125,15 @@ Rails.application.routes.draw do
   # ── LAB (실험적 기능 — admin/manager 전용) ──────────────────
   namespace :lab do
     resources :rfq_auto, only: %i[index show] do
+      collection do
+        post :sandbox    # 새 샌드박스 Order 생성
+      end
       member do
-        post :analyze    # 분석 실행
-        post :apply      # 결과를 Order에 반영 (Phase 2+)
-        post :feedback   # correct/wrong/partial 피드백
+        post   :analyze                                # 분석 실행
+        post   :apply                                  # 결과를 Order에 반영
+        post   :feedback                               # 사용자 피드백
+        post   :upload                                 # 첨부 업로드 (+ 즉시 분석 옵션)
+        delete "attachments/:attachment_id", to: "rfq_auto#destroy_attachment", as: :attachment
       end
     end
   end
