@@ -50,16 +50,13 @@ module RfqAuto
     end
 
     def call
-      broadcast_progress!  # 시작 시점 — UI에 running 표시
+      # run_step이 시작/완료 시점에 자동 broadcast하므로 외부 broadcast 호출은 시작/종료에만.
+      broadcast_progress!  # 시작 시점 — 모든 단계 pending 상태로 표시
 
       run_step("step1_attachments") { step1_classify_attachments }
-      broadcast_progress!
       run_step("step2_items")       { step2_extract_items }
-      broadcast_progress!
       run_step("step3_tasks")       { step3_build_task_candidates }
-      broadcast_progress!
       run_step("step4_suppliers")   { step4_find_suppliers }
-      broadcast_progress!
       run_step("step5_summary")     { step5_build_summary }
 
       @analysis.update!(
@@ -70,7 +67,7 @@ module RfqAuto
         latency_ms:   ((Time.current - @t0) * 1000).round,
         completed_at: Time.current
       )
-      broadcast_progress!  # 최종 — completed 표시
+      broadcast_progress!  # 최종 — completed 상태 + 메트릭 카드 표시
     rescue StandardError => e
       Rails.logger.error "[RfqAuto::Analyzer] FATAL #{e.class}: #{e.message}\n#{e.backtrace.first(3).join("\n")}"
       @analysis.update!(
@@ -101,8 +98,12 @@ module RfqAuto
     end
 
     # 단계 실행 + 격리. 한 단계 실패해도 결과 채우고 다음 진행.
+    # 시작 시점에 'running' 마커 broadcast → 사용자에게 '이 단계 처리 중' 시각화.
     def run_step(key)
       step_t0 = Time.current
+      @steps_result[key] = { status: "running", started_at: step_t0.iso8601 }
+      broadcast_progress!  # 단계 시작 알림 — UI 스피너 표시
+
       result = yield
       result[:latency_ms] = ((Time.current - step_t0) * 1000).round
       result[:status]     ||= "ok"
@@ -151,9 +152,21 @@ module RfqAuto
     # ── Step 2 — 품목 + 11항목 누락 체크 ──────────────────────────
     def step2_extract_items
       combined_text = build_combined_text
-      return { status: "skipped", reason: "no extractable text", items: [] } if combined_text.blank?
+      text_preview  = combined_text.to_s.strip[0, 2000]
+      text_chars    = combined_text.to_s.length
 
-      raw = Rfp::ItemExtractor.call(combined_text) rescue nil
+      return { status: "skipped", reason: "텍스트 추출 실패 — PDF 도면이거나 OCR 필요", items: [],
+               text_preview: nil, text_chars: 0, doc_level_missing: REQUIRED_FIELDS.dup,
+               doc_level_missing_labels: REQUIRED_FIELDS.map { |f| REQUIRED_FIELD_LABELS[f] } } if combined_text.blank?
+
+      llm_error = nil
+      raw = begin
+        Rfp::ItemExtractor.call(combined_text)
+      rescue StandardError => e
+        llm_error = "#{e.class}: #{e.message}"
+        Rails.logger.warn "[RfqAuto::Analyzer] step2 ItemExtractor 실패: #{llm_error}"
+        nil
+      end
       items = (raw.is_a?(Hash) ? raw[:items] : raw) || []
 
       enriched = items.map.with_index do |item, idx|
@@ -172,7 +185,32 @@ module RfqAuto
         }
       end
 
-      { items: enriched, count: enriched.size }
+      # 품목 0개라도 문서 전체 기준 11항목 점검 (텍스트만 검사하는 항목들)
+      doc_missing = REQUIRED_FIELDS.select do |field|
+        case field
+        when "certification"     then !combined_text.match?(/(KS|CE|API|ATEX|ISO)\b/i)
+        when "lead_time"         then !combined_text.match?(/(lead\s*time|delivery\s*date|by\s+\d|due|납기)/i)
+        when "delivery_address"  then !combined_text.match?(/(delivery\s*address|ship\s*to|destination|납품지)/i)
+        when "incoterms"         then !combined_text.match?(/(FOB|CIF|EXW|DDP|FCA|CFR)\b/i)
+        when "payment_terms"     then !combined_text.match?(/(payment|T\/T|L\/C|net\s*\d|결제)/i)
+        when "drawing_attached"  then !@order.attachments.any? { |a| a.blob.filename.to_s.match?(/\.(pdf|dwg|dxf|step|stp|igs|png|jpg|jpeg)$/i) }
+        when "client_rfq_no"     then @order.reference_no.blank? && @order.rfq_no.blank?
+        when "validity_period"   then !combined_text.match?(/(valid|expir|유효)/i)
+        # 품목 단위 항목들 — 품목 0개면 결정적으로 누락
+        when "product_name", "specification", "quantity_unit"
+          enriched.empty? || enriched.all? { |e| e[:missing_fields].include?(field) }
+        end
+      end
+
+      {
+        items:                    enriched,
+        count:                    enriched.size,
+        text_chars:               text_chars,
+        text_preview:             text_preview,
+        llm_error:                llm_error,
+        doc_level_missing:        doc_missing,
+        doc_level_missing_labels: doc_missing.map { |f| REQUIRED_FIELD_LABELS[f] }
+      }
     end
 
     def build_combined_text
@@ -217,18 +255,32 @@ module RfqAuto
 
     # ── Step 3 — Task 후보 (dry-run, 저장 안 함) ─────────────────
     def step3_build_task_candidates
-      items = @steps_result.dig("step2_items", :items) || []
-      return { status: "skipped", reason: "no items", tasks: [] } if items.empty?
+      step2 = @steps_result["step2_items"] || {}
+      items = step2[:items] || []
 
-      tasks = items.flat_map do |item|
+      if items.any?
         # 품목 1개 → 11항목 체크리스트 task
-        REQUIRED_FIELDS.map do |field|
+        tasks = items.flat_map do |item|
+          REQUIRED_FIELDS.map do |field|
+            {
+              item_idx: item[:idx],
+              item_name: item[:name],
+              field: field,
+              label: REQUIRED_FIELD_LABELS[field],
+              status: item[:missing_fields].include?(field) ? "missing" : "ok"
+            }
+          end
+        end
+      else
+        # 품목 0개 → 문서 단위 11항목 점검을 task로 노출 (대표님이 결손 항목 한눈에 보도록)
+        doc_missing = step2[:doc_level_missing] || REQUIRED_FIELDS
+        tasks = REQUIRED_FIELDS.map do |field|
           {
-            item_idx: item[:idx],
-            item_name: item[:name],
+            item_idx: 0,
+            item_name: "(품목 추출 실패 — 문서 단위 점검)",
             field: field,
             label: REQUIRED_FIELD_LABELS[field],
-            status: item[:missing_fields].include?(field) ? "missing" : "ok"
+            status: doc_missing.include?(field) ? "missing" : "ok"
           }
         end
       end

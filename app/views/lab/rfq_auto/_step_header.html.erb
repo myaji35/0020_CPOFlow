@@ -1,25 +1,42 @@
-<%# 5단계 카드 헤더 — num, title, step(hash), badge(string) 받음 %>
+<%# 5단계 카드 헤더 — num, title, step(hash), badge(string) 받음.
+    상태: pending(미시작 회색) / running(처리중 amber+spinner) / ok(완료 emerald) / skipped(회색) / error(빨강) %>
 <%
   status = step["status"] || (step.empty? ? "pending" : "ok")
-  color = case status
-          when "ok"      then "emerald"
-          when "error"   then "red"
-          when "skipped" then "ink"
-          else "amber"
-          end
+  case status
+  when "ok"      then color, label = "emerald", "완료"
+  when "error"   then color, label = "red",     "실패"
+  when "skipped" then color, label = "ink",     "건너뜀"
+  when "running" then color, label = "amber",   "처리 중"
+  else                color, label = "ink",     "대기"
+  end
   latency = step["latency_ms"]
 %>
 <div class="flex items-center gap-3">
-  <div class="w-7 h-7 rounded-full bg-<%= color %>-100 dark:bg-<%= color %>-900/40 text-<%= color %>-700 dark:text-<%= color %>-300 grid place-items-center text-[12px] font-bold">
-    <%= num %>
+  <%# 상태 아이콘 — running일 때만 회전 스피너 %>
+  <div class="w-7 h-7 rounded-full bg-<%= color %>-100 dark:bg-<%= color %>-900/40 text-<%= color %>-700 dark:text-<%= color %>-300 grid place-items-center text-[12px] font-bold relative">
+    <% if status == "running" %>
+      <svg class="w-4 h-4 animate-spin absolute" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" stroke-dasharray="40 60" stroke-linecap="round"></circle>
+      </svg>
+      <span class="opacity-30"><%= num %></span>
+    <% elsif status == "ok" %>
+      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    <% elsif status == "error" %>
+      ✗
+    <% else %>
+      <%= num %>
+    <% end %>
   </div>
   <div class="flex-1">
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-2 flex-wrap">
       <span class="text-[14px] font-semibold text-ink-900 dark:text-white"><%= title %></span>
+      <span class="text-[10px] px-1.5 py-0.5 rounded font-mono <%= status == 'running' ? "bg-#{color}-100 dark:bg-#{color}-900/40 text-#{color}-700 dark:text-#{color}-300" : 'bg-ink-100 dark:bg-ink-800 text-ink-600 dark:text-ink-300' %>">
+        <%= label %>
+      </span>
       <% if badge.present? %>
         <span class="text-[10px] px-1.5 py-0.5 rounded bg-ink-100 dark:bg-ink-800 text-ink-600 dark:text-ink-300 font-mono"><%= badge %></span>
       <% end %>
-      <% if latency %>
+      <% if latency && status != "running" %>
         <span class="text-[10px] text-ink-400 font-mono"><%= latency %>ms</span>
       <% end %>
       <% if status == "error" %>

@@ -82,5 +82,8 @@ module.exports = {
     { pattern: /^bg-(stage|brand|ink|ok|warn|dangerx|info|accentx)-(50|75|100|150|200|300|400|500|600|700|900|950|new|quo|pending|po|deliver|problem|grn|giveup|done)$/ },
     { pattern: /^text-(stage|brand|ink|ok|warn|dangerx|info|accentx)-(50|75|100|150|200|300|400|500|600|700|900|950|new|quo|pending|po|deliver|problem|grn|giveup|done)$/ },
     { pattern: /^border-(stage|brand|ink|ok|warn|dangerx|info|accentx)-(50|75|100|150|200|300|400|500|600|700|900|950|new|quo|pending|po|deliver|problem|grn|giveup|done)$/ },
+    // RFQ Auto step status 동적 클래스 — running/ok/error/skipped/pending 색상 보호
+    { pattern: /^(bg|text|border)-(emerald|red|amber|ink)-(50|100|300|400|500|600|700|800|900)$/, variants: ['dark'] },
+    { pattern: /^bg-(emerald|red|amber|ink)-900\/40$/, variants: ['dark'] },
   ],
 }
