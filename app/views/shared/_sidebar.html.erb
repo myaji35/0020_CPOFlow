@@ -138,6 +138,17 @@
         <%= nav_link_to admin_reviews_path, icon: "lni lni-comments-alt", label: t("nav.feedback_admin", default: "피드백 관리") %>
       </div>
     <% end %>
+
+    <%# LAB — 실험적 기능 (admin/manager 한정). 운영 데이터 변경 X (dry-run) %>
+    <% if current_user&.admin_or_manager? && %w[admin manager].include?(current_persona) %>
+      <div class="px-3 pt-4 pb-1 text-[10px] font-semibold tracking-[1.2px] uppercase text-amber-200/70 transition-opacity"
+           :class="collapsed ? 'opacity-0 h-0 pt-0 pb-0 overflow-hidden' : 'opacity-100'">
+        🔬 LAB
+      </div>
+      <div class="flex flex-col px-2 gap-px">
+        <%= nav_link_to lab_rfq_auto_index_path, icon: "lni lni-magnifier", label: "RFQ Auto" %>
+      </div>
+    <% end %>
   </div>
 
   <!-- Foot: trash + settings + user (sticky) -->

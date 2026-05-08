@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_08_012013) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_08_022219) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -700,6 +700,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_08_012013) do
     t.string "user_agent"
     t.index ["created_at"], name: "index_reviews_on_created_at"
     t.index ["status"], name: "index_reviews_on_status"
+  end
+
+  create_table "rfq_auto_analyses", force: :cascade do |t|
+    t.datetime "completed_at"
+    t.decimal "cost_usd", precision: 10, scale: 4, default: "0.0"
+    t.datetime "created_at", null: false
+    t.text "error_message"
+    t.string "feedback"
+    t.integer "latency_ms", default: 0
+    t.string "llm_model"
+    t.integer "order_id", null: false
+    t.datetime "started_at"
+    t.string "status", default: "pending", null: false
+    t.text "steps"
+    t.text "summary"
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["order_id"], name: "index_rfq_auto_analyses_on_order_id"
+    t.index ["status"], name: "index_rfq_auto_analyses_on_status"
+    t.index ["user_id", "created_at"], name: "index_rfq_auto_analyses_on_user_id_and_created_at"
   end
 
   create_table "rfq_feedbacks", force: :cascade do |t|

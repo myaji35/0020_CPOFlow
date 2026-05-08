@@ -122,6 +122,17 @@ Rails.application.routes.draw do
     end
   end
 
+  # ── LAB (실험적 기능 — admin/manager 전용) ──────────────────
+  namespace :lab do
+    resources :rfq_auto, only: %i[index show] do
+      member do
+        post :analyze    # 분석 실행
+        post :apply      # 결과를 Order에 반영 (Phase 2+)
+        post :feedback   # correct/wrong/partial 피드백
+      end
+    end
+  end
+
   # Admin namespace
   namespace :admin do
     resources :imports, only: %i[index new create show] do

@@ -18,6 +18,7 @@ class Order < ApplicationRecord
   has_many :assignees, through: :assignments, source: :employee
   has_many :order_quotes, dependent: :destroy
   has_many :notifications, as: :notifiable, dependent: :destroy
+  has_many :rfq_auto_analyses, dependent: :destroy
   has_many_attached :attachments
 
   # ISS-262: 악성 첨부 차단 — MIME allowlist + 실행가능 확장자 deny + 크기 상한

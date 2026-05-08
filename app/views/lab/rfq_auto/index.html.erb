@@ -1,0 +1,92 @@
+<% content_for :page_title, "🔬 LAB — RFQ Auto" %>
+
+<div class="px-6 py-6 max-w-[1400px] mx-auto">
+  <header class="mb-6">
+    <div class="flex items-center gap-3 mb-2">
+      <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300">LAB · 실험실</span>
+      <span class="text-[11px] text-ink-500">운영 데이터는 변경되지 않습니다 (dry-run)</span>
+    </div>
+    <h1 class="text-xl font-semibold text-ink-900 dark:text-white tracking-tight">RFQ Auto — 첨부 자동 분석</h1>
+    <p class="text-[13px] text-ink-600 dark:text-ink-300 mt-1">
+      칸반 <code class="text-[12px] bg-ink-100 dark:bg-ink-800 px-1.5 py-0.5 rounded">new_rfq</code> 컬럼의 카드 1개를 선택해
+      첨부파일이 어디까지 자동 분석되는지 확인합니다. 5단계: 첨부 분류 → 품목 추출 → Task 후보 → 공급사 탐색 → 종합 보고서.
+    </p>
+  </header>
+
+  <%= form_with url: lab_rfq_auto_index_path, method: :get, class: "mb-4 flex items-center gap-2" do %>
+    <input type="text" name="q" value="<%= params[:q] %>"
+           placeholder="제목·고객·RFQ 번호 검색..."
+           class="flex-1 max-w-[420px] text-[13px] px-3 py-2 border border-ink-200 dark:border-ink-700 rounded-md bg-white dark:bg-ink-800">
+    <button type="submit" class="text-[13px] px-3 py-2 rounded-md bg-brand-600 text-white hover:bg-brand-700 transition-colors">검색</button>
+    <% if params[:q].present? %>
+      <%= link_to "초기화", lab_rfq_auto_index_path, class: "text-[12px] text-ink-500 hover:text-brand-600" %>
+    <% end %>
+  <% end %>
+
+  <div class="bg-white dark:bg-ink-900 border border-ink-150 dark:border-ink-800 rounded-lg overflow-hidden shadow-sh-1">
+    <table class="w-full text-[13px]">
+      <thead class="bg-ink-50 dark:bg-ink-800 text-[11px] font-semibold uppercase tracking-wider text-ink-600 dark:text-ink-300">
+        <tr>
+          <th class="px-3 py-2 text-left">제목 / RFQ 번호</th>
+          <th class="px-3 py-2 text-left">고객</th>
+          <th class="px-3 py-2 text-center">첨부</th>
+          <th class="px-3 py-2 text-center">최근 분석</th>
+          <th class="px-3 py-2 text-center">품목/누락</th>
+          <th class="px-3 py-2 text-right">액션</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-ink-100 dark:divide-ink-800">
+        <% if @orders.empty? %>
+          <tr><td colspan="6" class="px-3 py-8 text-center text-ink-500">분석 대상 카드가 없습니다 (new_rfq 컬럼 비어 있음).</td></tr>
+        <% end %>
+        <% @orders.each do |order| %>
+          <% latest = @latest_analysis_by_order[order.id] %>
+          <tr class="hover:bg-ink-50 dark:hover:bg-ink-800/40 transition-colors">
+            <td class="px-3 py-2.5">
+              <div class="font-medium text-ink-900 dark:text-white truncate max-w-[420px]"><%= order.title.presence || order.display_subject %></div>
+              <div class="text-[11px] text-ink-500 mt-0.5"><%= order.reference_no.presence || order.rfq_no.presence || "—" %></div>
+            </td>
+            <td class="px-3 py-2.5 text-ink-700 dark:text-ink-200"><%= order.client&.name || order.customer_name || "—" %></td>
+            <td class="px-3 py-2.5 text-center">
+              <% n = order.attachments.size %>
+              <% if n.zero? %>
+                <span class="text-[11px] text-ink-400">없음</span>
+              <% else %>
+                <span class="inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"><%= n %>개</span>
+              <% end %>
+            </td>
+            <td class="px-3 py-2.5 text-center">
+              <% if latest %>
+                <% color = latest.completed? ? "emerald" : (latest.failed? ? "red" : "amber") %>
+                <span class="inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded bg-<%= color %>-50 text-<%= color %>-700 dark:bg-<%= color %>-900/30 dark:text-<%= color %>-300">
+                  <%= latest.status %>
+                </span>
+                <div class="text-[10px] text-ink-500 mt-0.5"><%= time_ago_in_words(latest.created_at) %> 전</div>
+              <% else %>
+                <span class="text-[11px] text-ink-400">—</span>
+              <% end %>
+            </td>
+            <td class="px-3 py-2.5 text-center">
+              <% if latest&.completed? %>
+                <% s = latest.summary_data %>
+                <span class="text-[11px] font-mono text-ink-700 dark:text-ink-200">
+                  <%= s["items_count"].to_i %>품 / <span class="text-amber-600 dark:text-amber-400 font-semibold">결손 <%= s["items_missing_total"].to_i %></span>
+                </span>
+              <% else %>
+                <span class="text-[11px] text-ink-400">—</span>
+              <% end %>
+            </td>
+            <td class="px-3 py-2.5 text-right">
+              <%= link_to "열기 →", lab_rfq_auto_path(order),
+                  class: "text-[12px] font-semibold text-brand-600 hover:text-brand-700 hover:underline" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-4 text-[11px] text-ink-500">
+    표시: 최대 50건 · 분석은 dry-run으로 LAB에만 기록됨 · 결과 적용은 Phase 2에서 추가 예정
+  </div>
+</div>
