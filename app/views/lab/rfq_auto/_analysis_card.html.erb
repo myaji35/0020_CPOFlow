@@ -54,33 +54,36 @@
     </div>
   <% end %>
 
-  <%# 5단계 카드 %>
-  <div class="space-y-4">
+  <%# 5단계 패널 — 단계별 status에 따라 자동 펼침 %>
+  <div class="space-y-3">
     <% step1 = steps["step1_attachments"] || {} %>
-    <%= render "lab/rfq_auto/step_header", num: 1, title: "첨부 파일 인식", step: step1, badge: step1.empty? ? nil : "#{step1['relevant'].to_i}/#{step1['total'].to_i} 관련" %>
-    <% if step1["items"].is_a?(Array) && step1["items"].any? %>
-      <div class="ml-9 -mt-2 mb-4 space-y-1.5">
-        <% step1["items"].each do |it| %>
-          <div class="flex items-center justify-between text-[12px] px-3 py-2 bg-ink-50 dark:bg-ink-900 rounded border border-ink-100 dark:border-ink-800">
-            <div class="flex items-center gap-2 min-w-0">
-              <span class="font-mono text-ink-700 dark:text-ink-200 truncate max-w-[420px]"><%= it["filename"] %></span>
-              <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"><%= it["type"] %></span>
+    <%= render layout: "lab/rfq_auto/step_panel", locals: { num: 1, title: "첨부 파일 인식", step: step1, badge: step1.empty? ? nil : "#{step1['relevant'].to_i}/#{step1['total'].to_i} 관련" } do %>
+      <% if step1["items"].is_a?(Array) && step1["items"].any? %>
+        <div class="space-y-1.5">
+          <% step1["items"].each do |it| %>
+            <div class="flex items-center justify-between text-[12px] px-3 py-2 bg-ink-50 dark:bg-ink-900 rounded border border-ink-100 dark:border-ink-800">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="font-mono text-ink-700 dark:text-ink-200 truncate max-w-[420px]"><%= it["filename"] %></span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"><%= it["type"] %></span>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="text-[10px] text-ink-500">관련도 <%= it["relevance_score"] %></span>
+                <span class="w-12 h-1 bg-ink-100 rounded-full overflow-hidden"><span class="block h-full bg-brand-500" style="width: <%= [it["relevance_score"].to_i, 100].min %>%"></span></span>
+              </div>
             </div>
-            <div class="flex items-center gap-2 shrink-0">
-              <span class="text-[10px] text-ink-500">관련도 <%= it["relevance_score"] %></span>
-              <span class="w-12 h-1 bg-ink-100 rounded-full overflow-hidden"><span class="block h-full bg-brand-500" style="width: <%= [it["relevance_score"].to_i, 100].min %>%"></span></span>
-            </div>
-          </div>
-        <% end %>
-      </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="text-[11px] text-ink-500">첨부 없음.</div>
+      <% end %>
     <% end %>
 
     <% step2 = steps["step2_items"] || {} %>
-    <%= render "lab/rfq_auto/step_header", num: 2, title: "품목 추출 + 필수 11항목 점검", step: step2, badge: step2.empty? ? nil : "#{step2['count'].to_i}품" %>
+    <%= render layout: "lab/rfq_auto/step_panel", locals: { num: 2, title: "품목 추출 + 필수 11항목 점검", step: step2, badge: step2.empty? ? nil : "#{step2['count'].to_i}품" } do %>
 
     <%# 항상 표시 — 11항목 매트릭스. 품목별 또는 문서 단위 fallback %>
     <% if step2.is_a?(Hash) && (step2["items"].present? || step2["doc_level_missing"].present?) %>
-      <div class="ml-9 -mt-2 mb-4">
+      <div>
         <%# 추출 모드 정보 (LLM / OCR / Escalation / Vision) %>
         <div class="mb-3 flex flex-wrap gap-1.5 text-[10px]">
           <% if step2["llm_model"].present? %>
@@ -128,84 +131,94 @@
           </details>
         <% end %>
 
-        <%# 11항목 매트릭스 — 품목 있으면 표 형식, 없으면 문서 단위 %>
+        <%# 11항목 매트릭스 — 행: 품목 / 열: 11항목 ✓ ✗ 단일 표 %>
         <% if step2["items"].is_a?(Array) && step2["items"].any? %>
-          <%# 품목 표 — #/출처/품명·모델/사양/수량/단위/인증/누락 %>
-          <div class="overflow-x-auto rounded-md border border-ink-150 dark:border-ink-800">
-            <table class="w-full text-[12px]">
-              <thead class="bg-ink-50 dark:bg-ink-800 text-[10px] uppercase tracking-wider text-ink-600 dark:text-ink-300">
-                <tr>
-                  <th class="px-2 py-1.5 text-left w-8">#</th>
-                  <th class="px-2 py-1.5 text-left w-44">출처 파일</th>
-                  <th class="px-2 py-1.5 text-left">품명 / 모델</th>
-                  <th class="px-2 py-1.5 text-left">사양</th>
-                  <th class="px-2 py-1.5 text-right w-20">수량</th>
-                  <th class="px-2 py-1.5 text-left w-16">단위</th>
-                  <th class="px-2 py-1.5 text-left w-24">인증</th>
-                  <th class="px-2 py-1.5 text-center w-20">누락</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-ink-100 dark:divide-ink-800 bg-white dark:bg-ink-900">
-                <% step2["items"].each do |item| %>
-                  <tr>
-                    <td class="px-2 py-1.5 text-ink-500 font-mono"><%= item["idx"] %></td>
-                    <td class="px-2 py-1.5">
-                      <% if item["source_file"].present? %>
-                        <span class="inline-block text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 truncate max-w-[160px]" title="<%= item["source_file"] %>&#10;<%= item["source_excerpt"] %>"><%= item["source_file"].to_s.truncate(20) %></span>
-                      <% else %>
-                        <span class="text-[10px] text-ink-400">—</span>
-                      <% end %>
-                    </td>
-                    <td class="px-2 py-1.5">
-                      <div class="font-semibold text-ink-900 dark:text-white truncate max-w-[260px]" title="<%= item["name"] %>"><%= item["name"].presence || "—" %></div>
-                      <% if item["model"].present? %>
-                        <div class="text-[10px] text-ink-500 font-mono"><%= item["model"] %></div>
-                      <% end %>
-                    </td>
-                    <td class="px-2 py-1.5 text-ink-700 dark:text-ink-200 truncate max-w-[280px]" title="<%= item["spec"] %>"><%= item["spec"].presence || "—" %></td>
-                    <td class="px-2 py-1.5 text-right font-mono text-ink-900 dark:text-white"><%= item["quantity"].presence || "—" %></td>
-                    <td class="px-2 py-1.5 text-ink-700 dark:text-ink-200"><%= item["unit"].presence || "—" %></td>
-                    <td class="px-2 py-1.5">
-                      <% if item["certification"].present? %>
-                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"><%= item["certification"] %></span>
-                      <% else %><span class="text-ink-400">—</span><% end %>
-                    </td>
-                    <td class="px-2 py-1.5 text-center">
-                      <% if item["missing_count"].to_i > 0 %>
-                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300">⚠ <%= item["missing_count"] %></span>
-                      <% else %>
-                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300">완비</span>
-                      <% end %>
-                    </td>
-                  </tr>
-                <% end %>
-              </tbody>
-            </table>
-          </div>
-
-          <%# 11항목 매트릭스 — 품목별 펼치기 (details) %>
-          <details class="mt-3">
-            <summary class="cursor-pointer text-[11px] text-ink-600 dark:text-ink-300 hover:text-brand-600">
-              📋 품목별 11항목 상세 점검 펼쳐보기
+          <%# 기본 정보 표 (품명/사양/수량/출처) %>
+          <details open class="mb-3">
+            <summary class="cursor-pointer text-[11px] font-semibold text-ink-700 dark:text-ink-200 mb-2 hover:text-brand-600">
+              📦 품목 기본 정보 (<%= step2["items"].size %>건)
             </summary>
-            <div class="mt-2 space-y-2">
-              <% step2["items"].each do |item| %>
-                <div class="border border-ink-150 dark:border-ink-800 rounded-md p-3 bg-white dark:bg-ink-900">
-                  <div class="text-[12px] font-semibold mb-2 text-ink-900 dark:text-white">
-                    #<%= item["idx"] %>. <%= item["name"] %>
-                  </div>
-                  <div class="grid grid-cols-2 md:grid-cols-3 gap-1">
-                    <% missing = (item["missing_fields"] || []) %>
-                    <% RfqAuto::Analyzer::REQUIRED_FIELDS.each do |field| %>
-                      <% is_missing = missing.include?(field) %>
-                      <span class="text-[10px] px-1.5 py-0.5 rounded <%= is_missing ? 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300' : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' %>">
-                        <%= is_missing ? "✗" : "✓" %> <%= RfqAuto::Analyzer::REQUIRED_FIELD_LABELS[field] %>
-                      </span>
-                    <% end %>
-                  </div>
-                </div>
-              <% end %>
+            <div class="overflow-x-auto rounded-md border border-ink-150 dark:border-ink-800">
+              <table class="w-full text-[12px]">
+                <thead class="bg-ink-50 dark:bg-ink-800 text-[10px] uppercase tracking-wider text-ink-600 dark:text-ink-300">
+                  <tr>
+                    <th class="px-2 py-1.5 text-left w-8">#</th>
+                    <th class="px-2 py-1.5 text-left w-32">출처 파일</th>
+                    <th class="px-2 py-1.5 text-left">품명 / 모델</th>
+                    <th class="px-2 py-1.5 text-left">사양</th>
+                    <th class="px-2 py-1.5 text-right w-16">수량</th>
+                    <th class="px-2 py-1.5 text-left w-14">단위</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-ink-100 dark:divide-ink-800 bg-white dark:bg-ink-900">
+                  <% step2["items"].each do |item| %>
+                    <tr>
+                      <td class="px-2 py-1.5 text-ink-500 font-mono"><%= item["idx"] %></td>
+                      <td class="px-2 py-1.5">
+                        <% if item["source_file"].present? %>
+                          <span class="inline-block text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 truncate max-w-[120px]" title="<%= item["source_file"] %>"><%= item["source_file"].to_s.truncate(16) %></span>
+                        <% else %><span class="text-[10px] text-ink-400">—</span><% end %>
+                      </td>
+                      <td class="px-2 py-1.5">
+                        <div class="font-semibold text-ink-900 dark:text-white truncate max-w-[260px]" title="<%= item["name"] %>"><%= item["name"].presence || "—" %></div>
+                        <% if item["model"].present? %><div class="text-[10px] text-ink-500 font-mono"><%= item["model"] %></div><% end %>
+                      </td>
+                      <td class="px-2 py-1.5 text-ink-700 dark:text-ink-200 truncate max-w-[280px]" title="<%= item["spec"] %>"><%= item["spec"].presence || "—" %></td>
+                      <td class="px-2 py-1.5 text-right font-mono text-ink-900 dark:text-white"><%= item["quantity"].presence || "—" %></td>
+                      <td class="px-2 py-1.5 text-ink-700 dark:text-ink-200"><%= item["unit"].presence || "—" %></td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
             </div>
+          </details>
+
+          <%# 11항목 매트릭스 — 행=품목, 열=11항목 (✓/✗) — 한눈에 결손 패턴 보기 %>
+          <details open>
+            <summary class="cursor-pointer text-[11px] font-semibold text-ink-700 dark:text-ink-200 mb-2 hover:text-brand-600">
+              ✓✗ 필수 11항목 매트릭스 (행: 품목, 열: 항목)
+            </summary>
+            <div class="overflow-x-auto rounded-md border border-ink-150 dark:border-ink-800">
+              <table class="w-full text-[11px] border-collapse">
+                <thead class="bg-ink-50 dark:bg-ink-800 text-[10px] text-ink-600 dark:text-ink-300">
+                  <tr>
+                    <th class="sticky left-0 bg-ink-50 dark:bg-ink-800 px-2 py-1.5 text-left w-44 z-10 border-r border-ink-200 dark:border-ink-700">품목</th>
+                    <% RfqAuto::Analyzer::REQUIRED_FIELDS.each do |field| %>
+                      <th class="px-1 py-1.5 text-center min-w-[64px] border-l border-ink-200 dark:border-ink-700 align-middle">
+                        <div class="leading-tight whitespace-pre-line"><%= RfqAuto::Analyzer::REQUIRED_FIELD_LABELS[field].gsub(' ', "\n") %></div>
+                      </th>
+                    <% end %>
+                    <th class="px-2 py-1.5 text-center w-14 border-l border-ink-200 dark:border-ink-700">결손</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-ink-900">
+                  <% step2["items"].each do |item| %>
+                    <tr class="border-t border-ink-100 dark:border-ink-800">
+                      <td class="sticky left-0 bg-white dark:bg-ink-900 px-2 py-1.5 border-r border-ink-200 dark:border-ink-700 z-10">
+                        <div class="font-semibold text-ink-900 dark:text-white truncate max-w-[160px]" title="<%= item["name"] %>">#<%= item["idx"] %>. <%= item["name"].to_s.truncate(20) %></div>
+                      </td>
+                      <% missing = (item["missing_fields"] || []) %>
+                      <% RfqAuto::Analyzer::REQUIRED_FIELDS.each do |field| %>
+                        <% is_missing = missing.include?(field) %>
+                        <td class="px-1 py-1.5 text-center border-l border-ink-100 dark:border-ink-800 <%= is_missing ? 'bg-red-50 dark:bg-red-900/20' : 'bg-emerald-50/50 dark:bg-emerald-900/10' %>">
+                          <span class="<%= is_missing ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400' %> font-bold text-[14px]">
+                            <%= is_missing ? "✗" : "✓" %>
+                          </span>
+                        </td>
+                      <% end %>
+                      <td class="px-2 py-1.5 text-center border-l border-ink-200 dark:border-ink-700">
+                        <% if item["missing_count"].to_i > 0 %>
+                          <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 font-mono">⚠ <%= item["missing_count"] %></span>
+                        <% else %>
+                          <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300">완비</span>
+                        <% end %>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+            <div class="mt-2 text-[10px] text-ink-500">✓ 충족 / ✗ 누락 — 컬럼 헤더에 마우스 hover하면 전체 항목명 표시</div>
           </details>
         <% else %>
           <%# 품목 0개 — 문서 단위 11항목 매트릭스 %>
@@ -229,14 +242,14 @@
         <% end %>
       </div>
     <% end %>
+    <% end %>
 
     <%# Step 3 — Task 목록 후보 (dry-run, 카드 적용 전 미리보기) %>
     <% step3 = steps["step3_tasks"] || {} %>
-    <%= render "lab/rfq_auto/step_header", num: 3, title: "Task 목록 후보 (카드 적용 시 자동 생성)", step: step3,
-               badge: step3.empty? ? nil : "#{step3['count'].to_i}건 / 결손 #{step3['missing_count'].to_i}" %>
+    <%= render layout: "lab/rfq_auto/step_panel", locals: { num: 3, title: "Task 목록 후보 (카드 적용 시 자동 생성)", step: step3, badge: step3.empty? ? nil : "#{step3['count'].to_i}건 / 결손 #{step3['missing_count'].to_i}" } do %>
     <% missing_tasks = (step3["tasks"] || []).select { |t| t["status"] == "missing" } %>
     <% if missing_tasks.any? %>
-      <div class="ml-9 -mt-2 mb-4">
+      <div>
         <div class="text-[11px] text-ink-500 mb-2">
           📌 카드에 적용 시 다음 Task가 자동 생성됩니다 (누락 항목 1건 = Task 1건).
         </div>
@@ -268,19 +281,19 @@
         </div>
       </div>
     <% elsif step3["count"].to_i > 0 %>
-      <div class="ml-9 -mt-2 mb-4 text-[11px] text-emerald-700 dark:text-emerald-300">
+      <div class="text-[11px] text-emerald-700 dark:text-emerald-300">
         ✓ 모든 필수 항목이 충족되어 자동 생성될 Task가 없습니다.
       </div>
+    <% end %>
     <% end %>
 
     <%# Step 4 — 공급사 탐색 %>
     <% step4 = steps["step4_suppliers"] || {} %>
-    <%= render "lab/rfq_auto/step_header", num: 4, title: "공급사 탐색", step: step4,
-               badge: step4.empty? ? nil : "#{step4['count'].to_i}건" %>
+    <%= render layout: "lab/rfq_auto/step_panel", locals: { num: 4, title: "공급사 탐색", step: step4, badge: step4.empty? ? nil : "#{step4['count'].to_i}건" } do %>
     <% if step4["suppliers"].is_a?(Array) && step4["suppliers"].any? %>
       <%# 소스별 그룹핑 %>
       <% sources = step4["suppliers"].group_by { |s| s["source"] } %>
-      <div class="ml-9 -mt-2 mb-4 space-y-3">
+      <div class="space-y-3">
         <% sources.each do |source, sups| %>
           <div>
             <div class="text-[11px] font-semibold text-ink-700 dark:text-ink-200 mb-1">
@@ -341,17 +354,18 @@
           </div>
         </div>
       <% else %>
-        <div class="ml-9 -mt-2 mb-4 text-[11px] text-ink-500">
+        <div class="text-[11px] text-ink-500">
           품목 0개로 탐색 skip — 품목 추출 후 다시 분석해주세요.
         </div>
       <% end %>
     <% end %>
+    <% end %>
 
     <%# Step 5 — 종합 보고서 %>
     <% step5 = steps["step5_summary"] || {} %>
-    <%= render "lab/rfq_auto/step_header", num: 5, title: "종합 보고서", step: step5, badge: step5.empty? ? nil : "완료" %>
+    <%= render layout: "lab/rfq_auto/step_panel", locals: { num: 5, title: "종합 보고서", step: step5, badge: step5.empty? ? nil : "완료" } do %>
     <% if analysis.completed? && summary.present? %>
-      <div class="ml-9 -mt-2 mb-4 grid grid-cols-2 md:grid-cols-3 gap-2 text-[11px]">
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-[11px]">
         <div class="p-2 rounded bg-ink-50 dark:bg-ink-900 border border-ink-150 dark:border-ink-800">
           <div class="text-ink-500 mb-0.5">📎 첨부 분류</div>
           <div class="font-mono text-ink-900 dark:text-white"><%= summary["attachments_relevant"].to_i %>/<%= summary["attachments_total"].to_i %> 관련</div>
@@ -377,6 +391,7 @@
           <div class="font-mono text-ink-900 dark:text-white"><%= summary["elapsed_seconds"] %>s · $<%= summary["cost_usd"] %></div>
         </div>
       </div>
+    <% end %>
     <% end %>
   </div>
 

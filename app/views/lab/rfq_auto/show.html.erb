@@ -84,6 +84,45 @@
     <%= turbo_stream_from "rfq_auto_analysis_#{@latest.id}" %>
     <%= render "analysis_card", analysis: @latest %>
 
+    <%# 폴백 폴링 — Action Cable 미작동 환경 대비. running 상태일 때만 2초마다 페이지 reload.
+        Turbo Stream broadcast 정상 작동하면 페이지 reload 전 결과 갱신되어 효과 없음 (idempotent). %>
+    <% if @latest.running? %>
+      <script>
+        (function () {
+          var pollId;
+          function startPoll () {
+            if (pollId) return;
+            pollId = setInterval(function () {
+              var card = document.getElementById('rfq-auto-analysis-<%= @latest.id %>');
+              var status = card && card.dataset.status;
+              if (status && status !== 'running') {
+                clearInterval(pollId);
+                return;
+              }
+              fetch(window.location.pathname, { headers: { 'Accept': 'text/html' } })
+                .then(function (r) { return r.text(); })
+                .then(function (html) {
+                  var doc = new DOMParser().parseFromString(html, 'text/html');
+                  var fresh = doc.getElementById('rfq-auto-analysis-<%= @latest.id %>');
+                  if (fresh) {
+                    var current = document.getElementById('rfq-auto-analysis-<%= @latest.id %>');
+                    if (current) current.replaceWith(fresh);
+                    if (fresh.dataset.status && fresh.dataset.status !== 'running') {
+                      clearInterval(pollId);
+                    }
+                  }
+                })
+                .catch(function () { /* 무시 — 다음 폴링 재시도 */ });
+            }, 2000);
+          }
+          // turbo:load 또는 즉시 시작
+          if (document.readyState === 'complete') startPoll();
+          else window.addEventListener('load', startPoll);
+          document.addEventListener('turbo:load', startPoll);
+        })();
+      </script>
+    <% end %>
+
     <%# 과거 분석 이력 %>
     <% if @analyses.size > 1 %>
       <div class="mt-8 pt-4 border-t border-ink-150 dark:border-ink-800">
