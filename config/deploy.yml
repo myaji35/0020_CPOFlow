@@ -5,10 +5,17 @@ service: cpoflow
 image: myaji35/cpoflow
 
 # Deploy to these servers.
+# 2026-05-08: SolidQueue를 web 컨테이너에서 분리 — DB 락 경합으로 사용자 요청 지연/5xx 발생.
+# worker는 web과 같은 서버(158.247.235.31)에 별도 컨테이너로 실행, 같은 SQLite 볼륨 공유.
+# web은 사용자 요청만 처리 → BusyException 빈도 ↓ + Puma 응답성 회복.
 servers:
   web:
     hosts:
       - 158.247.235.31
+  worker:
+    hosts:
+      - 158.247.235.31
+    cmd: bin/jobs
 
 # Where you keep your container images.
 registry:
@@ -39,7 +46,8 @@ env:
     # - SMTP_PORT
     # - SMTP_DOMAIN
   clear:
-    SOLID_QUEUE_IN_PUMA: true
+    # 2026-05-08: web 컨테이너에서 SolidQueue 분리 → false. worker 컨테이너가 단독 실행.
+    SOLID_QUEUE_IN_PUMA: false
     MAILER_HOST: cpoflow.ddtl.co.kr
 
 # Aliases

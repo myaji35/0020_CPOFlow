@@ -26,7 +26,8 @@ RUN apt-get update -qq && \
       libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 \
       libxcomposite1 libxdamage1 libxrandr2 libgbm1 libpango-1.0-0 \
       libcairo2 libasound2 libxshmfence1 \
-      fonts-liberation fonts-nanum fonts-noto-cjk fonts-noto-core fonts-hosny-amiri && \
+      fonts-liberation fonts-nanum fonts-noto-cjk fonts-noto-core fonts-hosny-amiri \
+      poppler-utils && \
     fc-cache -f && \
     ln -s /usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2 /usr/local/lib/libjemalloc.so && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
