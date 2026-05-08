@@ -175,8 +175,9 @@ class Order < ApplicationRecord
       .where.not(status: [ :get_grn, :give_up, :done ])
   }
   scope :due_soon, -> { where(due_date: Date.today..14.days.from_now).where.not(status: [ :get_grn, :give_up, :done ]) }
-  scope :by_due_date, -> { order(due_date: :asc) }
-  scope :by_reference_no, ->(ref) { where(reference_no: ref).order(created_at: :asc) }
+  # JOIN 환경(scoped_orders 등)에서 다른 테이블의 동명 컬럼과 충돌 방지를 위해 테이블명 명시.
+  scope :by_due_date, -> { order("orders.due_date ASC") }
+  scope :by_reference_no, ->(ref) { where(reference_no: ref).order("orders.created_at ASC") }
   scope :root_orders, -> { where(parent_order_id: nil) }
   scope :inbox_pending, -> { where(status: :new_rfq, rfq_status: :rfq_pending) }
   scope :inbox_excluded, -> { where(status: :new_rfq, rfq_status: :rfq_excluded) }

@@ -1,6 +1,8 @@
 class DashboardController < ApplicationController
   def index
     # Branch 스코프 적용 (admin은 전체, 일반 사용자는 본인 branch만)
+    # 주의: scoped_orders가 비-admin에서 joins(:user) → users.created_at/updated_at과 충돌 가능.
+    # bare column 대신 hash form 또는 orders.* 명시 사용.
     orders = scoped_orders
 
     # ── 현재 상황 (KPI Cards) ─────────────────────────────────
@@ -8,7 +10,7 @@ class DashboardController < ApplicationController
     @overdue_count  = orders.overdue.count
     @urgent_count   = orders.urgent.count
     @delivered_this_month = orders.get_grn
-                                 .where(updated_at: Time.current.beginning_of_month..)
+                                 .where(orders: { updated_at: Time.current.beginning_of_month.. })
                                  .count
 
     # AUDIT-002: 미배정 Order 카운트 (active + not finished)
@@ -19,7 +21,7 @@ class DashboardController < ApplicationController
                               .count
 
     @urgent_orders  = orders.urgent.by_due_date.limit(5).includes(:assignees)
-    @recent_orders  = orders.order(created_at: :desc).limit(8).includes(:assignees, :tasks)
+    @recent_orders  = orders.order("orders.created_at DESC").limit(8).includes(:assignees, :tasks)
     @kanban_counts  = orders.group(:status).count
 
     # ISS-216: 이번 주/다음 주 예정 납기 위젯
@@ -35,32 +37,39 @@ class DashboardController < ApplicationController
                                     .by_due_date.limit(8).includes(:assignees, :client)
     @due_next_week_count = active_scope.where(due_date: next_week_start..next_week_end).count
 
-    # ── 기간별 분석 데이터 ────────────────────────────────────
-    @weekly_data    = build_weekly_data(8)
-    @monthly_data   = build_monthly_data(12)
-    @quarterly_data = build_quarterly_data(6)
-    @yearly_data    = build_yearly_data(3)
+    # ── 기간별 분석 데이터 ─ 글로벌 캐시 (5분, 사용자별로 동일 결과)
+    # 시계열은 30+ 쿼리가 직렬 → 캐시 hit 시 SQL 0개
+    @weekly_data    = Rails.cache.fetch("dashboard/weekly/8",    expires_in: 5.minutes) { build_weekly_data(8) }
+    @monthly_data   = Rails.cache.fetch("dashboard/monthly/12",  expires_in: 5.minutes) { build_monthly_data(12) }
+    @quarterly_data = Rails.cache.fetch("dashboard/quarterly/6", expires_in: 5.minutes) { build_quarterly_data(6) }
+    @yearly_data    = Rails.cache.fetch("dashboard/yearly/3",    expires_in: 5.minutes) { build_yearly_data(3) }
 
     # ── 스마트 KPI 추가 ───────────────────────────────────────
-    @total_value_this_month = orders.where(created_at: Time.current.beginning_of_month..).sum(:estimated_value).to_f
-    @total_value_last_month = orders.where(created_at: 1.month.ago.beginning_of_month..1.month.ago.end_of_month).sum(:estimated_value).to_f
+    @total_value_this_month = orders.where(orders: { created_at: Time.current.beginning_of_month.. }).sum(:estimated_value).to_f
+    @total_value_last_month = orders.where(orders: { created_at: 1.month.ago.beginning_of_month..1.month.ago.end_of_month }).sum(:estimated_value).to_f
     @on_time_rate_this_month = calculate_on_time_rate(Time.current.beginning_of_month, Time.current.end_of_month)
     @on_time_rate_last_month = calculate_on_time_rate(1.month.ago.beginning_of_month, 1.month.ago.end_of_month)
 
-    # 현장 카테고리별 수주 (현황)
-    @site_category_data = build_site_category_data
+    # 현장 카테고리별 수주 — 글로벌 캐시 (5분)
+    @site_category_data = Rails.cache.fetch("dashboard/site_category", expires_in: 5.minutes) { build_site_category_data }
 
-    # FR-06: 발주처 Top5 / 거래처 Top5
-    @top_clients = Client.joins(:orders)
-                         .select("clients.id, clients.name, COUNT(orders.id) AS order_count, SUM(orders.estimated_value) AS total_value")
-                         .group("clients.id, clients.name")
-                         .order(Arel.sql("total_value DESC NULLS LAST"))
-                         .limit(5)
-    @top_suppliers = Supplier.joins(:orders)
-                             .select("suppliers.id, suppliers.name, COUNT(orders.id) AS order_count, SUM(orders.estimated_value) AS total_value")
-                             .group("suppliers.id, suppliers.name")
-                             .order(Arel.sql("total_value DESC NULLS LAST"))
-                             .limit(5)
+    # FR-06: 발주처 Top5 / 거래처 Top5 — 글로벌 캐시 (5분, .to_a로 ActiveRecord 결과 freeze)
+    @top_clients = Rails.cache.fetch("dashboard/top_clients/5", expires_in: 5.minutes) do
+      Client.joins(:orders)
+            .select("clients.id, clients.name, COUNT(orders.id) AS order_count, SUM(orders.estimated_value) AS total_value")
+            .group("clients.id, clients.name")
+            .order(Arel.sql("total_value DESC NULLS LAST"))
+            .limit(5)
+            .to_a
+    end
+    @top_suppliers = Rails.cache.fetch("dashboard/top_suppliers/5", expires_in: 5.minutes) do
+      Supplier.joins(:orders)
+              .select("suppliers.id, suppliers.name, COUNT(orders.id) AS order_count, SUM(orders.estimated_value) AS total_value")
+              .group("suppliers.id, suppliers.name")
+              .order(Arel.sql("total_value DESC NULLS LAST"))
+              .limit(5)
+              .to_a
+    end
 
     # 담당자별 워크로드 (활성 발주 기준 Top10)
     @assignee_workload = User
@@ -115,7 +124,7 @@ class DashboardController < ApplicationController
     # FR-03: 7일 스파크라인
     @daily_sparkline = (6.downto(0)).map do |i|
       day = Date.today - i.days
-      orders.where(created_at: day.beginning_of_day..day.end_of_day).count
+      orders.where(orders: { created_at: day.beginning_of_day..day.end_of_day }).count
     end
   end
 

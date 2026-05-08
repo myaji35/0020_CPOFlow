@@ -74,7 +74,7 @@ class KanbanController < ApplicationController
           # AUDIT-001: show_stale=true 시 전체 표시, 기본은 최근 30일만
           rfq_base = base.where(status: :new_rfq, rfq_status: Order::KANBAN_VISIBLE_RFQ_STATUSES)
           rfq_base = rfq_base.recent_new_rfq unless params[:show_stale] == "true"
-          rfq_base.reorder(created_at: :desc)
+          rfq_base.reorder("orders.created_at DESC")
         else
           base.where(status: col_key)
         end
@@ -169,7 +169,7 @@ class KanbanController < ApplicationController
         # AUDIT-001: show_stale=true 시 전체 표시, 기본은 최근 30일만
         rfq_base = base.where(status: :new_rfq, rfq_status: Order::KANBAN_VISIBLE_RFQ_STATUSES)
         rfq_base = rfq_base.recent_new_rfq unless params[:show_stale] == "true"
-        rfq_base.reorder(created_at: :desc)
+        rfq_base.reorder("orders.created_at DESC")
       else
         base.where(status: status)
       end

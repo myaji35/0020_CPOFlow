@@ -53,9 +53,11 @@ class ReportsController < ApplicationController
     @period     = params[:period] || "this_month"
     @date_range = parse_period(@period, params[:from], params[:to])
     @selected_board = params[:board_id].present? ? KanbanBoard.find_by(id: params[:board_id]) : nil
+    # ambiguous column 차단: report_scoped_orders가 joins(:user/:assignees)로 승격될 때
+    # users/clients/suppliers 모두 created_at 보유 → 테이블명 명시 필수.
     orders      = report_scoped_orders.includes(:client, :supplier, :project, :user)
-                       .where(created_at: @date_range)
-                       .order(created_at: :desc)
+                       .where(orders: { created_at: @date_range })
+                       .order("orders.created_at DESC")
 
     respond_to do |format|
       format.csv do
@@ -129,9 +131,11 @@ class ReportsController < ApplicationController
   end
 
   def order_stats(range)
-    base      = report_scoped_orders.where(created_at: range)
+    # ambiguous column 차단: report_scoped_orders가 joins(:user/:assignees)로 승격될 때
+    # users.created_at/users.updated_at 충돌 → orders 테이블 명시.
+    base      = report_scoped_orders.where(orders: { created_at: range })
     # ISS-267: 납품 완료는 get_grn + done (9단계 칸반에서 done이 최종 종료)
-    delivered = report_scoped_orders.where(status: [ :get_grn, :done ]).where(updated_at: range)
+    delivered = report_scoped_orders.where(status: [ :get_grn, :done ]).where(orders: { updated_at: range })
     on_time   = delivered.where("orders.due_date >= DATE(orders.updated_at)").count
     {
       count:        base.count,
@@ -153,7 +157,7 @@ class ReportsController < ApplicationController
 
   def calc_avg_lead_days(range)
     # ISS-267: get_grn + done 포함하여 평균 리드타임 산출
-    delivered = report_scoped_orders.where(status: [ :get_grn, :done ]).where(updated_at: range)
+    delivered = report_scoped_orders.where(status: [ :get_grn, :done ]).where(orders: { updated_at: range })
     cnt = delivered.count
     return 0.0 if cnt == 0
     total_days = delivered.sum("JULIANDAY(orders.updated_at) - JULIANDAY(orders.created_at)")
@@ -167,10 +171,10 @@ class ReportsController < ApplicationController
       r = m..(m.end_of_month)
       {
         label:     m.strftime("%y.%m"),
-        orders:    report_scoped_orders.where(created_at: r).count,
+        orders:    report_scoped_orders.where(orders: { created_at: r }).count,
         # ISS-267: 월별 trend의 delivered도 get_grn + done
-        delivered: report_scoped_orders.where(status: [ :get_grn, :done ]).where(updated_at: r).count,
-        value:     (report_scoped_orders.where(created_at: r).sum(:estimated_value).to_f / 1000).round
+        delivered: report_scoped_orders.where(status: [ :get_grn, :done ]).where(orders: { updated_at: r }).count,
+        value:     (report_scoped_orders.where(orders: { created_at: r }).sum(:estimated_value).to_f / 1000).round
       }
     end
   end

@@ -98,8 +98,9 @@ module Admin
       }
 
       # 카드 3: 최근 7일 FN 건수 (would_exclude=true AND Order.rfq_status=rfq_triage)
+      # ambiguous column 차단: joins(:order) 시 classification_logs.created_at 명시
       fn_scope = ClassificationLog.v2.shadow_would_exclude
-                   .where("created_at >= ?", 7.days.ago)
+                   .where("classification_logs.created_at >= ?", 7.days.ago)
                    .where.not(order_id: nil)
                    .joins(:order)
                    .where(orders: { rfq_status: Order.rfq_statuses[:rfq_triage] })
