@@ -1,0 +1,239 @@
+{
+  "format_signatures": [
+    {
+      "name": "Kent Supplier Portal Onboarding Guide",
+      "trigger_regex": "/Kent\\s+Supplier\\s+Portal|tpmanagement@kentplc\\.com|fa-emqh-saasfaprod1\\.fa\\.ocs\\.oraclecloud\\.com/im",
+      "applies_to": "Kent PLC 공급업체 포털 등록/정보 업데이트 안내 문서",
+      "confidence": "high"
+    },
+    {
+      "name": "Wilo MEA Customer Notice",
+      "trigger_regex": "/Wilo\\s+(Middle\\s+East|MEA)|WILO\\s+Middle\\s+East\\s+FZE|Jebel\\s+Ali\\s+Free\\s+Zone/im",
+      "applies_to": "Wilo Middle East & Africa 고객 공지문 (가격·납기·물류 관련)",
+      "confidence": "high"
+    },
+    {
+      "name": "ENEC Modular Contract PO (Module 2 GTC)",
+      "trigger_regex": "/Emirates\\s+Nuclear\\s+Energy\\s+Corporation|MODULE\\s+2\\s*GENERAL\\s+TERMS|ADGM\\s+Rules|Nuclear\\s+Regulatory\\s+Agency/im",
+      "applies_to": "Emirates Nuclear Energy Corporation (ENEC) 발주 계약 일반 조건서 (Module 2)",
+      "confidence": "high"
+    },
+    {
+      "name": "Ariba RFQ/RFP (ELE SPARES)",
+      "trigger_regex": "/ariba\\.sourcing\\.rfxui\\.PrintRFX|RFQ#?\\s*\\d{7,}|ELE\\s+SPARES|sectionHead.*(?:Overview|Timing\\s+Rules|Currency\\s+Rules)/im",
+      "applies_to": "SAP Ariba 플랫폼 기반 RFQ/RFP 출력 HTML 문서 (ENEC 등 UAE 발주처)",
+      "confidence": "high"
+    }
+  ],
+  "field_extractors": [
+    {
+      "field": "vendor",
+      "regex": "/Update\\s+your\\s+supplier\\s+details.*?(?:action\\s+required)|tpmanagement@kentplc\\.com/im",
+      "example_match": "tpmanagement@kentplc.com",
+      "applies_to_format": "Kent Supplier Portal Onboarding Guide"
+    },
+    {
+      "field": "buyer",
+      "regex": "/WILO\\s+Middle\\s+East\\s+FZE|Wilo\\s+Middle\\s+East\\s+&\\s+Africa/im",
+      "example_match": "WILO Middle East FZE",
+      "applies_to_format": "Wilo MEA Customer Notice"
+    },
+    {
+      "field": "buyer",
+      "regex": "/Emirates\\s+Nuclear\\s+Energy\\s+Corporation/im",
+      "example_match": "Emirates Nuclear Energy Corporation",
+      "applies_to_format": "ENEC Modular Contract PO (Module 2 GTC)"
+    },
+    {
+      "field": "vendor",
+      "regex": "/sent\\s+to\\s+([A-Z][A-Z0-9 &]+(?:TRADING|SUPPLY|SERVICES|LLC|FZE|CO\\.?))/im",
+      "example_match": "A TO Z SUPPLY CHAIN TRADING",
+      "applies_to_format": "ENEC Modular Contract PO (Module 2 GTC)"
+    },
+    {
+      "field": "rfq_number",
+      "regex": "/RFQ#?\\s*(\\d{7,})/im",
+      "example_match": "RFQ#6000009800",
+      "applies_to_format": "Ariba RFQ/RFP (ELE SPARES)"
+    },
+    {
+      "field": "po_number",
+      "regex": "/PR\\s+(\\d{7,})/im",
+      "example_match": "PR 1200011752",
+      "applies_to_format": "Ariba RFQ/RFP (ELE SPARES)"
+    },
+    {
+      "field": "delivery_date",
+      "regex": "/Due\\s+date[^>]*?>\\s*<[^>]+>\\s*([\\d]{1,2}\\/[\\d]{1,2}\\/[\\d]{4}\\s+[\\d]{1,2}:[\\d]{2}\\s*[AP]M)/im",
+      "example_match": "4/22/2026 12:00 PM",
+      "applies_to_format": "Ariba RFQ/RFP (ELE SPARES)"
+    },
+    {
+      "field": "buyer",
+      "regex": "/Owner[^>]*?>\\s*<[^>]+>\\s*([^<]+)<\\/td>/im",
+      "example_match": "Theikanath Bobby Bosco",
+      "applies_to_format": "Ariba RFQ/RFP (ELE SPARES)"
+    },
+    {
+      "field": "spec",
+      "regex": "/INDICATOR,FLOW:GAUGE,\\s*([\\d\\s\\-\\.]+[A-Z\\/]+,[^<,]+)/im",
+      "example_match": "INDICATOR,FLOW:GAUGE,0 - 160 L/S,±0.5%",
+      "applies_to_format": "Ariba RFQ/RFP (ELE SPARES)"
+    },
+    {
+      "field": "item_no",
+      "regex": "/<td[^>]*>\\s*(\\d+)\\s+(?:INDICATOR|VALVE|PUMP|SENSOR|GAUGE|METER|SWITCH|TRANSMITTER)/im",
+      "example_match": "3 INDICATOR,FLOW:GAUGE,0 - 160 L/S",
+      "applies_to_format": "Ariba RFQ/RFP (ELE SPARES)"
+    },
+    {
+      "field": "incoterms",
+      "regex": "/incoterm[s]?\\s*[:\\-]?\\s*([A-Z]{3}\\b[^\\n<]{0,40})/im",
+      "example_match": "",
+      "applies_to_format": "ENEC Modular Contract PO (Module 2 GTC)"
+    },
+    {
+      "field": "payment_terms",
+      "regex": "/payment\\s+term[s]?\\s*[:\\-]?\\s*([^\\n<]{5,60})/im",
+      "example_match": "",
+      "applies_to_format": "ENEC Modular Contract PO (Module 2 GTC)"
+    },
+    {
+      "field": "certification",
+      "regex": "/(?:certificate\\s+of\\s+incorporation|registration\\/certificate)/im",
+      "example_match": "registration/certificate of incorporation",
+      "applies_to_format": "Kent Supplier Portal Onboarding Guide"
+    }
+  ],
+  "must_comply_patterns": [
+    {
+      "category": "공급업체 포털 정보 업데이트 마감",
+      "trigger_regex": "/action\\s+required\\s+by\\s+(\\d{1,2}\\s+[A-Z][a-z]+\\s+\\d{4})/im",
+      "what_to_do": "지정된 마감일(17 April 2026)까지 Kent Supplier Portal에 은행 계좌·주소·세금등록번호 등 공급업체 정보를 반드시 업데이트해야 함. 미이행 시 결제 지연 발생",
+      "severity": "critical",
+      "example": "action required by 17 April 2026"
+    },
+    {
+      "category": "공급업체 포털 은행 정보 등록",
+      "trigger_regex": "/Add\\s+Bank\\s+Details\\s+in\\s+the\\s+Kent\\s+Supplier\\s+Portal|Update\\s+Existing\\s+Bank\\s+Details/im",
+      "what_to_do": "Kent Supplier Portal에 은행 계좌 정보를 신규 등록하거나 기존 정보를 업데이트해야 함. 오류 발생 시 스크린샷과 함께 tpmanagement@kentplc.com으로 이메일 발송",
+      "severity": "critical",
+      "example": "Add Bank Details in the Kent Supplier Portal"
+    },
+    {
+      "category": "공급업체 포털 세금등록번호 갱신",
+      "trigger_regex": "/Review\\s+and\\s+Update\\s+Tax\\s+Registration\\s+Details|Tax\\s+Registration\\s+Number/im",
+      "what_to_do": "소득세(Income Tax) 및 거래세(Transaction Tax) 등록번호를 포털에서 검토하고, 변경 필요 시 증빙 서류(납세자 등록증 등)를 첨부하여 업데이트 제출",
+      "severity": "high",
+      "example": "Tax Registration Number: Enter the Tax registration number."
+    },
+    {
+      "category": "ENEC 계약 인수 기준 준수 (Acceptance Test)",
+      "trigger_regex": "/Acceptance\\s+Test|passed\\s+the\\s+Customer.*?inspection|thirty\\s+\\(30\\)\\s+Days\\s+after\\s+Delivery/im",
+      "what_to_do": "납품 후 30일 이내 고객 검사 및 Acceptance Test를 통과해야 최종 인수 인정. 공급자는 해당 기간 내 불합격 시 재납품 의무 이행 필요",
+      "severity": "critical",
+      "example": "has passed the Customer's inspection (which the Customer shall perform promptly and in no event later than thirty (30) Days after Delivery unless otherwise agreed in the Purchase Order)"
+    },
+    {
+      "category": "ENEC 적용 법규 및 규제 준수",
+      "trigger_regex": "/Applicable\\s+Law|Nuclear\\s+Regulatory\\s+Agency|Applicable\\s+Codes\\s+and\\s+Standards/im",
+      "what_to_do": "ENEC PO상 명시된 코드·표준 및 UAE 핵규제기관 요구사항, 관련 국제법·조약을 모두 준수해야 함",
+      "severity": "critical",
+      "example": "\"Applicable Codes and Standards\" means the codes and standards: (a) specified in the applicable Purchase Order; (b) required by the Nuclear Regulatory Agency; and (c) required by Industry Standards."
+    },
+    {
+      "category": "Ariba RFQ 응찰 마감 준수",
+      "trigger_regex": "/Due\\s+date[^>]*?>[^<]*<[^>]*>\\s*([\\d\\/]+\\s+[\\d:]+\\s*[AP]M)/im",
+      "what_to_do": "Ariba 플랫폼의 Due date(4/22/2026 12:00 PM)까지 견적을 제출해야 하며, 응찰 마감 후 수정 불가",
+      "severity": "critical",
+      "example": "Due date: 4/22/2026 12:00 PM"
+    },
+    {
+      "category": "Wilo 가격 조정 사전 고지",
+      "trigger_regex": "/price\\s+adjustment\\s+will\\s+become\\s+necessary|review\\s+and\\s+potentially\\s+adjust\\s+our\\s+current\\s+pricing/im",
+      "what_to_do": "Wilo MEA로부터 가격 인상 예고 통보를 수신했으므로, 진행 중인 견적·계약에 대해 가격 유효기간을 재확인하고 필요 시 Wilo 담당자와 협의",
+      "severity": "high",
+      "example": "a price adjustment will become necessary. Despite our continuous efforts to absorb and mitigate the impact of rising costs across the supply chain"
+    },
+    {
+      "category": "ENEC 중재 규정 준수 (ADGM)",
+      "trigger_regex": "/ADGM\\s+Rules|Abu\\s+Dhabi\\s+Global\\s+Market|arbitration/im",
+      "what_to_do": "분쟁 발생 시 ADGM 중재 규정에 따라 처리해야 하며, 중재 비용(변호사 비용, 감정인 비용 등) 관련 조항을 사전 검토",
+      "severity": "high",
+      "example": "\"ADGM Rules\" means the latest rules published by ADGM for governing arbitration."
+    }
+  ],
+  "nice_to_have_patterns": [
+    {
+      "type": "Note",
+      "regex": "/If\\s+you\\s+have\\s+any\\s+issues\\s+during\\s+this\\s+process.*?tpmanagement@kentplc\\.com/im",
+      "what_it_means": "Kent 포털 처리 중 문제 발생 시 스크린샷 첨부하여 tpmanagement@kentplc.com으로 문의 가능",
+      "example": "If you have any issues during this process, please send an email to tpmanagement@kentplc.com with the screenshots of the issue."
+    },
+    {
+      "type": "Note",
+      "regex": "/Wilo\\s+remains\\s+fully\\s+committed\\s+to\\s+supporting|contact\\s+your\\s+regular\\s+Wilo\\s+representative/im",
+      "what_it_means": "가격 조정 관련 추가 문의는 담당 Wilo 영업대표에게 연락 가능 (공급망 유지 의지 표명)",
+      "example": "Should you have any questions or wish to discuss this matter further, please contact your regular Wilo representative."
+    },
+    {
+      "type": "Reference",
+      "regex": "/This\\s+file\\s+was\\s+downloaded\\s+at:\\s*\\[([^\\]]+)\\]/im",
+      "what_it_means": "Ariba RFQ 문서의 다운로드 타임스탬프 — 문서 유효성 및 버전 확인용",
+      "example": "This file was downloaded at: [Thursday, April 16, 2026 at 4:31 AM]"
+    },
+    {
+      "type": "Note",
+      "regex": "/Allow\\s+participants\\s+to\\s+select\\s+bidding\\s+currency[^>]*?>\\s*<[^>]+>\\s*(Yes|No)/im",
+      "what_it_means": "Ariba RFQ에서 응찰자가 견적 통화를 직접 선택할 수 있음을 의미 (UAE Dirham 외 통화 제출 가능)",
+      "example": "Allow participants to select bidding currency: Yes"
+    },
+    {
+      "type": "Reference",
+      "regex": "/Rev\\.\\s*(\\d+)\\s*\\(([\\d]{2}-[\\d]{2}-[\\d]{2,4})\\)/im",
+      "what_it_means": "ENEC Modular Contract의 개정 버전 및 날짜 — 항상 최신 Rev. 기준 계약 조건 적용 여부 확인 필요",
+      "example": "Rev. 4 (14-01-25)"
+    },
+    {
+      "type": "Note",
+      "regex": "/For\\s+Official\\s+Use\\s+Only\\s*\\(FOUO\\)/im",
+      "what_it_means": "ENEC 계약 문서는 공식 용도로만 사용 가능(대외 기밀) — 외부 공유 금지",
+      "example": "For Official Use Only (FOUO)"
+    },
+    {
+      "type": "Reference",
+      "regex": "/Commodity[^>]*?>\\s*<[^>]+>\\s*([^<]+\\d{6})/im",
+      "what_it_means": "Ariba RFQ의 품목 분류 코드 — 내부 분류 및 전문 분야 매핑에 활용",
+      "example": "Control indicating and signaling devices 321515"
+    },
+    {
+      "type": "Note",
+      "regex": "/ELE\\s+SPARES\\s+has\\s+been\\s+extended\\s+by\\s+(\\d+)\\s+days/im",
+      "what_it_means": "RFQ 응찰 마감이 연장되었음을 이메일 제목에서 직접 식별 — 연장된 마감일 재확인 필요",
+      "example": "ELE SPARES has been extended by 5 days"
+    }
+  ],
+  "summary": {
+    "common_structure": "4개 샘플은 크게 4가지 문서 유형으로 분류됨: ① 공급업체 포털 등록 가이드(Kent, Oracle Cloud 기반), ② 발주처 공지문(Wilo MEA, 가격·물류 이슈), ③ 발주 계약 일반조건(ENEC Module 2 GTC, 법률·인수·중재 조항), ④ Ariba 플랫폼 RFQ 출력 HTML(ELE SPARES, 품목·타이밍·통화 규칙 포함). 공통적으로 UAE 기반 발주처(Kent PLC, Wilo MEA, ENEC, Ariba 기반 UAE 발주처)에서 Korea BMT로 발송된 문서이며, 행동 요구(마감일·제출 의무)와 참조 정보(계약 조건·단가 조정 예고)가 혼재함",
+    "discriminating_markers": [
+      "Kent Supplier Portal",
+      "tpmanagement@kentplc.com",
+      "fa-emqh-saasfaprod1.fa.ocs.oraclecloud.com",
+      "Wilo Middle East FZE",
+      "Wilo MEA",
+      "Emirates Nuclear Energy Corporation",
+      "MODULE 2 GENERAL TERMS AND CONDITIONS",
+      "ADGM Rules",
+      "Nuclear Regulatory Agency",
+      "ariba.sourcing.rfxui.PrintRFX",
+      "RFQ#6000009800",
+      "ELE SPARES",
+      "sectionHead",
+      "Timing Rules",
+      "Rev. 4 (14-01-25)",
+      "For Official Use Only (FOUO)",
+      "Control indicating and signaling devices 321515"
+    ],
+    "estimated_coverage": 55
+  }
+}

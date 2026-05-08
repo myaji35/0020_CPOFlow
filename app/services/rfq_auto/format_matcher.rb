@@ -1,22 +1,22 @@
 # frozen_string_literal: true
 
-# LAB / RFQ Auto — 양식별 정규식 패턴 매칭 (Phase 2-A)
+# LAB / RFQ Auto — 양식별 정규식 패턴 매칭 (Phase 2-A/B)
 #
-# config/rfq_auto/nawah_patterns.json 의 패턴 라이브러리를 로드해
-# 첨부 텍스트에서 양식 식별 + 필드 추출 + MUST/NICE 컴플라이언스 체크를 수행.
+# config/rfq_auto/*_patterns.json 의 모든 패턴 라이브러리를 자동 머지해 로드.
+# 새 양식 추가 시 새 *_patterns.json 파일만 떨어뜨리면 즉시 활성화.
 #
-# Sonnet 호출 전 1차 추출 — 정규식만으로 82% 커버되는 NAWAH/ENEC 양식 빠른 처리.
+# Sonnet 호출 전 1차 추출 — 정규식만으로 NAWAH/ENEC 82%, BMT 수신 양식 55% 커버.
 #
 # 사용:
 #   matcher = RfqAuto::FormatMatcher.new(text)
-#   matcher.format_name         # => "NAWAH PO Standard" or nil
+#   matcher.format_name         # => "NAWAH PO Standard" or "Kent Supplier Portal..." or nil
 #   matcher.fields              # => { po_number: "4500020346", po_date: "13 Apr 2026", ... }
 #   matcher.must_comply         # => [{category:, severity:, what_to_do:, example:}, ...]
 #   matcher.nice_to_have        # => [{type:, what_it_means:, example:}, ...]
 #   matcher.invalid?            # => true (Ariba 로그인 페이지 같은 무효 문서)
 module RfqAuto
   class FormatMatcher
-    PATTERNS_PATH = Rails.root.join("config/rfq_auto/nawah_patterns.json")
+    PATTERNS_DIR = Rails.root.join("config/rfq_auto")
 
     class << self
       def patterns
@@ -29,12 +29,23 @@ module RfqAuto
 
       private
 
+      # 디렉터리 안 모든 *_patterns.json 을 머지. 키별 배열 concat.
       def load_patterns
-        return {} unless File.exist?(PATTERNS_PATH)
-        JSON.parse(File.read(PATTERNS_PATH))
-      rescue JSON::ParserError => e
-        Rails.logger.warn("[RfqAuto::FormatMatcher] patterns parse failed: #{e.message}")
-        {}
+        merged = { "format_signatures" => [], "field_extractors" => [],
+                   "must_comply_patterns" => [], "nice_to_have_patterns" => [] }
+        return merged unless Dir.exist?(PATTERNS_DIR)
+
+        Dir.glob(PATTERNS_DIR.join("*_patterns.json")).sort.each do |path|
+          begin
+            data = JSON.parse(File.read(path))
+            merged.each_key do |k|
+              merged[k].concat(data[k]) if data[k].is_a?(Array)
+            end
+          rescue JSON::ParserError => e
+            Rails.logger.warn("[RfqAuto::FormatMatcher] #{path} parse failed: #{e.message}")
+          end
+        end
+        merged
       end
     end
 

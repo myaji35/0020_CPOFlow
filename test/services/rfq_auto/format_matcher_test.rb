@@ -71,5 +71,23 @@ module RfqAuto
       assert_empty m.fields
       assert_empty m.must_comply
     end
+
+    test "Kent Supplier Portal format detected (BMT 패턴)" do
+      text = "Update Bank Details in the Kent Supplier Portal\n" \
+             "Email: tpmanagement@kentplc.com\n" \
+             "Login at fa-emqh-saasfaprod1.fa.ocs.oraclecloud.com"
+      m = FormatMatcher.new(text)
+      assert_match(/Kent/, m.format_name.to_s)
+    end
+
+    test "Ariba RFQ format detected (BMT 패턴)" do
+      text = "ariba.sourcing.rfxui.PrintRFX\n" \
+             "RFQ# 6000009800\n" \
+             "ELE SPARES\n" \
+             "sectionHead Overview"
+      m = FormatMatcher.new(text)
+      assert_not_nil m.format_name
+      assert_match(/Ariba RFQ|ELE SPARES/, m.format_name.to_s)
+    end
   end
 end
