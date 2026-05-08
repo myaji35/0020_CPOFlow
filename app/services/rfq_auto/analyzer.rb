@@ -161,13 +161,38 @@ module RfqAuto
 
       llm_error = nil
       raw = begin
-        Rfp::ItemExtractor.call(combined_text)
+        Rfp::ItemExtractor.call(combined_text) if combined_text.length >= 50
       rescue StandardError => e
         llm_error = "#{e.class}: #{e.message}"
         Rails.logger.warn "[RfqAuto::Analyzer] step2 ItemExtractor 실패: #{llm_error}"
         nil
       end
       items = (raw.is_a?(Hash) ? raw[:items] : raw) || []
+
+      # Vision 폴백 — 텍스트 < 50자 또는 품목 0개 + PDF/이미지 첨부 있을 때 Sonnet Vision 호출.
+      vision_used = false
+      vision_cost = 0.0
+      vision_pages = 0
+      vision_model = nil
+      vision_error = nil
+      if items.empty? && @order.attachments.any? { |a| a.blob.filename.to_s.match?(/\.(pdf|png|jpg|jpeg|webp)$/i) }
+        begin
+          vresult = RfqAuto::VisionItemExtractor.new(@order, pages_cap: 5).call
+          items        = vresult[:items] || []
+          vision_used  = true
+          vision_cost  = vresult[:cost_usd].to_f
+          vision_pages = vresult[:page_count].to_i
+          vision_model = vresult[:model]
+          @total_cost += vision_cost
+          Rails.logger.info "[RfqAuto::Analyzer] Vision 폴백 결과 items=#{items.size} cost=$#{vision_cost} pages=#{vision_pages}"
+        rescue RfqAuto::VisionItemExtractor::AnthropicCreditError => e
+          vision_error = "❗ Anthropic API 잔액 부족 — 충전 후 재시도 부탁드립니다 (#{e.message.truncate(120)})"
+          Rails.logger.warn "[RfqAuto::Analyzer] #{vision_error}"
+        rescue StandardError => e
+          vision_error = "#{e.class}: #{e.message.truncate(160)}"
+          Rails.logger.warn "[RfqAuto::Analyzer] Vision 폴백 실패: #{vision_error}"
+        end
+      end
 
       enriched = items.map.with_index do |item, idx|
         missing = check_required_fields(item, combined_text)
@@ -209,7 +234,13 @@ module RfqAuto
         text_preview:             text_preview,
         llm_error:                llm_error,
         doc_level_missing:        doc_missing,
-        doc_level_missing_labels: doc_missing.map { |f| REQUIRED_FIELD_LABELS[f] }
+        doc_level_missing_labels: doc_missing.map { |f| REQUIRED_FIELD_LABELS[f] },
+        # Vision 폴백 메타 정보
+        vision_used:              vision_used,
+        vision_cost_usd:          vision_cost,
+        vision_pages:             vision_pages,
+        vision_model:             vision_model,
+        vision_error:             vision_error
       }
     end
 
@@ -288,31 +319,13 @@ module RfqAuto
       { tasks: tasks, count: tasks.size, missing_count: tasks.count { |t| t[:status] == "missing" } }
     end
 
-    # ── Step 4 — 공급사 탐색 (Phase 1: 자체 Supplier DB만) ──────
+    # ── Step 4 — 공급사 탐색 (Phase 3: 자체 DB → 한국 조달청 → Google CSE) ──────
+    # 키 미설정 소스는 graceful skip. SupplierFinder에 위임.
     def step4_find_suppliers
       items = @steps_result.dig("step2_items", :items) || []
       return { status: "skipped", reason: "no items", suppliers: [] } if items.empty?
 
-      candidates = items.first(3).flat_map do |item|
-        keyword = item[:name].to_s
-        next [] if keyword.blank?
-
-        local = Supplier.where("name LIKE ? OR ecount_code LIKE ?", "%#{keyword}%", "%#{keyword}%").limit(5).map do |s|
-          {
-            source:        "local_db",
-            confidence:    90,
-            name:          s.name,
-            email:         s.try(:email),
-            phone:         s.try(:phone),
-            website:       s.try(:website),
-            country:       s.try(:country),
-            item_keyword:  keyword
-          }
-        end
-
-        local
-      end
-
+      candidates = RfqAuto::SupplierFinder.new(items, max_per_source: 5).call
       { suppliers: candidates, count: candidates.size, sources: candidates.map { |c| c[:source] }.tally }
     end
 

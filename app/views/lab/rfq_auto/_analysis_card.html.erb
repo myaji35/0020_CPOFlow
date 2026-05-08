@@ -81,6 +81,18 @@
     <%# 항상 표시 — 11항목 매트릭스. 품목별 또는 문서 단위 fallback %>
     <% if step2.is_a?(Hash) && (step2["items"].present? || step2["doc_level_missing"].present?) %>
       <div class="ml-9 -mt-2 mb-4">
+        <%# Vision 폴백 정보 %>
+        <% if step2["vision_used"] %>
+          <div class="mb-3 p-2 text-[11px] bg-fuchsia-50 dark:bg-fuchsia-900/20 border border-fuchsia-200 dark:border-fuchsia-800 rounded">
+            👁 <strong>Vision 모드</strong> 자동 폴백 — 모델 <%= step2["vision_model"] %>, <%= step2["vision_pages"] %>페이지, 비용 $<%= step2["vision_cost_usd"] %>
+          </div>
+        <% end %>
+        <% if step2["vision_error"].present? %>
+          <div class="mb-3 p-2 text-[11px] bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-red-700 dark:text-red-300 font-mono">
+            <%= step2["vision_error"] %>
+          </div>
+        <% end %>
+
         <%# 텍스트 추출 결과 + LLM 에러 진단 정보 %>
         <% if step2["text_chars"].to_i > 0 || step2["llm_error"].present? %>
           <details class="mb-3 text-[11px]">
