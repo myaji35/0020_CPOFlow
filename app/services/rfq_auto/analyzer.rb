@@ -54,6 +54,7 @@ module RfqAuto
       broadcast_progress!  # 시작 시점 — 모든 단계 pending 상태로 표시
 
       run_step("step1_attachments") { step1_classify_attachments }
+      run_step("step1b_format")     { step1b_format_match }
       run_step("step2_items")       { step2_extract_items }
       run_step("step3_tasks")       { step3_build_task_candidates }
       run_step("step4_suppliers")   { step4_find_suppliers }
@@ -147,6 +148,42 @@ module RfqAuto
              else 20
              end
       (base * (confidence || 0.5)).round
+    end
+
+    # ── Step 1b — 양식 패턴 매칭 (Phase 2-A: NAWAH/ENEC Ariba 정규식 라이브러리) ──
+    # 첨부 결합 텍스트에 대해 FormatMatcher로 양식 식별 + 헤더 필드 + MUST/NICE 추출.
+    # Step 2(LLM) 진입 전 1차 추출 — 정규식만으로 NAWAH/ENEC 82% 커버.
+    # @format_match_result에 저장 → 후속 단계가 "이건 무효 Ariba 로그인" 같은 신호 활용.
+    def step1b_format_match
+      combined_text = build_combined_text
+      @format_match_result = nil
+
+      if combined_text.blank? || combined_text.length < 100
+        return { status: "skipped", reason: "text too short", text_chars: combined_text.to_s.length }
+      end
+
+      matcher = RfqAuto::FormatMatcher.new(combined_text)
+      summary = matcher.summary
+
+      @format_match_result = {
+        format:           summary[:format],
+        invalid:          summary[:invalid],
+        fields:           matcher.fields,
+        must_comply:      matcher.must_comply,
+        nice_to_have:     matcher.nice_to_have,
+        critical_count:   summary[:critical_count],
+        must_count:       summary[:must_count],
+        nice_count:       summary[:nice_count]
+      }
+
+      {
+        format:         summary[:format] || "(unknown)",
+        invalid:        summary[:invalid],
+        fields_count:   matcher.fields.size,
+        must_comply:    matcher.must_comply.map { |m| { category: m[:category], severity: m[:severity] } },
+        nice_to_have:   matcher.nice_to_have.map { |n| n[:type] },
+        critical_count: summary[:critical_count]
+      }
     end
 
     # ── Step 2 — 품목 + 11항목 누락 체크 (Phase 4: A+C 적용) ───────
