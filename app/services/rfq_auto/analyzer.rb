@@ -218,28 +218,28 @@ module RfqAuto
                  ocr_used: ocr_used, vision_used: false }
       end
 
-      # 1차 ItemExtractor (Sonnet 기본)
+      # 1차 ItemExtractor (Haiku 4.5 기본 — Step 1b 결과를 컨텍스트로 주입)
       llm_error = nil
-      raw = run_item_extractor(combined_text) { |err| llm_error = err }
+      raw = run_item_extractor(combined_text, format_context: @format_match_result) { |err| llm_error = err }
       items = (raw.is_a?(Hash) ? raw["items"] : nil) || []
       llm_cost = raw.is_a?(Hash) ? raw["_cost_usd"].to_f : 0.0
       llm_model = raw.is_a?(Hash) ? raw["_model"] : nil
       @total_cost += llm_cost
 
-      # Opus escalation — Sonnet이 0건이면 Opus로 1회 재시도
+      # Sonnet escalation — Haiku가 0건이면 Sonnet으로 1회 재시도 (Opus는 너무 비쌈, 양식 컨텍스트 있으면 Sonnet으로 충분)
       escalated = false
       escalation_cost = 0.0
       if items.empty? && llm_error.nil? && combined_text.length >= 50
-        ENV["RFP_ITEM_MODEL"] = "claude-opus-4-7"
+        ENV["RFP_ITEM_MODEL"] = "claude-sonnet-4-6"
         begin
-          retry_raw = run_item_extractor(combined_text) { |err| llm_error = err }
+          retry_raw = run_item_extractor(combined_text, format_context: @format_match_result) { |err| llm_error = err }
           if retry_raw.is_a?(Hash) && retry_raw["items"].is_a?(Array) && retry_raw["items"].any?
             items = retry_raw["items"]
             escalated = true
             escalation_cost = retry_raw["_cost_usd"].to_f
             llm_model = retry_raw["_model"]
             @total_cost += escalation_cost
-            Rails.logger.info "[RfqAuto::Analyzer] Opus escalation 성공: #{items.size}품 cost=$#{escalation_cost}"
+            Rails.logger.info "[RfqAuto::Analyzer] Sonnet escalation 성공: #{items.size}품 cost=$#{escalation_cost}"
           end
         ensure
           ENV.delete("RFP_ITEM_MODEL")
@@ -331,8 +331,9 @@ module RfqAuto
     end
 
     # ItemExtractor 호출 + 예외 격리 — 잔액 부족은 위로 전파.
-    def run_item_extractor(text)
-      result = Rfp::ItemExtractor.call(text)
+    # @param format_context [Hash, nil] FormatMatcher 결과 — 헤더/MUST 사전 인식 시 LLM에 컨텍스트로 주입.
+    def run_item_extractor(text, format_context: nil)
+      result = Rfp::ItemExtractor.call(text, format_context: format_context)
       result
     rescue StandardError => e
       msg = "#{e.class}: #{e.message}"

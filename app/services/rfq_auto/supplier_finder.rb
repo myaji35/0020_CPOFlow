@@ -54,7 +54,9 @@ module RfqAuto
     # ── Anthropic Web Search Tool — 신뢰도 60~90 (모델 추정) ────
     # D-3: 신뢰도 70+ 결과를 Supplier 테이블에 자동 저장 → 다음 분석부터 자체 DB hit.
     def search_web
-      result = RfqAuto::WebSupplierFinder.new(@items, max_per_item: @max).call
+      # 비용 절감 (2026-05-08): max_per_item 5 (한 품목당 web_search 호출 5회)
+      # max_items 3 — 최대 3개 품목만 web search (나머지는 local DB / datago / google 의존)
+      result = RfqAuto::WebSupplierFinder.new(@items, max_per_item: 5, max_items: 3).call
       @web_cost_usd  = result[:cost_usd].to_f
       @web_model     = result[:model]
       @web_citations = result[:citations] || []

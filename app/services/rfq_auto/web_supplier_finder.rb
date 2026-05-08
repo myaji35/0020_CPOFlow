@@ -23,12 +23,17 @@ require "json"
 
 module RfqAuto
   class WebSupplierFinder
-    MODEL = ENV.fetch("RFQ_WEB_SEARCH_MODEL", "claude-sonnet-4-6")
+    # 비용 절감: Sonnet → Haiku 4.5 (정확도 유지하면서 ~3배 저렴).
+    # ENV로 override 가능.
+    MODEL = ENV.fetch("RFQ_WEB_SEARCH_MODEL", "claude-haiku-4-5-20251001")
     API_URL = "https://api.anthropic.com/v1/messages"
     API_VERSION = "2023-06-01"
-    MAX_TOKENS = 4096
-    INPUT_PER_MTOK   = 3.00
-    OUTPUT_PER_MTOK  = 15.00
+    MAX_TOKENS = 3000
+    PRICING = {
+      "claude-sonnet-4-6"          => { input: 3.00,  output: 15.00 },
+      "claude-haiku-4-5-20251001"  => { input: 1.00,  output: 5.00 },
+      "claude-opus-4-7"            => { input: 15.00, output: 75.00 }
+    }.freeze
 
     class AnthropicCreditError < StandardError; end
 
@@ -72,10 +77,12 @@ module RfqAuto
       - UAE companies: prefer .ae / .com domains with UAE address
     PROMPT
 
-    # D-1: 한 번에 1개 품목만 처리 — 깊이 있는 검색 보장 (이전: 3품목 묶음 → 첫 품목만 깊게)
-    def initialize(items, max_per_item: 8)
+    # 품목당 개별 호출 (깊이 있는 검색 보장).
+    # 비용 통제: 기본 3품목 cap. Step 4 호출자가 max_items로 추가 제한 가능.
+    def initialize(items, max_per_item: 5, max_items: 3)
       @items = items.is_a?(Array) ? items : []
       @max_per_item = max_per_item
+      @max_items = max_items
     end
 
     def call
@@ -89,8 +96,8 @@ module RfqAuto
       total_output = 0
       all_citations = []
 
-      # D-1: 품목당 개별 호출 — 각 품목마다 max_uses 검색 회수 보장
-      @items.first(5).each do |item|  # 최대 5품목 (비용 통제)
+      # 품목당 개별 호출 — 각 품목마다 max_uses 검색 회수 보장
+      @items.first(@max_items).each do |item|
         keyword = (item.is_a?(Hash) ? (item[:name] || item["name"]) : nil).to_s.strip
         next if keyword.blank?
 
@@ -113,7 +120,8 @@ module RfqAuto
         all_suppliers.concat(suppliers)
       end
 
-      cost = (total_input.to_f * INPUT_PER_MTOK + total_output.to_f * OUTPUT_PER_MTOK) / 1_000_000
+      pricing = PRICING[MODEL] || PRICING["claude-haiku-4-5-20251001"]
+      cost = (total_input.to_f * pricing[:input] + total_output.to_f * pricing[:output]) / 1_000_000
 
       enriched = all_suppliers.map do |s|
         {
@@ -166,8 +174,8 @@ module RfqAuto
         model:      MODEL,
         max_tokens: MAX_TOKENS,
         system:     SYSTEM_PROMPT,
-        # D-2: max_uses 5→10 — 한 품목당 다양한 시장(KR/UAE/Global) 검색 보장
-        tools:      [ { type: "web_search_20250305", name: "web_search", max_uses: 10 } ],
+        # 비용 절감 (2026-05-08): max_uses 10→5 — 한 품목당 KR/UAE/Global 1~2회씩
+        tools:      [ { type: "web_search_20250305", name: "web_search", max_uses: @max_per_item } ],
         messages:   [ { role: "user", content: user_msg } ]
       }.to_json
 

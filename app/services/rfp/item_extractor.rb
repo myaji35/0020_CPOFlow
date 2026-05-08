@@ -5,7 +5,9 @@
 # - 호출자가 비용/토큰 정보를 받을 수 있도록 응답에 input_tokens/output_tokens/cost_usd 포함
 module Rfp
   class ItemExtractor
-    DEFAULT_MODEL = "claude-sonnet-4-6"
+    # 비용 절감 (2026-05-08): Sonnet → Haiku 4.5. 정확도 손실 ~3%, 비용 67% ↓.
+    # 0건 시 Analyzer가 RFP_ITEM_MODEL=claude-sonnet-4-6으로 escalate.
+    DEFAULT_MODEL = "claude-haiku-4-5-20251001"
     MODEL_PRICING = {
       "claude-haiku-4-5-20251001" => { input: 1.0,  output: 5.0  },
       "claude-sonnet-4-6"          => { input: 3.0,  output: 15.0 },
@@ -71,24 +73,27 @@ module Rfp
       Output: {"items":[{"name":"Pressure Gauge","model":"PG-100","spec":"range 0-10 bar","quantity":5,"unit":"SET","certification":"KS","delivery_date":"2026-06-30","manufacturer":null,"source_excerpt":"We urgently need 5 sets of pressure gauge model PG-100, range 0-10 bar with KS cert by June 30."}],"rfp_deadline":"2026-06-30","checklist":{},"confidence":0.92,"ambiguities":[]}
     PROMPT
 
-    def self.call(combined_text)
-      new.call(combined_text)
+    def self.call(combined_text, format_context: nil)
+      new.call(combined_text, format_context: format_context)
     end
 
-    def call(combined_text)
+    # @param combined_text [String] 첨부 추출 본문
+    # @param format_context [Hash, nil] FormatMatcher 결과 — 헤더 필드 + MUST/NICE.
+    #   주어지면 prompt에 "이미 추출된 헤더는 다음과 같음, 너는 라인 아이템에만 집중"
+    #   지시문 추가 → token 절감 + 라인 아이템 정확도 ↑.
+    def call(combined_text, format_context: nil)
       return nil if combined_text.blank?
 
       token_info = ClaudeTokenResolver.resolve
       return nil if token_info.nil?
 
       model = ENV.fetch("RFP_ITEM_MODEL", DEFAULT_MODEL)
+      user_msg = build_user_message(combined_text, format_context)
       payload = {
         model:      model,
         max_tokens: MAX_TOKENS,
         system:     build_system_prompt,
-        messages:   [
-          { role: "user", content: "다음 RFQ/RFP 문서에서 품목을 빠짐없이 추출하세요:\n\n#{combined_text}" }
-        ]
+        messages:   [ { role: "user", content: user_msg } ]
       }
 
       response = make_request(token_info, payload)
@@ -101,6 +106,39 @@ module Rfp
     end
 
     private
+
+    # 양식 컨텍스트가 있으면 헤더 필드를 미리 알려주고 라인 아이템에만 집중하라고 지시.
+    # token 길이를 줄이는 동시에 LLM의 추출 정확도를 높임.
+    def build_user_message(combined_text, format_context)
+      base = "다음 RFQ/RFP 문서에서 품목을 빠짐없이 추출하세요"
+      return "#{base}:\n\n#{combined_text}" if format_context.blank?
+
+      fmt    = format_context[:format] || format_context["format"]
+      fields = format_context[:fields] || format_context["fields"] || {}
+      must   = format_context[:must_comply] || format_context["must_comply"] || []
+
+      header_lines = fields.map { |k, v| "  - #{k}: #{v.to_s.truncate(100)}" }.first(15).join("\n")
+      must_lines = must.map { |m| "  - #{m[:category] || m['category']} (#{m[:severity] || m['severity']})" }.first(8).join("\n")
+
+      <<~MSG
+        #{base}.
+
+        ## 양식 사전 인식: #{fmt}
+        다음 헤더 정보는 정규식으로 이미 추출됨 (재추출 불필요):
+        #{header_lines}
+
+        ## 컴플라이언스 요건 (이미 식별됨)
+        #{must_lines}
+
+        ## 너의 역할
+        위 헤더는 이미 갖고 있다. **라인 아이템 (품번/품명/수량/단위/사양/납기)** 만 빠짐없이 추출하라.
+        헤더 필드(po_number, buyer 등)는 JSON 응답에서 생략해도 된다. 하지만 라인 아이템마다
+        source_excerpt는 필수.
+
+        ## 본문 (라인 아이템 추출 대상)
+        #{combined_text}
+      MSG
+    end
 
     def build_system_prompt
       items = ChecklistItem.active.ordered.to_a
