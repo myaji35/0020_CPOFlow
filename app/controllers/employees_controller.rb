@@ -8,7 +8,7 @@ class EmployeesController < ApplicationController
   before_action :require_manager!, only: %i[destroy]
 
   def index
-    @employees = Employee.includes(:visas, :employment_contracts, :employee_assignments, :department).by_name
+    @employees = Employee.includes(:user, :visas, :employment_contracts, :employee_assignments, :department).by_name
     @employees = @employees.where(active: true) unless params[:show_inactive] == "1"
     if params[:q].present?
       @employees = @employees.where("name LIKE ? OR name_en LIKE ?",

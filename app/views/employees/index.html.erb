@@ -162,10 +162,24 @@
                   <div class="flex items-center gap-1.5">
                     <span class="font-medium text-gray-900 dark:text-white"><%= emp.name %></span>
                     <% if emp.user_id.present? %>
-                      <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400" title="<%= t("employees.account_linked") %>: <%= emp.user&.email %>">
-                        <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                        <%= t("employees.account_linked") %>
-                      </span>
+                      <% state = emp.user&.presence_state %>
+                      <% case state
+                         when "online" %>
+                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400" title="접속중 (5분 이내 활동) — last_seen: <%= l(emp.user.last_seen_at, format: :short) rescue '' %>">
+                          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                          접속중
+                        </span>
+                      <% when "active" %>
+                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400" title="이용중 (30분 이내 활동) — last_seen: <%= l(emp.user.last_seen_at, format: :short) rescue '' %>">
+                          <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                          이용중
+                        </span>
+                      <% else %>
+                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400" title="<%= t("employees.account_linked") %>: <%= emp.user&.email %>">
+                          <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                          <%= t("employees.account_linked") %>
+                        </span>
+                      <% end %>
                     <% else %>
                       <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-500" title="<%= t("employees.account_unlinked") %>">
                         <%= t("employees.account_unlinked") %>

@@ -7,6 +7,7 @@ class ApplicationController < ActionController::Base
   before_action :authenticate_user!
   before_action :enforce_active_account
   before_action :set_locale
+  before_action :touch_last_seen
   before_action :set_sentry_context, if: -> { defined?(Sentry) }
 
   # ISS-269: Optimistic locking 충돌 시 사용자 친화적 재시도 안내
@@ -24,6 +25,19 @@ class ApplicationController < ActionController::Base
     return if allowed_paths.include?(request.path)
     return if request.path.start_with?("/users/sign_out", "/rails/")
     redirect_to pending_approval_path
+  end
+
+  # 직원 목록 '접속중'/'이용중' 배지용. 1분 throttle(Solid Cache)로 DB 쓰기 부하 최소화.
+  # 가장(impersonate) 중에는 실제 admin의 last_seen만 갱신 — 가장 대상 last_seen 부풀림 방지.
+  def touch_last_seen
+    user = current_real_user
+    return unless user
+    cache_key = "presence/touched/#{user.id}"
+    return if Rails.cache.read(cache_key)
+    Rails.cache.write(cache_key, true, expires_in: 1.minute)
+    user.update_columns(last_seen_at: Time.current)
+  rescue StandardError => e
+    Rails.logger.warn "[touch_last_seen] #{e.class}: #{e.message}"
   end
 
   def set_sentry_context

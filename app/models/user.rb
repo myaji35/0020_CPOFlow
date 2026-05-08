@@ -103,6 +103,26 @@ class User < ApplicationRecord
     admin? || manager?
   end
 
+  # ── Presence (접속/이용 상태) ────────────────────────────────
+  # ApplicationController#touch_last_seen이 1분 throttle로 last_seen_at 갱신.
+  ONLINE_WINDOW         = 5.minutes
+  RECENTLY_ACTIVE_WINDOW = 30.minutes
+
+  def online?
+    last_seen_at.present? && last_seen_at > ONLINE_WINDOW.ago
+  end
+
+  def recently_active?
+    last_seen_at.present? && last_seen_at > RECENTLY_ACTIVE_WINDOW.ago
+  end
+
+  # 표시용 문자열 키: "online" / "active" / "offline"
+  def presence_state
+    return "online"  if online?
+    return "active"  if recently_active?
+    "offline"
+  end
+
   def preferred_locale
     locale.presence || "en"
   end
