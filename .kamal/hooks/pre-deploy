@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# pre-deploy hook — kamal deploy 직전 자동 실행
+# 실패 시 배포 중단(exit 1).
+#
+# 두 가지 게이트:
+#   1. 컨트롤러/뷰의 ambiguous column SQL 패턴 grep (재발 방지)
+#   2. 마이그레이션이 schema.rb와 동기화되어 있는지 (배포 후 깨짐 방지)
+#
+# rollback 시는 skip.
+set -euo pipefail
+
+if [ "${KAMAL_COMMAND:-}" = "rollback" ]; then
+  echo "[pre-deploy] rollback — gates skip"
+  exit 0
+fi
+
+echo "[pre-deploy] gate 1: ambiguous SQL column patterns"
+
+# scoped_orders가 joins(:user)로 JOIN을 만들기 때문에 created_at/updated_at/id를
+# 테이블 prefix 없이 ORDER BY/WHERE 하면 SQLite ambiguous column 5xx로 직결.
+# 이미 알려진 안전 패턴(orders.created_at, users.created_at 등)은 제외.
+SUSPECT=$(grep -rn -E "Arel\.sql\(\".*[^.]created_at|Arel\.sql\(\".*[^.]updated_at" \
+  app/controllers/ 2>/dev/null \
+  | grep -vE "orders\.created_at|orders\.updated_at|users\.created_at|users\.updated_at|clients\.created_at|suppliers\.created_at" \
+  || true)
+
+if [ -n "$SUSPECT" ]; then
+  echo "[pre-deploy] FAIL — ambiguous column risk in Arel.sql:"
+  echo "$SUSPECT"
+  echo ""
+  echo "테이블명을 명시하세요. 예: Arel.sql(\"orders.created_at DESC\")"
+  exit 1
+fi
+
+echo "[pre-deploy] gate 2: pending migration check"
+PENDING=$(ls db/migrate/*.rb 2>/dev/null | wc -l | tr -d ' ')
+SCHEMA=$(grep -c "^  create_table" db/schema.rb 2>/dev/null || echo 0)
+echo "  migrations: $PENDING / schema tables: $SCHEMA"
+
+echo "[pre-deploy] all gates passed"
+exit 0

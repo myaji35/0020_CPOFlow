@@ -67,7 +67,9 @@ class InboxController < ApplicationController
     # Pagination: 30건씩 로드 (UAE 느린 네트워크 대응)
     @page = [ params[:page].to_i, 1 ].max
     @total_filtered = base_scope.count
-    @all_orders = base_scope.order(Arel.sql("COALESCE(email_received_at, created_at) DESC"))
+    # ambiguous column 차단: includes(:user/:client/:supplier) 가 JOIN으로 승격될 때
+    # 모든 테이블이 created_at 보유 → 테이블명 명시 필수.
+    @all_orders = base_scope.order(Arel.sql("COALESCE(orders.email_received_at, orders.created_at) DESC"))
                             .offset((@page - 1) * PER_PAGE)
                             .limit(PER_PAGE)
     @total_pages = (@total_filtered.to_f / PER_PAGE).ceil

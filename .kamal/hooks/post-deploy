@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# post-deploy hook — 배포 완료 직후 prod 5xx 헬스체크
+# 5xx 검출 시 자동 rollback 트리거.
+set -euo pipefail
+
+echo "[post-deploy] $KAMAL_PERFORMER deployed $KAMAL_VERSION to ${KAMAL_DESTINATION:-production} in ${KAMAL_RUNTIME}s"
+
+if [ "${KAMAL_COMMAND:-}" = "rollback" ]; then
+  echo "[post-deploy] rollback completed — canary skip"
+  exit 0
+fi
+
+# bin/canary는 5xx 발견 시 exit 1.
+if [ -x "bin/canary" ]; then
+  echo "[post-deploy] running canary..."
+  if bin/canary; then
+    echo "[post-deploy] ✅ canary passed"
+  else
+    echo "[post-deploy] ❌ canary failed — 5xx detected"
+    echo "[post-deploy] 자동 rollback을 시도합니다."
+    kamal rollback || {
+      echo "[post-deploy] rollback 실패 — 수동 개입 필요. kamal app boot로 직전 버전 부팅 시도하세요."
+      exit 1
+    }
+    exit 1
+  fi
+else
+  echo "[post-deploy] bin/canary 없음 — skip"
+fi

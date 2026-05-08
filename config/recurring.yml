@@ -14,11 +14,13 @@ production:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12
 
-  # Sync Gmail for all connected accounts every 15 minutes
+  # Sync Gmail for all connected accounts.
+  # SQLite WAL + Puma+SolidQueue 단일 프로세스에서 15분 간격은 BusyException 빈발(2026-05-07 incident).
+  # 1시간으로 완화. 사용자 요청 시 inbox에서 수동 sync 버튼 사용.
   gmail_sync_all:
     class: EmailSyncJob
     queue: default
-    schedule: every 15 minutes
+    schedule: every hour at minute 5
 
   # Due date notifications (Google Chat + in-app) at 07:00 daily
   due_notifications:
@@ -39,17 +41,17 @@ production:
     queue: default
     schedule: every day at 8am
 
-  # eCountERP 품목 동기화 (매 시간 30분)
+  # eCountERP 품목 동기화 — 6시간 간격 (BusyException 완화 + ERP 변경 빈도 고려)
   ecount_product_sync:
     class: EcountProductSyncJob
     queue: default
-    schedule: every hour at minute 30
+    schedule: every 6 hours
 
-  # eCountERP 거래처 동기화 (매 시간 45분)
+  # eCountERP 거래처 동기화 — 6시간 간격 (오프셋으로 동시 락 방지)
   ecount_customer_sync:
     class: EcountCustomerSyncJob
     queue: default
-    schedule: every hour at minute 45
+    schedule: every 6 hours at minute 30
 
   # Shadow Mode FN detection daily at 02:00 (ISS-045 Phase C4)
   shadow_fn_detection:

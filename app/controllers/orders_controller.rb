@@ -464,7 +464,8 @@ class OrdersController < ApplicationController
     # ISS-256: Branch 격리 — 캐시 키에 user branch 포함해야 cross-branch 캐시 leak 방지
     cache_branch = current_user.admin? ? "admin" : current_user.branch.to_s
     data = Rails.cache.fetch("refno_preview/#{cache_branch}/#{ref}", expires_in: 5.minutes) do
-      orders = scoped_orders.where(reference_no: ref).order(:created_at).limit(5).to_a
+      # ambiguous column 차단: scoped_orders가 비-admin에서 joins(:user) → users.created_at 충돌 가능.
+      orders = scoped_orders.where(reference_no: ref).order("orders.created_at ASC").limit(5).to_a
       if orders.any?
         g = OrderGraphBuilder.new(orders.first, depth: 1, include_suggested: false).call
         {
