@@ -47,7 +47,8 @@
   </head>
 
   <body class="bg-ink-75 dark:bg-ink-950 text-ink-900 dark:text-ink-100 antialiased transition-colors duration-200 font-sans"
-        style="font-feature-settings: 'cv11','ss01';">
+        style="font-feature-settings: 'cv11','ss01';"
+        data-current-user-id="<%= current_user&.id %>">
     <% if user_signed_in? %>
       <div class="flex h-screen overflow-hidden relative"
            x-data="{ sidebarPinned: (typeof localStorage !== 'undefined' && localStorage.getItem('sidebar_collapsed') === 'true') }"
