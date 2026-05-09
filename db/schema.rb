@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_08_064104) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_09_173336) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -495,15 +495,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_08_064104) do
   end
 
   create_table "notifications", force: :cascade do |t|
+    t.datetime "acknowledged_at"
     t.text "body"
     t.datetime "created_at", null: false
+    t.integer "intent_level", default: 0, null: false
     t.integer "notifiable_id"
     t.string "notifiable_type"
     t.string "notification_type"
     t.datetime "read_at"
+    t.datetime "sla_due_at"
     t.string "title"
     t.datetime "updated_at", null: false
     t.integer "user_id"
+    t.datetime "viewed_at"
+    t.integer "viewed_duration_sec"
+    t.index ["acknowledged_at"], name: "index_notifications_on_acknowledged_at"
+    t.index ["notifiable_type", "notifiable_id", "notification_type"], name: "idx_notifications_polymorphic_type"
+    t.index ["sla_due_at"], name: "index_notifications_on_sla_due_at"
   end
 
   create_table "order_links", force: :cascade do |t|
@@ -573,6 +581,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_08_064104) do
     t.text "llm_analysis"
     t.datetime "llm_analyzed_at"
     t.integer "lock_version", default: 0, null: false
+    t.integer "mention_acknowledged_count", default: 0, null: false
+    t.integer "mention_sla_overdue_count", default: 0, null: false
+    t.integer "mention_total_count", default: 0, null: false
+    t.integer "mention_unread_count", default: 0, null: false
+    t.integer "mention_viewed_only_count", default: 0, null: false
+    t.string "mention_worst_state"
     t.text "original_email_body"
     t.string "original_email_from"
     t.text "original_email_html_body"
@@ -630,6 +644,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_08_064104) do
     t.index ["kanban_board_id"], name: "index_orders_on_kanban_board_id"
     t.index ["kanban_column_id"], name: "index_orders_on_kanban_column_id"
     t.index ["lab_sandbox"], name: "index_orders_on_lab_sandbox"
+    t.index ["mention_total_count"], name: "idx_orders_mention_total", where: "mention_total_count > 0"
     t.index ["parent_order_id"], name: "index_orders_on_parent_order_id"
     t.index ["project_id"], name: "index_orders_on_project_id"
     t.index ["reference_no"], name: "index_orders_on_reference_no"
