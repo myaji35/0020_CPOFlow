@@ -1,6 +1,10 @@
 require "test_helper"
 
 class NotificationTest < ActiveSupport::TestCase
+  setup do
+    I18n.locale = :ko
+  end
+
   test "Notification scopes 정상 동작" do
     assert_nothing_raised { Notification.unread.count }
     assert_nothing_raised { Notification.recent.limit(10).to_a }
@@ -30,5 +34,184 @@ class NotificationTest < ActiveSupport::TestCase
     n = Notification.new(notification_type: "system")
     n.valid?
     assert_empty n.errors[:notification_type]
+  end
+
+  # ─────────────────────────────────────────
+  # ISS-353 Phase 1 — T13 모델 테스트
+  # ─────────────────────────────────────────
+
+  # 헬퍼: 신규 사용자 생성
+  def make_user(suffix = SecureRandom.hex(3))
+    User.create!(
+      email: "ntest_#{suffix}@example.com",
+      password: "password123",
+      name: "NTest #{suffix}",
+      role: :member
+    )
+  end
+
+  # 헬퍼: 신규 Order
+  def make_order(owner)
+    Order.create!(
+      user: owner,
+      title: "MentionTest Order #{SecureRandom.hex(3)}",
+      customer_name: "Cust",
+      status: :new_rfq
+    )
+  end
+
+  test "mentions scope returns only mentioned type" do
+    u = make_user
+    o = make_order(u)
+    m  = Notification.create!(user: u, notifiable: o, notification_type: "mentioned", body: "@u 확인")
+    nm = Notification.create!(user: u, notifiable: o, notification_type: "due_date", body: "due")
+
+    user_notifs = Notification.where(user: u)
+    assert_equal 1, user_notifs.mentions.count
+    assert_equal m.id, user_notifs.mentions.first.id
+  ensure
+    Notification.where(user: u).destroy_all if u
+    o&.reload&.destroy
+    u&.destroy
+  end
+
+  test "unacknowledged scope filters acknowledged_at IS NULL" do
+    u = make_user
+    o = make_order(u)
+    a = Notification.create!(user: u, notifiable: o, notification_type: "mentioned", body: "1")
+    b = Notification.create!(user: u, notifiable: o, notification_type: "mentioned", body: "2")
+    a.update!(acknowledged_at: Time.current)
+
+    rel = Notification.where(user: u).mentions.unacknowledged
+    assert_equal 1, rel.count
+    assert_equal b.id, rel.first.id
+  ensure
+    Notification.where(user: u).destroy_all if u
+    o&.reload&.destroy
+    u&.destroy
+  end
+
+  test "intent_level defaults to 0 on create" do
+    u = make_user
+    o = make_order(u)
+    n = Notification.create!(user: u, notifiable: o, notification_type: "mentioned", body: "x")
+    assert_equal 0, n.intent_level
+  ensure
+    n&.destroy
+    o&.reload&.destroy
+    u&.destroy
+  end
+
+  test "acknowledge! sets acknowledged_at and read_at" do
+    u = make_user
+    o = make_order(u)
+    n = Notification.create!(user: u, notifiable: o, notification_type: "mentioned", body: "x")
+    assert_nil n.acknowledged_at
+    assert_nil n.read_at
+
+    before = Time.current
+    n.acknowledge!(viewer: u)
+    after = Time.current
+
+    n.reload
+    assert n.acknowledged_at.present?
+    assert n.read_at.present?
+    assert_in_delta before.to_f, n.acknowledged_at.to_f, (after - before + 1.0)
+  ensure
+    n&.destroy
+    o&.reload&.destroy
+    u&.destroy
+  end
+
+  test "acknowledge! is idempotent — second call no-op" do
+    u = make_user
+    o = make_order(u)
+    n = Notification.create!(user: u, notifiable: o, notification_type: "mentioned", body: "x")
+    n.acknowledge!(viewer: u)
+    first_ts = n.reload.acknowledged_at
+
+    sleep 0.05  # ensure Time.current would differ
+    n.acknowledge!(viewer: u)
+    assert_equal first_ts.to_f, n.reload.acknowledged_at.to_f, "second acknowledge should not update timestamp"
+  ensure
+    n&.destroy
+    o&.reload&.destroy
+    u&.destroy
+  end
+
+  test "acknowledge! rejects non-owner" do
+    owner   = make_user("own")
+    other   = make_user("oth")
+    o = make_order(owner)
+    n = Notification.create!(user: owner, notifiable: o, notification_type: "mentioned", body: "x")
+
+    n.acknowledge!(viewer: other)
+    assert_nil n.reload.acknowledged_at, "non-owner viewer must not set acknowledged_at"
+  ensure
+    n&.destroy
+    o&.reload&.destroy
+    owner&.destroy
+    other&.destroy
+  end
+
+  test "mark_viewed! sets viewed_at and viewed_duration_sec" do
+    u = make_user
+    o = make_order(u)
+    n = Notification.create!(user: u, notifiable: o, notification_type: "mentioned", body: "x")
+    n.mark_viewed!(duration_sec: 5)
+    n.reload
+    assert n.viewed_at.present?
+    assert_equal 5, n.viewed_duration_sec
+  ensure
+    n&.destroy
+    o&.reload&.destroy
+    u&.destroy
+  end
+
+  test "mark_viewed! is idempotent" do
+    u = make_user
+    o = make_order(u)
+    n = Notification.create!(user: u, notifiable: o, notification_type: "mentioned", body: "x")
+    n.mark_viewed!(duration_sec: 5)
+    first_ts = n.reload.viewed_at
+
+    sleep 0.05
+    n.mark_viewed!(duration_sec: 99)
+    n.reload
+    assert_equal first_ts.to_f, n.viewed_at.to_f, "second mark_viewed! must not update timestamp"
+    assert_equal 5, n.viewed_duration_sec, "duration must not be overwritten"
+  ensure
+    n&.destroy
+    o&.reload&.destroy
+    u&.destroy
+  end
+
+  test "after_commit triggers Order#recompute_mention_summary! for mentions only" do
+    u = make_user
+    o = make_order(u)
+    assert_equal 0, o.reload.mention_total_count
+
+    Notification.create!(user: u, notifiable: o, notification_type: "mentioned", body: "@u 1")
+    assert_equal 1, o.reload.mention_total_count, "mention notif should increment mention_total_count"
+
+    Notification.create!(user: u, notifiable: o, notification_type: "due_date", body: "due")
+    assert_equal 1, o.reload.mention_total_count, "non-mention notif must NOT change mention_total_count"
+  ensure
+    Notification.where(notifiable: o).destroy_all if o
+    o&.reload&.destroy
+    u&.destroy
+  end
+
+  test "after_commit no-op when notifiable destroyed_by_association" do
+    u = make_user
+    o = make_order(u)
+    Notification.create!(user: u, notifiable: o, notification_type: "mentioned", body: "x")
+    # Order#destroy → has_many :notifications, dependent: :destroy → 자식 destroy 시
+    # destroyed_by_association 가드로 broadcast/recompute 무발화 (raise 없이 정상 종료)
+    assert_nothing_raised { o.reload.destroy }
+    o = nil
+  ensure
+    o&.reload&.destroy if o && Order.exists?(o.id)
+    u&.destroy
   end
 end

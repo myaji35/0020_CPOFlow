@@ -48,6 +48,7 @@ class OrderTest < ActiveSupport::TestCase
 
   # ISS-039: critical? / unassigned? / scope :critical
   setup do
+    I18n.locale = :ko
     @owner = User.create!(
       email: "order_test_owner_#{SecureRandom.hex(3)}@example.com",
       password: "password123", name: "Order Test Owner", role: :member
@@ -266,5 +267,190 @@ class OrderTest < ActiveSupport::TestCase
   ensure
     order&.destroy
     user&.destroy
+  end
+
+  # ─────────────────────────────────────────
+  # ISS-353 Phase 1 — T13 멘션 요약 테스트
+  # ─────────────────────────────────────────
+
+  def make_mention_user(suffix = SecureRandom.hex(3))
+    User.create!(
+      email: "mtest_#{suffix}@example.com",
+      password: "password123",
+      name: "MTest #{suffix}",
+      role: :member
+    )
+  end
+
+  def make_mention_order(creator)
+    Order.create!(
+      user: creator,
+      title: "Mention Summary Test #{SecureRandom.hex(3)}",
+      customer_name: "Cust",
+      status: :new_rfq
+    )
+  end
+
+  test "recompute_mention_summary! with no mentions sets all counts to 0" do
+    creator = make_mention_user("c0")
+    order = make_mention_order(creator)
+    order.recompute_mention_summary!
+    order.reload
+    assert_equal 0, order.mention_total_count
+    assert_equal 0, order.mention_unread_count
+    assert_equal 0, order.mention_viewed_only_count
+    assert_equal 0, order.mention_acknowledged_count
+    assert_equal 0, order.mention_sla_overdue_count
+    assert_nil order.mention_worst_state
+  ensure
+    Notification.where(notifiable: order).destroy_all if order
+    order&.reload&.destroy
+    creator&.destroy
+  end
+
+  test "recompute_mention_summary! 5 distinct unread mentions → unread_count=5, worst=unread" do
+    creator = make_mention_user("c5")
+    order = make_mention_order(creator)
+    users = 5.times.map { |i| make_mention_user("u5_#{i}") }
+    users.each { |u| Notification.create!(user: u, notifiable: order, notification_type: "mentioned", body: "x") }
+    order.reload
+    assert_equal 5, order.mention_total_count
+    assert_equal 5, order.mention_unread_count
+    assert_equal 0, order.mention_acknowledged_count
+    assert_equal 0, order.mention_viewed_only_count
+    assert_equal "unread", order.mention_worst_state
+  ensure
+    Notification.where(notifiable: order).destroy_all if order
+    order&.reload&.destroy
+    users&.each(&:destroy)
+    creator&.destroy
+  end
+
+  test "recompute_mention_summary! same user multiple mentions aggregated to 1 dot" do
+    creator = make_mention_user("cAgg")
+    order = make_mention_order(creator)
+    u = make_mention_user("uAgg")
+    3.times { Notification.create!(user: u, notifiable: order, notification_type: "mentioned", body: "n") }
+    order.reload
+    assert_equal 1, order.mention_total_count, "same user 3 mentions should aggregate to 1 dot"
+    assert_equal 1, order.mention_unread_count
+    assert_equal "unread", order.mention_worst_state
+  ensure
+    Notification.where(notifiable: order).destroy_all if order
+    order&.reload&.destroy
+    u&.destroy
+    creator&.destroy
+  end
+
+  test "recompute_mention_summary! mixed states pick worst (unread present → worst=unread)" do
+    creator = make_mention_user("cMix")
+    order = make_mention_order(creator)
+    # 2 ack + 1 viewed_only + 2 unread → 5 distinct users
+    ack_users     = 2.times.map { |i| make_mention_user("ack_#{i}") }
+    viewed_users  = 1.times.map { |i| make_mention_user("vw_#{i}") }
+    unread_users  = 2.times.map { |i| make_mention_user("ur_#{i}") }
+    now = Time.current
+
+    ack_users.each do |u|
+      n = Notification.create!(user: u, notifiable: order, notification_type: "mentioned", body: "x")
+      n.update!(acknowledged_at: now)
+    end
+    viewed_users.each do |u|
+      n = Notification.create!(user: u, notifiable: order, notification_type: "mentioned", body: "x")
+      n.update!(viewed_at: now)
+    end
+    unread_users.each do |u|
+      Notification.create!(user: u, notifiable: order, notification_type: "mentioned", body: "x")
+    end
+
+    order.reload
+    assert_equal 5, order.mention_total_count
+    assert_equal 2, order.mention_unread_count
+    assert_equal 1, order.mention_viewed_only_count
+    assert_equal 2, order.mention_acknowledged_count
+    assert_equal "unread", order.mention_worst_state
+  ensure
+    Notification.where(notifiable: order).destroy_all if order
+    order&.reload&.destroy
+    [ack_users, viewed_users, unread_users].flatten.each(&:destroy)
+    creator&.destroy
+  end
+
+  test "recompute_mention_summary! does not increment lock_version" do
+    creator = make_mention_user("cLock")
+    order = make_mention_order(creator)
+    u = make_mention_user("uLock")
+    # mention 생성 → after_commit이 recompute 1회 호출 (이 단계에서 update_columns만 실행)
+    Notification.create!(user: u, notifiable: order, notification_type: "mentioned", body: "x")
+
+    before = order.reload.lock_version
+    order.recompute_mention_summary!
+    after = order.reload.lock_version
+    assert_equal before, after, "update_columns must not bump lock_version"
+  ensure
+    Notification.where(notifiable: order).destroy_all if order
+    order&.reload&.destroy
+    u&.destroy
+    creator&.destroy
+  end
+
+  test "mention_summary_dots returns dots in unread-first order" do
+    creator = make_mention_user("cOrd")
+    order = make_mention_order(creator)
+    u_unread = make_mention_user("ord_ur")
+    u_ack    = make_mention_user("ord_ack")
+    u_view   = make_mention_user("ord_vw")
+    now = Time.current
+
+    n_ack = Notification.create!(user: u_ack, notifiable: order, notification_type: "mentioned", body: "x")
+    n_ack.update!(acknowledged_at: now)
+    n_view = Notification.create!(user: u_view, notifiable: order, notification_type: "mentioned", body: "x")
+    n_view.update!(viewed_at: now)
+    Notification.create!(user: u_unread, notifiable: order, notification_type: "mentioned", body: "x")
+
+    dots = order.reload.mention_summary_dots(viewer: nil, limit: 5)
+    assert_equal 3, dots.size
+    # 정렬: 미확인(unread) 먼저, 그다음 viewed_only, 그다음 acknowledged
+    assert_equal "unread", dots.first[:state]
+    assert_equal "acknowledged", dots.last[:state]
+  ensure
+    Notification.where(notifiable: order).destroy_all if order
+    order&.reload&.destroy
+    [u_unread, u_ack, u_view].each(&:destroy)
+    creator&.destroy
+  end
+
+  test "mention_summary_dots respects limit (7 distinct users → returns 5)" do
+    creator = make_mention_user("cLim")
+    order = make_mention_order(creator)
+    users = 7.times.map { |i| make_mention_user("lim_#{i}") }
+    users.each { |u| Notification.create!(user: u, notifiable: order, notification_type: "mentioned", body: "x") }
+    dots = order.reload.mention_summary_dots(viewer: nil, limit: 5)
+    assert_equal 5, dots.size
+  ensure
+    Notification.where(notifiable: order).destroy_all if order
+    order&.reload&.destroy
+    users&.each(&:destroy)
+    creator&.destroy
+  end
+
+  test "mention_summary_dots returns hash with required keys" do
+    creator = make_mention_user("cKey")
+    order = make_mention_order(creator)
+    u = make_mention_user("uKey")
+    Notification.create!(user: u, notifiable: order, notification_type: "mentioned", body: "x")
+    dots = order.reload.mention_summary_dots(viewer: nil, limit: 5)
+    assert_equal 1, dots.size
+    dot = dots.first
+    %i[user_id user_name state notification_id].each do |k|
+      assert dot.key?(k), "dot hash missing key #{k}"
+    end
+    assert_equal u.id, dot[:user_id]
+    assert_equal "unread", dot[:state]
+  ensure
+    Notification.where(notifiable: order).destroy_all if order
+    order&.reload&.destroy
+    u&.destroy
+    creator&.destroy
   end
 end
