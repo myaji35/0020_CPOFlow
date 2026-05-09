@@ -569,4 +569,83 @@ class Order < ApplicationRecord
       end
     end
   end
+
+  # ISS-353 Phase 1 — 멘션 카운터 캐시 재계산 (worst-state aggregation)
+  #
+  # 의도적으로 update_columns 사용 — Order 콜백을 우회한다:
+  #   - sync_legacy_tracking_columns_to_numbers (after_save)
+  #   - maybe_auto_assign_card_status (after_save)
+  #   - lock_version 충돌 회피 (carrier 콜백 무발화)
+  # 멘션 요약 컬럼은 비즈니스 상태가 아닌 파생 캐시이므로 콜백/검증/optimistic locking 모두 우회 안전.
+  # 멱등성: 매 호출마다 GROUP BY로 처음부터 재집계 → race condition 시 마지막 호출이 정확한 값으로 수렴.
+  def recompute_mention_summary!
+    rows = Notification.where(notifiable: self, notification_type: "mentioned")
+                       .group(:user_id)
+                       .pluck(
+                         :user_id,
+                         Arel.sql("MAX(CASE WHEN acknowledged_at IS NOT NULL THEN 1 ELSE 0 END)"),
+                         Arel.sql("MAX(CASE WHEN viewed_at IS NOT NULL THEN 1 ELSE 0 END)"),
+                         Arel.sql("MAX(CASE WHEN sla_due_at IS NOT NULL AND sla_due_at < CURRENT_TIMESTAMP AND acknowledged_at IS NULL THEN 1 ELSE 0 END)")
+                       )
+
+    counts = { ack: 0, viewed_only: 0, unread: 0, sla_overdue: 0 }
+    rows.each do |_uid, ack, viewed, overdue|
+      if overdue == 1
+        counts[:sla_overdue] += 1
+      elsif ack == 1
+        counts[:ack] += 1
+      elsif viewed == 1
+        counts[:viewed_only] += 1
+      else
+        counts[:unread] += 1
+      end
+    end
+
+    worst = if counts[:sla_overdue] > 0 then "sla_overdue"
+            elsif counts[:unread] > 0 then "unread"
+            elsif counts[:viewed_only] > 0 then "viewed_only"
+            elsif counts[:ack] > 0 then "acknowledged"
+            else nil
+            end
+
+    update_columns(
+      mention_total_count:        rows.size,
+      mention_unread_count:       counts[:unread],
+      mention_viewed_only_count:  counts[:viewed_only],
+      mention_acknowledged_count: counts[:ack],
+      mention_sla_overdue_count:  counts[:sla_overdue],
+      mention_worst_state:        worst,
+      updated_at:                 Time.current
+    )
+  end
+
+  # ISS-353 Phase 1 — 도트 줄 렌더용 요약 hash 배열
+  # 정렬: 미확인 우선 (○ → ◐ → ●) — spec §4 결정 4
+  # B1-b: viewer 클라이언트 마킹 — viewer 인자는 Phase 3에서 활용 예정 (현재 미사용)
+  def mention_summary_dots(viewer: nil, limit: 5)
+    _ = viewer  # B1-b: viewer 클라이언트 마킹 — Phase 1에서는 미사용 (Phase 3 hover 카드용 예약)
+    Notification.where(notifiable: self, notification_type: "mentioned")
+                .group(:user_id)
+                .order(Arel.sql("MIN(acknowledged_at) IS NULL DESC, MIN(viewed_at) IS NULL DESC"))
+                .pluck(
+                  :user_id,
+                  Arel.sql("MAX(CASE WHEN acknowledged_at IS NOT NULL THEN 1 ELSE 0 END)"),
+                  Arel.sql("MAX(CASE WHEN viewed_at IS NOT NULL THEN 1 ELSE 0 END)"),
+                  Arel.sql("MAX(id)")
+                )
+                .first(limit)
+                .map do |uid, ack, viewed, nid|
+                  state = if ack == 1 then "acknowledged"
+                          elsif viewed == 1 then "viewed_only"
+                          else "unread"
+                          end
+                  user = User.find_by(id: uid)
+                  {
+                    user_id: uid,
+                    user_name: user&.display_name || "?",
+                    state: state,
+                    notification_id: nid
+                  }
+                end
+  end
 end
