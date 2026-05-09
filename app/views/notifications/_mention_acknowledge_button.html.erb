@@ -1,0 +1,18 @@
+<%# ISS-353 Phase 1 — 멘션 [✓ 확인] 버튼 (드로어 멘션 패널 안에서 사용)
+    locals:
+      notification : Notification (required) — 본인 소유 mention 알림
+
+    이미 acknowledged면 미출력. button_to + Turbo로 acknowledge 액션 호출 →
+    컨트롤러가 turbo_stream.remove("notification-row-#{id}")로 자기 행 제거 +
+    Notification#after_commit broadcast로 칸반 도트 줄도 동기화.
+%>
+<% return if notification.acknowledged? %>
+<%= button_to acknowledge_notification_path(notification),
+      method: :patch,
+      form: { data: { turbo: true }, class: "inline" },
+      class: "inline-flex items-center gap-1 px-3 py-1 text-xs rounded-md border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition" do %>
+  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+  </svg>
+  <%= t("mentions.acknowledge.button") %>
+<% end %>

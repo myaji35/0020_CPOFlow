@@ -1754,6 +1754,12 @@ en:
       state_viewed_only: "viewed, not acknowledged"
       state_acknowledged: "acknowledged"
       state_sla_overdue: "SLA overdue"
+    acknowledge:
+      button: "Acknowledge"
+      acknowledged: "Acknowledged"
+    drawer:
+      panel_title: "@mentions on this card"
+      no_pending: "No pending mentions"
 
   # ── Errors ────────────────────────────────────────────────────────
   errors:

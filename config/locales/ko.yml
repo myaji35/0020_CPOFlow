@@ -1818,3 +1818,9 @@ ko:
       state_viewed_only: "봤지만 미확인"
       state_acknowledged: "확인됨"
       state_sla_overdue: "SLA 초과"
+    acknowledge:
+      button: "확인"
+      acknowledged: "확인됨"
+    drawer:
+      panel_title: "이 카드의 @멘션"
+      no_pending: "확인 대기중인 멘션이 없습니다"

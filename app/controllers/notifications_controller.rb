@@ -47,13 +47,18 @@ class NotificationsController < ApplicationController
   # ISS-353 Phase 1: 멘션 [✓ 확인] 명시 클릭
   # 본인 소유 notification만 대상 — current_user.notifications scope로 자동 권한 검증
   # 다른 사용자 id 추측 시 ActiveRecord::RecordNotFound (404)
+  #
+  # turbo_stream 응답: 드로어 멘션 패널의 자기 행만 제거.
+  # 칸반 카드 도트 줄 갱신은 Notification#after_commit broadcast가 별도 처리.
   def acknowledge
     notification = current_user.notifications.find(params[:id])
     notification.acknowledge!(viewer: current_user)
     respond_to do |format|
-      format.turbo_stream { head :ok }
-      format.json         { head :ok }
-      format.html         { redirect_back fallback_location: notifications_path }
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.remove("notification-row-#{notification.id}")
+      end
+      format.json { head :ok }
+      format.html { redirect_back fallback_location: notifications_path }
     end
   end
 
