@@ -156,6 +156,8 @@
     </div>
   <% end %>
 
+  <%= render "orders/mention_dot_strip", order: order, viewer: current_user, variant: :kanban_card %>
+
   <!-- Footer: Assignees + Meta -->
   <div class="flex items-center justify-between pt-2 border-t border-gray-50 dark:border-gray-700">
     <!-- Assignee avatars -->
