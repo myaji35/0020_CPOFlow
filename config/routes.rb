@@ -289,7 +289,11 @@ Rails.application.routes.draw do
   # 알림 센터
   resources :notifications, only: %i[index] do
     collection { patch :read_all }
-    member     { patch :read }
+    member do
+      patch :read
+      patch :acknowledge  # ISS-353 Phase 1: 멘션 [✓ 확인] 클릭
+      patch :view         # ISS-353 Phase 1: 뷰포트 5초 노출 자동 기록
+    end
   end
 
   # 주문 일괄 처리 (Bulk Actions)

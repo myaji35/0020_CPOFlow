@@ -44,6 +44,28 @@ class NotificationsController < ApplicationController
     end
   end
 
+  # ISS-353 Phase 1: 멘션 [✓ 확인] 명시 클릭
+  # 본인 소유 notification만 대상 — current_user.notifications scope로 자동 권한 검증
+  # 다른 사용자 id 추측 시 ActiveRecord::RecordNotFound (404)
+  def acknowledge
+    notification = current_user.notifications.find(params[:id])
+    notification.acknowledge!(viewer: current_user)
+    respond_to do |format|
+      format.turbo_stream { head :ok }
+      format.json         { head :ok }
+      format.html         { redirect_back fallback_location: notifications_path }
+    end
+  end
+
+  # ISS-353 Phase 1: 뷰포트 5초 연속 노출 시 자동 viewed_at 기록
+  # duration은 0..3600 클램프 (안티 게이밍: 비현실적 long-tail 차단)
+  def view
+    notification = current_user.notifications.find(params[:id])
+    duration = params[:duration].to_i.clamp(0, 3600)
+    notification.mark_viewed!(duration_sec: duration)
+    head :ok
+  end
+
   def read_all
     scope = current_user.notifications.unread
     if params[:category].present? && params[:category] != "all"
