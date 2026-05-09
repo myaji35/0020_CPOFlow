@@ -20,6 +20,9 @@
 | Turbo 채널명 | `order_#{id}_mentions` (사용자 요구) | 본 계획 §7 |
 | viewed_at 임계값 | 5초 연속 노출 | spec §13 |
 | 기존 `orders.viewed_at` 컬럼 | **건드리지 않음** — Phase 1은 `notifications.viewed_at`만 추가 | schema.rb 확인 (orders.viewed_at은 별도 의미로 이미 존재) |
+| **viewer-self 마킹 방식** (B1) | 서버는 stateless 렌더, 클라이언트가 `<body data-current-user-id>` 읽어 `data-viewer-self` 적용 | eng-review B1-b 채택 (2026-05-09) |
+| **i18n 적용 시점** (B2) | Phase 1부터 ko/en yml 동시 등록 — `mentions.dot_strip.*` 키 | eng-review B2-a 채택 (2026-05-09) |
+| **after_commit destroy 처리** (B3) | `return if destroyed_by_association.present?` + `after_commit on: %i[create update]` | eng-review B3 채택 (2026-05-09) |
 
 ---
 
@@ -89,9 +92,12 @@
 - **수용 기준**: 사용자 A가 [✓ 확인] 클릭 → 사용자 B의 칸반에서 도트가 즉시(<2s) 갱신. 멘션 0건 카드는 `turbo-cable-stream-source` 미렌더.
 - **예상 커밋**: 1
 
-### T6 — `_mention_dot_strip` 파셜
-- **파일**: `app/views/orders/_mention_dot_strip.html.erb` (신규)
-- **내용**: spec §9 인터페이스대로
+### T6 — `_mention_dot_strip` 파셜 + i18n 키
+- **파일**:
+  - `app/views/orders/_mention_dot_strip.html.erb` (신규)
+  - `config/locales/ko.yml` (키 추가)
+  - `config/locales/en.yml` (키 추가)
+- **내용**: spec §9 인터페이스 + i18n
   ```erb
   <%# locals: order, viewer, variant: %>
   <% return if order.mention_total_count.to_i == 0 %>
@@ -102,23 +108,46 @@
        data-controller="mention-dots mention-viewport"
        data-mention-viewport-order-id-value="<%= order.id %>"
        data-mention-viewport-threshold-value="5000">
-    <span class="font-mono text-[10px] text-ink-500">@</span>
+    <span class="font-mono text-[10px] text-ink-500"><%= t("mentions.dot_strip.symbol") %></span>
     <% dots.each do |dot| %>
-      <%= render "orders/mention_dot", dot: dot, viewer: viewer %>
+      <%= render "orders/mention_dot", dot: dot %>
     <% end %>
     <% if overflow > 0 %>
-      <span class="text-[10px] text-ink-500">+<%= overflow %></span>
+      <span class="text-[10px] text-ink-500"><%= t("mentions.dot_strip.overflow_count", count: overflow) %></span>
     <% end %>
-    <span class="text-[10px] text-ink-500 ml-1"><%= order.mention_acknowledged_count %>/<%= order.mention_total_count %> 확인</span>
+    <span class="text-[10px] text-ink-500 ml-1">
+      <%= t("mentions.dot_strip.acknowledged_count",
+             ack: order.mention_acknowledged_count,
+             total: order.mention_total_count) %>
+    </span>
   </div>
   ```
-- **수용 기준**: 5개 멘션 + 2 unread + 3 acknowledged → DOM에 `○○●●●` 순서대로(미확인 좌측 우선) 렌더. 멘션 0건 → 컨테이너 자체 미출력 (`return`).
+  - i18n 키:
+    ```yaml
+    # config/locales/ko.yml
+    ko:
+      mentions:
+        dot_strip:
+          symbol: "@"
+          overflow_count: "+%{count}"
+          acknowledged_count: "%{ack}/%{total} 확인"
+    # config/locales/en.yml
+    en:
+      mentions:
+        dot_strip:
+          symbol: "@"
+          overflow_count: "+%{count}"
+          acknowledged_count: "%{ack}/%{total} ack"
+    ```
+- **B1-b 변경**: partial은 `viewer` local을 받지 않음. `dot` hash에서 `is_viewer_self`를 제거하고 클라이언트가 마킹.
+- **수용 기준**: 5개 멘션 + 2 unread + 3 acknowledged → DOM에 `○○●●●` 순서대로 렌더. 멘션 0건 → 컨테이너 자체 미출력. ko 환경 "확인" / en 환경 "ack" 표기.
 - **예상 커밋**: 1
 
 ### T7 — `_mention_dot` 파셜
 - **파일**: `app/views/orders/_mention_dot.html.erb` (신규)
 - **내용**:
-  - locals: `dot` (hash: `{user_id, user_name, state, notification_id, intent_level}`), `viewer`
+  - locals: `dot` (hash: `{user_id, user_name, state, notification_id, intent_level}`) — **viewer 제거(B1-b)**
+  - 도트 wrapper에 `data-user-id="<%= dot[:user_id] %>"` 출력 → 클라이언트가 본인 여부 판정
   - 상태별 클래스 매핑 (Phase 1은 4가지: `unread`, `viewed_only`, `acknowledged`, `sla_overdue`)
     - `unread` → `bg-ink-200 border border-ink-300` (회색 ○ 느낌)
     - `viewed_only` → `bg-amber-400` (노랑 ◐) — half-fill은 conic-gradient로
@@ -286,7 +315,7 @@ class Notification < ApplicationRecord
 
   before_validation -> { self.intent_level ||= 0 }
 
-  after_commit :sync_order_mention_summary, on: %i[create update destroy]
+  after_commit :sync_order_mention_summary, on: %i[create update]
 
   def acknowledged?       = acknowledged_at.present?
   def viewed?             = viewed_at.present?
@@ -309,6 +338,7 @@ class Notification < ApplicationRecord
   private
 
   def sync_order_mention_summary
+    return if destroyed_by_association.present?  # B3: Order dependent: :destroy 가드
     return unless notification_type == MENTIONED_TYPE
     return unless notifiable.is_a?(Order)
     notifiable.recompute_mention_summary!
@@ -324,7 +354,9 @@ class Notification < ApplicationRecord
 end
 ```
 
-**Trade-off**: `viewer: nil`로 broadcast하면 cross-user 정확도가 떨어짐 (펄스 애니는 viewer-specific). Phase 1은 펄스 미구현이므로 nil 전송 OK. Phase 3에서 per-user broadcast로 변경.
+**B1-b 결정 (2026-05-09)**: broadcast는 stateless `viewer: nil`로 전송. 클라이언트(Stimulus)가 `<body data-current-user-id>` 읽어 broadcast 후에도 본인 도트에 `data-viewer-self="true"` 자동 마킹. self-acknowledge 단축이 cross-user broadcast 후에도 유지.
+
+**B3 결정 (2026-05-09)**: `destroyed_by_association` 가드 + `on: %i[create update]`로 destroy 케이스 명시 제외. Order 삭제 시 자식 notifications가 같은 트랜잭션에서 destroy되지만 callback은 무발화 — 어차피 Order 자체가 사라져 broadcast target도 없음.
 
 ### 3.2 `Order#recompute_mention_summary!`
 
@@ -493,13 +525,29 @@ app/views/kanban/
 
 ## 6. Stimulus Controllers
 
-### 6.1 `mention_dots_controller.js` — 50줄 미만
+### 6.1 `mention_dots_controller.js` — B1-b 클라이언트 viewer-self 마킹
 
 ```js
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = ["dot"]
+
+  connect() {
+    this.markViewerSelf()
+  }
+
+  // Turbo Stream broadcast 후에도 다시 호출되도록 MutationObserver 사용
+  // (broadcast_replace_to가 partial을 통째로 바꾸면 connect()가 재호출됨 — 자동 처리)
+  markViewerSelf() {
+    const currentUserId = document.body.dataset.currentUserId
+    if (!currentUserId) return
+    this.element.querySelectorAll('[data-user-id]').forEach((el) => {
+      if (el.dataset.userId === currentUserId) {
+        el.dataset.viewerSelf = "true"
+      }
+    })
+  }
 
   acknowledge(event) {
     const dotEl = event.currentTarget
@@ -519,6 +567,11 @@ export default class extends Controller {
   }
 }
 ```
+
+**B1-b 보강 요건**:
+- `app/views/layouts/application.html.erb`의 `<body>`에 `data-current-user-id="<%= current_user&.id %>"` 추가
+- `_mention_dot.html.erb`의 도트 wrapper에 `data-user-id="<%= dot[:user_id] %>"` 출력 (서버는 본인 여부 판정 안 함)
+- Stimulus `connect()`는 Turbo Stream broadcast로 partial이 교체될 때마다 재호출됨 → 자동 마킹 유지
 
 ### 6.2 `mention_viewport_controller.js` — Intersection Observer 5초
 
