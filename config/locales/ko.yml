@@ -1806,3 +1806,10 @@ ko:
     status_cancelled: "철회"
     days_unit: "일"
     nav_leaves: "휴가 관리"
+
+  # ── 멘션 (ISS-353 Phase 1) ────────────────────────────────────────
+  mentions:
+    dot_strip:
+      symbol: "@"
+      overflow_count: "+%{count}"
+      acknowledged_count: "%{ack}/%{total} 확인"

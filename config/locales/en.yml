@@ -1743,6 +1743,13 @@ en:
     days_unit: "day(s)"
     nav_leaves: "Leave"
 
+  # ── Mentions (ISS-353 Phase 1) ────────────────────────────────────
+  mentions:
+    dot_strip:
+      symbol: "@"
+      overflow_count: "+%{count}"
+      acknowledged_count: "%{ack}/%{total} ack"
+
   # ── Errors ────────────────────────────────────────────────────────
   errors:
     messages:
