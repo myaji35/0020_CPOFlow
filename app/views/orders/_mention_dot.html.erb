@@ -1,0 +1,41 @@
+<%# ISS-353 Phase 1 — 멘션 단일 도트 (사람 단위 worst-state)
+    locals:
+      dot : Hash {user_id, user_name, state, notification_id, intent_level?}
+
+    B1-b 결정: viewer 인자 없음. 서버 stateless 렌더 — 클라이언트(Wave 2b Stimulus)가
+    <body data-current-user-id> 읽어 data-viewer-self 마킹.
+
+    상태별 색상 (4종, Phase 1은 unread/viewed_only/acknowledged 3종 운용):
+      unread       → 회색 ○ (bg-ink-200 border-ink-300)
+      viewed_only  → 노랑 ◐ (bg-amber-400)
+      acknowledged → 녹색 ● (bg-emerald-500)
+      sla_overdue  → 빨강 테두리 (bg-white border-2 border-red-500) — Phase 2 활성
+
+    클릭/호버:
+      - 24x24 wrapper button — 모바일 터치 영역 보장 + 키보드 접근 가능
+      - data-action="click->mention-dots#acknowledge" — Wave 2b에서 JS 작성
+      - hover scale-1.33 (8px) + transition-transform
+      - native title 툴팁 — Phase 3에서 호버 카드로 승격
+%>
+<%
+  state = dot[:state].to_s
+  dot_color_class = case state
+                    when "unread"        then "bg-ink-200 border border-ink-300"
+                    when "viewed_only"   then "bg-amber-400"
+                    when "acknowledged"  then "bg-emerald-500"
+                    when "sla_overdue"   then "bg-white border-2 border-red-500"
+                    else "bg-ink-200 border border-ink-300"
+                    end
+  state_label = t("mentions.dot.state_#{state}", default: state)
+  tooltip     = "#{dot[:user_name]} — #{state_label}"
+%>
+<button type="button"
+        class="mention-dot-wrapper inline-flex items-center justify-center w-6 h-6 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-300"
+        data-action="click->mention-dots#acknowledge"
+        data-prevent-card-open="true"
+        data-user-id="<%= dot[:user_id] %>"
+        data-notification-id="<%= dot[:notification_id] %>"
+        data-state="<%= state %>"
+        title="<%= tooltip %>">
+  <span class="mention-dot inline-block w-1.5 h-1.5 rounded-full <%= dot_color_class %> hover:scale-[1.33] transition-transform"></span>
+</button>

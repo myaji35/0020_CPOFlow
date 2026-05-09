@@ -1813,3 +1813,8 @@ ko:
       symbol: "@"
       overflow_count: "+%{count}"
       acknowledged_count: "%{ack}/%{total} 확인"
+    dot:
+      state_unread: "미확인"
+      state_viewed_only: "봤지만 미확인"
+      state_acknowledged: "확인됨"
+      state_sla_overdue: "SLA 초과"

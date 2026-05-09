@@ -1749,6 +1749,11 @@ en:
       symbol: "@"
       overflow_count: "+%{count}"
       acknowledged_count: "%{ack}/%{total} ack"
+    dot:
+      state_unread: "unread"
+      state_viewed_only: "viewed, not acknowledged"
+      state_acknowledged: "acknowledged"
+      state_sla_overdue: "SLA overdue"
 
   # ── Errors ────────────────────────────────────────────────────────
   errors:
