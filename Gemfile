@@ -112,6 +112,13 @@ group :development, :test do
   gem "rubocop-rails-omakase", require: false
 end
 
+group :test do
+  # ISS-353 Phase 1 T15: Capybara system test infrastructure
+  # 기존 test/system/*_test.rb 들이 require "capybara/rails" 사용 — gem 미설치 상태였음.
+  gem "capybara"
+  gem "selenium-webdriver"
+end
+
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
