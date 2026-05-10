@@ -16,6 +16,7 @@ class RfqAutoMailer < ApplicationMailer
     @order     = params[:order]
     @items     = params[:items] || []
     @from_user = params[:from_user]
+    @inquiry_due_date = params[:inquiry_due_date]
 
     # 첨부파일 attach
     Array(params[:attachments_data]).each do |att|

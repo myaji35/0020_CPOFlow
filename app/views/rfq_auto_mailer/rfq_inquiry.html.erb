@@ -1,60 +1,82 @@
 <!DOCTYPE html>
 <html>
-<body style="font-family: 'Helvetica Neue', Arial, sans-serif; line-height:1.5; color:#222; max-width:680px;">
-  <p>Dear <strong><%= @selection.supplier_name %></strong> Sales Team,</p>
+<body style="font-family:'Helvetica Neue', Arial, sans-serif; line-height:1.5; color:#222; max-width:680px; margin:0 auto; padding:16px;">
 
-  <p>We are <strong>AtoZ2010 Inc.</strong> (Procurement Department), reaching out regarding the following items.
-     We would like to receive your best quotation including unit price, lead time, MOQ, and shipping terms.</p>
+<%= render "shared/atoz_rfq_letterhead",
+           rfq_no:   @order.try(:rfq_no).presence || @order.try(:reference_no).presence || @order.try(:po_no).presence || "—",
+           due_date: @inquiry_due_date.presence,
+           address:  nil %>
 
-  <h3 style="border-bottom:1px solid #ccc; padding-bottom:4px;">Items Requested</h3>
-  <table cellpadding="6" cellspacing="0" border="1" style="border-collapse:collapse; width:100%; font-size:13px;">
-    <thead style="background:#f5f5f5;">
+<p style="font-size:13px;">Dear <strong><%= @selection.supplier_name %></strong> Sales Team,</p>
+
+<p style="font-size:13px;">
+  We are <strong>AtoZ2010 Inc.</strong> (Procurement Department), reaching out regarding the following items.
+  We would like to receive your best quotation including unit price, lead time, MOQ, and shipping terms.
+</p>
+
+<h3 style="border-bottom:1px solid #999; padding-bottom:4px; margin-top:24px; font-size:14px;">Items Requested</h3>
+<table cellpadding="6" cellspacing="0" border="1" style="border-collapse:collapse; width:100%; max-width:680px; font-size:12px; color:#222; margin-bottom:16px;">
+  <thead>
+    <tr style="background:#e5e5e5;">
+      <th style="text-align:center; border:1px solid #666; width:5%;">No.</th>
+      <th style="text-align:left;   border:1px solid #666; width:35%;">Material Description</th>
+      <th style="text-align:left;   border:1px solid #666; width:15%;">Model / Part No.</th>
+      <th style="text-align:left;   border:1px solid #666; width:15%;">Manufacturer / Brand Name</th>
+      <th style="text-align:center; border:1px solid #666; width:8%;">Unit</th>
+      <th style="text-align:right;  border:1px solid #666; width:8%;">Qty</th>
+      <th style="text-align:left;   border:1px solid #666; width:14%;">Remarks</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @items.each_with_index do |item, i| %>
+      <%
+        # B2 dual-key 접근 — JSON-parsed string key + symbol key 양쪽 호환
+        name         = item[:name].presence         || item["name"]
+        spec         = item[:spec].presence         || item["spec"]
+        model        = item[:model].presence        || item["model"]
+        part_no      = item[:part_no].presence      || item["part_no"]
+        manufacturer = item[:manufacturer].presence || item["manufacturer"]
+        brand        = item[:brand].presence        || item["brand"]
+        unit         = item[:unit].presence         || item["unit"]
+        qty          = item[:quantity].presence     || item["quantity"]
+        remarks      = item[:remarks].presence      || item["remarks"]
+        certif       = item[:certification].presence || item["certification"]
+
+        if spec.present?
+          material_desc = "<strong>#{ERB::Util.h(name)}</strong><br><span style='font-size:11px;'>#{ERB::Util.h(spec).to_s.gsub(/\n+/, '<br>')}</span>"
+        else
+          material_desc = "<strong>#{ERB::Util.h(name)}</strong>"
+        end
+
+        model_part = part_no.presence || model
+        brand_disp = manufacturer.presence || brand
+        remarks_disp = remarks.presence || certif
+      %>
       <tr>
-        <th style="text-align:left;">#</th>
-        <th style="text-align:left;">Item</th>
-        <th style="text-align:left;">Spec</th>
-        <th style="text-align:right;">Qty</th>
-        <th style="text-align:left;">Unit</th>
+        <td style="text-align:center; border:1px solid #999; vertical-align:top;"><%= i + 1 %></td>
+        <td style="border:1px solid #999; vertical-align:top;"><%= material_desc.html_safe %></td>
+        <td style="border:1px solid #999; vertical-align:top;"><%= model_part.presence || "—" %></td>
+        <td style="border:1px solid #999; vertical-align:top;"><%= brand_disp.presence || "—" %></td>
+        <td style="text-align:center; border:1px solid #999; vertical-align:top;"><%= unit.presence || "—" %></td>
+        <td style="text-align:right;  border:1px solid #999; vertical-align:top;"><%= qty.presence || "—" %></td>
+        <td style="border:1px solid #999; vertical-align:top; font-size:11px;"><%= remarks_disp.presence || "—" %></td>
       </tr>
-    </thead>
-    <tbody>
-      <% @items.each_with_index do |item, i| %>
-        <tr>
-          <td><%= i + 1 %></td>
-          <td><strong><%= item[:name].presence || item["name"] %></strong>
-            <% model = item[:model] || item["model"] %>
-            <% if model.present? %><br><small><%= model %></small><% end %>
-          </td>
-          <td><%= item[:spec].presence || item["spec"] %></td>
-          <td style="text-align:right;"><%= item[:quantity].presence || item["quantity"] || "—" %></td>
-          <td><%= item[:unit].presence || item["unit"] %></td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
+    <% end %>
+  </tbody>
+</table>
 
-  <h3 style="border-bottom:1px solid #ccc; padding-bottom:4px; margin-top:24px;">Requirements</h3>
-  <ul>
-    <li><strong>Quotation in writing</strong> with unit price (USD or local currency), lead time, MOQ.</li>
-    <li><strong>Delivery</strong>: <%= @order.try(:client)&.country.presence || "South Korea / UAE — please advise on Incoterms" %></li>
-    <li><strong>Certifications</strong>: please indicate KS / CE / API / ATEX / ISO compliance where applicable.</li>
-    <li><strong>Validity</strong>: please indicate quote validity period.</li>
-  </ul>
-
-  <% if @order.reference_no.present? %>
-    <p><strong>Our RFQ Reference</strong>: <%= @order.reference_no %></p>
+<%# Optional: 추가 요건 — 기존 버전의 Requirements 섹션 유지 %>
+<h3 style="border-bottom:1px solid #999; padding-bottom:4px; margin-top:24px; font-size:14px;">Requirements</h3>
+<ul style="font-size:13px; color:#222;">
+  <li><strong>Quotation in writing</strong> with unit price (USD or local currency), lead time, MOQ.</li>
+  <li><strong>Delivery</strong>: <%= @order.try(:client)&.country.presence || "South Korea / UAE — please advise on Incoterms" %></li>
+  <li><strong>Certifications</strong>: please indicate KS / CE / API / ATEX / ISO compliance where applicable.</li>
+  <% if @inquiry_due_date.present? %>
+    <li><strong>Reply by</strong>: <%= @inquiry_due_date %></li>
   <% end %>
+</ul>
 
-  <p>Please reply to <strong><%= @from_user&.email %></strong> at your earliest convenience.</p>
+<%= render "shared/atoz_rfq_footer", sender: @from_user %>
 
-  <p style="margin-top:24px; padding-top:12px; border-top:1px solid #eee; color:#666; font-size:12px;">
-    Best regards,<br>
-    <strong><%= @from_user&.display_name %></strong> · AtoZ2010 Inc. — Procurement<br>
-    Email: <%= @from_user&.email %>
-  </p>
-
-  <p style="color:#aaa; font-size:11px; margin-top:16px;">
-    This message was generated by CPOFlow LAB / RFQ Auto. Original attachments included.
-  </p>
 </body>
 </html>
