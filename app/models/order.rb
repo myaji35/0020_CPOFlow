@@ -585,11 +585,14 @@ class Order < ApplicationRecord
                          :user_id,
                          Arel.sql("MAX(CASE WHEN acknowledged_at IS NOT NULL THEN 1 ELSE 0 END)"),
                          Arel.sql("MAX(CASE WHEN viewed_at IS NOT NULL THEN 1 ELSE 0 END)"),
-                         Arel.sql("MAX(CASE WHEN sla_due_at IS NOT NULL AND sla_due_at < CURRENT_TIMESTAMP AND acknowledged_at IS NULL THEN 1 ELSE 0 END)")
+                         Arel.sql("MAX(CASE WHEN sla_due_at IS NOT NULL AND sla_due_at < CURRENT_TIMESTAMP AND acknowledged_at IS NULL THEN 1 ELSE 0 END)"),
+                         Arel.sql("MAX(intent_level)")
                        )
 
     counts = { ack: 0, viewed_only: 0, unread: 0, sla_overdue: 0 }
-    rows.each do |_uid, ack, viewed, overdue|
+    worst_intent = 0
+    rows.each do |_uid, ack, viewed, overdue, intent|
+      worst_intent = [worst_intent, intent.to_i].max
       if overdue == 1
         counts[:sla_overdue] += 1
       elsif ack == 1
@@ -615,6 +618,7 @@ class Order < ApplicationRecord
       mention_acknowledged_count: counts[:ack],
       mention_sla_overdue_count:  counts[:sla_overdue],
       mention_worst_state:        worst,
+      mention_worst_intent:       worst_intent,
       updated_at:                 Time.current
     )
   end
@@ -631,10 +635,11 @@ class Order < ApplicationRecord
                   :user_id,
                   Arel.sql("MAX(CASE WHEN acknowledged_at IS NOT NULL THEN 1 ELSE 0 END)"),
                   Arel.sql("MAX(CASE WHEN viewed_at IS NOT NULL THEN 1 ELSE 0 END)"),
-                  Arel.sql("MAX(id)")
+                  Arel.sql("MAX(id)"),
+                  Arel.sql("MAX(intent_level)")  # ISS-354 Phase 2: 도트 인텐트 색상 변형
                 )
                 .first(limit)
-                .map do |uid, ack, viewed, nid|
+                .map do |uid, ack, viewed, nid, intent|
                   state = if ack == 1 then "acknowledged"
                           elsif viewed == 1 then "viewed_only"
                           else "unread"
@@ -644,8 +649,44 @@ class Order < ApplicationRecord
                     user_id: uid,
                     user_name: user&.display_name || "?",
                     state: state,
-                    notification_id: nid
+                    notification_id: nid,
+                    intent_level: intent.to_i
                   }
                 end
+  end
+
+  # ISS-354 Phase 2 — 발신자(viewer) 본인이 이 카드에서 보낸 멘션 요약.
+  # B3 결정: notifications.sent_by_user_id 로 정확히 매칭 (Order 생성자 휴리스틱 폐기).
+  # 컴포넌트 B 호버 카드 / 리마인드 권한 / cooldown 판정에 사용.
+  def sender_mention_summary(viewer:)
+    return [] if viewer.nil?
+    sent_notifs = notifications.where(notification_type: "mentioned", sent_by_user_id: viewer.id)
+    return [] if sent_notifs.empty?
+
+    sent_notifs.group_by(&:user_id).map do |_uid, group|
+      latest = group.max_by(&:created_at)
+      state = if latest.acknowledged_at.present? then :acknowledged
+              elsif latest.viewed_at.present?  then :viewed_only
+              else                                 :unread
+              end
+      {
+        user:            latest.user,
+        state:           state,
+        intent_level:    latest.intent_level,
+        mentioned_at:    group.min_by(&:created_at).created_at,
+        viewed_at:       latest.viewed_at,
+        acknowledged_at: latest.acknowledged_at,
+        can_remind:      !cooldown_active?(latest.user_id, viewer.id),
+        sla_overdue:     latest.sla_due_at.present? && latest.sla_due_at < Time.current && latest.acknowledged_at.nil?
+      }
+    end
+  end
+
+  # ISS-354 Phase 2 — 24h 리마인드 cooldown.
+  # 같은 (sender → receiver) 조합으로 24h 이내 reminded_at 이 set 된 멘션이 있으면 cooldown 활성.
+  def cooldown_active?(receiver_id, sender_id)
+    notifications.where(notification_type: "mentioned", user_id: receiver_id, sent_by_user_id: sender_id)
+                 .where("reminded_at IS NOT NULL AND reminded_at > ?", 24.hours.ago)
+                 .exists?
   end
 end
