@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_09_173336) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_10_103759) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -503,6 +503,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_09_173336) do
     t.string "notifiable_type"
     t.string "notification_type"
     t.datetime "read_at"
+    t.datetime "reminded_at"
+    t.integer "sent_by_user_id"
     t.datetime "sla_due_at"
     t.string "title"
     t.datetime "updated_at", null: false
@@ -511,6 +513,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_09_173336) do
     t.integer "viewed_duration_sec"
     t.index ["acknowledged_at"], name: "index_notifications_on_acknowledged_at"
     t.index ["notifiable_type", "notifiable_id", "notification_type"], name: "idx_notifications_polymorphic_type"
+    t.index ["reminded_at"], name: "index_notifications_on_reminded_at"
+    t.index ["sent_by_user_id"], name: "index_notifications_on_sent_by_user_id"
     t.index ["sla_due_at"], name: "index_notifications_on_sla_due_at"
   end
 
@@ -586,6 +590,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_09_173336) do
     t.integer "mention_total_count", default: 0, null: false
     t.integer "mention_unread_count", default: 0, null: false
     t.integer "mention_viewed_only_count", default: 0, null: false
+    t.integer "mention_worst_intent", default: 0, null: false
     t.string "mention_worst_state"
     t.text "original_email_body"
     t.string "original_email_from"
