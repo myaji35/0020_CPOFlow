@@ -73,6 +73,11 @@ Rails.application.routes.draw do
       get  "pdf/purchase_order", to: "orders/pdf#purchase_order",  as: :pdf_purchase_order
       get  "attachment_preview/:blob_id", action: :preview_attachment, as: :attachment_preview
       post :urgent_email_draft   # ISS-328: 긴급 견적 의뢰 메일 초안
+
+      # ISS-354 Phase 2 Wave 3 — 컴포넌트 B 발신자 호버 + 리마인드
+      get  :mention_sender_hover
+      post :mention_remind_all
+      post "mention_remind_one/:user_id", action: :mention_remind_one, as: :mention_remind_one
     end
   end
 

@@ -507,6 +507,25 @@ class OrdersController < ApplicationController
     }
   end
 
+  # ISS-354 Phase 2 Wave 3 (T10) — 컴포넌트 B 발신자 호버 카드 fragment
+  #
+  # B3 권한 격리:
+  #   - viewer 가 이 카드에 멘션을 보낸 적이 없으면 head :no_content (빈 응답)
+  #     → mention_dots_controller.js 가 빈 응답 무시하므로 호버 미렌더
+  #   - 발신자 본인이면 partial 렌더 (sender_mention_summary 기준)
+  def mention_sender_hover
+    @order = scoped_orders.find(params[:id])
+
+    has_sent = @order.sender_mention_summary(viewer: current_user).any?
+    return head :no_content unless has_sent
+
+    render partial: "orders/mention_sender_hover",
+           locals:  { order: @order, viewer: current_user },
+           layout:  false
+  rescue ActiveRecord::RecordNotFound
+    head :not_found
+  end
+
   private
 
   def build_mailto(to, subject, body)
