@@ -33,12 +33,16 @@ module RfqAuto
       Return ONLY a JSON object with this exact shape:
       {
         "items": [
-          {"name": "...", "model": "...", "spec": "...", "quantity": "...", "unit": "...", "certification": "..."}
+          {"name": "...", "model": "...", "spec": "...", "quantity": "...", "unit": "...", "certification": "...", "manufacturer": "...", "brand": "...", "part_no": "...", "remarks": "..."}
         ]
       }
       Rules:
       - "name" is required (item/product name in English if possible).
       - Include model number, specs, qty, unit, certification (KS/CE/API/ATEX/ISO) if present.
+      - "manufacturer": OEM/maker name (e.g. "Sika", "3M", "Hyosung"). If not identified, return "".
+      - "brand": brand/series label if distinct from manufacturer (e.g. "Sika Pro"). If not identified, return "".
+      - "part_no": part/SKU number if separate from model (e.g. "SK-100-A"). If not identified, return "".
+      - "remarks": free-form notes (delivery condition, packaging, QC requirement). If not identified, return "".
       - If document is NOT a procurement request (e.g. registration form, marketing), return {"items": []}.
       - Output JSON only, no commentary.
     PROMPT
