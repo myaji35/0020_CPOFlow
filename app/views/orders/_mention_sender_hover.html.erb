@@ -1,0 +1,90 @@
+<%# ISS-354 Phase 2 Wave 3 — 컴포넌트 B 발신자 호버 카드
+    locals:
+      order  : Order (required)
+      viewer : User  (required, current_user)
+
+    B3 권한 격리: order.sender_mention_summary(viewer:) 가 빈 배열을 돌려주면
+                 → 빈 응답 ("") 으로 즉시 종료 (호버 미렌더). 컨트롤러도 별도로
+                 head :no_content 으로 차단하지만, partial 자체에서도 안전망.
+%>
+<%
+  summary = order.sender_mention_summary(viewer: viewer)
+%>
+<% return "".html_safe if summary.empty? %>
+<%
+  unack_count = summary.count { |s| s[:state] != :acknowledged }
+  any_remindable = summary.any? { |s| s[:state] != :acknowledged && s[:can_remind] }
+%>
+<div class="cpoflow-sender-hover-panel"
+     id="sender-hover-<%= order.id %>"
+     data-controller="mention-remind"
+     data-mention-remind-order-id-value="<%= order.id %>">
+
+  <div class="px-3 py-2 border-b border-slate-200 flex items-center justify-between">
+    <h4 class="text-sm font-semibold text-slate-900">
+      <%= t("mentions.sender_hover.title", count: summary.size) %>
+    </h4>
+    <% if unack_count == 0 %>
+      <span class="text-xs text-emerald-600"><%= t("mentions.sender_hover.no_unack") %></span>
+    <% else %>
+      <span class="text-xs text-amber-700"><%= t("mentions.sender_hover.unack_count", count: unack_count) %></span>
+    <% end %>
+  </div>
+
+  <ul class="divide-y divide-slate-100">
+    <% summary.each do |s| %>
+      <li class="px-3 py-2 flex items-start gap-2 text-xs">
+        <span class="<%=
+          case s[:state]
+          when :acknowledged then "text-emerald-600"
+          when :viewed_only  then "text-amber-600"
+          else "text-slate-400"
+          end
+        %> text-base leading-none mt-0.5">●</span>
+
+        <div class="flex-1 min-w-0">
+          <p class="font-medium text-slate-900 truncate"><%= s[:user]&.display_name || "?" %></p>
+          <p class="text-[11px] text-slate-500">
+            <% case s[:state] %>
+            <% when :acknowledged %>
+              <%= t("mentions.sender_hover.row_ack", time: time_ago_in_words(s[:acknowledged_at])) %>
+            <% when :viewed_only %>
+              <%= t("mentions.sender_hover.row_viewed", time: time_ago_in_words(s[:viewed_at])) %>
+            <% else %>
+              <%= t("mentions.sender_hover.row_unread", time: time_ago_in_words(s[:mentioned_at])) %>
+            <% end %>
+            <% if s[:sla_overdue] %>
+              <span class="text-red-700 font-semibold ml-1"><%= t("mentions.sender_hover.sla_overdue_badge") %></span>
+            <% end %>
+          </p>
+        </div>
+
+        <% if s[:state] != :acknowledged %>
+          <% if s[:can_remind] %>
+            <button type="button"
+                    data-action="click->mention-remind#sendOne"
+                    data-mention-remind-receiver-id-param="<%= s[:user].id %>"
+                    class="text-xs px-2 py-0.5 rounded border border-slate-300 hover:bg-slate-50 whitespace-nowrap">
+              <%= t("mentions.sender_hover.remind_one") %>
+            </button>
+          <% else %>
+            <span class="text-xs text-slate-400 whitespace-nowrap"
+                  title="<%= t("mentions.sender_hover.cooldown_active", user: s[:user]&.display_name) %>">
+              ⏳
+            </span>
+          <% end %>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+
+  <% if unack_count > 0 && any_remindable %>
+    <div class="px-3 py-2 border-t border-slate-200">
+      <button type="button"
+              data-action="click->mention-remind#sendAll"
+              class="w-full text-xs px-3 py-1.5 rounded bg-emerald-600 text-white hover:bg-emerald-700 font-medium">
+        <%= t("mentions.sender_hover.remind_all") %>
+      </button>
+    </div>
+  <% end %>
+</div>

@@ -1831,3 +1831,14 @@ ko:
     sla:
       remaining: "마감까지 %{time}"
       overdue: "SLA %{time} 초과"
+    sender_hover:
+      title: "내가 보낸 멘션 %{count}건"
+      no_unack: "모두 확인 완료됨"
+      unack_count: "미응답 %{count}"
+      row_ack: "%{time} 전 확인됨"
+      row_viewed: "%{time} 전 봤음 — 미확인"
+      row_unread: "%{time} 전 발송 — 미확인"
+      remind_all: "리마인드 모두 보내기"
+      remind_one: "push"
+      cooldown_active: "%{user}님은 24h 이내 리마인드 발송됨"
+      sla_overdue_badge: "⚠️ SLA 초과"

@@ -1767,6 +1767,17 @@ en:
     sla:
       remaining: "%{time} remaining"
       overdue: "SLA overdue by %{time}"
+    sender_hover:
+      title: "%{count} sent mentions"
+      no_unack: "All acknowledged"
+      unack_count: "%{count} unack"
+      row_ack: "ack'd %{time} ago"
+      row_viewed: "viewed %{time} ago — not ack'd"
+      row_unread: "sent %{time} ago — unread"
+      remind_all: "Remind all"
+      remind_one: "push"
+      cooldown_active: "%{user} reminded within 24h"
+      sla_overdue_badge: "⚠️ SLA overdue"
 
   # ── Errors ────────────────────────────────────────────────────────
   errors:
