@@ -1779,6 +1779,10 @@ en:
       cooldown_active: "%{user} reminded within 24h"
       sla_overdue_badge: "⚠️ SLA overdue"
 
+  # ── RFQ Auto (analysis result screen labels) ──────────────────────
+  rfq_auto:
+    items_requested: "Items Requested"
+
   # ── Errors ────────────────────────────────────────────────────────
   errors:
     messages:

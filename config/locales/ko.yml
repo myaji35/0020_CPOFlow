@@ -1842,3 +1842,7 @@ ko:
       remind_one: "push"
       cooldown_active: "%{user}님은 24h 이내 리마인드 발송됨"
       sla_overdue_badge: "⚠️ SLA 초과"
+
+  # ── RFQ Auto (분석 결과 화면 라벨) ──────────────────────────────
+  rfq_auto:
+    items_requested: "품목 / Items Requested"
