@@ -23,6 +23,7 @@ export default class extends Controller {
   connect() {
     this._query      = ""
     this._atIndex    = -1
+    this._atPrefix   = null   // ISS-353-A: 입력된 @ 개수 보존 ("@", "@@", "@@@")
     this._activeIdx  = -1
     this._open       = false
     this._items      = []
@@ -110,12 +111,14 @@ export default class extends Controller {
     const val    = input.value
     const pos    = input.selectionStart
     const before = val.slice(0, pos)
-    // 문자열 시작 또는 공백 직후의 @(선택적 단어)까지 매칭
-    const match  = before.match(/(?:^|\s)@([\w가-힣]*)$/)
+    // ISS-353-A: @ 1~3개(@/@@/@@@) 직후 단어 매칭 — Phase 2 인텐트 prefix 호환
+    // 4개 이상은 의도적으로 미매칭 (오타/일반 텍스트로 간주)
+    const match  = before.match(/(?:^|\s)(@{1,3})([\w가-힣]*)$/)
 
     if (match) {
-      this._atIndex = before.lastIndexOf("@")
-      this._query   = match[1]
+      this._atPrefix = match[1]                                   // "@" | "@@" | "@@@"
+      this._atIndex  = before.length - match[0].replace(/^\s/, "").length  // prefix(@..) 시작 위치
+      this._query    = match[2]
       this._fetch(this._query)
     } else {
       this._close()
@@ -269,7 +272,9 @@ export default class extends Controller {
     const val    = input.value
     const before = val.slice(0, this._atIndex)
     const after  = val.slice(input.selectionStart)
-    const mention = `@${item.display_name} `
+    // ISS-353-A: 입력된 @ 개수(@/@@/@@@) 보존 — Phase 2 인텐트 prefix 그대로
+    const prefix  = this._atPrefix || "@"
+    const mention = `${prefix}${item.display_name} `
 
     input.value = before + mention + after
     const cursor = (before + mention).length
@@ -279,8 +284,9 @@ export default class extends Controller {
       this.employeeIdTarget.value = item.id
     }
 
-    this._atIndex = -1
-    this._query   = ""
+    this._atIndex  = -1
+    this._atPrefix = null
+    this._query    = ""
     this._close()
     queueMicrotask(() => input.focus())
   }
