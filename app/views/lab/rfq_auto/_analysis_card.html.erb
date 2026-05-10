@@ -185,44 +185,12 @@
 
         <%# 11항목 매트릭스 — 행: 품목 / 열: 11항목 ✓ ✗ 단일 표 %>
         <% if step2["items"].is_a?(Array) && step2["items"].any? %>
-          <%# 기본 정보 표 (품명/사양/수량/출처) %>
+          <%# AtoZ RFQ 7컬럼 양식 — 이메일과 동일 양식으로 화면 미리보기 통일 (ISS-358 Wave 3 T8) %>
           <details open class="mb-3">
             <summary class="cursor-pointer text-[11px] font-semibold text-ink-700 dark:text-ink-200 mb-2 hover:text-brand-600">
-              📦 품목 기본 정보 (<%= step2["items"].size %>건)
+              📦 품목 기본 정보 (<%= step2["items"].size %>건) — AtoZ RFQ 양식
             </summary>
-            <div class="overflow-x-auto rounded-md border border-ink-150 dark:border-ink-800">
-              <table class="w-full text-[12px]">
-                <thead class="bg-ink-50 dark:bg-ink-800 text-[10px] uppercase tracking-wider text-ink-600 dark:text-ink-300">
-                  <tr>
-                    <th class="px-2 py-1.5 text-left w-8">#</th>
-                    <th class="px-2 py-1.5 text-left w-32">출처 파일</th>
-                    <th class="px-2 py-1.5 text-left">품명 / 모델</th>
-                    <th class="px-2 py-1.5 text-left">사양</th>
-                    <th class="px-2 py-1.5 text-right w-16">수량</th>
-                    <th class="px-2 py-1.5 text-left w-14">단위</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-ink-100 dark:divide-ink-800 bg-white dark:bg-ink-900">
-                  <% step2["items"].each do |item| %>
-                    <tr>
-                      <td class="px-2 py-1.5 text-ink-500 font-mono"><%= item["idx"] %></td>
-                      <td class="px-2 py-1.5">
-                        <% if item["source_file"].present? %>
-                          <span class="inline-block text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 truncate max-w-[120px]" title="<%= item["source_file"] %>"><%= item["source_file"].to_s.truncate(16) %></span>
-                        <% else %><span class="text-[10px] text-ink-400">—</span><% end %>
-                      </td>
-                      <td class="px-2 py-1.5">
-                        <div class="font-semibold text-ink-900 dark:text-white truncate max-w-[260px]" title="<%= item["name"] %>"><%= item["name"].presence || "—" %></div>
-                        <% if item["model"].present? %><div class="text-[10px] text-ink-500 font-mono"><%= item["model"] %></div><% end %>
-                      </td>
-                      <td class="px-2 py-1.5 text-ink-700 dark:text-ink-200 truncate max-w-[280px]" title="<%= item["spec"] %>"><%= item["spec"].presence || "—" %></td>
-                      <td class="px-2 py-1.5 text-right font-mono text-ink-900 dark:text-white"><%= item["quantity"].presence || "—" %></td>
-                      <td class="px-2 py-1.5 text-ink-700 dark:text-ink-200"><%= item["unit"].presence || "—" %></td>
-                    </tr>
-                  <% end %>
-                </tbody>
-              </table>
-            </div>
+            <%= render "shared/atoz_rfq_items_table", items: step2["items"], mode: :screen %>
           </details>
 
           <%# 11항목 매트릭스 — 행=품목, 열=11항목 (✓/✗) — 한눈에 결손 패턴 보기 %>

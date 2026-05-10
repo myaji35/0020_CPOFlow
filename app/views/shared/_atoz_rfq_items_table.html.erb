@@ -1,0 +1,67 @@
+<%# AtoZ RFQ 7컬럼 양식 (이메일 + 분석 결과 화면 공통).
+    locals:
+      items — Array of Hash (string-key 또는 symbol-key 양쪽 호환, dual-key 접근)
+      mode  — :email (기본) 또는 :screen — 화면 모드에서는 한국어 라벨 헤더 노출
+%>
+<% mode ||= :email %>
+<% if mode == :screen %>
+  <h3 style="font-size:14px; margin:0 0 8px 0; color:#222;">
+    <%= t("rfq_auto.items_requested", default: "품목 / Items Requested") %>
+  </h3>
+<% end %>
+<table cellpadding="6" cellspacing="0" border="1" style="border-collapse:collapse; width:100%; max-width:680px; font-size:12px; color:#222; margin-bottom:16px;">
+  <thead>
+    <tr style="background:#e5e5e5;">
+      <th style="text-align:center; border:1px solid #666; width:5%;">No.</th>
+      <th style="text-align:left;   border:1px solid #666; width:35%;">Material Description</th>
+      <th style="text-align:left;   border:1px solid #666; width:15%;">Model / Part No.</th>
+      <th style="text-align:left;   border:1px solid #666; width:15%;">Manufacturer / Brand Name</th>
+      <th style="text-align:center; border:1px solid #666; width:8%;">Unit</th>
+      <th style="text-align:right;  border:1px solid #666; width:8%;">Qty</th>
+      <th style="text-align:left;   border:1px solid #666; width:14%;">Remarks</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% (items || []).each_with_index do |item, i| %>
+      <%
+        # B2 dual-key 접근 — JSON-parsed string key + symbol key 양쪽 호환
+        name         = item[:name].presence         || item["name"]
+        spec         = item[:spec].presence         || item["spec"]
+        model        = item[:model].presence        || item["model"]
+        part_no      = item[:part_no].presence      || item["part_no"]
+        manufacturer = item[:manufacturer].presence || item["manufacturer"]
+        brand        = item[:brand].presence        || item["brand"]
+        unit         = item[:unit].presence         || item["unit"]
+        qty          = item[:quantity].presence     || item["quantity"]
+        remarks      = item[:remarks].presence      || item["remarks"]
+        certif       = item[:certification].presence || item["certification"]
+
+        material_desc = if spec.present?
+          "<strong>#{ERB::Util.h(name)}</strong><br><span style='font-size:11px;'>#{ERB::Util.h(spec).to_s.gsub(/\n+/, '<br>')}</span>"
+        else
+          "<strong>#{ERB::Util.h(name)}</strong>"
+        end
+
+        model_part   = part_no.presence || model
+        brand_disp   = manufacturer.presence || brand
+        remarks_disp = remarks.presence || certif
+      %>
+      <tr>
+        <td style="text-align:center; border:1px solid #999; vertical-align:top;"><%= i + 1 %></td>
+        <td style="border:1px solid #999; vertical-align:top;"><%= material_desc.html_safe %></td>
+        <td style="border:1px solid #999; vertical-align:top;"><%= model_part.presence || "—" %></td>
+        <td style="border:1px solid #999; vertical-align:top;"><%= brand_disp.presence || "—" %></td>
+        <td style="text-align:center; border:1px solid #999; vertical-align:top;"><%= unit.presence || "—" %></td>
+        <td style="text-align:right;  border:1px solid #999; vertical-align:top;"><%= qty.presence || "—" %></td>
+        <td style="border:1px solid #999; vertical-align:top; font-size:11px;"><%= remarks_disp.presence || "—" %></td>
+      </tr>
+    <% end %>
+    <% if (items || []).empty? %>
+      <tr>
+        <td colspan="7" style="text-align:center; padding:16px; color:#666; border:1px solid #999;">
+          품목이 없습니다 (No items extracted)
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

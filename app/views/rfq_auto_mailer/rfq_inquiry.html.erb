@@ -15,55 +15,7 @@
 </p>
 
 <h3 style="border-bottom:1px solid #999; padding-bottom:4px; margin-top:24px; font-size:14px;">Items Requested</h3>
-<table cellpadding="6" cellspacing="0" border="1" style="border-collapse:collapse; width:100%; max-width:680px; font-size:12px; color:#222; margin-bottom:16px;">
-  <thead>
-    <tr style="background:#e5e5e5;">
-      <th style="text-align:center; border:1px solid #666; width:5%;">No.</th>
-      <th style="text-align:left;   border:1px solid #666; width:35%;">Material Description</th>
-      <th style="text-align:left;   border:1px solid #666; width:15%;">Model / Part No.</th>
-      <th style="text-align:left;   border:1px solid #666; width:15%;">Manufacturer / Brand Name</th>
-      <th style="text-align:center; border:1px solid #666; width:8%;">Unit</th>
-      <th style="text-align:right;  border:1px solid #666; width:8%;">Qty</th>
-      <th style="text-align:left;   border:1px solid #666; width:14%;">Remarks</th>
-    </tr>
-  </thead>
-  <tbody>
-    <% @items.each_with_index do |item, i| %>
-      <%
-        # B2 dual-key 접근 — JSON-parsed string key + symbol key 양쪽 호환
-        name         = item[:name].presence         || item["name"]
-        spec         = item[:spec].presence         || item["spec"]
-        model        = item[:model].presence        || item["model"]
-        part_no      = item[:part_no].presence      || item["part_no"]
-        manufacturer = item[:manufacturer].presence || item["manufacturer"]
-        brand        = item[:brand].presence        || item["brand"]
-        unit         = item[:unit].presence         || item["unit"]
-        qty          = item[:quantity].presence     || item["quantity"]
-        remarks      = item[:remarks].presence      || item["remarks"]
-        certif       = item[:certification].presence || item["certification"]
-
-        if spec.present?
-          material_desc = "<strong>#{ERB::Util.h(name)}</strong><br><span style='font-size:11px;'>#{ERB::Util.h(spec).to_s.gsub(/\n+/, '<br>')}</span>"
-        else
-          material_desc = "<strong>#{ERB::Util.h(name)}</strong>"
-        end
-
-        model_part = part_no.presence || model
-        brand_disp = manufacturer.presence || brand
-        remarks_disp = remarks.presence || certif
-      %>
-      <tr>
-        <td style="text-align:center; border:1px solid #999; vertical-align:top;"><%= i + 1 %></td>
-        <td style="border:1px solid #999; vertical-align:top;"><%= material_desc.html_safe %></td>
-        <td style="border:1px solid #999; vertical-align:top;"><%= model_part.presence || "—" %></td>
-        <td style="border:1px solid #999; vertical-align:top;"><%= brand_disp.presence || "—" %></td>
-        <td style="text-align:center; border:1px solid #999; vertical-align:top;"><%= unit.presence || "—" %></td>
-        <td style="text-align:right;  border:1px solid #999; vertical-align:top;"><%= qty.presence || "—" %></td>
-        <td style="border:1px solid #999; vertical-align:top; font-size:11px;"><%= remarks_disp.presence || "—" %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+<%= render "shared/atoz_rfq_items_table", items: @items, mode: :email %>
 
 <%# Optional: 추가 요건 — 기존 버전의 Requirements 섹션 유지 %>
 <h3 style="border-bottom:1px solid #999; padding-bottom:4px; margin-top:24px; font-size:14px;">Requirements</h3>
