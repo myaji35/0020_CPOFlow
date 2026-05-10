@@ -65,6 +65,13 @@ production:
     schedule: every day at 17:00 UTC
     queue: default
 
+  # ISS-354 Phase 2: 멘션 SLA 마감 catch-up — 매시 17분 (12/5/30 와 충돌 없음)
+  # 시간 경과로 sla_due_at 이 지난 카드의 mention_worst_state 캐시 갱신.
+  mention_sla_check:
+    class: MentionSlaCheckerJob
+    schedule: every hour at minute 17
+    queue: default
+
 development:
   # Sync Gmail every 5 minutes in development for faster testing
   gmail_sync_all:
@@ -89,3 +96,9 @@ development:
     class: HrExpiryNotificationJob
     queue: default
     schedule: every day at 8am
+
+  # ISS-354 Phase 2: 멘션 SLA catch-up — dev 환경은 10분 간격 (수동 검증 편의)
+  mention_sla_check:
+    class: MentionSlaCheckerJob
+    schedule: every 10 minutes
+    queue: default
