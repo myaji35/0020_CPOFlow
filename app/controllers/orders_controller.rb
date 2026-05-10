@@ -526,7 +526,81 @@ class OrdersController < ApplicationController
     head :not_found
   end
 
+  # ISS-354 Phase 2 Wave 3 (T11) — 발신자 본인이 미응답자 전체에 리마인드 발송
+  #
+  # 24h cooldown: Order#cooldown_active?(receiver_id, sender_id) — Wave 1 T3에서 구현됨.
+  # 통과한 receiver 만 새 Notification 생성 (intent_level = 마지막 멘션 강도 유지).
+  def mention_remind_all
+    @order = scoped_orders.find(params[:id])
+    summary = @order.sender_mention_summary(viewer: current_user)
+    return head :forbidden if summary.empty?
+
+    targets = summary.select { |s| s[:state] != :acknowledged && s[:can_remind] }
+    targets.each { |s| create_reminder_notification(@order, s[:user], current_user) }
+
+    render turbo_stream: turbo_stream.replace(
+      "sender-hover-#{@order.id}",
+      partial: "orders/mention_sender_hover",
+      locals:  { order: @order, viewer: current_user }
+    )
+  rescue ActiveRecord::RecordNotFound
+    head :not_found
+  end
+
+  # ISS-354 Phase 2 Wave 3 (T11) — 발신자 본인이 단일 receiver 에게 리마인드
+  def mention_remind_one
+    @order = scoped_orders.find(params[:id])
+    receiver = User.find(params[:user_id])
+
+    # 권한: viewer 가 receiver 에게 이 카드에서 멘션 보낸 적 있어야 함
+    has_sent = @order.notifications.where(notification_type: "mentioned",
+                                          sent_by_user_id: current_user.id,
+                                          user_id:         receiver.id).exists?
+    return head :forbidden unless has_sent
+
+    # cooldown 체크
+    return head :forbidden if @order.cooldown_active?(receiver.id, current_user.id)
+
+    create_reminder_notification(@order, receiver, current_user)
+
+    render turbo_stream: turbo_stream.replace(
+      "sender-hover-#{@order.id}",
+      partial: "orders/mention_sender_hover",
+      locals:  { order: @order, viewer: current_user }
+    )
+  rescue ActiveRecord::RecordNotFound
+    head :not_found
+  end
+
   private
+
+  # ISS-354 Phase 2 Wave 3 (T11) — 리마인드 Notification 생성 헬퍼
+  # 마지막 멘션의 intent_level 그대로 유지 (긴급 멘션 리마인드는 여전히 긴급)
+  def create_reminder_notification(order, receiver, sender)
+    last_mention = order.notifications
+                        .where(notification_type: "mentioned",
+                               user_id:         receiver.id,
+                               sent_by_user_id: sender.id)
+                        .order(:created_at)
+                        .last
+    intent = last_mention&.intent_level.to_i
+
+    title_ref = order.po_no.presence ||
+                order.quo_no.presence ||
+                order.rfq_no.presence ||
+                order.title
+
+    Notification.create!(
+      user:              receiver,
+      notifiable:        order,
+      notification_type: "mentioned",
+      intent_level:      intent,
+      sent_by_user_id:   sender.id,
+      reminded_at:       Time.current,
+      title:             "[리마인드] @멘션: #{title_ref}",
+      body:              "#{sender.display_name}님이 회원님께 리마인드를 보냈습니다."
+    )
+  end
 
   def build_mailto(to, subject, body)
     "mailto:#{CGI.escape(to)}?subject=#{CGI.escape(subject)}&body=#{CGI.escape(body)}"
