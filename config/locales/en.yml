@@ -1743,7 +1743,7 @@ en:
     days_unit: "day(s)"
     nav_leaves: "Leave"
 
-  # ── Mentions (ISS-353 Phase 1) ────────────────────────────────────
+  # ── Mentions (ISS-353 Phase 1 + ISS-354 Phase 2) ──────────────────
   mentions:
     dot_strip:
       symbol: "@"
@@ -1760,6 +1760,13 @@ en:
     drawer:
       panel_title: "@mentions on this card"
       no_pending: "No pending mentions"
+    intent:
+      level_0: "FYI"
+      level_1: "Acknowledge required"
+      level_2: "Response required"
+    sla:
+      remaining: "%{time} remaining"
+      overdue: "SLA overdue by %{time}"
 
   # ── Errors ────────────────────────────────────────────────────────
   errors:

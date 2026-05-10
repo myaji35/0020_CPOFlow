@@ -14,9 +14,22 @@
                else
                  ""
                end
+  # ISS-354 Phase 2 Wave 2 (T7) — 멘션 worst intent/state에 따른 카드 좌측 스트라이프
+  # sla_overdue > intent 2 > intent 1 우선순위. 인텐트가 0이거나 멘션 없으면 미적용.
+  mention_worst_intent = order.mention_worst_intent.to_i
+  mention_worst_state  = order.mention_worst_state.to_s
+  mention_stripe_class = if mention_worst_state == "sla_overdue"
+                           "border-l-4 border-red-600"
+                         elsif mention_worst_intent >= 2
+                           "border-l-4 border-red-500"
+                         elsif mention_worst_intent >= 1
+                           "border-l-4 border-amber-500"
+                         else
+                           ""
+                         end
 %>
 <div id="kanban-card-<%= order.id %>"
-     class="kanban-card-root relative rounded-md border pl-[14px] pr-3 py-2.5 shadow-sh-1 hover:shadow-sh-2 hover:border-ink-300 transition-all group cursor-pointer hover:cursor-grab active:cursor-grabbing<%= ' ring-2 ring-red-500 ring-offset-1' if order.critical? %>"
+     class="kanban-card-root relative rounded-md border pl-[14px] pr-3 py-2.5 shadow-sh-1 hover:shadow-sh-2 hover:border-ink-300 transition-all group cursor-pointer hover:cursor-grab active:cursor-grabbing<%= ' ring-2 ring-red-500 ring-offset-1' if order.critical? %> <%= mention_stripe_class %>"
      style="<%= card_bg_style %> <%= card_border_style %>"
      data-order-id="<%= order.id %>"
      data-card-status-key="<%= order.card_status&.key %>"
@@ -27,6 +40,8 @@
      data-customer="<%= order.customer_name %>"
      data-refno="<%= order.reference_no %>"
      data-thread-id="<%= order.gmail_thread_id %>"
+     data-mention-worst-intent="<%= mention_worst_intent %>"
+     data-mention-worst-state="<%= mention_worst_state %>"
      title="클릭하여 상세 보기"
      onclick="if(!this._justDragged && !window._selectMode && !event.target.closest('button,a,input,select,textarea,.drag-handle,[data-prevent-card-open]')){openOrderDrawer(<%= order.id %>, <%= order.display_subject.to_json %>, '<%= order_path(order) %>', '<%= order.reference_no %>');}"
      >

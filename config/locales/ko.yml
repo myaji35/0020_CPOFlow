@@ -1807,7 +1807,7 @@ ko:
     days_unit: "일"
     nav_leaves: "휴가 관리"
 
-  # ── 멘션 (ISS-353 Phase 1) ────────────────────────────────────────
+  # ── 멘션 (ISS-353 Phase 1 + ISS-354 Phase 2) ──────────────────────
   mentions:
     dot_strip:
       symbol: "@"
@@ -1824,3 +1824,10 @@ ko:
     drawer:
       panel_title: "이 카드의 @멘션"
       no_pending: "확인 대기중인 멘션이 없습니다"
+    intent:
+      level_0: "FYI"
+      level_1: "확인 필수"
+      level_2: "응답 필수"
+    sla:
+      remaining: "마감까지 %{time}"
+      overdue: "SLA %{time} 초과"

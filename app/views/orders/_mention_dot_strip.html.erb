@@ -1,4 +1,4 @@
-<%# ISS-353 Phase 1 — 멘션 도트 줄 (사람 단위 worst-state)
+<%# ISS-353 Phase 1 → ISS-354 Phase 2 Wave 2 — 멘션 도트 줄 (사람 단위 worst-state + 인텐트 + SLA)
     locals:
       order    : Order (required)
       viewer   : User or nil (optional) — Phase 1에서는 미사용 (B1-b 클라이언트 마킹)
@@ -7,19 +7,43 @@
     3중 게이트 #1: 멘션 0건이면 즉시 return — DOM 미출력
     T5 흡수: turbo_stream_from을 컨테이너 내부에 둠 → 칸반/드로어 어디서 렌더하든
              자동 구독. 0건일 때는 위 return으로 미실행 → Cable 부하 절감.
+
+    Phase 2 Wave 2 (T7):
+      - 첫 토큰 `@` → worst_intent 에 따라 `@`/`@@`/`@@@`로 색상·강도 변경
+      - data-mention-worst-intent / data-mention-worst-state 노출 → CSS 카드 스트라이프
+      - SLA 카운트다운(remaining/overdue) — 가장 임박한 미응답 멘션 기준
 %>
 <% return if order.mention_total_count.to_i == 0 %>
 <% viewer  ||= nil %>
 <% variant ||= :kanban_card %>
-<% dots     = order.mention_summary_dots(viewer: viewer, limit: 5) %>
-<% overflow = order.mention_total_count.to_i - dots.size %>
+<% dots         = order.mention_summary_dots(viewer: viewer, limit: 5) %>
+<% overflow     = order.mention_total_count.to_i - dots.size %>
+<% worst_intent = order.mention_worst_intent.to_i %>
+<% intent_symbol = ["@", "@@", "@@@"][worst_intent] || "@" %>
+<%
+  # SLA 힌트: 미확인 + sla_due_at 있는 멘션 중 가장 임박한 1건
+  next_sla = order.notifications
+                  .where(notification_type: "mentioned", acknowledged_at: nil)
+                  .where.not(sla_due_at: nil)
+                  .order(:sla_due_at)
+                  .first
+  symbol_color_class = if worst_intent >= 2
+                         "text-red-700 font-bold"
+                       elsif worst_intent >= 1
+                         "text-amber-700 font-semibold"
+                       else
+                         "text-ink-500"
+                       end
+%>
 <div id="mention-dot-strip-<%= order.id %>"
      class="mention-dot-strip flex items-center gap-1 mt-1.5 pt-1.5 border-t border-ink-100"
      data-controller="mention-dots mention-viewport"
      data-mention-viewport-order-id-value="<%= order.id %>"
-     data-mention-viewport-threshold-value="5000">
+     data-mention-viewport-threshold-value="5000"
+     data-mention-worst-intent="<%= worst_intent %>"
+     data-mention-worst-state="<%= order.mention_worst_state %>">
   <%= turbo_stream_from "order_#{order.id}_mentions" %>
-  <span class="font-mono text-[10px] text-ink-500"><%= t("mentions.dot_strip.symbol") %></span>
+  <span class="font-mono text-[10px] <%= symbol_color_class %>"><%= intent_symbol %></span>
   <% dots.each do |dot| %>
     <%= render "orders/mention_dot", dot: dot %>
   <% end %>
@@ -31,4 +55,14 @@
           ack: order.mention_acknowledged_count,
           total: order.mention_total_count) %>
   </span>
+
+  <% if order.mention_worst_state == "sla_overdue" && next_sla %>
+    <span class="text-[10px] text-red-700 font-semibold ml-2">
+      <%= t("mentions.sla.overdue", time: time_ago_in_words(next_sla.sla_due_at)) %>
+    </span>
+  <% elsif next_sla && next_sla.sla_due_at > Time.current %>
+    <span class="text-[10px] text-amber-700 ml-2">
+      <%= t("mentions.sla.remaining", time: distance_of_time_in_words(Time.current, next_sla.sla_due_at)) %>
+    </span>
+  <% end %>
 </div>
