@@ -178,4 +178,92 @@ class MentionParserServiceTest < ActiveSupport::TestCase
 
     Notification.where(user: @mentioned_user).destroy_all
   end
+
+  # ─────────────────────────────────────────
+  # ISS-354 Phase 2 — T13 인텐트 + sent_by_user_id
+  # ─────────────────────────────────────────
+
+  test "MentionParserService — @@ → intent_level 1" do
+    @comment.update!(body: "@@홍길동멘션테스트 확인 부탁")
+    MentionParserService.new(@comment, @mentioner).call
+    notif = Notification.where(user: @mentioned_user).order(created_at: :desc).first
+    assert_equal 1, notif.intent_level
+    notif.destroy
+  end
+
+  test "MentionParserService — @@@ → intent_level 2" do
+    @comment.update!(body: "@@@홍길동멘션테스트 응답 필수")
+    MentionParserService.new(@comment, @mentioner).call
+    notif = Notification.where(user: @mentioned_user).order(created_at: :desc).first
+    assert_equal 2, notif.intent_level
+    notif.destroy
+  end
+
+  test "MentionParserService — @ → intent_level 0 (백워드 호환)" do
+    @comment.update!(body: "@홍길동멘션테스트 FYI")
+    MentionParserService.new(@comment, @mentioner).call
+    notif = Notification.where(user: @mentioned_user).order(created_at: :desc).first
+    assert_equal 0, notif.intent_level
+    notif.destroy
+  end
+
+  test "MentionParserService — same person @ + @@ in one comment → intent 1 (max wins)" do
+    @comment.update!(body: "@홍길동멘션테스트 FYI 그리고 @@홍길동멘션테스트 확인")
+    MentionParserService.new(@comment, @mentioner).call
+    notifs = Notification.where(user: @mentioned_user)
+    assert_equal 1, notifs.count, "동일 user 통합 1건"
+    assert_equal 1, notifs.first.intent_level, "max(0,1)=1"
+    notifs.destroy_all
+  end
+
+  test "MentionParserService — same person @@@ + @ → intent 2 (max wins)" do
+    @comment.update!(body: "@@@홍길동멘션테스트 응답 그리고 @홍길동멘션테스트 다시")
+    MentionParserService.new(@comment, @mentioner).call
+    notifs = Notification.where(user: @mentioned_user)
+    assert_equal 1, notifs.count
+    assert_equal 2, notifs.first.intent_level, "max(2,0)=2"
+    notifs.destroy_all
+  end
+
+  test "MentionParserService — sent_by_user_id stored from @mentioned_by" do
+    @comment.update!(body: "@홍길동멘션테스트 sent_by_user_id 검증")
+    MentionParserService.new(@comment, @mentioner).call
+    notif = Notification.where(user: @mentioned_user).order(created_at: :desc).first
+    assert_equal @mentioner.id, notif.sent_by_user_id
+    notif.destroy
+  end
+
+  test "MentionParserService — different intents for different people in one comment" do
+    other_user = User.find_or_create_by(email: "mention_target_diff@example.com") do |u|
+      u.name = "Mention Diff Target"; u.password = "password123"; u.role = :member
+    end
+    other_emp = Employee.find_or_create_by(name: "박과장멘션테스트") do |e|
+      e.nationality = "KR"; e.employment_type = "regular"
+    end
+    other_emp.update!(user_id: other_user.id)
+
+    @comment.update!(body: "@홍길동멘션테스트 FYI, @@@박과장멘션테스트 응답 필수")
+    MentionParserService.new(@comment, @mentioner).call
+
+    n1 = Notification.where(user: @mentioned_user).order(created_at: :desc).first
+    n2 = Notification.where(user: other_user).order(created_at: :desc).first
+    assert_equal 0, n1.intent_level, "홍길동 → @ → 0"
+    assert_equal 2, n2.intent_level, "박과장 → @@@ → 2"
+    Notification.where(user: [ @mentioned_user, other_user ]).destroy_all
+    other_emp.destroy
+    other_user.destroy
+  end
+
+  test "MentionParserService — 백워드 호환: 기존 @홍길동 그대로 intent 0 생성" do
+    # Phase 1 스타일 호출 — 단일 @
+    @comment.update!(body: "@홍길동멘션테스트 백워드 호환 확인")
+    assert_difference("Notification.count", 1) do
+      MentionParserService.new(@comment, @mentioner).call
+    end
+    notif = Notification.where(user: @mentioned_user).order(created_at: :desc).first
+    assert_equal 0, notif.intent_level
+    assert_equal "mentioned", notif.notification_type
+    assert_equal @mentioner.id, notif.sent_by_user_id
+    notif.destroy
+  end
 end

@@ -453,4 +453,183 @@ class OrderTest < ActiveSupport::TestCase
     u&.destroy
     creator&.destroy
   end
+
+  # ─────────────────────────────────────────
+  # ISS-354 Phase 2 — T13 worst_intent + sender_summary + cooldown
+  # ─────────────────────────────────────────
+
+  test "recompute_mention_summary! — worst_intent picks max across users" do
+    creator = make_mention_user("wIntCreator")
+    order = make_mention_order(creator)
+    u1 = make_mention_user("wInt1")
+    u2 = make_mention_user("wInt2")
+    Notification.create!(user: u1, notifiable: order, notification_type: "mentioned", intent_level: 1, body: "x")
+    Notification.create!(user: u2, notifiable: order, notification_type: "mentioned", intent_level: 2, body: "y")
+    order.reload
+    assert_equal 2, order.mention_worst_intent, "max(1,2)=2"
+  ensure
+    Notification.where(notifiable: order).destroy_all if order
+    order&.reload&.destroy
+    [u1, u2].each(&:destroy)
+    creator&.destroy
+  end
+
+  test "recompute_mention_summary! — worst_intent 0 when no mentions" do
+    creator = make_mention_user("wIntZero")
+    order = make_mention_order(creator)
+    order.recompute_mention_summary!
+    order.reload
+    assert_equal 0, order.mention_worst_intent
+  ensure
+    order&.reload&.destroy
+    creator&.destroy
+  end
+
+  test "mention_summary_dots — returns intent_level in each hash" do
+    creator = make_mention_user("dotIntCreator")
+    order = make_mention_order(creator)
+    u = make_mention_user("dotInt1")
+    Notification.create!(user: u, notifiable: order, notification_type: "mentioned", intent_level: 2, body: "x")
+    dots = order.reload.mention_summary_dots(viewer: nil, limit: 5)
+    assert_equal 1, dots.size
+    assert dots.first.key?(:intent_level), "dot hash missing :intent_level"
+    assert_equal 2, dots.first[:intent_level]
+  ensure
+    Notification.where(notifiable: order).destroy_all if order
+    order&.reload&.destroy
+    u&.destroy
+    creator&.destroy
+  end
+
+  test "sender_mention_summary — returns [] when viewer is nil" do
+    creator = make_mention_user("senderNil")
+    order = make_mention_order(creator)
+    assert_equal [], order.sender_mention_summary(viewer: nil)
+  ensure
+    order&.reload&.destroy
+    creator&.destroy
+  end
+
+  test "sender_mention_summary — returns only mentions where sent_by_user_id == viewer.id" do
+    sender   = make_mention_user("senderS")
+    other    = make_mention_user("senderOther")
+    receiver = make_mention_user("senderR")
+    order = make_mention_order(sender)
+
+    # sender → receiver
+    Notification.create!(user: receiver, notifiable: order, notification_type: "mentioned",
+                         intent_level: 1, sent_by_user_id: sender.id, body: "from sender")
+    # other → receiver (다른 발신자)
+    Notification.create!(user: receiver, notifiable: order, notification_type: "mentioned",
+                         intent_level: 2, sent_by_user_id: other.id, body: "from other")
+
+    summary_sender = order.sender_mention_summary(viewer: sender)
+    assert_equal 1, summary_sender.size
+    assert_equal receiver.id, summary_sender.first[:user].id
+  ensure
+    Notification.where(notifiable: order).destroy_all if order
+    order&.reload&.destroy
+    [sender, other, receiver].each(&:destroy)
+  end
+
+  test "sender_mention_summary — group by user_id (latest mention per receiver)" do
+    sender   = make_mention_user("senderG")
+    receiver = make_mention_user("recvG")
+    order = make_mention_order(sender)
+
+    # 같은 receiver 여러 번 멘션
+    Notification.create!(user: receiver, notifiable: order, notification_type: "mentioned",
+                         intent_level: 0, sent_by_user_id: sender.id, body: "1")
+    sleep 0.05
+    Notification.create!(user: receiver, notifiable: order, notification_type: "mentioned",
+                         intent_level: 2, sent_by_user_id: sender.id, body: "2")
+
+    summary = order.sender_mention_summary(viewer: sender)
+    assert_equal 1, summary.size, "동일 receiver 통합 1건"
+    assert_equal 2, summary.first[:intent_level], "최신 멘션의 intent_level"
+  ensure
+    Notification.where(notifiable: order).destroy_all if order
+    order&.reload&.destroy
+    [sender, receiver].each(&:destroy)
+  end
+
+  test "sender_mention_summary — sla_overdue 정확 (sla_due_at 경과 + 미응답)" do
+    sender   = make_mention_user("senderSla")
+    receiver = make_mention_user("recvSla")
+    order = make_mention_order(sender)
+
+    n = Notification.create!(user: receiver, notifiable: order, notification_type: "mentioned",
+                             intent_level: 2, sent_by_user_id: sender.id, body: "x")
+    # SLA 인위적으로 경과시킴
+    n.update_columns(sla_due_at: 1.hour.ago, acknowledged_at: nil)
+
+    summary = order.sender_mention_summary(viewer: sender)
+    assert_equal 1, summary.size
+    assert_equal true, summary.first[:sla_overdue], "SLA 경과 + 미응답이면 overdue=true"
+  ensure
+    Notification.where(notifiable: order).destroy_all if order
+    order&.reload&.destroy
+    [sender, receiver].each(&:destroy)
+  end
+
+  test "sender_mention_summary — can_remind reflects cooldown state" do
+    sender   = make_mention_user("senderCd")
+    receiver = make_mention_user("recvCd")
+    order = make_mention_order(sender)
+
+    # 활성 cooldown — reminded_at 1시간 전
+    Notification.create!(user: receiver, notifiable: order, notification_type: "mentioned",
+                         intent_level: 1, sent_by_user_id: sender.id,
+                         reminded_at: 1.hour.ago, body: "x")
+
+    summary = order.sender_mention_summary(viewer: sender)
+    assert_equal 1, summary.size
+    assert_equal false, summary.first[:can_remind], "cooldown 활성 → can_remind=false"
+  ensure
+    Notification.where(notifiable: order).destroy_all if order
+    order&.reload&.destroy
+    [sender, receiver].each(&:destroy)
+  end
+
+  test "cooldown_active? — true when reminded_at within 24h" do
+    sender   = make_mention_user("cdAct1")
+    receiver = make_mention_user("cdAct2")
+    order = make_mention_order(sender)
+    Notification.create!(user: receiver, notifiable: order, notification_type: "mentioned",
+                         intent_level: 1, sent_by_user_id: sender.id,
+                         reminded_at: 1.hour.ago, body: "x")
+    assert_equal true, order.cooldown_active?(receiver.id, sender.id)
+  ensure
+    Notification.where(notifiable: order).destroy_all if order
+    order&.reload&.destroy
+    [sender, receiver].each(&:destroy)
+  end
+
+  test "cooldown_active? — false when reminded_at > 24h ago" do
+    sender   = make_mention_user("cdInact1")
+    receiver = make_mention_user("cdInact2")
+    order = make_mention_order(sender)
+    Notification.create!(user: receiver, notifiable: order, notification_type: "mentioned",
+                         intent_level: 1, sent_by_user_id: sender.id,
+                         reminded_at: 25.hours.ago, body: "x")
+    assert_equal false, order.cooldown_active?(receiver.id, sender.id)
+  ensure
+    Notification.where(notifiable: order).destroy_all if order
+    order&.reload&.destroy
+    [sender, receiver].each(&:destroy)
+  end
+
+  test "cooldown_active? — false when no reminded_at notifications exist" do
+    sender   = make_mention_user("cdNone1")
+    receiver = make_mention_user("cdNone2")
+    order = make_mention_order(sender)
+    # reminded_at 없는 알림만 존재
+    Notification.create!(user: receiver, notifiable: order, notification_type: "mentioned",
+                         intent_level: 1, sent_by_user_id: sender.id, body: "x")
+    assert_equal false, order.cooldown_active?(receiver.id, sender.id)
+  ensure
+    Notification.where(notifiable: order).destroy_all if order
+    order&.reload&.destroy
+    [sender, receiver].each(&:destroy)
+  end
 end

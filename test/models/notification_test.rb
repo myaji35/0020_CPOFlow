@@ -214,4 +214,110 @@ class NotificationTest < ActiveSupport::TestCase
     o&.reload&.destroy if o && Order.exists?(o.id)
     u&.destroy
   end
+
+  # ─────────────────────────────────────────
+  # ISS-354 Phase 2 — T13 SLA + sent_by_user_id
+  # ─────────────────────────────────────────
+
+  test "Notification#assign_sla_due_at — intent 0 (FYI) → sla_due_at nil" do
+    u = make_user
+    o = make_order(u)
+    n = Notification.create!(user: u, notifiable: o, notification_type: "mentioned",
+                             intent_level: 0, body: "x")
+    assert_nil n.sla_due_at, "intent 0 (FYI)는 SLA 없음"
+  ensure
+    n&.destroy
+    o&.reload&.destroy
+    u&.destroy
+  end
+
+  test "Notification#assign_sla_due_at — intent 1 (@@) → sla_due_at ~ 4시간 뒤" do
+    u = make_user
+    o = make_order(u)
+    before = Time.current
+    n = Notification.create!(user: u, notifiable: o, notification_type: "mentioned",
+                             intent_level: 1, body: "x")
+    after = Time.current
+    assert_not_nil n.sla_due_at
+    expected = before + 4.hours
+    expected_max = after + 4.hours
+    assert n.sla_due_at >= expected - 1.second, "sla_due_at은 4시간 이후여야 함"
+    assert n.sla_due_at <= expected_max + 1.second
+  ensure
+    n&.destroy
+    o&.reload&.destroy
+    u&.destroy
+  end
+
+  test "Notification#assign_sla_due_at — intent 2 (@@@) → sla_due_at ~ 1시간 뒤" do
+    u = make_user
+    o = make_order(u)
+    before = Time.current
+    n = Notification.create!(user: u, notifiable: o, notification_type: "mentioned",
+                             intent_level: 2, body: "x")
+    after = Time.current
+    assert_not_nil n.sla_due_at
+    assert n.sla_due_at >= (before + 1.hour) - 1.second
+    assert n.sla_due_at <= (after + 1.hour) + 1.second
+  ensure
+    n&.destroy
+    o&.reload&.destroy
+    u&.destroy
+  end
+
+  test "Notification#assign_sla_due_at — mentioned 타입에만 발화 (visa/contract 등 제외)" do
+    u = make_user
+    o = make_order(u)
+    n_due = Notification.create!(user: u, notifiable: o, notification_type: "due_date",
+                                 intent_level: 2, body: "x")
+    assert_nil n_due.sla_due_at, "due_date 타입은 SLA 무발화"
+
+    n_visa = Notification.create!(user: u, notifiable: o, notification_type: "visa",
+                                  intent_level: 2, body: "y")
+    assert_nil n_visa.sla_due_at, "visa 타입은 SLA 무발화"
+  ensure
+    n_due&.destroy
+    n_visa&.destroy
+    o&.reload&.destroy
+    u&.destroy
+  end
+
+  test "Notification#assign_sla_due_at — 미리 set 된 sla_due_at 보존 (멱등)" do
+    u = make_user
+    o = make_order(u)
+    fixed_due = 10.hours.from_now
+    n = Notification.create!(user: u, notifiable: o, notification_type: "mentioned",
+                             intent_level: 2, sla_due_at: fixed_due, body: "x")
+    # intent 2면 1시간 뒤로 자동 산출되겠지만, 이미 set이면 그 값 유지
+    assert_in_delta fixed_due.to_f, n.sla_due_at.to_f, 1.0
+  ensure
+    n&.destroy
+    o&.reload&.destroy
+    u&.destroy
+  end
+
+  test "Notification#assign_default_intent_level — 기본값 0" do
+    u = make_user
+    o = make_order(u)
+    n = Notification.create!(user: u, notifiable: o, notification_type: "mentioned", body: "x")
+    assert_equal 0, n.intent_level, "intent_level 미지정 시 기본 0"
+  ensure
+    n&.destroy
+    o&.reload&.destroy
+    u&.destroy
+  end
+
+  test "Notification — sent_by_user_id is nullable (legacy 알림 호환)" do
+    u = make_user
+    o = make_order(u)
+    # sent_by_user_id 미지정 (기존 Phase 1 알림 패턴) — 검증 통과해야 함
+    n = Notification.create!(user: u, notifiable: o, notification_type: "mentioned",
+                             intent_level: 0, body: "legacy")
+    assert_nil n.sent_by_user_id
+    assert n.persisted?, "sent_by_user_id 없이도 저장 가능해야 함"
+  ensure
+    n&.destroy
+    o&.reload&.destroy
+    u&.destroy
+  end
 end
