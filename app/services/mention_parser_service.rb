@@ -2,10 +2,19 @@
 
 # 텍스트(코멘트 body, 태스크 title 등)에서 @이름 멘션을 파싱하여 Notification을 생성한다.
 # 코멘트와 태스크를 모두 지원 — subject(Comment 또는 Task) + source_text + notification_body_template
+#
+# Phase 2 (ISS-354): @ / @@ / @@@ 인텐트 파싱
+#   - @       → intent_level: 0 (FYI, SLA 없음)
+#   - @@      → intent_level: 1 (확인 필수, SLA 4h)
+#   - @@@     → intent_level: 2 (응답 필수, SLA 1h)
+# 같은 사람을 다른 인텐트로 여러 번 멘션하면 max 인텐트가 적용된다 (e.g. `@홍 ... @@홍` → 1).
 class MentionParserService
-  # @이름 또는 @John Doe (영문 Title Case 두 단어) 허용.
-  # 한글은 단일 토큰으로만 매칭(성+이름 붙여쓰기 관례).
+  # Phase 1 — 단일 @ 매칭 (백워드 호환 보존, 외부 호출자가 있으면 그대로 작동)
   MENTION_PATTERN = /@([A-Z][a-zA-Z]+(?:[ \t][A-Z][a-zA-Z]+)?|[\w가-힣]+)/.freeze
+
+  # Phase 2 — @ 개수까지 캡처. {1,3} 으로 1~3개 prefix 허용.
+  # 같은 정규식의 한글/영문 이름 매칭 규칙은 Phase 1과 동일.
+  MENTION_PATTERN_V2 = /(@{1,3})([A-Z][a-zA-Z]+(?:[ \t][A-Z][a-zA-Z]+)?|[\w가-힣]+)/.freeze
 
   # subject: Comment 또는 Task
   # mentioned_by: User
@@ -17,12 +26,18 @@ class MentionParserService
   def call
     return if source_text.blank?
 
-    names = source_text.scan(MENTION_PATTERN).flatten.uniq
-    return if names.empty?
+    # 매칭을 (prefix, name) 튜플로 — name 기준으로 max 인텐트 합산
+    matches = source_text.scan(MENTION_PATTERN_V2)  # [["@", "홍길동"], ["@@", "박과장"], ...]
+    return if matches.empty?
+
+    by_name = {}
+    matches.each do |prefix, name|
+      intent = prefix.length - 1
+      by_name[name] = [(by_name[name] || -1), intent].max
+    end
 
     notified_user_ids = []
-
-    names.each do |name|
+    by_name.each do |name, intent_level|
       mentioned_user = resolve_user(name)
       next unless mentioned_user
       next if notified_user_ids.include?(mentioned_user.id)
@@ -32,8 +47,10 @@ class MentionParserService
         user:              mentioned_user,
         notifiable:        notifiable_order,
         notification_type: "mentioned",
-        title:             notification_title,
-        body:              notification_body
+        intent_level:      intent_level,
+        sent_by_user_id:   @mentioned_by&.id,
+        title:             notification_title(intent_level),
+        body:              notification_body(intent_level)
       )
       notified_user_ids << mentioned_user.id
     end
@@ -91,23 +108,26 @@ class MentionParserService
     end
   end
 
-  def notification_body
+  def notification_body(intent = 0)
     who = @mentioned_by.display_name
+    intent_label = ["", " (확인 필수)", " (응답 필수)"][intent]
     case @subject
-    when Comment then "#{who}님이 코멘트에서 회원님을 멘션했습니다."
-    when Task    then "#{who}님이 태스크에서 회원님을 멘션했습니다."
-    else              "#{who}님이 회원님을 멘션했습니다."
+    when Comment then "#{who}님이 코멘트에서 회원님을 멘션했습니다#{intent_label}."
+    when Task    then "#{who}님이 태스크에서 회원님을 멘션했습니다#{intent_label}."
+    else              "#{who}님이 회원님을 멘션했습니다#{intent_label}."
     end
   end
 
   # ISS-멘션버그: Notification.title 비어 있어 헤더 드롭다운/알림 페이지에 빈 줄로 보이는 문제 수정.
   #   주문 식별자(reference_no/po_no/quo_no/rfq_no/title)가 있으면 그것을 활용, 없으면 일반 문구.
-  def notification_title
+  # Phase 2 (ISS-354): @ 개수 prefix 반영 (@/@@/@@@).
+  def notification_title(intent = 0)
+    prefix = ["@", "@@", "@@@"][intent] || "@"
     order = notifiable_order
-    return "@멘션 알림" unless order
+    return "#{prefix}멘션 알림" unless order
 
     ref = order.po_no.presence || order.quo_no.presence || order.rfq_no.presence ||
           order.reference_no.presence || order.title.presence
-    ref ? "@멘션: #{ref}" : "@멘션 알림"
+    ref ? "#{prefix}멘션: #{ref}" : "#{prefix}멘션 알림"
   end
 end
