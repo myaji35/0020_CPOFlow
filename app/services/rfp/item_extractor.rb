@@ -44,7 +44,10 @@ module Rfp
             "unit": "SET / EA / PCS / M / KG",
             "certification": "KS/CE/API/ATEX/ISO if mentioned, else null",
             "delivery_date": "YYYY-MM-DD or null",
-            "manufacturer": "OEM brand or null",
+            "manufacturer": "OEM/maker name (e.g. Sika, 3M, Hyosung) or null",
+            "brand": "brand/series label if distinct from manufacturer (e.g. 'Sika Pro') or null",
+            "part_no": "part/SKU number if separate from model (e.g. SK-100-A) or null",
+            "remarks": "free-form notes (delivery condition, packaging, QC requirement) or null",
             "source_excerpt": "verbatim 30+ char quote from document (REQUIRED — 할루시네이션 차단)"
           }
         ],
@@ -70,7 +73,7 @@ module Rfp
 
       ## Example (1-shot)
       Input: "We urgently need 5 sets of pressure gauge model PG-100, range 0-10 bar with KS cert by June 30."
-      Output: {"items":[{"name":"Pressure Gauge","model":"PG-100","spec":"range 0-10 bar","quantity":5,"unit":"SET","certification":"KS","delivery_date":"2026-06-30","manufacturer":null,"source_excerpt":"We urgently need 5 sets of pressure gauge model PG-100, range 0-10 bar with KS cert by June 30."}],"rfp_deadline":"2026-06-30","checklist":{},"confidence":0.92,"ambiguities":[]}
+      Output: {"items":[{"name":"Pressure Gauge","model":"PG-100","spec":"range 0-10 bar","quantity":5,"unit":"SET","certification":"KS","delivery_date":"2026-06-30","manufacturer":null,"brand":null,"part_no":null,"remarks":null,"source_excerpt":"We urgently need 5 sets of pressure gauge model PG-100, range 0-10 bar with KS cert by June 30."}],"rfp_deadline":"2026-06-30","checklist":{},"confidence":0.92,"ambiguities":[]}
     PROMPT
 
     def self.call(combined_text, format_context: nil)
