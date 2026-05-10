@@ -277,11 +277,16 @@ module RfqAuto
         {
           idx: idx + 1,
           name:           pick(item, :name, :product_name, :item_name),
-          model:          pick(item, :model, :model_no, :part_no),
+          model:          pick(item, :model, :model_no),
           spec:           pick(item, :spec, :specification, :description),
           quantity:       pick(item, :quantity, :qty),
           unit:           pick(item, :unit, :uom),
           certification:  pick(item, :certification, :cert),
+          # ISS-358 Wave 0 (T0c): AtoZ RFQ 양식 7컬럼용 — extractor가 추출한 4개 키 통과
+          manufacturer:   pick(item, :manufacturer, :maker),
+          brand:          pick(item, :brand),
+          part_no:        pick(item, :part_no, :part_number, :sku),
+          remarks:        pick(item, :remarks, :notes, :note),
           source_file:    find_source_file(excerpt),
           source_excerpt: excerpt[0, 160],
           missing_fields: missing,
