@@ -70,7 +70,11 @@ Phase 2는 코드에 상수로 박음. Phase 4~ 에서 `Setting`/`Team` 단위 �
 
 ## 4. 데이터 모델 변경
 
-Phase 1에서 컬럼은 모두 추가됐음. Phase 2는 **컬럼 추가 0** — 기존 컬럼에 데이터를 채우는 작업.
+Phase 1에서 5개 컬럼은 추가됐음. Phase 2는 **컬럼 추가 2건**:
+- `orders.mention_worst_intent` (integer, default: 0, null: false) — 카운터 캐시
+- `notifications.sent_by_user_id` (integer, null: true, indexed) — 발신자 식별 (B3 결정)
+
+> **2026-05-10 eng-review BLOCKER 수정**: 본 §4와 §5.2의 모순(컬럼 추가 0 vs `mention_worst_intent` 추가) 해결, B3(발신자 식별 휴리스틱) 정확히 풀기 위해 `sent_by_user_id` 추가. B1(`user_id` → `user_id`), B4(SLA Job 쿼리 윈도우)도 함께 수정.
 
 ### 4.1 `Notification` — `before_validation` 훅 강화
 
@@ -126,7 +130,8 @@ def call
       user:              user,
       notifiable:        notifiable_order,
       notification_type: "mentioned",
-      intent_level:      intent_level,  # ← Phase 2 추가
+      intent_level:      intent_level,           # ← Phase 2 추가
+      sent_by_user_id:   @mentioned_by&.id,      # ← B3 결정 (2026-05-10): 발신자 명시
       title:             notification_title(intent_level),
       body:              notification_body(intent_level)
     )
@@ -159,9 +164,10 @@ class MentionSlaChecker < ApplicationJob
   queue_as :default
 
   def perform
-    # 마감 직전(30분 이내) → push 1회 + 마감 초과 시점에 worst_state 갱신
+    # B4 결정 (2026-05-10): 쿼리 윈도우 25시간으로 제한 — 무한 누적 방지
+    # 새로 SLA 초과된 멘션만 추출 (이미 처리된 historical 멘션 재처리 X)
     affected_orders = Notification.mentions
-                                  .where("sla_due_at < ?", Time.current)
+                                  .where("sla_due_at > ? AND sla_due_at < ?", 25.hours.ago, Time.current)
                                   .where(acknowledged_at: nil)
                                   .where(notifiable_type: "Order")
                                   .distinct
@@ -216,14 +222,16 @@ worst intent는 `Order` 모델에 `mention_worst_intent` 카운터 캐시 컬럼
 
 ### 5.3 `_mention_sender_hover.html.erb` — 컴포넌트 B 신규
 
+> **B3 결정 (2026-05-10)**: 발신자 식별은 `notifications.sent_by_user_id`로 정확히 매칭 (Order 생성자 휴리스틱 폐기). 매니저가 다른 사람 발주에 멘션한 경우도 발신자 본인 호버가 정상 작동.
+
 ```erb
 <%# locals: order %>
-<% return unless current_user.id == order.created_by_id  # 발신자만 %>
-<% sender_mentions = order.notifications.mentions.where("notifications.created_at IN (
-     SELECT MAX(created_at) FROM notifications n2
-     WHERE n2.notifiable_id = ? AND n2.notifiable_type = 'Order' AND n2.notification_type = 'mentioned'
-     GROUP BY n2.user_id
-   )", order.id) %>
+<% sender_mentions = order.notifications.mentions
+                              .where(sent_by_user_id: current_user.id)  # B3: 발신자 정확 매칭
+                              .group_by(&:user_id)
+                              .map { |_uid, group| group.max_by(&:created_at) }
+%>
+<% return if sender_mentions.empty?  # 본인이 발신자가 아닌 카드는 빈 응답 %>
 
 <div class="mention-sender-hover" data-mention-sender-hover>
   <h4>내가 보낸 멘션 <%= sender_mentions.count %>건</h4>
@@ -309,28 +317,40 @@ end
 
 ## 7. 컴포넌트 B 데이터 구조
 
-`Order#sender_mention_summary` (신규):
+`Order#sender_mention_summary` (신규) — B3 결정 적용:
 ```ruby
 def sender_mention_summary(viewer:)
-  return [] unless viewer&.id == created_by_id  # 발신자 본인만
-  
+  return [] if viewer.nil?
+
+  # B3: notifications.sent_by_user_id == viewer.id 인 멘션만 (발신자 정확 매칭)
+  sent_notifs = notifications.mentions.where(sent_by_user_id: viewer.id)
+  return [] if sent_notifs.empty?
+
+  sent_notifs.group_by(&:user_id).map { |_uid, group|
+    latest = group.max_by(&:created_at)
+    {
+      user: latest.user,
+      state: latest.acknowledged? ? :acknowledged : (latest.viewed? ? :viewed_only : :unread),
+      intent_level: latest.intent_level,
+      mentioned_at: group.min_by(&:created_at).created_at,
+      viewed_at: latest.viewed_at,
+      acknowledged_at: latest.acknowledged_at,
+      can_remind: !cooldown_active?(latest.user_id, viewer.id),
+      sla_overdue: latest.sla_due_at && latest.sla_due_at < Time.current && !latest.acknowledged?
+    }
+  }
+end
+
+# 24h cooldown — 같은 (sender, receiver, order) 조합으로 24h 이내 reminder 멘션 발송된 적 있는지
+def cooldown_active?(receiver_id, sender_id)
   notifications.mentions
-              .group_by(&:user_id)
-              .map { |uid, group|
-                latest = group.max_by(&:created_at)
-                {
-                  user: latest.user,
-                  state: latest.acknowledged? ? :acknowledged : (latest.viewed? ? :viewed_only : :unread),
-                  intent_level: latest.intent_level,
-                  mentioned_at: group.min_by(&:created_at).created_at,
-                  viewed_at: latest.viewed_at,
-                  acknowledged_at: latest.acknowledged_at,
-                  can_remind: !cooldown_active?(uid),
-                  sla_overdue: latest.sla_due_at && latest.sla_due_at < Time.current && !latest.acknowledged?
-                }
-              }
+              .where(user_id: receiver_id, sent_by_user_id: sender_id)
+              .where("reminded_at IS NOT NULL AND reminded_at > ?", 24.hours.ago)
+              .exists?
 end
 ```
+
+> **추가 컬럼**: `notifications.reminded_at` (datetime, nullable) — 리마인드 발송 시각 기록. 마지막 reminded_at이 24h 이내면 cooldown 활성.
 
 ---
 
@@ -378,12 +398,12 @@ en:
 
 | Wave | 범위 | 예상 작업 |
 |---|---|---|
-| **Wave 1 (백엔드 코어)** | T1: MentionParserService 인텐트 파싱 / T2: Notification SLA 산출 / T3: Order#mention_worst_intent 컬럼 + recompute / T4: MentionSlaChecker Job | 4 commits |
-| **Wave 2 (UI 차등)** | T5: dot 인텐트 색상 변형 / T6: 카드 좌측 스트라이프 / T7: SLA 카운트다운 표시 + i18n | 3 commits |
-| **Wave 3 (컴포넌트 B)** | T8: `_mention_sender_hover` partial / T9: mention_dots_controller 호버 트리거 / T10: 라우트 + OrdersController#mention_sender_hover / T11: mention_remind_all + cooldown / T12: mention_remind_controller.js | 5 commits |
-| **Wave 4 (테스트)** | T13: 모델/서비스 테스트 인텐트 / T14: SLA Job 테스트 / T15: 컨트롤러 테스트 / T16: System test 추가 (호버+리마인드) | 4 commits |
+| **Wave 1 (백엔드 코어)** | T0: 마이그레이션 (orders.mention_worst_intent + notifications.sent_by_user_id + notifications.reminded_at) / T1: MentionParserService 인텐트 파싱 + sent_by_user_id 저장 / T2: Notification SLA 산출 / T3: Order#recompute_mention_summary! worst_intent 추가 + Order#sender_mention_summary / T4: MentionSlaChecker Job (25h window) | 5 commits |
+| **Wave 2 (UI 차등)** | T5: `mention_summary_dots`에 intent_level 추가 / T6: dot 인텐트 색상 변형 / T7: 카드 좌측 스트라이프 + SLA 카운트다운 + i18n | 3 commits |
+| **Wave 3 (컴포넌트 B)** | T8: `_mention_sender_hover` partial / T9: mention_dots_controller 호버 트리거 / T10: 라우트 + OrdersController#mention_sender_hover (sent_by_user_id 권한) / T11: mention_remind_all + reminded_at cooldown / T12: mention_remind_controller.js | 5 commits |
+| **Wave 4 (테스트)** | T13: 모델/서비스 테스트 인텐트 + sent_by_user_id / T14: SLA Job 25h window 테스트 + freeze_time / T15: 컨트롤러 테스트 + cooldown / T16: System test (호버+리마인드+권한 격리) | 4 commits |
 
-**총 예상**: 16 commits, Phase 1보다 1 적음.
+**총 예상**: 17 commits (BLOCKER 수정으로 +1).
 
 ---
 
@@ -394,7 +414,7 @@ en:
 | R1 | 기존 `MENTION_PATTERN` 변경으로 회귀 | Phase 1 회귀 테스트 그대로 통과 + 신규 인텐트 테스트 추가 |
 | R2 | SLA Job이 매시간 실행 → 부하 | `find_each` + 영향 Order만 추출, 평균 0~10건/시간 가정 |
 | R3 | 카드 좌측 스트라이프 남용 → 시각 피로 | `@@`만 노랑, `@@@` 또는 `sla_overdue`만 빨강 |
-| R4 | 발신자 호버 권한 누수 | 서버 `current_user.id == order.created_by_id` 체크 + 클라이언트 dataset 체크 |
+| R4 | 발신자 호버 권한 누수 | 서버 `current_user.id == order.user_id` 체크 + 클라이언트 dataset 체크 |
 | R5 | 리마인드 스팸 | 24h cooldown DB 검사 (별도 `mention_reminders` 테이블 X — 기존 Notification.created_at 활용) |
 | R6 | 기존 코멘트의 `@홍길동` 백워드 호환 | 기존 매칭은 정확히 1개 `@`로 캡처 → intent_level: 0, 회귀 0 |
 | R7 | Phase 1 시드/실 데이터 혼재 | 어제 ISS-353-B에서 시드 정리 완료. Phase 2 시작 전 추가 cleanup 불필요 |
