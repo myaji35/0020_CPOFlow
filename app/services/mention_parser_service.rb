@@ -23,12 +23,9 @@ class MentionParserService
     notified_user_ids = []
 
     names.each do |name|
-      employee = resolve_employee(name)
-      next unless employee&.user_id
-      next if notified_user_ids.include?(employee.user_id)
-
-      mentioned_user = User.find_by(id: employee.user_id)
+      mentioned_user = resolve_user(name)
       next unless mentioned_user
+      next if notified_user_ids.include?(mentioned_user.id)
       next if mentioned_user == @mentioned_by  # 자기 자신 멘션 스킵
 
       Notification.create!(
@@ -42,15 +39,38 @@ class MentionParserService
     end
   end
 
-  # "홍길동멘션테스트 그리고" 처럼 뒤 단어까지 캡처된 경우 → 첫 토큰으로 재조회.
-  # "John Doe" 처럼 실제 두 단어 이름이면 전체 매칭 우선, 없으면 첫 단어만.
-  def resolve_employee(name)
-    direct = Employee.find_by(name: name)
-    return direct if direct
+  # ISS-353-B (2026-05-10): User 직접 매칭 fallback 추가.
+  # 1차: Employee.name → user_id (기존 경로)
+  # 2차: User.display_name == name (Employee 미등록 운영 직원 대응)
+  # 3차: 두 단어 이름 → 첫 토큰으로 Employee/User 재시도
+  def resolve_user(name)
+    return nil if name.blank?
 
+    # 1차: Employee 매칭
+    if (employee = Employee.find_by(name: name)) && employee.user_id
+      return User.find_by(id: employee.user_id)
+    end
+
+    # 2차: User.display_name 직접 매칭 (Employee 미등록 직원 대응)
+    user = User.find_by(name: name)
+    return user if user
+
+    # 3차: 두 단어 이름 → 첫 토큰 재시도
     first_token = name.to_s.split(/\s+/).first
     return nil if first_token.blank? || first_token == name
 
+    if (employee = Employee.find_by(name: first_token)) && employee.user_id
+      return User.find_by(id: employee.user_id)
+    end
+    User.find_by(name: first_token)
+  end
+
+  # 하위 호환 — 기존 호출자(있다면)를 위해 유지
+  def resolve_employee(name)
+    direct = Employee.find_by(name: name)
+    return direct if direct
+    first_token = name.to_s.split(/\s+/).first
+    return nil if first_token.blank? || first_token == name
     Employee.find_by(name: first_token)
   end
 
