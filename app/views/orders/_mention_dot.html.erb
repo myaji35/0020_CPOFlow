@@ -1,14 +1,17 @@
-<%# ISS-353 Phase 1 — 멘션 단일 도트 (사람 단위 worst-state)
+<%# ISS-353 Phase 1 → ISS-354 Phase 2 Wave 2 — 멘션 단일 도트 (사람 단위 worst-state + intent_level)
     locals:
-      dot : Hash {user_id, user_name, state, notification_id, intent_level?}
+      dot : Hash {user_id, user_name, state, notification_id, intent_level}
 
     B1-b 결정: viewer 인자 없음. 서버 stateless 렌더 — 클라이언트(Wave 2b Stimulus)가
     <body data-current-user-id> 읽어 data-viewer-self 마킹.
 
-    상태별 색상 (4종, Phase 1은 unread/viewed_only/acknowledged 3종 운용):
+    상태별 색상 (4종) × 인텐트 강도 (3단계 emerald):
       unread       → 회색 ○ (bg-ink-200 border-ink-300)
       viewed_only  → 노랑 ◐ (bg-amber-400)
-      acknowledged → 녹색 ● (bg-emerald-500)
+      acknowledged → 녹색 ●
+        intent 0 (FYI)        → bg-emerald-400 (연녹)
+        intent 1 (확인 필수)   → bg-emerald-600 (표준)
+        intent 2 (응답 필수)   → bg-emerald-700 (진녹)
       sla_overdue  → 빨강 테두리 (bg-white border-2 border-red-500) — Phase 2 활성
 
     클릭/호버:
@@ -18,16 +21,29 @@
       - native title 툴팁 — Phase 3에서 호버 카드로 승격
 %>
 <%
-  state = dot[:state].to_s
+  state  = dot[:state].to_s
+  intent = dot[:intent_level].to_i
   dot_color_class = case state
                     when "unread"        then "bg-ink-200 border border-ink-300"
                     when "viewed_only"   then "bg-amber-400"
-                    when "acknowledged"  then "bg-emerald-500"
+                    when "acknowledged"
+                      if intent >= 2
+                        "bg-emerald-700"
+                      elsif intent >= 1
+                        "bg-emerald-600"
+                      else
+                        "bg-emerald-400"
+                      end
                     when "sla_overdue"   then "bg-white border-2 border-red-500"
                     else "bg-ink-200 border border-ink-300"
                     end
-  state_label = t("mentions.dot.state_#{state}", default: state)
-  tooltip     = "#{dot[:user_name]} — #{state_label}"
+  state_label  = t("mentions.dot.state_#{state}", default: state)
+  intent_label = ["@", "@@", "@@@"][intent]
+  tooltip      = if intent > 0
+                   "#{dot[:user_name]} — #{state_label} (#{intent_label})"
+                 else
+                   "#{dot[:user_name]} — #{state_label}"
+                 end
 %>
 <button type="button"
         class="mention-dot-wrapper inline-flex items-center justify-center w-6 h-6 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-300"
@@ -36,6 +52,7 @@
         data-user-id="<%= dot[:user_id] %>"
         data-notification-id="<%= dot[:notification_id] %>"
         data-state="<%= state %>"
+        data-intent="<%= intent %>"
         title="<%= tooltip %>">
   <span class="mention-dot inline-block w-1.5 h-1.5 rounded-full <%= dot_color_class %> hover:scale-[1.33] transition-transform"></span>
 </button>
