@@ -45,17 +45,20 @@ LAB/RFQ Auto가 RFQ PDF/이미지를 분석한 뒤 **Anthropic Claude의 Web Sea
 
 ### 결정 3 — RFQ 양식 7컬럼 구조
 
-| 컬럼 | 데이터 소스 | 비고 |
+> **B1 결정 (2026-05-10)**: 분석기 프롬프트 확장 — VisionItemExtractor + RfpItemExtractor에 manufacturer/brand/part_no/remarks 추출 추가 → 7컬럼 모두 데이터 있음.
+> **B2 결정**: controller가 JSON-parsed 문자열 키 hash 전달 → 모든 view에서 dual-key 접근(`item[:foo].presence || item["foo"]`).
+
+| 컬럼 | 데이터 소스 (B1 확장 후) | 비고 |
 |---|---|---|
 | **No.** | 자동 (1, 2, 3...) | |
-| **Material Description** | `item[:description]` 또는 `item[:name] + spec` 멀티라인 | 불릿/번호로 사양 나열 (DIMENSION/COLOR/MATERIAL/MODEL 등) |
-| **Model / Part No.** | `item[:model]` 또는 `item[:part_no]` | |
-| **Manufacturer / Brand Name** | `item[:manufacturer]` 또는 `item[:brand]` | 분석 미식별 시 빈칸 |
-| **Unit** | `item[:unit]` (e.g., EA, BOX, m, m²) | |
-| **Qty** | `item[:quantity]` | |
-| **Remarks** | `item[:remarks]` 또는 빈칸 | |
+| **Material Description** | `item["name"]` + 불릿형 `item["spec"]` 멀티라인 | DIMENSION/COLOR/MATERIAL/MODEL 등 자유서술 |
+| **Model / Part No.** | `item["part_no"].presence || item["model"]` | 둘 다 추출, part_no 우선 |
+| **Manufacturer / Brand Name** | `item["manufacturer"].presence || item["brand"]` | 분석 미식별 시 "—" |
+| **Unit** | `item["unit"]` (EA, BOX, m, m² 등) | |
+| **Qty** | `item["quantity"]` | |
+| **Remarks** | `item["remarks"].presence || item["certification"]` | 인증/특이사항 |
 
-Item 모델 또는 hash가 위 키들을 다 가지고 있는지 사전 점검 필요. 누락 키는 빈 칸 또는 "—" 표시.
+**Wave 0 신설**: 추출기 프롬프트 확장 + 데이터 호환성 회귀 테스트가 양식 적용(Wave 2)보다 선행되어야 함.
 
 ---
 
@@ -113,25 +116,31 @@ Email: sales@atoz2010.com / +971 2 553 5580 / Musaffah, Abu Dhabi, UAE
 - `test/services/rfq_auto/web_supplier_finder_test.rb` (있다면) — 삭제
 
 ### 5.2 수정 (제거 코드 정리)
+- `app/services/rfq_auto/vision_item_extractor.rb` (Wave 0):
+  - SYSTEM_PROMPT에 manufacturer / brand / part_no / remarks 추출 지시 추가
+- `app/services/rfq_auto/rfp/item_extractor.rb` (Wave 0):
+  - LLM 프롬프트 동일 확장
 - `app/services/rfq_auto/supplier_finder.rb`:
   - `search_web` 메서드 제거
   - `enable_web` 파라미터 제거
   - `web_cost_usd` / `web_model` / `web_citations` / `web_error` 인스턴스 변수 + 접근자 제거
-  - `auto_save_high_confidence` 메서드는 유지 (datago/google_cse도 신뢰도 기반 자동 저장 가능)
+  - `auto_save_high_confidence` 메서드: **삭제** (현재 search_web에서만 호출. datago/google는 신뢰도 검증 별도 — 향후 ISS로 분리)
 - `app/services/rfq_auto/analyzer.rb`:
-  - `enable_web` 또는 `WebSupplierFinder` 직접 호출 부분 제거 (있는 경우)
-- `app/views/lab/rfq_auto/show.html.erb`:
-  - 품목 표 영역을 AtoZ RFQ 양식으로 교체
-  - "Web Search" / "Anthropic" 라벨/비용/citation 노출 제거
+  - lines 274-291 enriched.map: 새 키 (manufacturer/brand/part_no/remarks) 통과 처리
+  - lines 449-463 step4_find_suppliers: `web_cost_usd`, `web_model`, `web_citations`, `web_error` 의존 제거 — finder 결과만 반환하도록 단순화
 - `app/views/lab/rfq_auto/_analysis_card.html.erb`:
+  - 품목 표 영역을 AtoZ 7컬럼 양식으로 교체 (dual-key 접근)
   - WebSupplierFinder citation 표시 제거
+  - lines 497-511 "0 suppliers found" 진단 블록의 "🔍 인터넷 리서치 — Anthropic Web Search" 라인 제거
 - `app/controllers/lab/rfq_auto_controller.rb`:
   - `enable_web` 파라미터/세션 키 제거 (있는 경우)
+  - 또는 controller 측에서 `deep_symbolize_keys`로 통일 (Wave 0 검토)
 - `app/views/rfq_auto_mailer/rfq_inquiry.html.erb`:
-  - 기존 표 구조를 AtoZ 7컬럼 양식으로 교체
-  - 헤더 + 푸터 추가 (RFQ No., Due Date, Address, Mike Lee or current_user)
+  - 기존 표 구조를 AtoZ 7컬럼 양식으로 교체 (dual-key)
+  - 헤더 + 푸터 추가 (RFQ No., Due Date, Address, current_user)
 - `app/views/rfq_auto_mailer/rfq_inquiry.text.erb`:
   - 텍스트 버전도 양식 일치하게 갱신
+- **`app/views/lab/rfq_auto/show.html.erb` 편집 대상에서 제외** (eng-review 검증: 본 파일에 item table 없음 — _analysis_card.html.erb로 통합)
 
 ### 5.3 신규 (옵션)
 - `app/views/shared/_atoz_rfq_letterhead.html.erb` — 헤더 partial (재사용)
@@ -146,14 +155,17 @@ Email: sales@atoz2010.com / +971 2 553 5580 / Musaffah, Abu Dhabi, UAE
 
 ## 6. 환경 변수 / Credentials 정리
 
-`WebSupplierFinder` 제거 시 영향:
-- `ENV["ANTHROPIC_API_KEY"]` — **다른 기능에서 사용 중**(GraphRAG, 분석 LLM 등) → 그대로 유지
-- `ENV["ANTHROPIC_WEB_SEARCH_ENABLED"]` 또는 유사 플래그 — 제거
-- `Rails.application.credentials.dig(:anthropic, :web_search_*)` — 사용 흔적 검색 후 제거
+> **Eng-review 검증 (2026-05-10)**: 실제 존재하는 ENV는 `RFQ_WEB_SEARCH_MODEL` 1개뿐. `ANTHROPIC_WEB_SEARCH_ENABLED`는 미존재.
 
-검색 명령:
+`WebSupplierFinder` 제거 시 영향:
+- `ENV["RFQ_WEB_SEARCH_MODEL"]` — **제거 대상** (web_supplier_finder.rb:28에서만 사용)
+- `ENV["ANTHROPIC_API_KEY"]` — **유지** (VisionItemExtractor + RfpItemExtractor + 분석 LLM 사용)
+- credentials 별도 항목 없음
+
+검증:
 ```bash
-grep -rn "web_search\|WebSupplierFinder\|enable_web" app/ config/ --include="*.rb" --include="*.erb"
+grep -rn "RFQ_WEB_SEARCH_MODEL\|WebSupplierFinder\|enable_web\|search_web" app/ config/ lib/ --include="*.rb" --include="*.erb" --include="*.yml"
+# 기대: web_supplier_finder.rb 삭제 후 0건
 ```
 
 ---
@@ -162,12 +174,13 @@ grep -rn "web_search\|WebSupplierFinder\|enable_web" app/ config/ --include="*.r
 
 | Wave | 범위 | 예상 작업 |
 |---|---|---|
-| **Wave 1 (제거)** | T1: web_supplier_finder.rb 삭제 / T2: supplier_finder.rb 정리 (search_web, enable_web 제거) / T3: analyzer.rb 호출 경로 정리 / T4: 컨트롤러+뷰의 web_search 라벨/citation 제거 | 4 commits |
-| **Wave 2 (양식 적용 - 이메일)** | T5: AtoZ RFQ 양식 partial(letterhead, footer) 신규 / T6: rfq_inquiry.html.erb 7컬럼 양식 적용 / T7: rfq_inquiry.text.erb 양식 일치 | 3 commits |
-| **Wave 3 (양식 적용 - 화면)** | T8: lab/rfq_auto/show.html.erb 품목 영역 양식 적용 / T9: _analysis_card.html.erb 정리 | 2 commits |
-| **Wave 4 (테스트)** | T10: SupplierFinder 회귀 테스트 / T11: rfq_auto_mailer 양식 렌더 테스트 / T12: lab/rfq_auto controller 회귀 + ENV cleanup verification | 3 commits |
+| **Wave 0 (추출기 확장)** | T0a: VisionItemExtractor SYSTEM_PROMPT에 manufacturer/brand/part_no/remarks 추가 / T0b: RfpItemExtractor LLM 프롬프트 동일 확장 / T0c: analyzer.rb#enriched.map가 새 키 통과시키도록 수정 | 3 commits |
+| **Wave 1 (제거)** | T1: web_supplier_finder.rb 삭제 / T2: supplier_finder.rb 정리 (search_web/enable_web/web_* accessors 제거) / T3: analyzer.rb step4_find_suppliers (lines 449-463) 단순화 — web_cost_usd 의존 제거 / T4: _analysis_card.html.erb 정리 (web_search citation + 인터넷 리서치 진단 라인 497-511 정리) | 4 commits |
+| **Wave 2 (양식 적용 - 이메일)** | T5: AtoZ RFQ 양식 partial(letterhead, footer) 신규 / T6: rfq_inquiry.html.erb 7컬럼 양식 적용 (dual-key 접근) / T7: rfq_inquiry.text.erb 양식 일치 | 3 commits |
+| **Wave 3 (양식 적용 - 화면)** | T8: _analysis_card.html.erb 품목 영역 7컬럼 양식 / T9: 분석 결과 화면 manufacturer 컬럼 노출 (data-key 검증) | 2 commits |
+| **Wave 4 (테스트)** | T10: VisionItemExtractor + RfpItemExtractor 새 키 추출 테스트 / T11: SupplierFinder 회귀 (datago/google/local만) / T12: rfq_auto_mailer 양식 렌더 테스트 / T13: ENV cleanup grep 자동 검증 | 4 commits |
 
-**총 예상**: 12 commits
+**총 예상**: 16 commits (Wave 0 추가, 양식 완전한 데이터 확보).
 
 ---
 
