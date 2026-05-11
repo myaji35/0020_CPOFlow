@@ -470,6 +470,7 @@ ko:
       tab_comments: "코멘트"
       tab_attachments: "첨부파일"
       tab_quote_items: "품목"
+      quote_items_loading: "품목 데이터를 불러오는 중..."
       tab_history: "히스토리"
       tab_flow: "플로우"
       action_reply: "답장"

@@ -612,10 +612,10 @@
   ══════════════════════════════════════════════════════════ %>
   <%= render "orders/drawer_attachments", order: order %>
 
-  <%# 탭 패널: 품목 %>
+  <% if is_purchase %>
+  <%# 탭 패널: 품목 (purchase 보드 전용) %>
   <%= render partial: "orders/drawer_quote_items", locals: { order: order, initial_render: true } %>
 
-  <% if is_purchase %>
   <%# ══════════════════════════════════════════════════════════
       탭 패널 5: 히스토리 (구매보드 전용)
   ══════════════════════════════════════════════════════════ %>

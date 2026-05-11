@@ -470,6 +470,7 @@ en:
       tab_comments: "Comments"
       tab_attachments: "Attachments"
       tab_quote_items: "Items"
+      quote_items_loading: "Loading items..."
       tab_history: "History"
       tab_flow: "Flow"
       action_reply: "Reply"

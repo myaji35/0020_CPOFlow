@@ -2,8 +2,7 @@
 
 class OrderQuoteItemsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_order, except: %i[update destroy]
-  before_action :set_order_for_member, only: %i[update destroy]
+  before_action :set_order
 
   def index
     @items = @order.quote_items.ordered
@@ -28,10 +27,6 @@ class OrderQuoteItemsController < ApplicationController
   private
 
   def set_order
-    @order = Order.find(params[:order_id])
-  end
-
-  def set_order_for_member
     @order = Order.find(params[:order_id])
   end
 end
