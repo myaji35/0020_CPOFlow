@@ -13,7 +13,25 @@ class OrderQuoteItemsController < ApplicationController
   end
 
   def create
-    head :no_content
+    is_first = @order.quote_items.empty?
+    next_row = (@order.quote_items.maximum(:row_no) || 0) + 1
+    item = @order.quote_items.create!(row_no: next_row, item: "")
+
+    if is_first
+      sources = AttachmentQuoteAnalysis.where(order_id: @order.id, status: "completed")
+                                         .includes(:active_storage_attachment)
+      render turbo_stream: turbo_stream.replace(
+        "quote-items-frame-#{@order.id}",
+        partial: "orders/quote_items_frame",
+        locals: { order: @order, items: @order.quote_items.ordered, sources: sources }
+      )
+    else
+      render turbo_stream: turbo_stream.append(
+        "quote-items-tbody-#{@order.id}",
+        partial: "orders/quote_item_row",
+        locals: { item: item }
+      )
+    end
   end
 
   def update
@@ -21,7 +39,9 @@ class OrderQuoteItemsController < ApplicationController
   end
 
   def destroy
-    head :no_content
+    item = @order.quote_items.find(params[:id])
+    item.destroy
+    render turbo_stream: turbo_stream.remove("quote-item-#{item.id}")
   end
 
   private

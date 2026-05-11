@@ -1,0 +1,27 @@
+<tr id="quote-item-<%= item.id %>" class="border-b border-gray-100 hover:bg-gray-50">
+  <td class="px-2 py-2 text-xs text-gray-500 text-center w-12"><%= item.row_no %></td>
+  <td class="px-2 py-2 text-sm" data-field="item" data-item-id="<%= item.id %>">
+    <span class="quote-cell-text"><%= item.item %></span>
+    <% if item.user_edited %><span class="ml-1 text-[10px] text-[#00A1E0]" title="수정됨">•</span><% end %>
+  </td>
+  <td class="px-2 py-2 text-xs whitespace-pre-line text-gray-700"
+      data-field="description" data-item-id="<%= item.id %>"
+      style="max-width: 280px;">
+    <%= item.description %>
+  </td>
+  <td class="px-2 py-2 text-xs text-gray-700" data-field="model_part_no" data-item-id="<%= item.id %>"><%= item.model_part_no %></td>
+  <td class="px-2 py-2 text-xs text-gray-700" data-field="manufacturer_brand" data-item-id="<%= item.id %>"><%= item.manufacturer_brand %></td>
+  <td class="px-2 py-2 text-xs text-center w-16 text-gray-700" data-field="unit" data-item-id="<%= item.id %>"><%= item.unit %></td>
+  <td class="px-2 py-2 text-xs text-right w-20 text-gray-700" data-field="qty" data-item-id="<%= item.id %>"><%= item.qty %></td>
+  <td class="px-2 py-2 text-xs text-gray-700" data-field="remarks" data-item-id="<%= item.id %>"><%= item.remarks %></td>
+  <td class="px-2 py-2 text-xs w-8">
+    <%= button_to order_quote_item_path(item.order_id, item),
+        method: :delete, form: { data: { turbo_stream: true } },
+        class: "text-gray-400 hover:text-red-500 cursor-pointer", title: "삭제" do %>
+      <svg class="w-3.5 h-3.5 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/>
+      </svg>
+    <% end %>
+  </td>
+</tr>

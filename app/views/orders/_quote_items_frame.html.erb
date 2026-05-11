@@ -1,6 +1,46 @@
 <turbo-frame id="quote-items-frame-<%= order.id %>">
   <% if items.any? %>
-    <div class="text-sm text-gray-700">품목 <%= items.size %>건 (P3에서 표 렌더)</div>
+    <div class="mb-3 text-xs text-gray-600">
+      품목 <strong><%= items.size %></strong>건
+      <% if sources.any? %>
+        · 출처:
+        <% sources.each_with_index do |s, i| %>
+          <span><%= s.active_storage_attachment.filename %></span><%= "," if i < sources.size - 1 %>
+        <% end %>
+      <% end %>
+    </div>
+
+    <div class="overflow-x-auto border border-gray-200 rounded-lg">
+      <table class="min-w-full">
+        <thead class="bg-gray-50 text-[11px] text-gray-600">
+          <tr>
+            <th class="px-2 py-2 w-12">No</th>
+            <th class="px-2 py-2 text-left">Item</th>
+            <th class="px-2 py-2 text-left">Description</th>
+            <th class="px-2 py-2 text-left">Model / Part No</th>
+            <th class="px-2 py-2 text-left">Manufacturer / Brand</th>
+            <th class="px-2 py-2 w-16">Unit</th>
+            <th class="px-2 py-2 w-20 text-right">Qty</th>
+            <th class="px-2 py-2 text-left">Remarks</th>
+            <th class="px-2 py-2 w-8"></th>
+          </tr>
+        </thead>
+        <tbody id="quote-items-tbody-<%= order.id %>">
+          <% items.each do |item| %>
+            <%= render partial: "orders/quote_item_row", locals: { item: item } %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mt-3 flex items-center gap-2">
+      <%= form_with url: order_quote_items_path(order), data: { turbo_stream: true }, class: "inline" do %>
+        <button type="submit"
+                class="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 rounded-md cursor-pointer">
+          + 품목 추가
+        </button>
+      <% end %>
+    </div>
   <% else %>
     <div class="py-12 text-center">
       <svg class="w-12 h-12 mx-auto text-gray-300 mb-3" viewBox="0 0 24 24" fill="none"
@@ -9,7 +49,13 @@
         <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
       </svg>
       <div class="text-sm text-gray-700 mb-1">품목이 아직 없습니다</div>
-      <div class="text-xs text-gray-500">견적성 첨부파일에서 [분석] 버튼을 눌러 추출하세요.</div>
+      <div class="text-xs text-gray-500 mb-4">견적성 첨부파일에서 [분석] 버튼을 눌러 추출하세요.</div>
+      <%= form_with url: order_quote_items_path(order), data: { turbo_stream: true }, class: "inline" do %>
+        <button type="submit"
+                class="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 rounded-md cursor-pointer">
+          + 직접 추가
+        </button>
+      <% end %>
     </div>
   <% end %>
 </turbo-frame>
