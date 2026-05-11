@@ -1,11 +1,16 @@
 # frozen_string_literal: true
 
-# Placeholder — 본 구현은 T7/T12/T13 단계에서 추가됨.
 class OrderQuoteItemsController < ApplicationController
   before_action :authenticate_user!
+  before_action :set_order, except: %i[update destroy]
+  before_action :set_order_for_member, only: %i[update destroy]
 
   def index
-    head :no_content
+    @items = @order.quote_items.ordered
+    @sources = AttachmentQuoteAnalysis.where(order_id: @order.id, status: "completed")
+                                       .includes(:active_storage_attachment)
+    render partial: "orders/quote_items_frame",
+           locals: { order: @order, items: @items, sources: @sources }
   end
 
   def create
@@ -18,5 +23,15 @@ class OrderQuoteItemsController < ApplicationController
 
   def destroy
     head :no_content
+  end
+
+  private
+
+  def set_order
+    @order = Order.find(params[:order_id])
+  end
+
+  def set_order_for_member
+    @order = Order.find(params[:order_id])
   end
 end

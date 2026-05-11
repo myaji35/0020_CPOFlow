@@ -14,7 +14,7 @@
        id="drawer-tabs-<%= order.id %>">
     <% att_count = order.respond_to?(:attachments) ? (order.attachments.size rescue 0) : 0 %>
     <% tabs = if is_purchase
-      [['detail', t('orders.drawer.tab_detail')], ['tasks', t('orders.drawer.tab_tasks')], ['comments', t('orders.drawer.tab_comments')], ['attachments', t('orders.drawer.tab_attachments')], ['history', t('orders.drawer.tab_history')], ['flow', t('orders.drawer.tab_flow')]]
+      [['detail', t('orders.drawer.tab_detail')], ['tasks', t('orders.drawer.tab_tasks')], ['comments', t('orders.drawer.tab_comments')], ['attachments', t('orders.drawer.tab_attachments')], ['quote_items', t('orders.drawer.tab_quote_items')], ['history', t('orders.drawer.tab_history')], ['flow', t('orders.drawer.tab_flow')]]
     else
       [['detail', t('orders.drawer.tab_detail')], ['tasks', t('orders.drawer.tab_checklist')], ['comments', t('orders.drawer.tab_comments')], ['attachments', t('orders.drawer.tab_attachments')]]
     end %>
@@ -611,6 +611,9 @@
       탭 패널 4: 첨부파일 (partial로 분리 — Turbo Stream 업데이트 지원)
   ══════════════════════════════════════════════════════════ %>
   <%= render "orders/drawer_attachments", order: order %>
+
+  <%# 탭 패널: 품목 %>
+  <%= render partial: "orders/drawer_quote_items", locals: { order: order, initial_render: true } %>
 
   <% if is_purchase %>
   <%# ══════════════════════════════════════════════════════════

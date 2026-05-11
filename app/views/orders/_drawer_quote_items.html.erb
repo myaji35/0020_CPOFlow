@@ -1,0 +1,12 @@
+<% initial_render = local_assigns.fetch(:initial_render, true) %>
+<div id="drawer-panel-<%= order.id %>-quote_items"
+     class="p-6<%= ' hidden' if initial_render %>"
+     data-controller="quote-item-inline-edit">
+  <turbo-frame id="quote-items-frame-<%= order.id %>"
+               src="<%= order_quote_items_path(order) %>"
+               loading="lazy">
+    <div class="text-sm text-gray-500 py-12 text-center">
+      품목 데이터를 불러오는 중...
+    </div>
+  </turbo-frame>
+</div>

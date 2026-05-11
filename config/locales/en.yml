@@ -469,6 +469,7 @@ en:
       tab_checklist: "Checklist"
       tab_comments: "Comments"
       tab_attachments: "Attachments"
+      tab_quote_items: "Items"
       tab_history: "History"
       tab_flow: "Flow"
       action_reply: "Reply"

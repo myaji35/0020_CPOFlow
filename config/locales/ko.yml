@@ -469,6 +469,7 @@ ko:
       tab_checklist: "체크리스트"
       tab_comments: "코멘트"
       tab_attachments: "첨부파일"
+      tab_quote_items: "품목"
       tab_history: "히스토리"
       tab_flow: "플로우"
       action_reply: "답장"
