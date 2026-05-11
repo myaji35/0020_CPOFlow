@@ -38,14 +38,15 @@
   end
 %>
 
+<% compact = local_assigns.fetch(:compact, false) %>
 <div id="doc-card-<%= doc.id %>"
      class="group relative bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md hover:border-[#00A1E0] transition-all">
-  <%# 섬네일 영역 (3:2 비율, ~240x160) %>
+  <%# 섬네일 영역 (3:2 비율) %>
   <div class="relative aspect-[3/2] flex items-center justify-center <%= bg %> overflow-hidden">
     <% if thumb_url %>
       <%= image_tag thumb_url, class: "w-full h-full object-cover", loading: "lazy", alt: filename %>
     <% else %>
-      <svg class="w-14 h-14 <%= icon_color %>" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <svg class="<%= compact ? 'w-8 h-8' : 'w-14 h-14' %> <%= icon_color %>" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <% case icon_path
         when :pdf %>
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -100,11 +101,13 @@
     </div>
   </div>
   <%# 메타 정보 %>
-  <div class="px-2.5 py-2 border-t border-gray-100">
-    <p class="text-xs font-medium text-gray-800 truncate" title="<%= filename %>"><%= filename %></p>
-    <div class="flex items-center justify-between mt-0.5">
-      <span class="text-[10px] text-gray-500 uppercase font-mono"><%= ext.presence || "FILE" %></span>
-      <span class="text-[10px] text-gray-500"><%= number_to_human_size(blob.byte_size) %></span>
-    </div>
+  <div class="<%= compact ? 'px-1.5 py-1' : 'px-2.5 py-2' %> border-t border-gray-100">
+    <p class="<%= compact ? 'text-[10px]' : 'text-xs' %> font-medium text-gray-800 truncate" title="<%= filename %>"><%= filename %></p>
+    <% unless compact %>
+      <div class="flex items-center justify-between mt-0.5">
+        <span class="text-[10px] text-gray-500 uppercase font-mono"><%= ext.presence || "FILE" %></span>
+        <span class="text-[10px] text-gray-500"><%= number_to_human_size(blob.byte_size) %></span>
+      </div>
+    <% end %>
   </div>
 </div>

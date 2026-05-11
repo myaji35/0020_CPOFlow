@@ -7,41 +7,51 @@
   optional:
     title — 섹션 제목 (default: "첨부 파일")
     grid_id — DOM id (자동 생성)
+    compact — 컴팩트 모드 (default: false). true면 헤더 숨김 + 작은 카드 + 작은 dropzone
 %>
 <% title ||= "첨부 파일" %>
 <% grid_id ||= "doc-thumb-grid-#{SecureRandom.hex(4)}" %>
 <% docs = documents.respond_to?(:includes) ? documents.includes(:blob) : Array(documents) %>
+<% compact = local_assigns.fetch(:compact, false) %>
+<% wrapper_class = compact ? "mt-2" : "mt-4" %>
+<% grid_class = compact ? "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2" : "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" %>
 
-<div class="mt-4" data-controller="<%= 'document-dropzone' if can_edit && upload_url.present? %>"
+<div class="<%= wrapper_class %>" data-controller="<%= 'document-dropzone' if can_edit && upload_url.present? %>"
      <%= "data-document-dropzone-url-value=\"#{upload_url}\"".html_safe if can_edit && upload_url.present? %>>
-  <div class="flex items-center justify-between mb-3">
-    <h3 class="text-sm font-semibold text-gray-700">
-      <%= title %> <span class="text-xs text-gray-500">(<%= docs.size %>건)</span>
-    </h3>
-  </div>
+  <% unless compact %>
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="text-sm font-semibold text-gray-700">
+        <%= title %> <span class="text-xs text-gray-500">(<%= docs.size %>건)</span>
+      </h3>
+    </div>
+  <% else %>
+    <div class="flex items-center gap-2 mb-1.5">
+      <span class="text-[11px] font-medium text-gray-600"><%= title %></span>
+      <span class="text-[10px] text-gray-400">(<%= docs.size %>)</span>
+    </div>
+  <% end %>
 
   <% if can_edit && upload_url.present? %>
     <div data-document-dropzone-target="zone"
-         class="mb-3 border-2 border-dashed border-gray-300 rounded-lg p-3 text-center text-xs text-gray-500
-                hover:border-[#00A1E0] hover:bg-blue-50/30 transition-colors cursor-pointer"
+         class="<%= compact ? 'mb-1.5 border border-dashed border-gray-200 rounded px-2 py-1 text-[10px]' : 'mb-3 border-2 border-dashed border-gray-300 rounded-lg p-3 text-xs' %>
+                text-center text-gray-500 hover:border-[#00A1E0] hover:bg-blue-50/30 transition-colors cursor-pointer"
          data-action="click->document-dropzone#openFileDialog dragover->document-dropzone#dragOver dragleave->document-dropzone#dragLeave drop->document-dropzone#drop">
-      <span data-document-dropzone-target="label">📎 파일을 드래그하거나 클릭하여 추가</span>
+      <span data-document-dropzone-target="label">
+        <%= compact ? "+ 파일 추가" : "📎 파일을 드래그하거나 클릭하여 추가" %>
+      </span>
       <input type="file" multiple class="hidden" data-document-dropzone-target="input"
              data-action="change->document-dropzone#fileSelected" />
     </div>
   <% end %>
 
   <% if docs.any? %>
-    <div id="<%= grid_id %>" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+    <div id="<%= grid_id %>" class="<%= grid_class %>">
       <% docs.each do |doc| %>
-        <%= render "shared/document_thumbnail_card", doc: doc, can_edit: can_edit %>
+        <%= render "shared/document_thumbnail_card", doc: doc, can_edit: can_edit, compact: compact %>
       <% end %>
     </div>
-  <% else %>
-    <div class="text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-200">
-      <svg class="w-10 h-10 mx-auto text-gray-300 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
-      </svg>
+  <% elsif !compact %>
+    <div class="text-center py-6 bg-gray-50 rounded-lg border border-dashed border-gray-200">
       <p class="text-xs text-gray-500">첨부 파일이 없습니다</p>
     </div>
   <% end %>

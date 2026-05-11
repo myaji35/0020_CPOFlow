@@ -291,7 +291,7 @@
                     upload_url: current_user.admin_or_manager? ? employee_visa_path(@employee, visa) : nil,
                     can_edit: current_user.admin_or_manager?,
                     title: "비자 사본",
-                    grid_id: "visa-#{visa.id}-docs" %>
+                    grid_id: "visa-#{visa.id}-docs", compact: true %>
               </div>
             <% end %>
           </div>
@@ -356,7 +356,7 @@
                     upload_url: current_user.admin_or_manager? ? employee_employment_contract_path(@employee, contract) : nil,
                     can_edit: current_user.admin_or_manager?,
                     title: "계약서",
-                    grid_id: "contract-#{contract.id}-docs" %>
+                    grid_id: "contract-#{contract.id}-docs", compact: true %>
               </div>
             <% end %>
           </div>
@@ -419,7 +419,7 @@
                     upload_url: current_user.admin_or_manager? ? employee_certification_path(@employee, cert) : nil,
                     can_edit: current_user.admin_or_manager?,
                     title: "자격증 사본",
-                    grid_id: "cert-#{cert.id}-docs" %>
+                    grid_id: "cert-#{cert.id}-docs", compact: true %>
               </div>
             <% end %>
           </div>
