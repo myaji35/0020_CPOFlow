@@ -1,9 +1,10 @@
 class CreateAttachmentQuoteAnalyses < ActiveRecord::Migration[8.1]
   def change
     create_table :attachment_quote_analyses do |t|
-      t.references :order, null: false, foreign_key: true
+      t.references :order, null: false, foreign_key: true, index: false
       t.references :active_storage_attachment, null: false,
-                   foreign_key: { to_table: :active_storage_attachments }
+                   foreign_key: { to_table: :active_storage_attachments },
+                   index: false
       t.string  :status, null: false, default: "pending"
       t.boolean :is_quote_doc, null: false, default: false
       t.text    :items_json

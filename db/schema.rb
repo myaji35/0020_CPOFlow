@@ -133,9 +133,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_012821) do
     t.string "status", default: "pending", null: false
     t.datetime "updated_at", null: false
     t.index ["active_storage_attachment_id"], name: "idx_aqa_on_attachment_unique", unique: true
-    t.index ["active_storage_attachment_id"], name: "idx_on_active_storage_attachment_id_53bdc80ee5"
     t.index ["order_id", "status"], name: "idx_aqa_on_order_status"
-    t.index ["order_id"], name: "index_attachment_quote_analyses_on_order_id"
   end
 
   create_table "card_statuses", force: :cascade do |t|
