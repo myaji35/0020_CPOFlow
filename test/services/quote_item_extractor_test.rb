@@ -35,6 +35,7 @@ class QuoteItemExtractorTest < ActiveSupport::TestCase
     assert result[:cost_usd] > 0
     assert_equal "claude-sonnet-4-6", result[:llm_model]
     assert_equal 1, result[:page_count]
+    assert result[:latency_ms] >= 0
   end
 
   test "returns empty items when LLM returns none" do

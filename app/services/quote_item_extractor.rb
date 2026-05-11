@@ -55,19 +55,21 @@ class QuoteItemExtractor
   end
 
   def call
+    started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     images = render_pages
     return empty_result(reason: "no_images") if images.empty?
 
     input_tokens, output_tokens, items = call_anthropic(images)
     cost = (input_tokens.to_f * INPUT_PER_MTOK / 1_000_000) +
            (output_tokens.to_f * OUTPUT_PER_MTOK / 1_000_000)
+    latency_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - started) * 1000).round
 
     {
       items: items,
       cost_usd: cost.round(4),
       llm_model: MODEL,
       page_count: images.size,
-      latency_ms: 0
+      latency_ms: latency_ms
     }
   end
 
@@ -118,38 +120,33 @@ class QuoteItemExtractor
   end
 
   def call_anthropic(images)
-    api_key = AppSetting.get("anthropic_api_key").presence ||
-              Rails.application.credentials.dig(:anthropic, :api_key)
-    raise AnthropicCreditError, "Anthropic API key not configured" if api_key.blank?
+    client = ClaudeTokenResolver.create_client
+    raise AnthropicCreditError, "Anthropic API key not configured" if client.nil?
 
-    client = Anthropic::Client.new(api_key: api_key)
     content = images.map do |b64|
       { type: "image", source: { type: "base64", media_type: "image/png", data: b64 } }
     end
     content << { type: "text", text: 'Extract items as JSON. Return {"items":[...]}' }
 
-    resp = client.messages(
-      parameters: {
-        model: MODEL,
-        max_tokens: 4096,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: "user", content: content }]
-      }
+    resp = client.messages.create(
+      model: MODEL,
+      max_tokens: 4096,
+      system: SYSTEM_PROMPT,
+      messages: [{ role: "user", content: content }]
     )
-    text = resp.dig("content", 0, "text").to_s
-    parsed = JSON.parse(text.match(/\{.*\}/m).to_s)
-    items = Array(parsed["items"])
 
-    [
-      resp.dig("usage", "input_tokens").to_i,
-      resp.dig("usage", "output_tokens").to_i,
-      items
-    ]
+    text = resp.content.is_a?(Array) ? resp.content.first&.text.to_s : resp.content.to_s
+    json_str = text.match(/\{.*\}/m)&.to_s
+    raise ExtractionError, "No JSON in LLM response" if json_str.nil?
+
+    parsed = JSON.parse(json_str)
+    items = Array(parsed["items"])
+    [resp.usage&.input_tokens.to_i, resp.usage&.output_tokens.to_i, items]
   rescue Anthropic::Errors::AuthenticationError, Anthropic::Errors::PermissionDeniedError => e
-    raise AnthropicCreditError, e.message
+    raise AnthropicCreditError, e.message.to_s
   rescue Anthropic::Errors::APIError => e
     msg = e.message.to_s
-    if msg.include?("insufficient") || msg.match?(/credit/i)
+    if msg.include?("insufficient") || msg.include?("401") || msg.match?(/credit/i)
       raise AnthropicCreditError, msg
     end
     raise ExtractionError, "LLM call failed: #{msg}"
