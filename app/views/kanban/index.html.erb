@@ -964,12 +964,18 @@ function initKanban() {
       chosenClass: 'kanban-chosen',
 
       onStart: function(evt) {
+        // ISS-378: 드래그 중 외부 broadcast가 도착하면 이 카드만 morph 제외하기 위한 마킹
+        evt.item.dataset.dragging = 'true';
+
         document.querySelectorAll('.kanban-cards').forEach(function(c) {
           if (c !== evt.from) highlightColumn(c, true);
         });
       },
 
       onEnd: function(evt) {
+        // ISS-378: 드래그 종료 — morph 보호 해제
+        delete evt.item.dataset.dragging;
+
         // 모든 하이라이트 해제
         document.querySelectorAll('.kanban-cards').forEach(function(c) {
           highlightColumn(c, false);
@@ -1029,6 +1035,15 @@ function initKanban() {
 }
 document.addEventListener('turbo:load', initKanban);
 document.addEventListener('turbo:before-visit', function() { window._kanbanInitialized = false; });
+
+// ISS-378: 드래그 중인 카드는 외부 broadcast가 와도 morph 대상에서 제외 — 사용자의 드래그를 끊지 않는다.
+// 서버 상태는 onEnd의 fetch /orders/:id/move 응답으로 머지됨. 다른 사용자의 새 카드 추가/삭제는 정상 반영.
+document.addEventListener('turbo:before-morph-element', function(evt) {
+  var el = evt.target;
+  if (el && el.dataset && el.dataset.dragging === 'true') {
+    evt.preventDefault();
+  }
+});
 </script>
 
 <style>
