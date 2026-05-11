@@ -6,6 +6,12 @@ class OrdersController < ApplicationController
   before_action :require_member!, only: %i[create new edit update move_status quick_update update_tracking attach attach_from_url detach save_filter delete_saved_filter pricing_suggestion urgent_email_draft]
   before_action :require_manager!, only: %i[destroy]
 
+  # ISS-304: MenuPermission DB enforcement — 역할 기반 가드 위에 메뉴별 세부 권한 추가 보강.
+  # 시스템 역할(require_member!/require_manager!)이 1차 차단, DB MenuPermission이 2차 세부 통제.
+  before_action -> { enforce_menu_permission!(:orders, :create) }, only: %i[new create]
+  before_action -> { enforce_menu_permission!(:orders, :update) }, only: %i[edit update move_status quick_update update_tracking]
+  before_action -> { enforce_menu_permission!(:orders, :delete) }, only: %i[destroy]
+
   def index
     @orders = scoped_orders.includes(:assignees, :tasks, :user, :client, :project, :supplier, :card_status)
                            .order("orders.due_date ASC")

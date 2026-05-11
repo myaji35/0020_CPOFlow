@@ -223,6 +223,37 @@ class ApplicationController < ActionController::Base
   def can_update?(menu_key) = admin_persona? || menu_permission_for(menu_key)&.can_update? || false
   def can_delete?(menu_key) = admin_persona? || menu_permission_for(menu_key)&.can_delete? || false
 
+  # ISS-304: MenuPermission DB 값을 컨트롤러 enforcement에 연결.
+  # 사용법: before_action -> { enforce_menu_permission!(:orders, :create) }, only: %i[new create]
+  # 동작:
+  #   - admin_persona는 무조건 통과
+  #   - DB의 (effective_role, menu_key)에서 해당 action 권한 확인
+  #   - 거부 시 HTML은 root로 alert, JSON/Turbo는 403
+  # 기존 require_member!/require_manager!/require_admin!은 그대로 두고 보강 가드로 사용.
+  MENU_ACTION_MAP = {
+    read:   :can_read?,
+    create: :can_create?,
+    update: :can_update?,
+    delete: :can_delete?
+  }.freeze
+
+  def enforce_menu_permission!(menu_key, action)
+    return if admin_persona?
+    perm = menu_permission_for(menu_key)
+    method_name = MENU_ACTION_MAP[action.to_sym]
+    allowed = perm.present? && method_name && perm.public_send(method_name)
+    return if allowed
+
+    msg = I18n.t("auth.menu_permission_denied",
+                 default: "이 작업을 수행할 권한이 없습니다 (#{MenuPermission::MENU_LABELS[menu_key.to_s] || menu_key} #{action}).")
+    respond_to do |format|
+      format.html        { redirect_to root_path, alert: msg }
+      format.json        { render json: { error: msg }, status: :forbidden }
+      format.turbo_stream { head :forbidden }
+      format.any         { head :forbidden }
+    end
+  end
+
   helper_method :can_read?, :can_create?, :can_update?, :can_delete?
 
   def can_access_board?(board)
