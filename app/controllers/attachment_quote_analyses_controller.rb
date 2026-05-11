@@ -22,6 +22,9 @@ class AttachmentQuoteAnalysesController < ApplicationController
     )
   end
 
+  # 정책 (MVP): 재분석은 새 결과를 OrderQuoteItem에 append.
+  # 기존 사용자 편집 행(user_edited: true)은 그대로 보존.
+  # 충돌 모달(기존 유지/교체/병합)은 P5+ 향후 작업 (spec §6, §14).
   # POST /attachment_quote_analyses/:id/reanalyze
   def reanalyze
     aqa = AttachmentQuoteAnalysis.find(params[:id])

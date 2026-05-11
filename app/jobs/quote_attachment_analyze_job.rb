@@ -39,6 +39,10 @@ class QuoteAttachmentAnalyzeJob < ApplicationJob
 
   private
 
+  # 시드 정책: 새 분석 결과를 max(row_no)+1부터 순차 append.
+  # 기존 행(사용자 편집 포함)은 절대 update/delete 하지 않음.
+  # 따라서 같은 첨부를 재분석하면 행이 중복될 수 있음 — 이는 의도적이며,
+  # 사용자가 [-] 버튼으로 불필요 행을 삭제하도록 위임.
   def seed_items(aqa, items)
     next_row = (aqa.order.quote_items.maximum(:row_no) || 0) + 1
     items.each_with_index do |raw, idx|

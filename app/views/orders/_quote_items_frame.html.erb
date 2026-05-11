@@ -5,7 +5,16 @@
       <% if sources.any? %>
         · 출처:
         <% sources.each_with_index do |s, i| %>
-          <span><%= s.active_storage_attachment.filename %></span><%= "," if i < sources.size - 1 %>
+          <span class="inline-flex items-center gap-1">
+            <%= s.active_storage_attachment.filename %>
+            <%= form_with url: reanalyze_attachment_quote_analysis_path(s),
+                          method: :post, data: { turbo_stream: true }, class: "inline" do %>
+              <button type="submit" class="text-[10px] text-[#00A1E0] hover:underline cursor-pointer ml-1"
+                      title="이 첨부를 다시 분석합니다 (사용자 편집은 보존, 새 결과는 행 추가)">
+                [재분석]
+              </button>
+            <% end %>
+          </span><%= "," if i < sources.size - 1 %>
         <% end %>
       <% end %>
     </div>
