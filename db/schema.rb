@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_10_103759) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_11_012821) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -115,6 +115,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_10_103759) do
     t.index ["order_id", "employee_id"], name: "index_assignments_on_order_id_and_employee_id", unique: true
     t.index ["order_id"], name: "index_assignments_on_order_id"
     t.index ["user_id"], name: "index_assignments_on_user_id"
+  end
+
+  create_table "attachment_quote_analyses", force: :cascade do |t|
+    t.integer "active_storage_attachment_id", null: false
+    t.datetime "completed_at"
+    t.decimal "cost_usd", precision: 10, scale: 4, default: "0.0"
+    t.datetime "created_at", null: false
+    t.text "error_message"
+    t.boolean "is_quote_doc", default: false, null: false
+    t.text "items_json"
+    t.integer "latency_ms", default: 0
+    t.string "llm_model"
+    t.integer "order_id", null: false
+    t.integer "reanalyzed_count", default: 0, null: false
+    t.datetime "started_at"
+    t.string "status", default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.index ["active_storage_attachment_id"], name: "idx_aqa_on_attachment_unique", unique: true
+    t.index ["active_storage_attachment_id"], name: "idx_on_active_storage_attachment_id_53bdc80ee5"
+    t.index ["order_id", "status"], name: "idx_aqa_on_order_status"
+    t.index ["order_id"], name: "index_attachment_quote_analyses_on_order_id"
   end
 
   create_table "card_statuses", force: :cascade do |t|
@@ -973,6 +994,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_10_103759) do
   add_foreign_key "agent_trust_levels", "users"
   add_foreign_key "assignments", "orders"
   add_foreign_key "assignments", "users"
+  add_foreign_key "attachment_quote_analyses", "active_storage_attachments"
+  add_foreign_key "attachment_quote_analyses", "orders"
   add_foreign_key "card_statuses", "kanban_boards"
   add_foreign_key "certifications", "employees"
   add_foreign_key "classification_logs", "orders"
