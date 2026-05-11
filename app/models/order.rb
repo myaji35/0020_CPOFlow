@@ -155,6 +155,13 @@ class Order < ApplicationRecord
   belongs_to :kanban_board, optional: true
   belongs_to :kanban_column, optional: true
 
+  # ISS-376: 칸반 실시간 동기화 — 카드 변경 시 같은 보드를 보는 모든 클라이언트로 page refresh 브로드캐스트.
+  # Turbo morph가 DOM diff로 처리하므로 깜빡임 없이 스크롤 위치 유지됨.
+  # 보드 없는(legacy) Order는 default 보드 스트림으로 fallback.
+  after_create_commit  -> { broadcast_refresh_to(broadcast_kanban_stream) }
+  after_update_commit  -> { broadcast_refresh_to(broadcast_kanban_stream) }
+  after_destroy_commit -> { broadcast_refresh_to(broadcast_kanban_stream) }
+
   # 기본값 보장: 새 Order는 default(normal)로 시작
   before_validation :ensure_card_status, on: :create
   before_validation :backfill_customer_name_from_client
@@ -459,6 +466,13 @@ class Order < ApplicationRecord
   after_create_commit { SuggestOrderLinksJob.perform_later(id) }
 
   private
+
+  # ISS-376: broadcast 대상 stream key.
+  # 같은 보드를 보는 사용자만 받도록 보드 단위로 격리.
+  def broadcast_kanban_stream
+    board = kanban_board || KanbanBoard.default_board.first
+    [board, :kanban]
+  end
 
   def auto_assign_if_blank
     AutoAssignerService.new(self).call

@@ -2,7 +2,13 @@
 <% content_for :head do %>
   <!-- SortableJS for drag-and-drop -->
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+  <%# ISS-376: morph + scroll preserve로 다른 사용자 변경 수신 시 깜빡임/스크롤 점프 없음 %>
+  <meta name="turbo-refresh-method" content="morph">
+  <meta name="turbo-refresh-scroll" content="preserve">
 <% end %>
+
+<%# ISS-376: 현재 보드 단위로 Turbo Stream 구독 — Order broadcast_refresh 수신 %>
+<%= turbo_stream_from @current_board, :kanban %>
 
 <%# ISS-212: 수정 권한 없는 사용자 안내 배너 %>
 <% unless can_update?("orders") %>
