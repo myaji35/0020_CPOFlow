@@ -6,8 +6,9 @@
 <span id="quote-attachment-badge-<%= attachment.id %>" class="inline-flex items-center align-middle whitespace-nowrap">
   <% if status == "running" || status == "pending" %>
     <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold animate-pulse"
-          style="background:#9ca3af;color:white;">
-      <%= t("orders.attachments.badge_analyzing", default: "견적 분석중...") %>
+          style="background:#F4A83A;color:white;"
+          title="Sonnet 4.6 vision으로 분석 중 — 약 15~40초 소요. 완료 시 자동 갱신됩니다.">
+      ⏳ <%= t("orders.attachments.badge_analyzing", default: "분석중 ~30초") %>
     </span>
   <% elsif status == "completed" && aqa.is_quote_doc %>
     <button type="button"

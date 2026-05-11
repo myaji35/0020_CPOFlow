@@ -3,6 +3,8 @@
 ============================================================ %>
 <% thread_orders ||= Order.none %>
 <div id="order-drawer-content-<%= order.id %>" data-order-id="<%= order.id %>" data-drawer-shortcuts="true">
+  <%# 품목 분석 진행/완료 자동 갱신 — Job이 broadcast_replace_to "order-#{id}" 호출 %>
+  <%= turbo_stream_from "order-#{order.id}" %>
 
   <%# ── Action Bar (Redesign Phase 2) ───────────────────────── %>
   <%= render "orders/drawer_action_bar", order: order %>

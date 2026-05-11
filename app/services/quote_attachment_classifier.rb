@@ -20,12 +20,14 @@ class QuoteAttachmentClassifier
     @attachment = attachment
   end
 
+  # 옵션 C (대표님 결정 2026-05-11): 모든 첨부에 [분석] 노출.
+  # 단 audio/video/zip/calendar 같은 명백히 분석 불가 MIME과
+  # INVOICE/CONTRACT 같은 명백한 비-견적 키워드만 차단.
+  # 사용자 자율 판단으로 [분석] 클릭 — 비용 통제는 사용자 책임.
   def call
     return :not_quote if negative_mime?
     return :not_quote if negative_keyword?
-    return :quote_candidate if positive_keyword?
-    return :ambiguous if positive_mime?
-    :not_quote
+    :quote_candidate
   end
 
   private
