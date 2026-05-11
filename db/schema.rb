@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_11_015555) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_11_082908) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -50,6 +50,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_015555) do
     t.integer "to_status"
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
+    t.index ["created_at"], name: "idx_activities_on_created_at"
     t.index ["order_id"], name: "index_activities_on_order_id"
     t.index ["user_id"], name: "index_activities_on_user_id"
   end
@@ -202,6 +203,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_015555) do
     t.string "verdict"
     t.boolean "would_exclude", default: false, null: false
     t.index ["classifier_version", "created_at"], name: "index_classification_logs_on_classifier_version_and_created_at"
+    t.index ["created_at"], name: "idx_classification_logs_on_created_at"
     t.index ["email_message_id"], name: "index_classification_logs_on_email_message_id"
     t.index ["order_id"], name: "index_classification_logs_on_order_id"
     t.index ["would_exclude"], name: "index_classification_logs_on_would_exclude"
@@ -694,6 +696,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_015555) do
     t.index ["rfp_analysis_state"], name: "index_orders_on_rfp_analysis_state"
     t.index ["rfq_status"], name: "index_orders_on_rfq_status"
     t.index ["source_email_id"], name: "index_orders_on_source_email_id", unique: true, where: "source_email_id IS NOT NULL"
+    t.index ["status", "created_at"], name: "idx_orders_on_status_and_created_at"
     t.index ["status", "rfq_status"], name: "index_orders_on_status_rfq_status"
     t.index ["status"], name: "index_orders_on_status"
     t.index ["supplier_id"], name: "index_orders_on_supplier_id"
