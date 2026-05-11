@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_11_013405) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_11_015555) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -1011,7 +1011,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_013405) do
   add_foreign_key "agent_trust_levels", "users"
   add_foreign_key "assignments", "orders"
   add_foreign_key "assignments", "users"
-  add_foreign_key "attachment_quote_analyses", "active_storage_attachments"
+  add_foreign_key "attachment_quote_analyses", "active_storage_attachments", on_delete: :cascade
   add_foreign_key "attachment_quote_analyses", "orders"
   add_foreign_key "card_statuses", "kanban_boards"
   add_foreign_key "certifications", "employees"

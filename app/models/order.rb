@@ -19,8 +19,12 @@ class Order < ApplicationRecord
   has_many :order_quotes, dependent: :destroy
   has_many :notifications, as: :notifiable, dependent: :destroy
   has_many :rfq_auto_analyses, dependent: :destroy
-  has_many_attached :attachments
+  # IMPORTANT: AQA는 active_storage_attachments FK를 가지므로,
+  # has_many_attached :attachments 보다 먼저 선언해야 before_destroy 순서가 보장됨.
+  # 순서를 바꾸면 Order.destroy 시 FK violation 발생. 하단 마이그레이션 cascade FK도 참조.
   has_many :attachment_quote_analyses, dependent: :destroy
+  has_many_attached :attachments
+
   has_many :quote_items, class_name: "OrderQuoteItem", dependent: :destroy
 
   # ISS-262: 악성 첨부 차단 — MIME allowlist + 실행가능 확장자 deny + 크기 상한
