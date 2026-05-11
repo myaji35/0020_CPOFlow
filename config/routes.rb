@@ -54,6 +54,7 @@ Rails.application.routes.draw do
         patch :feedback  # ISS-293: RFP 자동 생성 태스크 👍/👎 피드백
       end
     end
+    resources :quote_items, only: %i[index create update destroy], controller: "order_quote_items"
     resources :comments, only: %i[create destroy]
     resources :assignments, only: %i[create destroy]
     resources :order_quotes, only: %i[new create destroy] do
@@ -314,6 +315,10 @@ Rails.application.routes.draw do
     resources :order_quotes, only: %i[new create destroy] do
       member { patch :select }
     end
+  end
+
+  resources :attachment_quote_analyses, only: %i[create] do
+    member { post :reanalyze }
   end
 
   # Settings
