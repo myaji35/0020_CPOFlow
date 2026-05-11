@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_11_012821) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_11_013405) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -556,6 +556,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_012821) do
     t.index ["target_type", "target_id"], name: "idx_order_links_target"
   end
 
+  create_table "order_quote_items", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.integer "edited_by_user_id"
+    t.string "item"
+    t.string "manufacturer_brand"
+    t.string "model_part_no"
+    t.integer "order_id", null: false
+    t.decimal "qty", precision: 12, scale: 3
+    t.text "remarks"
+    t.integer "row_no", default: 1, null: false
+    t.integer "source_attachment_id"
+    t.string "unit"
+    t.datetime "updated_at", null: false
+    t.boolean "user_edited", default: false, null: false
+    t.index ["order_id", "row_no"], name: "index_order_quote_items_on_order_id_and_row_no"
+    t.index ["source_attachment_id"], name: "idx_oqi_on_source_attachment"
+  end
+
   create_table "order_quotes", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "currency"
@@ -1019,6 +1038,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_012821) do
   add_foreign_key "leaves", "users", column: "manager_approved_by_id"
   add_foreign_key "leaves", "users", column: "rejected_by_id"
   add_foreign_key "order_links", "users", column: "created_by_id"
+  add_foreign_key "order_quote_items", "active_storage_attachments", column: "source_attachment_id"
+  add_foreign_key "order_quote_items", "orders"
+  add_foreign_key "order_quote_items", "users", column: "edited_by_user_id"
   add_foreign_key "orders", "card_statuses"
   add_foreign_key "orders", "clients"
   add_foreign_key "orders", "contact_persons"
