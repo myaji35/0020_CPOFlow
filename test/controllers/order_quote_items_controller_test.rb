@@ -59,6 +59,32 @@ class OrderQuoteItemsControllerTest < ActionDispatch::IntegrationTest
     assert_match "SPILL TRAY", response.body
   end
 
+  test "update sets value + user_edited" do
+    item = @order.quote_items.create!(row_no: 1, item: "Old")
+    patch order_quote_item_path(@order, item),
+          params: { field: "item", value: "New" }, as: :turbo_stream
+    assert_response :success
+    item.reload
+    assert_equal "New", item.item
+    assert_equal true, item.user_edited
+    assert_equal @user.id, item.edited_by_user_id
+  end
+
+  test "update rejects unknown field" do
+    item = @order.quote_items.create!(row_no: 1, item: "X")
+    patch order_quote_item_path(@order, item),
+          params: { field: "ssn", value: "123" }, as: :turbo_stream
+    assert_response :unprocessable_entity
+  end
+
+  test "update normalizes qty" do
+    item = @order.quote_items.create!(row_no: 1, item: "X")
+    patch order_quote_item_path(@order, item),
+          params: { field: "qty", value: "16 EA" }, as: :turbo_stream
+    item.reload
+    assert_equal 16, item.qty.to_i
+  end
+
   private
 
   def login_as(user)

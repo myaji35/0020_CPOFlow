@@ -4,6 +4,8 @@ class OrderQuoteItemsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_order
 
+  ALLOWED_FIELDS = %w[item description model_part_no manufacturer_brand unit qty remarks].freeze
+
   def index
     @items = @order.quote_items.ordered
     @sources = AttachmentQuoteAnalysis.where(order_id: @order.id, status: "completed")
@@ -35,7 +37,20 @@ class OrderQuoteItemsController < ApplicationController
   end
 
   def update
-    head :no_content
+    item = @order.quote_items.find(params[:id])
+    field = params[:field].to_s
+    return head :unprocessable_entity unless ALLOWED_FIELDS.include?(field)
+
+    item.update!(
+      field => normalize(field, params[:value]),
+      user_edited: true,
+      edited_by_user_id: current_user.id
+    )
+    render turbo_stream: turbo_stream.replace(
+      "quote-item-#{item.id}",
+      partial: "orders/quote_item_row",
+      locals: { item: item }
+    )
   end
 
   def destroy
@@ -48,5 +63,12 @@ class OrderQuoteItemsController < ApplicationController
 
   def set_order
     @order = Order.find(params[:order_id])
+  end
+
+  def normalize(field, raw)
+    return BigDecimal(raw.to_s.scan(/[\d.]+/).first || "0") if field == "qty" && raw.present?
+    raw
+  rescue ArgumentError
+    nil
   end
 end
