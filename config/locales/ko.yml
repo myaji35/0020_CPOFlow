@@ -592,6 +592,12 @@ ko:
       type_text: "텍스트"
       no_attachments: "첨부파일이 없습니다"
       no_attachments_hint: "위 영역에서 파일을 추가하세요"
+      badge_analyze: "분석"
+      badge_analyzing: "견적 분석중..."
+      badge_quoted: "견적분석"
+      badge_not_quote: "견적 아님"
+      badge_retry: "재분석"
+      badge_credit: "잔액 부족"
     # critical 배너
     critical:
       title: "즉시 조치 필요"

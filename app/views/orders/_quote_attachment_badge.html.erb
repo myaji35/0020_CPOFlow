@@ -25,6 +25,8 @@
         <%= credit_issue ? t("orders.attachments.badge_credit", default: "잔액 부족") : t("orders.attachments.badge_retry", default: "재분석") %>
       </button>
     <% end %>
+  <% elsif status == "not_quote" %>
+    <%# explicit not_quote — no badge %>
   <% elsif kind == :quote_candidate %>
     <%= form_with url: attachment_quote_analyses_path, data: { turbo_stream: true }, class: "inline" do |f| %>
       <%= f.hidden_field :attachment_id, value: attachment.id %>

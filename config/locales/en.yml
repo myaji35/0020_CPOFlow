@@ -592,6 +592,12 @@ en:
       type_text: "Text"
       no_attachments: "No attachments"
       no_attachments_hint: "Add files using the area above"
+      badge_analyze: "Analyze"
+      badge_analyzing: "Analyzing..."
+      badge_quoted: "Analyzed"
+      badge_not_quote: "Not Quote"
+      badge_retry: "Retry"
+      badge_credit: "No Credit"
     # Critical banner
     critical:
       title: "Immediate Action Required"

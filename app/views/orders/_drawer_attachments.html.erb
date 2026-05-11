@@ -136,6 +136,9 @@
                     <%= kind[:type].upcase.gsub("_", " ") %>
                   </span>
                 <% end %>
+                <%= render "orders/quote_attachment_badge",
+                    order: order, attachment: att,
+                    aqa: AttachmentQuoteAnalysis.find_by(active_storage_attachment_id: att.id) %>
               </p>
               <p class="text-xs text-gray-500">
                 <span class="<%= icon_color %>"><%= type_label %></span> ·
