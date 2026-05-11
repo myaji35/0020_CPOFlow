@@ -1,6 +1,13 @@
 class Employee < ApplicationRecord
   include DocumentAttachable
 
+  # 직원 프로필 사진 (헤더 80x80 원형 표시)
+  has_one_attached :avatar
+  validate :validate_avatar_safety
+
+  AVATAR_ALLOWED_MIMES = %w[image/jpeg image/pjpeg image/png image/webp image/heic image/heif].freeze
+  AVATAR_MAX_SIZE      = 3.megabytes
+
   belongs_to :user,       optional: true
   belongs_to :department, optional: true
   has_many :visas,                dependent: :destroy
@@ -138,6 +145,22 @@ class Employee < ApplicationRecord
       "#{months}개월"
     else
       "#{total}일"
+    end
+  end
+
+  private
+
+  def validate_avatar_safety
+    return unless avatar.attached?
+    blob = avatar.blob
+    ctype = blob.content_type.to_s.downcase
+    if !AVATAR_ALLOWED_MIMES.include?(ctype)
+      errors.add(:avatar, "이미지 파일만 업로드 가능합니다 (JPEG/PNG/WebP/HEIC)")
+      avatar.purge_later if blob.persisted?
+    elsif blob.byte_size > AVATAR_MAX_SIZE
+      mb = (blob.byte_size.to_f / 1.megabyte).round(1)
+      errors.add(:avatar, "사진 크기 초과 (#{mb}MB > #{AVATAR_MAX_SIZE / 1.megabyte}MB)")
+      avatar.purge_later if blob.persisted?
     end
   end
 end

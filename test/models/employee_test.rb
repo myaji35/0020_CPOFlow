@@ -50,4 +50,18 @@ class EmployeeTest < ActiveSupport::TestCase
     result = emp.suggested_user
     assert_equal user.id, result&.id, "이름 매칭 실패"
   end
+
+  test "avatar attaches with valid image" do
+    e = Employee.create!(name: "T#{SecureRandom.hex(2)}", nationality: "KR", employment_type: "regular")
+    e.avatar.attach(io: StringIO.new("dummy"), filename: "x.png", content_type: "image/png")
+    assert e.valid?, e.errors.full_messages.join(", ")
+    assert e.avatar.attached?
+  end
+
+  test "avatar rejects non-image" do
+    e = Employee.create!(name: "T#{SecureRandom.hex(2)}", nationality: "KR", employment_type: "regular")
+    e.avatar.attach(io: StringIO.new("dummy"), filename: "x.exe", content_type: "application/x-msdownload")
+    assert_not e.valid?
+    assert_match(/이미지/, e.errors.full_messages.first.to_s)
+  end
 end

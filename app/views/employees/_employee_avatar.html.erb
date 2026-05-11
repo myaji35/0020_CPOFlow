@@ -1,0 +1,13 @@
+<%# 직원 프로필 사진 — 사진 있으면 표시, 없으면 색상 이니셜 fallback %>
+<% size_px = local_assigns.fetch(:size_px, 80) %>
+<% if employee.avatar.attached? %>
+  <%= image_tag employee.avatar.variant(resize_to_fill: [size_px * 2, size_px * 2]).processed,
+      class: "rounded-full object-cover",
+      style: "width:#{size_px}px;height:#{size_px}px;",
+      alt: employee.name %>
+<% else %>
+  <div class="rounded-full flex items-center justify-center text-white font-semibold <%= employee.avatar_color %>"
+       style="width:<%= size_px %>px;height:<%= size_px %>px;font-size:<%= (size_px * 0.35).round %>px;">
+    <%= employee.initials %>
+  </div>
+<% end %>
