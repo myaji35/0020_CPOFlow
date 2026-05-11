@@ -1,0 +1,48 @@
+<%#
+  공통 첨부 파일 섬네일 갤러리 — Employee/Visa/Cert/Contract 공용
+  required locals:
+    documents — Active Storage attachments collection (owner.documents)
+    upload_url — POST URL for inline drag-drop upload (nil이면 업로드 비활성)
+    can_edit — boolean (업로드/삭제 권한)
+  optional:
+    title — 섹션 제목 (default: "첨부 파일")
+    grid_id — DOM id (자동 생성)
+%>
+<% title ||= "첨부 파일" %>
+<% grid_id ||= "doc-thumb-grid-#{SecureRandom.hex(4)}" %>
+<% docs = documents.respond_to?(:includes) ? documents.includes(:blob) : Array(documents) %>
+
+<div class="mt-4" data-controller="<%= 'document-dropzone' if can_edit && upload_url.present? %>"
+     <%= "data-document-dropzone-url-value=\"#{upload_url}\"".html_safe if can_edit && upload_url.present? %>>
+  <div class="flex items-center justify-between mb-3">
+    <h3 class="text-sm font-semibold text-gray-700">
+      <%= title %> <span class="text-xs text-gray-500">(<%= docs.size %>건)</span>
+    </h3>
+  </div>
+
+  <% if can_edit && upload_url.present? %>
+    <div data-document-dropzone-target="zone"
+         class="mb-3 border-2 border-dashed border-gray-300 rounded-lg p-3 text-center text-xs text-gray-500
+                hover:border-[#00A1E0] hover:bg-blue-50/30 transition-colors cursor-pointer"
+         data-action="click->document-dropzone#openFileDialog dragover->document-dropzone#dragOver dragleave->document-dropzone#dragLeave drop->document-dropzone#drop">
+      <span data-document-dropzone-target="label">📎 파일을 드래그하거나 클릭하여 추가</span>
+      <input type="file" multiple class="hidden" data-document-dropzone-target="input"
+             data-action="change->document-dropzone#fileSelected" />
+    </div>
+  <% end %>
+
+  <% if docs.any? %>
+    <div id="<%= grid_id %>" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+      <% docs.each do |doc| %>
+        <%= render "shared/document_thumbnail_card", doc: doc, can_edit: can_edit %>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+      <svg class="w-10 h-10 mx-auto text-gray-300 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+      </svg>
+      <p class="text-xs text-gray-500">첨부 파일이 없습니다</p>
+    </div>
+  <% end %>
+</div>
