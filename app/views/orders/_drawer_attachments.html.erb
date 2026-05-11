@@ -129,8 +129,10 @@
             <%# 파일 타입별 아이콘 %>
             <svg class="w-8 h-8 p-1.5 rounded bg-gray-100 <%= icon_color %> flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             <div class="flex-1 min-w-0">
-              <p class="text-xs font-medium text-gray-800 truncate flex items-center gap-1.5">
-                <%= fn %>
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <p class="text-xs font-medium text-gray-800 truncate min-w-0">
+                  <%= fn %>
+                </p>
                 <% if (kind = att_kinds[idx]) && kind[:type] != "other" %>
                   <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-blue-600 text-white leading-none shrink-0">
                     <%= kind[:type].upcase.gsub("_", " ") %>
@@ -139,7 +141,7 @@
                 <%= render "orders/quote_attachment_badge",
                     order: order, attachment: att,
                     aqa: AttachmentQuoteAnalysis.find_by(active_storage_attachment_id: att.id) %>
-              </p>
+              </div>
               <p class="text-xs text-gray-500">
                 <span class="<%= icon_color %>"><%= type_label %></span> ·
                 <%= number_to_human_size(blob.byte_size) %>
