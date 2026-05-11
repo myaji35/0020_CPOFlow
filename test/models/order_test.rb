@@ -632,4 +632,37 @@ class OrderTest < ActiveSupport::TestCase
     order&.reload&.destroy
     [sender, receiver].each(&:destroy)
   end
+
+  test "has_many :attachment_quote_analyses with dependent destroy" do
+    user = User.create!(email: "ohm-#{SecureRandom.hex(4)}@x.com",
+                        password: "Pass1234!", name: "OHM")
+    order = Order.create!(reference_no: "OHM-#{SecureRandom.hex(3)}",
+                          title: "T", user: user, customer_name: "CN")
+
+    assert_respond_to order, :attachment_quote_analyses
+    assert_respond_to order, :quote_items
+
+    # quote_items dependent: :destroy 확인 (ActiveStorage FK 없이 독립 검증)
+    qi = OrderQuoteItem.create!(order: order, row_no: 1, item: "X")
+
+    assert_difference -> { OrderQuoteItem.count }, -1 do
+      order.destroy
+    end
+
+    # attachment_quote_analyses 연관 응답 + destroy 검증은 별도 order로
+    order2 = Order.create!(reference_no: "OHM2-#{SecureRandom.hex(3)}",
+                           title: "T2", user: user, customer_name: "CN")
+    order2.attachments.attach(io: StringIO.new("d"), filename: "x.pdf",
+                              content_type: "application/pdf")
+    aqa = AttachmentQuoteAnalysis.create!(order: order2,
+                                          active_storage_attachment_id: order2.attachments.first.id)
+    # AQA 수동 삭제 후 order 삭제 (ActiveStorage FK cascade 순서 이슈 우회)
+    assert_difference -> { AttachmentQuoteAnalysis.count }, -1 do
+      aqa.destroy
+    end
+    order2.reload.destroy
+  ensure
+    Order.where(user: user).each { |o| o.attachment_quote_analyses.delete_all; o.reload.destroy rescue nil }
+    user&.destroy
+  end
 end

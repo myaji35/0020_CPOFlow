@@ -20,6 +20,8 @@ class Order < ApplicationRecord
   has_many :notifications, as: :notifiable, dependent: :destroy
   has_many :rfq_auto_analyses, dependent: :destroy
   has_many_attached :attachments
+  has_many :attachment_quote_analyses, dependent: :destroy
+  has_many :quote_items, class_name: "OrderQuoteItem", dependent: :destroy
 
   # ISS-262: 악성 첨부 차단 — MIME allowlist + 실행가능 확장자 deny + 크기 상한
   # 검증은 attach 시점(validate) — attach 후 blob 저장 전에 탈락.
