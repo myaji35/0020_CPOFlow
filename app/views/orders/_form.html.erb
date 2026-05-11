@@ -1,6 +1,12 @@
 <%= form_with model: order, multipart: true, class: "space-y-5" do |f| %>
   <% board = order.kanban_board || KanbanBoard.default_board.first %>
   <% is_purchase = board&.board_type == "purchase" || board&.is_default? %>
+
+  <%# ISS-377: 동시 편집 충돌 감지용 lock_version. 폼 로드 시점 버전과 비교 → 다른 사용자가 먼저 저장하면 StaleObjectError. %>
+  <% if order.persisted? %>
+    <%= f.hidden_field :lock_version %>
+  <% end %>
+
   <% if order.errors.any? %>
     <div class="px-4 py-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-800 dark:text-red-400 text-sm">
       <p class="font-semibold mb-1">다음 항목을 확인해 주세요:</p>

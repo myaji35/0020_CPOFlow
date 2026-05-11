@@ -401,6 +401,7 @@ en:
     create_success: "Order created successfully."
     update_success: "Order updated successfully."
     delete_success: "Order deleted successfully."
+    stale_object_error: "Another user has just updated this record. The form has been refreshed — please review and save again."
     status_updated: "Status updated to %{status}."
     # Order list (index)
     index:

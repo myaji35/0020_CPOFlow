@@ -401,6 +401,7 @@ ko:
     create_success: "발주가 등록되었습니다."
     update_success: "발주가 수정되었습니다."
     delete_success: "발주가 삭제되었습니다."
+    stale_object_error: "다른 사용자가 먼저 수정했습니다. 최신 내용으로 갱신되었으니 다시 확인 후 저장해 주세요."
     status_updated: "상태가 %{status}(으)로 변경되었습니다."
     # 주문 목록 (index)
     index:

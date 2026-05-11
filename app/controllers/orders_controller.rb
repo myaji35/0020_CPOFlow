@@ -212,6 +212,13 @@ class OrdersController < ApplicationController
     else
       render :edit, status: :unprocessable_entity
     end
+  rescue ActiveRecord::StaleObjectError
+    # ISS-377: 다른 사용자가 먼저 저장 → 최신 데이터로 폼 다시 채우고 안내.
+    # broadcast_refresh가 칸반/드로어를 이미 morph 했으므로 사용자는 최신 값을 본 상태로 재편집한다.
+    @order.reload
+    flash.now[:alert] = t("orders.stale_object_error",
+                          default: "다른 사용자가 먼저 수정했습니다. 최신 내용으로 갱신되었으니 다시 확인 후 저장해 주세요.")
+    render :edit, status: :conflict
   end
 
   def destroy
@@ -847,7 +854,8 @@ class OrdersController < ApplicationController
       :tags, :source_email_id, :original_email_subject,
       :original_email_body, :original_email_from,
       :client_id, :supplier_id, :project_id, :contact_person_id,
-      :rfq_no, :quo_no, :po_no, :kanban_board_id, :kanban_column_id
+      :rfq_no, :quo_no, :po_no, :kanban_board_id, :kanban_column_id,
+      :lock_version  # ISS-377: optimistic locking
     )
   end
 end
