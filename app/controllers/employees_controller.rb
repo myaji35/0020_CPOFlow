@@ -72,6 +72,24 @@ class EmployeesController < ApplicationController
     # ISS-332: 경고장 (현장배정/휴가 탭 제거)
     @warnings       = @employee.warnings.recent
     @warnings_count = @warnings.size
+    # ISS-303: 직원 + 직원에 속한 비자/계약/자격증 변경이력 통합 타임라인 (최근 50건)
+    visa_ids = @employee.visas.pluck(:id)
+    contract_ids = @employee.employment_contracts.pluck(:id)
+    cert_ids = @employee.certifications.pluck(:id)
+    @activities = Activity
+      .where(
+        "(auditable_type = ? AND auditable_id = ?) OR
+         (auditable_type = ? AND auditable_id IN (?)) OR
+         (auditable_type = ? AND auditable_id IN (?)) OR
+         (auditable_type = ? AND auditable_id IN (?))",
+        "Employee", @employee.id,
+        "Visa", visa_ids,
+        "EmploymentContract", contract_ids,
+        "Certification", cert_ids
+      )
+      .recent
+      .limit(50)
+      .includes(:user)
   end
 
   def new

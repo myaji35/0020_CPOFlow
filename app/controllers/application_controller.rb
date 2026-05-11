@@ -8,12 +8,18 @@ class ApplicationController < ActionController::Base
   before_action :enforce_active_account
   before_action :set_locale
   before_action :touch_last_seen
+  before_action :set_current_user  # ISS-303: 모델 콜백(Auditable concern)에서 current_user 접근용
   before_action :set_sentry_context, if: -> { defined?(Sentry) }
 
   # ISS-269: Optimistic locking 충돌 시 사용자 친화적 재시도 안내
   rescue_from ActiveRecord::StaleObjectError, with: :handle_stale_object_error
 
   private
+
+  # ISS-303: 모델 콜백(Auditable concern)에서 current_user를 알기 위한 주입.
+  def set_current_user
+    Current.user = current_user
+  end
 
   # AtoZ 직원만 사용: Employee 매칭 안 된 사용자는 /pending_approval 안내 페이지만 보이게 차단.
   # 통과 조건: current_user.active? (Employee 매칭 시 자동 활성화) 또는 허용 라우트

@@ -507,4 +507,7 @@
       </div>
     </div>
   </div>
+
+  <%# ISS-303: 통합 변경이력 타임라인 (직원 + 비자 + 계약 + 자격증) %>
+  <%= render "shared/audit_timeline", activities: @activities, title: "변경 이력 (직원 / 비자 / 계약 / 자격증)" %>
 </div>

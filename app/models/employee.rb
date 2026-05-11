@@ -1,5 +1,10 @@
 class Employee < ApplicationRecord
   include DocumentAttachable
+  include Auditable
+  # ISS-303: 컴플라이언스 감사 로그 대상 필드
+  audit_fields :name, :name_en, :email, :phone, :nationality, :employment_type,
+               :department, :department_id, :job_title, :hire_date, :termination_date,
+               :passport_number, :active
 
   # 직원 프로필 사진 (헤더 80x80 원형 표시)
   has_one_attached :avatar

@@ -1,5 +1,8 @@
 class EmploymentContract < ApplicationRecord
   include DocumentAttachable
+  include Auditable
+  # ISS-303: 컴플라이언스 감사 로그
+  audit_fields :start_date, :end_date, :base_salary, :currency, :pay_frequency, :status, :project_id
 
   belongs_to :employee
   belongs_to :project, optional: true

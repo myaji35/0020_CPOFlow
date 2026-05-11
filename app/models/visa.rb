@@ -1,5 +1,8 @@
 class Visa < ApplicationRecord
   include DocumentAttachable
+  include Auditable
+  # ISS-303: 컴플라이언스 감사 로그
+  audit_fields :visa_type, :visa_number, :issuing_country, :issue_date, :expiry_date, :status
 
   belongs_to :employee
 
