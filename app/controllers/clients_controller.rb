@@ -4,6 +4,10 @@ class ClientsController < ApplicationController
   # ISS-264: viewer read-only — CRUD는 member 이상만
   before_action :require_member!, only: %i[new create edit update]
   before_action :require_manager!, only: %i[destroy]
+  # ISS-380: MenuPermission DB 2차 가드 — require_*은 1차(role), enforce_*는 2차(DB 토글)
+  before_action -> { enforce_menu_permission!(:clients, :create) }, only: %i[new create]
+  before_action -> { enforce_menu_permission!(:clients, :update) }, only: %i[edit update]
+  before_action -> { enforce_menu_permission!(:clients, :delete) }, only: %i[destroy]
 
   def index
     @clients = Client.active.by_name

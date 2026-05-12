@@ -3,6 +3,9 @@ class SuppliersController < ApplicationController
   before_action :set_supplier, only: %i[show edit update]
   # ISS-264: viewer read-only — CRUD는 member 이상만 (Supplier는 destroy 없음 — 발주 이력 보존)
   before_action :require_member!, only: %i[new create edit update]
+  # ISS-380: MenuPermission DB 2차 가드
+  before_action -> { enforce_menu_permission!(:suppliers, :create) }, only: %i[new create]
+  before_action -> { enforce_menu_permission!(:suppliers, :update) }, only: %i[edit update]
 
   def index
     @suppliers = Supplier.by_name

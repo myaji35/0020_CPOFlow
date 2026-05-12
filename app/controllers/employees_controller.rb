@@ -6,6 +6,10 @@ class EmployeesController < ApplicationController
   # ISS-264: viewer read-only — CRUD는 member 이상만
   before_action :require_member!, only: %i[new create edit update]
   before_action :require_manager!, only: %i[destroy]
+  # ISS-380: MenuPermission DB 2차 가드
+  before_action -> { enforce_menu_permission!(:employees, :create) }, only: %i[new create]
+  before_action -> { enforce_menu_permission!(:employees, :update) }, only: %i[edit update]
+  before_action -> { enforce_menu_permission!(:employees, :delete) }, only: %i[destroy]
 
   def index
     @employees = Employee.includes(:user, :visas, :employment_contracts, :employee_assignments, :department).by_name

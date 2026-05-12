@@ -1,6 +1,11 @@
 class KanbanController < ApplicationController
   # ISS-261: viewer read-only — 칸반 이동/병합/분리는 member 이상만
   before_action :require_member!, only: %i[move merge split]
+  # ISS-380: MenuPermission DB 2차 가드
+  #  - :create  — 병합은 메인 카드에 종속 관계를 새로 생성 → 생성성 액션으로 분류
+  #  - :update  — 이동/분리 (상태 전이)
+  before_action -> { enforce_menu_permission!(:kanban, :create) }, only: %i[merge]
+  before_action -> { enforce_menu_permission!(:kanban, :update) }, only: %i[move split]
 
   # ISS-046 후속: 칸반 컬럼별 첫 N건만 즉시 렌더, 나머지는 turbo-frame lazy로 백그라운드.
   # 8개 컬럼 × 평균 20~50건 = 첫 페이지 ~200건 인서트 부담 → INITIAL_LIMIT로 80% 단축.

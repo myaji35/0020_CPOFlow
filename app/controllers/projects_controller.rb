@@ -4,6 +4,10 @@ class ProjectsController < ApplicationController
   # ISS-264: viewer read-only — CRUD는 member 이상만
   before_action :require_member!, only: %i[new create edit update]
   before_action :require_manager!, only: %i[destroy]
+  # ISS-380: MenuPermission DB 2차 가드
+  before_action -> { enforce_menu_permission!(:projects, :create) }, only: %i[new create]
+  before_action -> { enforce_menu_permission!(:projects, :update) }, only: %i[edit update]
+  before_action -> { enforce_menu_permission!(:projects, :delete) }, only: %i[destroy]
 
   def index
     @view = params[:view].presence_in(%w[list gantt]) || "list"

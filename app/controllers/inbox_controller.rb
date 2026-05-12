@@ -9,6 +9,16 @@ class InboxController < ApplicationController
                                            bulk_delete bulk_trash bulk_to_kanban
                                            bulk_all_uncertain_to_kanban bulk_restore
                                            sync destroy]
+  # ISS-380: MenuPermission DB 2차 가드
+  #  - :create  — 새 칸반 카드 진입 (convert_to_order / bulk_to_kanban / bulk_all_uncertain_to_kanban)
+  #  - :update  — AI/번역/피드백/재판독/복원/동기화 (메타데이터 갱신)
+  #  - :delete  — 휴지통/일괄삭제/단건삭제
+  before_action -> { enforce_menu_permission!(:inbox, :create) },
+                only: %i[convert_to_order bulk_to_kanban bulk_all_uncertain_to_kanban]
+  before_action -> { enforce_menu_permission!(:inbox, :update) },
+                only: %i[translate analyze_link generate_reply feedback reclassify bulk_restore sync]
+  before_action -> { enforce_menu_permission!(:inbox, :delete) },
+                only: %i[bulk_delete bulk_trash destroy]
   before_action :check_rate_limit!, only: %i[translate analyze_link generate_reply]
 
   PER_PAGE = 30
