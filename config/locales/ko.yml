@@ -1250,6 +1250,45 @@ ko:
   # ── 캘린더 ───────────────────────────────────────────────────────
   calendar:
     title: "납기 일정"
+    page_title: "캘린더"
+    subtitle_monthly: "%{month} 마감일 현황"
+    subtitle_weekly_range: "%{from} ~ %{to}"
+    view:
+      monthly: "월간"
+      weekly: "주간"
+      today: "오늘"
+    stats:
+      total: "이번 달 총 건"
+      overdue: "연체"
+      this_week: "이번 주 마감"
+      completed: "완료"
+    sources:
+      label: "이벤트 소스:"
+      orders: "주문 납기"
+      visas: "비자 만료"
+      contracts: "계약 만료"
+      leaves: "휴가"
+      toggle_hint: "클릭하여 소스 on/off"
+    weekday:
+      sun: "일"
+      mon: "월"
+      tue: "화"
+      wed: "수"
+      thu: "목"
+      fri: "금"
+      sat: "토"
+    cell:
+      more: "+%{count} more"
+      no_due: "마감 없음"
+    bottom:
+      this_month_title: "이번 달 마감 주문 (%{count}건)"
+    panel:
+      date_due: "%{date} 마감 (%{count}건)"
+      no_orders: "마감 주문 없음"
+      assignee_prefix: "담당:"
+    drag:
+      failure_http: "납기 변경 실패 (HTTP %{status})"
+      network_error: "네트워크 오류: %{message}"
 
   # ── 설정 ──────────────────────────────────────────────────────────
   settings:

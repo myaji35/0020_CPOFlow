@@ -1,4 +1,4 @@
-<% content_for :title, "캘린더" %>
+<% content_for :title, t("calendar.page_title") %>
 
 <%
   today = Date.today
@@ -9,17 +9,17 @@
   <%# === Header === %>
   <div class="flex items-center justify-between flex-wrap gap-3">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">캘린더</h1>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white"><%= t("calendar.page_title") %></h1>
       <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">
-        <%= @view == "weekly" ? "#{@week_start.strftime('%Y.%m.%d')} ~ #{@week_end.strftime('%m.%d')}" : "#{@month.strftime('%Y년 %m월')} 마감일 현황" %>
+        <%= @view == "weekly" ? t("calendar.subtitle_weekly_range", from: @week_start.strftime('%Y.%m.%d'), to: @week_end.strftime('%m.%d')) : t("calendar.subtitle_monthly", month: I18n.l(@month, format: "%Y-%m")) %>
       </p>
     </div>
     <div class="flex items-center gap-2">
       <%# 뷰 탭 %>
       <div class="flex rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
-        <%= link_to "월간", calendar_path(view: "monthly", month: @month.strftime("%Y-%m-%d")),
+        <%= link_to t("calendar.view.monthly"), calendar_path(view: "monthly", month: @month.strftime("%Y-%m-%d")),
             class: "text-xs px-3 py-1.5 transition-colors #{@view == 'monthly' ? 'bg-[#1E3A5F] text-white font-semibold' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}" %>
-        <%= link_to "주간", calendar_path(view: "weekly", date: today.strftime("%Y-%m-%d")),
+        <%= link_to t("calendar.view.weekly"), calendar_path(view: "weekly", date: today.strftime("%Y-%m-%d")),
             class: "text-xs px-3 py-1.5 transition-colors #{@view == 'weekly' ? 'bg-[#1E3A5F] text-white font-semibold' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}" %>
       </div>
 
@@ -27,7 +27,7 @@
 
       <%# 오늘 버튼 %>
       <% today_params = @view == "weekly" ? { view: "weekly", date: today.strftime("%Y-%m-%d") } : {} %>
-      <%= link_to "오늘", calendar_path(today_params),
+      <%= link_to t("calendar.view.today"), calendar_path(today_params),
           class: "text-xs px-3 py-1.5 rounded-lg bg-[#00A1E0] text-white font-semibold hover:bg-[#0090c8] transition-colors" %>
 
       <%# 이전/다음 네비게이션 %>
@@ -42,7 +42,7 @@
         <svg class="w-4 h-4 text-gray-600 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
       <% end %>
       <span class="text-sm font-semibold text-gray-700 dark:text-gray-300 px-3">
-        <%= @view == "weekly" ? "#{@week_start.strftime('%m/%d')} ~ #{@week_end.strftime('%m/%d')}" : @month.strftime("%Y년 %m월") %>
+        <%= @view == "weekly" ? "#{@week_start.strftime('%m/%d')} ~ #{@week_end.strftime('%m/%d')}" : @month.strftime("%Y-%m") %>
       </span>
       <%= link_to next_link, class: "p-2 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" do %>
         <svg class="w-4 h-4 text-gray-600 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
@@ -54,30 +54,30 @@
   <div class="grid grid-cols-4 gap-3">
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-center">
       <p class="text-2xl font-bold text-gray-900 dark:text-white"><%= @stats[:total] %></p>
-      <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">이번 달 총 건</p>
+      <p class="text-xs text-gray-500 dark:text-gray-500 mt-1"><%= t("calendar.stats.total") %></p>
     </div>
     <div class="bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800 p-4 text-center">
       <p class="text-2xl font-bold text-red-600 dark:text-red-400"><%= @stats[:overdue] %></p>
-      <p class="text-xs text-red-500 dark:text-red-400 mt-1">연체</p>
+      <p class="text-xs text-red-500 dark:text-red-400 mt-1"><%= t("calendar.stats.overdue") %></p>
     </div>
     <div class="bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-200 dark:border-orange-800 p-4 text-center">
       <p class="text-2xl font-bold text-orange-600 dark:text-orange-400"><%= @stats[:this_week] %></p>
-      <p class="text-xs text-orange-500 dark:text-orange-400 mt-1">이번 주 마감</p>
+      <p class="text-xs text-orange-500 dark:text-orange-400 mt-1"><%= t("calendar.stats.this_week") %></p>
     </div>
     <div class="bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800 p-4 text-center">
       <p class="text-2xl font-bold text-green-600 dark:text-green-400"><%= @stats[:completed] %></p>
-      <p class="text-xs text-green-500 dark:text-green-400 mt-1">완료</p>
+      <p class="text-xs text-green-500 dark:text-green-400 mt-1"><%= t("calendar.stats.completed") %></p>
     </div>
   </div>
 
   <%# ISS-208: 이벤트 소스 토글 + 타입별 레전드 %>
   <% event_types = [
-       { key: "orders",    label: "주문 납기",  color: "#00A1E0", icon: "📦" },
-       { key: "visas",     label: "비자 만료",  color: "#D93025", icon: "🛂" },
-       { key: "contracts", label: "계약 만료",  color: "#F4A83A", icon: "📝" }
+       { key: "orders",    label: t("calendar.sources.orders"),    color: "#00A1E0", icon: "📦" },
+       { key: "visas",     label: t("calendar.sources.visas"),     color: "#D93025", icon: "🛂" },
+       { key: "contracts", label: t("calendar.sources.contracts"), color: "#F4A83A", icon: "📝" }
      ] %>
   <div class="flex flex-wrap items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
-    <span class="text-xs font-semibold text-gray-600 dark:text-gray-400 mr-1">이벤트 소스:</span>
+    <span class="text-xs font-semibold text-gray-600 dark:text-gray-400 mr-1"><%= t("calendar.sources.label") %></span>
     <% event_types.each do |et| %>
       <% active = @event_sources.include?(et[:key]) %>
       <% count  = @type_counts[et[:key] == "orders" ? "order" : et[:key].sub(/s$/, "")].to_i %>
@@ -96,7 +96,7 @@
         <% end %>
       <% end %>
     <% end %>
-    <span class="text-[10px] text-gray-400 dark:text-gray-500 ml-auto">클릭하여 소스 on/off</span>
+    <span class="text-[10px] text-gray-400 dark:text-gray-500 ml-auto"><%= t("calendar.sources.toggle_hint") %></span>
   </div>
 
   <% if @view == "monthly" %>
@@ -104,7 +104,8 @@
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
       <%# 요일 헤더 %>
       <div class="grid grid-cols-7 border-b border-gray-200 dark:border-gray-700">
-        <% %w[일 월 화 수 목 금 토].each_with_index do |day, i| %>
+        <% weekday_labels = [t("calendar.weekday.sun"), t("calendar.weekday.mon"), t("calendar.weekday.tue"), t("calendar.weekday.wed"), t("calendar.weekday.thu"), t("calendar.weekday.fri"), t("calendar.weekday.sat")] %>
+        <% weekday_labels.each_with_index do |day, i| %>
           <div class="py-3 text-center text-xs font-semibold <%= i == 0 ? 'text-red-400' : i == 6 ? 'text-blue-400' : 'text-gray-500 dark:text-gray-500' %>">
             <%= day %>
           </div>
@@ -183,7 +184,7 @@
               </div>
             <% end %>
             <% if day_orders.size > 3 %>
-              <span class="text-[10px] text-gray-500 dark:text-gray-500">+<%= day_orders.size - 3 %> more</span>
+              <span class="text-[10px] text-gray-500 dark:text-gray-500"><%= t("calendar.cell.more", count: day_orders.size - 3) %></span>
             <% end %>
             <%# ISS-208: 비자/계약 이벤트 (날짜 단위) %>
             <% day_other_events = (@events_by_date[date] || []).reject { |e| e[:type] == "order" } %>
@@ -196,7 +197,7 @@
               </a>
             <% end %>
             <% if day_other_events.size > 2 %>
-              <span class="text-[10px] text-gray-500 dark:text-gray-500">+<%= day_other_events.size - 2 %> more</span>
+              <span class="text-[10px] text-gray-500 dark:text-gray-500"><%= t("calendar.cell.more", count: day_other_events.size - 2) %></span>
             <% end %>
           </div>
         <% end %>
@@ -212,7 +213,7 @@
           <% is_today = date == today %>
           <div class="py-3 text-center <%= is_today ? 'bg-blue-50 dark:bg-blue-900/20' : '' %>">
             <p class="text-xs font-semibold <%= i == 0 ? 'text-red-400' : i == 6 ? 'text-blue-400' : 'text-gray-500 dark:text-gray-500' %>">
-              <%= %w[일 월 화 수 목 금 토][i] %>
+              <%= weekday_labels[i] %>
             </p>
             <p class="text-lg font-bold mt-0.5 <%= is_today ? 'text-[#00A1E0]' : 'text-gray-900 dark:text-white' %>">
               <%= date.day %>
@@ -261,7 +262,7 @@
               </div>
             <% end %>
             <% if day_orders.empty? %>
-              <p class="text-[10px] text-gray-300 dark:text-gray-600 text-center mt-4">마감 없음</p>
+              <p class="text-[10px] text-gray-300 dark:text-gray-600 text-center mt-4"><%= t("calendar.cell.no_due") %></p>
             <% end %>
           </div>
         <% end %>
@@ -270,6 +271,14 @@
   <% end %>
 
   <%# === 사이드 패널 HTML === %>
+  <%# ISS-324: JS i18n 페이로드 — DOM에 한 번 주입하여 JS에서 읽어 사용 %>
+  <div id="calendar-i18n"
+       data-panel-date-due="<%= t('calendar.panel.date_due', date: '__DATE__', count: '__COUNT__') %>"
+       data-panel-no-orders="<%= t('calendar.panel.no_orders') %>"
+       data-assignee-prefix="<%= t('calendar.panel.assignee_prefix') %>"
+       data-drag-failure-http="<%= t('calendar.drag.failure_http', status: '__STATUS__') %>"
+       data-drag-network-error="<%= t('calendar.drag.network_error', message: '__MESSAGE__') %>"
+       hidden></div>
   <div id="calendar-panel-overlay" class="fixed inset-0 z-40 hidden"></div>
   <div id="calendar-side-panel"
        class="fixed top-0 right-0 h-full w-80 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 shadow-xl z-50 transform translate-x-full transition-transform duration-200 flex flex-col">
@@ -290,7 +299,7 @@
   <% if month_orders.any? %>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
       <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">이번 달 마감 주문 (<%= month_orders.count %>건)</h2>
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300"><%= t("calendar.bottom.this_month_title", count: month_orders.count) %></h2>
       </div>
       <div class="divide-y divide-gray-50 dark:divide-gray-700">
         <% month_orders.each do |order| %>
@@ -339,6 +348,16 @@ document.addEventListener('turbo:load', function() {
 
   if (!sidePanel) return;
 
+  // ISS-324: i18n 페이로드 — DOM에서 읽어 ko/en 양방향 지원
+  var i18nEl = document.getElementById('calendar-i18n');
+  var I18N = {
+    panelDateDue:    i18nEl?.dataset?.panelDateDue    || '__DATE__ Due (__COUNT__)',
+    panelNoOrders:   i18nEl?.dataset?.panelNoOrders   || 'No orders due',
+    assigneePrefix:  i18nEl?.dataset?.assigneePrefix  || 'Assignee:',
+    dragFailureHttp: i18nEl?.dataset?.dragFailureHttp || 'Failed to reschedule (HTTP __STATUS__)',
+    dragNetworkErr:  i18nEl?.dataset?.dragNetworkError || 'Network error: __MESSAGE__'
+  };
+
   var PRIORITY_LABELS = { urgent: 'URGENT', high: 'HIGH', medium: 'MEDIUM', low: 'LOW' };
   var PRIORITY_COLORS = {
     urgent: 'bg-red-600 text-white dark:bg-red-700',
@@ -362,15 +381,15 @@ document.addEventListener('turbo:load', function() {
            '<div class="flex items-center gap-1.5 flex-wrap">' +
            '<span class="text-xs text-gray-500 dark:text-gray-500">' + (o.status || '') + '</span>' +
            '<span class="text-xs font-semibold px-1.5 py-0.5 rounded-full ' + priColor + '">' + priLabel + '</span>' +
-           (o.assignee ? '<span class="text-xs text-gray-500 dark:text-gray-500 ml-auto">담당: ' + o.assignee + '</span>' : '') +
+           (o.assignee ? '<span class="text-xs text-gray-500 dark:text-gray-500 ml-auto">' + I18N.assigneePrefix + ' ' + o.assignee + '</span>' : '') +
            '</div>' +
            '</div>';
   }
 
   function openDatePanel(dateStr, orders) {
-    panelTitle.textContent = dateStr + ' 마감 (' + orders.length + '건)';
+    panelTitle.textContent = I18N.panelDateDue.replace('__DATE__', dateStr).replace('__COUNT__', orders.length);
     if (orders.length === 0) {
-      panelList.innerHTML = '<p class="text-xs text-gray-500 text-center py-8">마감 주문 없음</p>';
+      panelList.innerHTML = '<p class="text-xs text-gray-500 text-center py-8">' + I18N.panelNoOrders + '</p>';
     } else {
       panelList.innerHTML = orders.map(renderOrderCard).join('');
     }
@@ -461,10 +480,10 @@ document.addEventListener('turbo:load', function() {
           // 성공 → 페이지 reload로 정확한 상태 반영
           window.location.reload();
         } else {
-          alert('납기 변경 실패 (HTTP ' + r.status + ')');
+          alert(I18N.dragFailureHttp.replace('__STATUS__', r.status));
         }
       }).catch(function(err) {
-        alert('네트워크 오류: ' + err.message);
+        alert(I18N.dragNetworkErr.replace('__MESSAGE__', err.message));
       });
     });
   });

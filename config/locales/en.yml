@@ -1252,6 +1252,45 @@ en:
   # ── Calendar ──────────────────────────────────────────────────────
   calendar:
     title: "Delivery Calendar"
+    page_title: "Calendar"
+    subtitle_monthly: "%{month} Due Dates"
+    subtitle_weekly_range: "%{from} ~ %{to}"
+    view:
+      monthly: "Monthly"
+      weekly: "Weekly"
+      today: "Today"
+    stats:
+      total: "This Month Total"
+      overdue: "Overdue"
+      this_week: "Due This Week"
+      completed: "Completed"
+    sources:
+      label: "Event Sources:"
+      orders: "Order Due"
+      visas: "Visa Expiry"
+      contracts: "Contract Expiry"
+      leaves: "Leave"
+      toggle_hint: "Click to toggle source"
+    weekday:
+      sun: "Sun"
+      mon: "Mon"
+      tue: "Tue"
+      wed: "Wed"
+      thu: "Thu"
+      fri: "Fri"
+      sat: "Sat"
+    cell:
+      more: "+%{count} more"
+      no_due: "No due"
+    bottom:
+      this_month_title: "This Month's Due Orders (%{count})"
+    panel:
+      date_due: "%{date} Due (%{count})"
+      no_orders: "No orders due"
+      assignee_prefix: "Assignee:"
+    drag:
+      failure_http: "Failed to reschedule (HTTP %{status})"
+      network_error: "Network error: %{message}"
 
   # ── Settings ──────────────────────────────────────────────────────
   settings:
