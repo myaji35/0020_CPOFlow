@@ -1067,6 +1067,56 @@ en:
   # ── Team ──────────────────────────────────────────────────────────
   team:
     title: "Team"
+    page_title: "Team Status"
+    page_subtitle: "Per-member workload and activity overview"
+    branch_all: "All"
+    branch_abu_dhabi: "Abu Dhabi"
+    branch_seoul: "Seoul"
+    kpi:
+      total_members: "Total Members"
+      total_active: "Total Active Orders"
+      avg_per_member: "Avg Orders/Member"
+      total_overdue: "Overdue Orders"
+      overdue_rate: "Overdue Rate"
+      overloaded: "Overloaded"
+    card:
+      role_admin: "Admin"
+      role_manager: "Manager"
+      role_member: "Member"
+      role_viewer: "Viewer"
+      overloaded_badge: "Overloaded"
+      active: "Active"
+      overdue: "Overdue"
+      due_7days: "D-7"
+      tasks: "Tasks"
+      workload: "Workload"
+      change_role: "Change Role"
+    empty:
+      no_members: "No team members yet."
+    heatmap:
+      title: "Workload Heatmap (Last 8 Weeks)"
+      subtitle: "Cell value: weekly Activity count (status/update/create) — throughput proxy"
+      legend_low: "Low"
+      legend_high: "High"
+      col_member: "Member"
+      col_total: "Total"
+      col_avg: "Avg/Week"
+      tip_redistribute: "💡 Sorted by top throughput. Low-throughput members may have bandwidth for reassignment."
+      cell_count: "%{count}"
+    dist:
+      title: "Active Orders by Assignee"
+      legend_active: "Active"
+      legend_overdue: "Overdue"
+      tip_overdue: "Overdue: %{count}"
+      tip_active: "Active: %{count}"
+    show:
+      recent_30d_title: "Last 30 Days Activity"
+      recent_30d_total_html: "Total <span class=\"font-semibold text-gray-700 dark:text-gray-300\">%{count}</span> processed"
+      tab_all: "All"
+      tab_overdue: "Overdue"
+      tab_active: "Active"
+      today: "Today"
+      empty_orders: "No assigned orders."
 
   # ── Inbox ─────────────────────────────────────────────────────────
   inbox:

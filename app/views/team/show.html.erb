@@ -18,12 +18,12 @@
               <%= @member.role == 'admin'   ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' :
                   @member.role == 'manager' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'   :
                                              'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-500' %>">
-              <%= { 'admin' => '관리자', 'manager' => '매니저', 'member' => '멤버', 'viewer' => '뷰어' }[@member.role] %>
+              <%= { 'admin' => t("team.card.role_admin"), 'manager' => t("team.card.role_manager"), 'member' => t("team.card.role_member"), 'viewer' => t("team.card.role_viewer") }[@member.role] %>
             </span>
             <span class="text-sm text-gray-500 dark:text-gray-500"><%= @member.email %></span>
             <% if @member.branch.present? %>
               <span class="text-xs text-gray-500 dark:text-gray-500">
-                <%= @member.branch == 'abu_dhabi' ? 'Abu Dhabi' : 'Seoul' %>
+                <%= @member.branch == 'abu_dhabi' ? t("team.branch_abu_dhabi") : t("team.branch_seoul") %>
               </span>
             <% end %>
           </div>
@@ -35,8 +35,8 @@
   <%# 최근 30일 처리 건수 미니 바 차트 %>
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
     <div class="flex items-center justify-between mb-3">
-      <h2 class="text-sm font-semibold text-gray-900 dark:text-white">최근 30일 처리 현황</h2>
-      <span class="text-xs text-gray-500 dark:text-gray-500">총 <span class="font-semibold text-gray-700 dark:text-gray-300"><%= @activity_total %></span>건 처리</span>
+      <h2 class="text-sm font-semibold text-gray-900 dark:text-white"><%= t("team.show.recent_30d_title") %></h2>
+      <span class="text-xs text-gray-500 dark:text-gray-500"><%= t("team.show.recent_30d_total_html", count: @activity_total).html_safe %></span>
     </div>
     <div class="flex items-end gap-px" style="height: 64px;">
       <% @daily_activity.each do |d| %>
@@ -48,7 +48,7 @@
                         <%= is_today ? 'bg-primary' : 'bg-blue-300 dark:bg-blue-500' %>
                         hover:bg-blue-500 dark:hover:bg-blue-400 transition-colors cursor-default"
                  style="height: <%= bar_h %>%;"
-                 title="<%= d[:date].strftime('%m/%d') %>: <%= d[:count] %>건"></div>
+                 title="<%= d[:date].strftime('%m/%d') %>: <%= t('team.heatmap.cell_count', count: d[:count]) %>"></div>
           <% else %>
             <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-t" style="height: 4%;"></div>
           <% end %>
@@ -57,7 +57,7 @@
     </div>
     <div class="flex justify-between mt-2">
       <span class="text-xs text-gray-400 dark:text-gray-600"><%= @daily_activity.first[:date].strftime('%m/%d') %></span>
-      <span class="text-xs text-gray-400 dark:text-gray-600">오늘</span>
+      <span class="text-xs text-gray-400 dark:text-gray-600"><%= t("team.show.today") %></span>
     </div>
   </div>
 
@@ -85,7 +85,7 @@
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
     <%# 탭 헤더 %>
     <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-1" id="order-tabs">
-      <% [['전체', 'all', total_count], ['지연', 'overdue', overdue_count], ['진행', 'active', active_count]].each do |label, tab, cnt| %>
+      <% [[t("team.show.tab_all"), 'all', total_count], [t("team.show.tab_overdue"), 'overdue', overdue_count], [t("team.show.tab_active"), 'active', active_count]].each do |label, tab, cnt| %>
         <button class="tab-btn px-3 py-1.5 text-sm rounded-lg font-medium transition-colors
                        <%= tab == 'all' ? 'bg-primary text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700' %>"
                 data-tab="<%= tab %>"
@@ -151,7 +151,7 @@
         <% end %>
       </div>
     <% else %>
-      <div class="p-8 text-center text-sm text-gray-500 dark:text-gray-500">담당 주문이 없습니다.</div>
+      <div class="p-8 text-center text-sm text-gray-500 dark:text-gray-500"><%= t("team.show.empty_orders") %></div>
     <% end %>
   </div>
 </div>

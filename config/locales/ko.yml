@@ -1065,6 +1065,56 @@ ko:
   # ── 팀 ───────────────────────────────────────────────────────────
   team:
     title: "팀"
+    page_title: "팀 현황"
+    page_subtitle: "팀원별 업무 및 워크로드 현황"
+    branch_all: "전체"
+    branch_abu_dhabi: "Abu Dhabi"
+    branch_seoul: "Seoul"
+    kpi:
+      total_members: "총 팀원"
+      total_active: "총 활성 주문"
+      avg_per_member: "평균 주문/인"
+      total_overdue: "지연 주문"
+      overdue_rate: "연체율"
+      overloaded: "과부하 팀원"
+    card:
+      role_admin: "관리자"
+      role_manager: "매니저"
+      role_member: "멤버"
+      role_viewer: "뷰어"
+      overloaded_badge: "과부하"
+      active: "진행"
+      overdue: "지연"
+      due_7days: "D-7"
+      tasks: "태스크"
+      workload: "워크로드"
+      change_role: "역할 변경"
+    empty:
+      no_members: "팀원이 없습니다."
+    heatmap:
+      title: "작업 부하 히트맵 (최근 8주)"
+      subtitle: "셀 값: 주간 Activity 발생 수 (status/update/create) — 처리량 프록시"
+      legend_low: "적음"
+      legend_high: "많음"
+      col_member: "팀원"
+      col_total: "합계"
+      col_avg: "평균/주"
+      tip_redistribute: "💡 상위 처리량 팀원부터 정렬. 낮은 처리량 팀원은 bandwidth 여유 가능 — 재배치 후보"
+      cell_count: "%{count}건"
+    dist:
+      title: "담당자별 활성 주문 분포"
+      legend_active: "활성"
+      legend_overdue: "지연"
+      tip_overdue: "지연 %{count}건"
+      tip_active: "진행 %{count}건"
+    show:
+      recent_30d_title: "최근 30일 처리 현황"
+      recent_30d_total_html: "총 <span class=\"font-semibold text-gray-700 dark:text-gray-300\">%{count}</span>건 처리"
+      tab_all: "전체"
+      tab_overdue: "지연"
+      tab_active: "진행"
+      today: "오늘"
+      empty_orders: "담당 주문이 없습니다."
 
   # ── 인박스 ───────────────────────────────────────────────────────
   inbox:
