@@ -1,4 +1,7 @@
 class CalendarController < ApplicationController
+  # ISS-381: MenuPermission DB 가드 — 캘린더는 조회 전용
+  before_action -> { enforce_menu_permission!(:calendar, :read) }, only: %i[index]
+
   def index
     @view = %w[monthly weekly].include?(params[:view]) ? params[:view] : "monthly"
     @month = params[:month] ? Date.parse(params[:month]) : Date.today.beginning_of_month

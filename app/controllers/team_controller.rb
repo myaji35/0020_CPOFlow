@@ -1,4 +1,9 @@
 class TeamController < ApplicationController
+  # ISS-381: MenuPermission DB 가드
+  #  - :read   — index/show (역할별 조회 통제)
+  #  - :update — update_role (역할 변경 — 코드 내부 admin? 가드와 이중)
+  before_action -> { enforce_menu_permission!(:team, :read) },   only: %i[index show]
+  before_action -> { enforce_menu_permission!(:team, :update) }, only: %i[update_role]
   before_action :set_member, only: %i[show update_role]
 
   def index

@@ -2,6 +2,8 @@
 
 class ReportsController < ApplicationController
   before_action :require_admin_or_manager!
+  # ISS-381: MenuPermission DB 2차 가드 — 조회 전용 (require_admin_or_manager! + DB 토글 이중)
+  before_action -> { enforce_menu_permission!(:reports, :read) }, only: %i[index export_pdf]
 
   def index
     @period     = params[:period] || "this_month"

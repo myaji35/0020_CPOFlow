@@ -1,17 +1,23 @@
 class MenuPermission < ApplicationRecord
   ROLES     = %w[viewer member manager admin].freeze
-  MENU_KEYS = %w[orders clients suppliers projects employees org_chart inbox kanban admin].freeze
+  # ISS-381: contact_persons/calendar/team/reports 추가 — 사이드바 노출되지만 권한 설정 화면에서 누락 갭 해소.
+  MENU_KEYS = %w[orders clients suppliers projects employees org_chart inbox kanban admin
+                 contact_persons calendar team reports].freeze
 
   MENU_LABELS = {
-    "orders"    => "발주 관리",
-    "clients"   => "발주처 관리",
-    "suppliers" => "거래처 관리",
-    "projects"  => "현장 관리",
-    "employees" => "직원 관리",
-    "org_chart" => "조직도",
-    "inbox"     => "인박스",
-    "kanban"    => "칸반 보드",
-    "admin"     => "관리자 메뉴"
+    "orders"          => "발주 관리",
+    "clients"         => "발주처 관리",
+    "suppliers"       => "거래처 관리",
+    "projects"        => "현장 관리",
+    "employees"       => "직원 관리",
+    "org_chart"       => "조직도",
+    "inbox"           => "인박스",
+    "kanban"          => "칸반 보드",
+    "admin"           => "관리자 메뉴",
+    "contact_persons" => "외부 담당자",
+    "calendar"        => "캘린더",
+    "team"            => "팀 관리",
+    "reports"         => "경영 리포트"
   }.freeze
 
   DEFAULT_PERMISSIONS = {
