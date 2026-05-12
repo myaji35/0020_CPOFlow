@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 class Orders::BulkController < ApplicationController
-  before_action :require_manager_or_admin!
+  # ISS-382: require_manager_or_admin! → require_manager! 로 통일
+  before_action :require_manager!
 
   def update
     # ISS-257: Branch 격리 — manager가 타 branch 오더를 일괄 업데이트하지 못하게 차단
@@ -43,12 +44,6 @@ class Orders::BulkController < ApplicationController
   end
 
   private
-
-  def require_manager_or_admin!
-    unless current_user&.admin? || current_user&.manager?
-      redirect_to orders_path, alert: "권한이 없습니다."
-    end
-  end
 
   def generate_csv(orders)
     require "csv"

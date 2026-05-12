@@ -4,7 +4,8 @@
 # Phase 1: 목록(new_rfq 카드) + 상세(5단계 분석 결과 + 메트릭).
 # 분석은 동기 실행 (Phase 2에서 ActiveJob + Turbo Stream 진행률 스트리밍 도입).
 class Lab::RfqAutoController < ApplicationController
-  before_action :require_admin_or_manager!
+  # ISS-382: require_admin_or_manager! → require_manager! 로 통일
+  before_action :require_manager!
   before_action :load_order, only: %i[show analyze apply feedback upload destroy_attachment select_supplier send_rfq_emails]
 
   # GET /lab/rfq_auto — new_rfq 카드 + 샌드박스 카드 목록
@@ -296,11 +297,6 @@ class Lab::RfqAutoController < ApplicationController
       vals = line.split(sep).map(&:strip)
       headers.zip(vals).to_h
     end
-  end
-
-  def require_admin_or_manager!
-    return if current_user&.admin? || current_user&.manager?
-    redirect_to root_path, alert: "LAB은 admin/manager 전용입니다."
   end
 
   def load_order

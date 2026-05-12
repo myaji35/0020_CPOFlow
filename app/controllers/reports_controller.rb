@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 class ReportsController < ApplicationController
-  before_action :require_admin_or_manager!
-  # ISS-381: MenuPermission DB 2차 가드 — 조회 전용 (require_admin_or_manager! + DB 토글 이중)
+  # ISS-382: require_admin_or_manager! → require_manager! 로 통일 (ApplicationController 단일 정의 사용)
+  before_action :require_manager!
+  # ISS-381: MenuPermission DB 2차 가드 — 조회 전용 (require_manager! + DB 토글 이중)
   before_action -> { enforce_menu_permission!(:reports, :read) }, only: %i[index export_pdf]
 
   def index
@@ -267,7 +268,4 @@ class ReportsController < ApplicationController
     end
   end
 
-  def require_admin_or_manager!
-    redirect_to root_path, alert: "접근 권한이 없습니다." unless current_user&.admin? || current_user&.manager?
-  end
 end

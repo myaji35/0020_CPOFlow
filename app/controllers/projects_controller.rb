@@ -112,9 +112,5 @@ class ProjectsController < ApplicationController
     )
   end
 
-  def require_manager!
-    unless current_user.manager? || current_user.admin?
-      redirect_to projects_path, alert: "권한이 없습니다."
-    end
-  end
+  # ISS-382: 중복 require_manager! 제거 — ApplicationController 단일 정의 사용
 end
