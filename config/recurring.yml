@@ -17,10 +17,14 @@ production:
   # Sync Gmail for all connected accounts.
   # SQLite WAL + Puma+SolidQueue 단일 프로세스에서 15분 간격은 BusyException 빈발(2026-05-07 incident).
   # 1시간으로 완화. 사용자 요청 시 inbox에서 수동 sync 버튼 사용.
-  gmail_sync_all:
-    class: EmailSyncJob
-    queue: default
-    schedule: every hour at minute 5
+  #
+  # 2026-05-30: 배포 리소스/LLM 비용 정지 — 자동 Gmail sync 비활성화.
+  #   이 잡이 매시간 새 메일을 ClassificationOrchestrator(Haiku→Sonnet)로 자동 분류 → 토큰 비용 발생원.
+  #   필요 시 inbox 수동 sync 버튼으로 호출하거나 아래 4줄 주석 해제하여 재활성화.
+  # gmail_sync_all:
+  #   class: EmailSyncJob
+  #   queue: default
+  #   schedule: every hour at minute 5
 
   # Due date notifications (Google Chat + in-app) at 07:00 daily
   due_notifications:
@@ -74,10 +78,12 @@ production:
 
 development:
   # Sync Gmail every 5 minutes in development for faster testing
-  gmail_sync_all:
-    class: EmailSyncJob
-    queue: default
-    schedule: every 5 minutes
+  # 2026-05-30: 배포/LLM 비용 정지 — dev 자동 sync도 비활성화 (LLM 자동 분류 차단).
+  #   재활성화하려면 아래 4줄 주석 해제.
+  # gmail_sync_all:
+  #   class: EmailSyncJob
+  #   queue: default
+  #   schedule: every 5 minutes
 
   # Due date notifications at 07:00 daily
   due_notifications:
