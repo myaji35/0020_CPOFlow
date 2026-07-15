@@ -34,7 +34,9 @@ class OrderLinkTest < ActiveSupport::TestCase
   test "relation 화이트리스트 미포함 시 invalid" do
     link = OrderLink.new(source: @order_a, target: @order_b, relation: "bogus")
     assert_not link.valid?
-    assert_includes link.errors[:relation], "is not included in the list"
+    # 메시지 문자열이 아니라 에러 종류를 검증한다. locale.rb가
+    # production=:en / 그 외=:ko 로 분기해 test 환경에서는 한국어가 나온다.
+    assert link.errors.of_kind?(:relation, :inclusion)
   end
 
   test "status 화이트리스트 미포함 시 invalid" do

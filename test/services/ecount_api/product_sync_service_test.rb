@@ -43,7 +43,9 @@ class EcountApi::ProductSyncServiceTest < ActiveSupport::TestCase
     assert_nil svc.send(:product_attrs, item)
   end
 
-  test "product_attrs — CURR_CD 없을 때 USD 기본값" do
+  # 9716764 "feat(currency): UAE 본사 정책 — 기본값 USD→AED 전환" 이후
+  # 기본 통화는 AED다. 그때 서비스만 바꾸고 이 테스트는 USD 기대를 유지했다.
+  test "product_attrs — CURR_CD 없을 때 AED 기본값" do
     svc  = EcountApi::ProductSyncService.new
     item = {
       "PROD_CD"  => "DEFAULT_CURR_#{SecureRandom.hex(4)}",
@@ -52,7 +54,7 @@ class EcountApi::ProductSyncServiceTest < ActiveSupport::TestCase
       "IN_PRICE" => "0", "CURR_CD" => nil, "USE_YN" => "N"
     }
     attrs = svc.send(:product_attrs, item)
-    assert_equal "USD", attrs[:currency]
+    assert_equal "AED", attrs[:currency]
     assert_not attrs[:active]
   end
 
