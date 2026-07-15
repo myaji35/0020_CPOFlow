@@ -10,7 +10,7 @@ class KanbanColumnTest < ActiveSupport::TestCase
   test "validates name presence" do
     col = KanbanColumn.new(kanban_board: @board, key: "test_col")
     assert_not col.valid?
-    assert_includes col.errors[:name], "can't be blank"
+    assert col.errors.of_kind?(:name, :blank)
   end
 
   test "auto-generates key from name" do
@@ -30,13 +30,13 @@ class KanbanColumnTest < ActiveSupport::TestCase
     KanbanColumn.create!(kanban_board: @board, name: "Test", key: "unique_test_key", position: 99)
     dup = KanbanColumn.new(kanban_board: @board, name: "Test 2", key: "unique_test_key")
     assert_not dup.valid?
-    assert_includes dup.errors[:key], "has already been taken"
+    assert dup.errors.of_kind?(:key, :taken)
   end
 
   test "validates key format" do
     col = KanbanColumn.new(kanban_board: @board, name: "Bad", key: "Bad-Key!")
     assert_not col.valid?
-    assert_includes col.errors[:key], "is invalid"
+    assert col.errors.of_kind?(:key, :invalid)
   end
 
   test "ordered scope returns by position" do

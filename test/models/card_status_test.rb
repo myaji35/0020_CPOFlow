@@ -20,7 +20,7 @@ class CardStatusTest < ActiveSupport::TestCase
       bg_color: "#FFFFFF", border_color: "#E5E7EB", text_color: "#111827"
     )
     assert_not dup.valid?
-    assert_includes dup.errors[:key], "has already been taken"
+    assert dup.errors.of_kind?(:key, :taken)
   end
 
   test "hex color format required" do

@@ -17,7 +17,7 @@ class CommentTest < ActiveSupport::TestCase
   test "body 없으면 유효하지 않음" do
     c = Comment.new(body: "", order: @order, user: @user)
     assert_not c.valid?
-    assert_includes c.errors[:body], "can't be blank"
+    assert c.errors.of_kind?(:body, :blank)
   end
 
   test "body 5000자 초과 시 유효하지 않음" do
