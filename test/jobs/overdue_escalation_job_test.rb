@@ -3,6 +3,11 @@
 require "test_helper"
 
 class OverdueEscalationJobTest < ActiveJob::TestCase
+  # test_helper.rb 의 `fixtures :all` 이 주석 처리돼 있어 각 테스트가 필요한
+  # fixture를 개별 선언한다(order_test.rb 등 다른 테스트의 기존 패턴).
+  # 이 선언이 없어 CardStatus.find_by!(key: "urgent") 가 RecordNotFound로 죽었다.
+  fixtures :card_statuses
+
   HEX = -> { SecureRandom.hex(4) }
 
   setup do

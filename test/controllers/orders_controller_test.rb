@@ -83,12 +83,16 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
 
   # ─── destroy ─────────────────────────────
 
-  test "orders destroy — 삭제 성공 (manager)" do
+  # de10713 "feat(trash): 휴지통 페이지 + soft delete" 이후 destroy는 hard delete가
+  # 아니라 archive!(archived_at 세팅)다. 레코드는 남고 복원 가능하다.
+  # 그때 컨트롤러만 바꾸고 이 테스트는 Order.count -1 기대를 유지해 깨진 채였다.
+  test "orders destroy — 삭제 성공 (manager, soft delete)" do
     @user.update!(role: :manager)
     order = Order.create!(title: "Delete Test Order", customer_name: "Cust", user: @user, status: :new_rfq)
-    assert_difference("Order.count", -1) do
+    assert_no_difference("Order.count") do
       delete order_path(order)
     end
+    assert_not_nil order.reload.archived_at, "soft delete로 archived_at이 세팅되어야 한다"
     @user.update!(role: :member)
   end
 
@@ -182,7 +186,8 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     order = Order.create!(title: "Destroy Test", customer_name: "Cust", user: @user, status: :new_rfq)
     delete order_path(order)
     assert_response :redirect
-    assert_not Order.exists?(order.id)
+    # soft delete(de10713)라 레코드는 남는다 — archived_at 세팅으로 검증.
+    assert_not_nil order.reload.archived_at
     @user.update!(role: :member)
   end
 
