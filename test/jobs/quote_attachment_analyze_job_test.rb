@@ -18,9 +18,9 @@ class QuoteAttachmentAnalyzeJobTest < ActiveJob::TestCase
 
   test "marks completed and seeds items on success" do
     result = {
-      items: [{ "item" => "SPILL TRAY", "description" => "129x119",
+      items: [ { "item" => "SPILL TRAY", "description" => "129x119",
                 "model_part_no" => "5004-BK", "manufacturer_brand" => "ENPAC",
-                "unit" => "EA", "qty" => "16", "remarks" => "" }],
+                "unit" => "EA", "qty" => "16", "remarks" => "" } ],
       cost_usd: 0.02, llm_model: "claude-sonnet-4-6",
       page_count: 1, latency_ms: 100
     }
@@ -71,7 +71,7 @@ class QuoteAttachmentAnalyzeJobTest < ActiveJob::TestCase
 
   test "appends rows to existing quote_items (preserves prior rows)" do
     OrderQuoteItem.create!(order: @order, row_no: 1, item: "EXISTING", user_edited: true)
-    result = { items: [{ "item" => "NEW", "qty" => "5" }],
+    result = { items: [ { "item" => "NEW", "qty" => "5" } ],
                cost_usd: 0.01, llm_model: "claude-sonnet-4-6",
                page_count: 1, latency_ms: 50 }
     with_extractor_result(result) do

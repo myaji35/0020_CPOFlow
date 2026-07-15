@@ -34,7 +34,7 @@ class ImpersonationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   def teardown
-    ImpersonationToken.where(admin_id: [@admin.id, @other_admin.id, @non_admin.id]).delete_all
+    ImpersonationToken.where(admin_id: [ @admin.id, @other_admin.id, @non_admin.id ]).delete_all
   end
 
   # AC#1

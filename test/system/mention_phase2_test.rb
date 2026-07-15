@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require "application_system_test_case"
 
 # ISS-354 Phase 2 Wave 4 — T16
@@ -54,7 +55,7 @@ class MentionPhase2Test < ApplicationSystemTestCase
     I18n.locale = I18n.default_locale
     Notification.where(notifiable: @order).destroy_all if @order
     @order&.reload&.destroy if @order && Order.exists?(@order.id)
-    [@sender, @receiver, @other].each { |u| u&.destroy if u && User.exists?(u.id) }
+    [ @sender, @receiver, @other ].each { |u| u&.destroy if u && User.exists?(u.id) }
   end
 
   test "발신자가 자기 카드 도트 줄 호버 시 sender_hover 패널이 노출된다" do

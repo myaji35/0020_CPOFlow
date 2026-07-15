@@ -93,7 +93,7 @@ class QuoteItemExtractor
     when "application/pdf"
       render_pdf_pages
     when /^image\//
-      [base64_image(@attachment.download)]
+      [ base64_image(@attachment.download) ]
     else
       []
     end
@@ -132,7 +132,7 @@ class QuoteItemExtractor
       model: MODEL,
       max_tokens: 4096,
       system: SYSTEM_PROMPT,
-      messages: [{ role: "user", content: content }]
+      messages: [ { role: "user", content: content } ]
     )
 
     text = resp.content.is_a?(Array) ? resp.content.first&.text.to_s : resp.content.to_s
@@ -141,7 +141,7 @@ class QuoteItemExtractor
 
     parsed = JSON.parse(json_str)
     items = Array(parsed["items"])
-    [resp.usage&.input_tokens.to_i, resp.usage&.output_tokens.to_i, items]
+    [ resp.usage&.input_tokens.to_i, resp.usage&.output_tokens.to_i, items ]
   rescue Anthropic::Errors::AuthenticationError, Anthropic::Errors::PermissionDeniedError => e
     raise AnthropicCreditError, e.message.to_s
   rescue Anthropic::Errors::APIError => e

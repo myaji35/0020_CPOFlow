@@ -33,7 +33,7 @@ class MentionParserService
     by_name = {}
     matches.each do |prefix, name|
       intent = prefix.length - 1
-      by_name[name] = [(by_name[name] || -1), intent].max
+      by_name[name] = [ (by_name[name] || -1), intent ].max
     end
 
     notified_user_ids = []
@@ -110,7 +110,7 @@ class MentionParserService
 
   def notification_body(intent = 0)
     who = @mentioned_by.display_name
-    intent_label = ["", " (확인 필수)", " (응답 필수)"][intent]
+    intent_label = [ "", " (확인 필수)", " (응답 필수)" ][intent]
     case @subject
     when Comment then "#{who}님이 코멘트에서 회원님을 멘션했습니다#{intent_label}."
     when Task    then "#{who}님이 태스크에서 회원님을 멘션했습니다#{intent_label}."
@@ -122,7 +122,7 @@ class MentionParserService
   #   주문 식별자(reference_no/po_no/quo_no/rfq_no/title)가 있으면 그것을 활용, 없으면 일반 문구.
   # Phase 2 (ISS-354): @ 개수 prefix 반영 (@/@@/@@@).
   def notification_title(intent = 0)
-    prefix = ["@", "@@", "@@@"][intent] || "@"
+    prefix = [ "@", "@@", "@@@" ][intent] || "@"
     order = notifiable_order
     return "#{prefix}멘션 알림" unless order
 

@@ -6,7 +6,7 @@ class NotificationsController < ApplicationController
   # params[:category] = all / due_date / status_changed / assigned / system /
   #                     visa / contract / overdue_escalation /
   #                     ecount_slip_failed / oauth_signup / mentioned
-  VALID_CATEGORIES = (["all"] + Notification::TYPES).freeze
+  VALID_CATEGORIES = ([ "all" ] + Notification::TYPES).freeze
 
   def index
     @current_filter   = params[:filter].presence_in(%w[all unread]) || "all"

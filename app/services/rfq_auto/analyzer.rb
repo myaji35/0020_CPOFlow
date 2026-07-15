@@ -141,12 +141,12 @@ module RfqAuto
 
     def relevance_score_for(type, confidence)
       base = case type
-             when "rfq", "quotation"          then 95
-             when "po", "invoice"             then 70
-             when "delivery_note", "grn"      then 40
-             when "packing_list"              then 50
-             else 20
-             end
+      when "rfq", "quotation"          then 95
+      when "po", "invoice"             then 70
+      when "delivery_note", "grn"      then 40
+      when "packing_list"              then 50
+      else 20
+      end
       (base * (confidence || 0.5)).round
     end
 

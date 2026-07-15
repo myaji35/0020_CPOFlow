@@ -5,7 +5,7 @@ class AddPerfIndexes < ActiveRecord::Migration[8.1]
   # - classification_logs.created_at 인덱스 없음 → 14K rows 풀스캔
   # 권장 효과: 23~40배 단축 (각 ~30ms / ~5ms)
   def change
-    add_index :orders, [:status, :created_at], if_not_exists: true,
+    add_index :orders, [ :status, :created_at ], if_not_exists: true,
               name: "idx_orders_on_status_and_created_at"
     add_index :activities, :created_at, if_not_exists: true,
               name: "idx_activities_on_created_at"

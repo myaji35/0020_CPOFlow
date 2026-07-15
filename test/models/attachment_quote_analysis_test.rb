@@ -36,7 +36,7 @@ class AttachmentQuoteAnalysisTest < ActiveSupport::TestCase
       order: @order, active_storage_attachment_id: @attachment.id,
       items_json: '[{"item":"X"}]'
     )
-    assert_equal [{ "item" => "X" }], aqa.items
+    assert_equal [ { "item" => "X" } ], aqa.items
   end
 
   test "items returns [] when items_json blank or invalid" do

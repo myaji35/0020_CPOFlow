@@ -53,11 +53,11 @@ module RfqAuto
         last_order  = (s.orders.maximum(:created_at) rescue nil)
         confidence = if s.try(:auto_imported) && order_count == 0
                        60  # 자동 import 미검증
-                     elsif order_count >= 5
+        elsif order_count >= 5
                        95  # 다회 거래 검증됨
-                     else
+        else
                        85  # 일반 등록
-                     end
+        end
         {
           source:        "local_db",
           confidence:    confidence,

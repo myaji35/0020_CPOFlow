@@ -471,7 +471,7 @@ class Order < ApplicationRecord
   # 같은 보드를 보는 사용자만 받도록 보드 단위로 격리.
   def broadcast_kanban_stream
     board = kanban_board || KanbanBoard.default_board.first
-    [board, :kanban]
+    [ board, :kanban ]
   end
 
   def auto_assign_if_blank
@@ -612,7 +612,7 @@ class Order < ApplicationRecord
     counts = { ack: 0, viewed_only: 0, unread: 0, sla_overdue: 0 }
     worst_intent = 0
     rows.each do |_uid, ack, viewed, overdue, intent|
-      worst_intent = [worst_intent, intent.to_i].max
+      worst_intent = [ worst_intent, intent.to_i ].max
       if overdue == 1
         counts[:sla_overdue] += 1
       elsif ack == 1
@@ -625,11 +625,11 @@ class Order < ApplicationRecord
     end
 
     worst = if counts[:sla_overdue] > 0 then "sla_overdue"
-            elsif counts[:unread] > 0 then "unread"
-            elsif counts[:viewed_only] > 0 then "viewed_only"
-            elsif counts[:ack] > 0 then "acknowledged"
-            else nil
-            end
+    elsif counts[:unread] > 0 then "unread"
+    elsif counts[:viewed_only] > 0 then "viewed_only"
+    elsif counts[:ack] > 0 then "acknowledged"
+    else nil
+    end
 
     update_columns(
       mention_total_count:        rows.size,
@@ -661,9 +661,9 @@ class Order < ApplicationRecord
                 .first(limit)
                 .map do |uid, ack, viewed, nid, intent|
                   state = if ack == 1 then "acknowledged"
-                          elsif viewed == 1 then "viewed_only"
-                          else "unread"
-                          end
+                  elsif viewed == 1 then "viewed_only"
+                  else "unread"
+                  end
                   user = User.find_by(id: uid)
                   {
                     user_id: uid,
@@ -686,9 +686,9 @@ class Order < ApplicationRecord
     sent_notifs.group_by(&:user_id).map do |_uid, group|
       latest = group.max_by(&:created_at)
       state = if latest.acknowledged_at.present? then :acknowledged
-              elsif latest.viewed_at.present?  then :viewed_only
-              else                                 :unread
-              end
+      elsif latest.viewed_at.present?  then :viewed_only
+      else                                 :unread
+      end
       {
         user:            latest.user,
         state:           state,

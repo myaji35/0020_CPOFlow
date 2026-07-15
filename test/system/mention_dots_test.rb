@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require "application_system_test_case"
 
 # ISS-353 Phase 1 — T15: Capybara system test 4 페르소나

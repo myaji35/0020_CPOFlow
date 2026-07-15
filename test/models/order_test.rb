@@ -372,7 +372,7 @@ class OrderTest < ActiveSupport::TestCase
   ensure
     Notification.where(notifiable: order).destroy_all if order
     order&.reload&.destroy
-    [ack_users, viewed_users, unread_users].flatten.each(&:destroy)
+    [ ack_users, viewed_users, unread_users ].flatten.each(&:destroy)
     creator&.destroy
   end
 
@@ -416,7 +416,7 @@ class OrderTest < ActiveSupport::TestCase
   ensure
     Notification.where(notifiable: order).destroy_all if order
     order&.reload&.destroy
-    [u_unread, u_ack, u_view].each(&:destroy)
+    [ u_unread, u_ack, u_view ].each(&:destroy)
     creator&.destroy
   end
 
@@ -470,7 +470,7 @@ class OrderTest < ActiveSupport::TestCase
   ensure
     Notification.where(notifiable: order).destroy_all if order
     order&.reload&.destroy
-    [u1, u2].each(&:destroy)
+    [ u1, u2 ].each(&:destroy)
     creator&.destroy
   end
 
@@ -529,7 +529,7 @@ class OrderTest < ActiveSupport::TestCase
   ensure
     Notification.where(notifiable: order).destroy_all if order
     order&.reload&.destroy
-    [sender, other, receiver].each(&:destroy)
+    [ sender, other, receiver ].each(&:destroy)
   end
 
   test "sender_mention_summary — group by user_id (latest mention per receiver)" do
@@ -550,7 +550,7 @@ class OrderTest < ActiveSupport::TestCase
   ensure
     Notification.where(notifiable: order).destroy_all if order
     order&.reload&.destroy
-    [sender, receiver].each(&:destroy)
+    [ sender, receiver ].each(&:destroy)
   end
 
   test "sender_mention_summary — sla_overdue 정확 (sla_due_at 경과 + 미응답)" do
@@ -569,7 +569,7 @@ class OrderTest < ActiveSupport::TestCase
   ensure
     Notification.where(notifiable: order).destroy_all if order
     order&.reload&.destroy
-    [sender, receiver].each(&:destroy)
+    [ sender, receiver ].each(&:destroy)
   end
 
   test "sender_mention_summary — can_remind reflects cooldown state" do
@@ -588,7 +588,7 @@ class OrderTest < ActiveSupport::TestCase
   ensure
     Notification.where(notifiable: order).destroy_all if order
     order&.reload&.destroy
-    [sender, receiver].each(&:destroy)
+    [ sender, receiver ].each(&:destroy)
   end
 
   test "cooldown_active? — true when reminded_at within 24h" do
@@ -602,7 +602,7 @@ class OrderTest < ActiveSupport::TestCase
   ensure
     Notification.where(notifiable: order).destroy_all if order
     order&.reload&.destroy
-    [sender, receiver].each(&:destroy)
+    [ sender, receiver ].each(&:destroy)
   end
 
   test "cooldown_active? — false when reminded_at > 24h ago" do
@@ -616,7 +616,7 @@ class OrderTest < ActiveSupport::TestCase
   ensure
     Notification.where(notifiable: order).destroy_all if order
     order&.reload&.destroy
-    [sender, receiver].each(&:destroy)
+    [ sender, receiver ].each(&:destroy)
   end
 
   test "cooldown_active? — false when no reminded_at notifications exist" do
@@ -630,7 +630,7 @@ class OrderTest < ActiveSupport::TestCase
   ensure
     Notification.where(notifiable: order).destroy_all if order
     order&.reload&.destroy
-    [sender, receiver].each(&:destroy)
+    [ sender, receiver ].each(&:destroy)
   end
 
   test "has_many :attachment_quote_analyses with dependent destroy + cascade FK" do

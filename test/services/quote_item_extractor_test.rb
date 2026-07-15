@@ -16,7 +16,7 @@ class QuoteItemExtractorTest < ActiveSupport::TestCase
 
   test "raises AnthropicCreditError on credit issue" do
     extractor = QuoteItemExtractor.new(@attachment)
-    extractor.define_singleton_method(:render_pages) { ["base64data"] }
+    extractor.define_singleton_method(:render_pages) { [ "base64data" ] }
     extractor.define_singleton_method(:call_anthropic) do |_images|
       raise QuoteItemExtractor::AnthropicCreditError, "insufficient"
     end
@@ -25,9 +25,9 @@ class QuoteItemExtractorTest < ActiveSupport::TestCase
 
   test "returns items + cost on success" do
     extractor = QuoteItemExtractor.new(@attachment)
-    extractor.define_singleton_method(:render_pages) { ["b64"] }
+    extractor.define_singleton_method(:render_pages) { [ "b64" ] }
     extractor.define_singleton_method(:call_anthropic) do |_images|
-      [100, 50, [{ "item" => "SPILL TRAY" }]]
+      [ 100, 50, [ { "item" => "SPILL TRAY" } ] ]
     end
     result = extractor.call
     assert_equal 1, result[:items].size
@@ -40,8 +40,8 @@ class QuoteItemExtractorTest < ActiveSupport::TestCase
 
   test "returns empty items when LLM returns none" do
     extractor = QuoteItemExtractor.new(@attachment)
-    extractor.define_singleton_method(:render_pages) { ["b64"] }
-    extractor.define_singleton_method(:call_anthropic) { |_| [100, 10, []] }
+    extractor.define_singleton_method(:render_pages) { [ "b64" ] }
+    extractor.define_singleton_method(:call_anthropic) { |_| [ 100, 10, [] ] }
     result = extractor.call
     assert_equal [], result[:items]
   end

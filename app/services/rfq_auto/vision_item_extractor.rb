@@ -114,12 +114,12 @@ module RfqAuto
 
     def encode_image(path)
       mime = case File.extname(path).downcase
-             when ".png" then "image/png"
-             when ".jpg", ".jpeg" then "image/jpeg"
-             when ".gif" then "image/gif"
-             when ".webp" then "image/webp"
-             else "image/png"
-             end
+      when ".png" then "image/png"
+      when ".jpg", ".jpeg" then "image/jpeg"
+      when ".gif" then "image/gif"
+      when ".webp" then "image/webp"
+      else "image/png"
+      end
       {
         type: "image",
         source: {

@@ -8,7 +8,7 @@ class AddMentionColumnsToNotifications < ActiveRecord::Migration[8.1]
     add_column :notifications, :intent_level,        :integer, default: 0, null: false
     add_column :notifications, :sla_due_at,          :datetime
 
-    add_index :notifications, [:notifiable_type, :notifiable_id, :notification_type],
+    add_index :notifications, [ :notifiable_type, :notifiable_id, :notification_type ],
               name: "idx_notifications_polymorphic_type"
     add_index :notifications, :acknowledged_at
     add_index :notifications, :sla_due_at
