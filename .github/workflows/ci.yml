@@ -66,3 +66,34 @@ jobs:
       - name: Lint code for consistent style
         run: bin/rubocop -f github
 
+  # ⭐ 테스트 게이트 (2026-07-15 신설)
+  #
+  # 왜 지금 추가하는가: 테스트 237개 파일 / 1,406개 test 블록이 있는데
+  # ci.yml에 rails test가 0곳이었다 — CI에서 한 번도 실행된 적이 없다.
+  # 쓴 테스트가 자산이 되려면 매 push마다 기계가 돌려야 한다.
+  #
+  # continue-on-error / || true 금지: 경고는 무시된다. 게이트는 차단해야 게이트다.
+  test:
+    runs-on: ubuntu-latest
+    env:
+      RAILS_ENV: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libsqlite3-dev
+
+      - name: Setup database
+        run: bin/rails db:prepare
+
+      - name: Run tests
+        run: bin/rails test
+
