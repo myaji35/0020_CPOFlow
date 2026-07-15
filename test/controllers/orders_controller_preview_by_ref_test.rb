@@ -39,7 +39,11 @@ class OrdersControllerPreviewByRefTest < ActionDispatch::IntegrationTest
   test "존재하지 않는 ref → 데이터 없음" do
     get preview_by_ref_orders_path, params: { ref: "NONEXIST-9999" }
     assert_response :success
-    assert_match(/데이터 없음/, response.body)
+    # 로그인 사용자의 로케일은 User#preferred_locale = `locale.presence || "en"` 을 따른다.
+    # 테스트 사용자는 locale 미지정이라 영어("No data")가 렌더된다 — 앱 동작이 정상이고
+    # 한국어 문구를 하드코딩한 테스트가 잘못이었다.
+    # i18n 키로 검증해 로케일이 바뀌어도 깨지지 않게 한다.
+    assert_match(/#{Regexp.escape(I18n.t("orders.refno_preview.no_data", locale: :en))}/, response.body)
   end
 
   private
