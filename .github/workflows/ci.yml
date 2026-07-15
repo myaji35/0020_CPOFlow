@@ -98,6 +98,13 @@ jobs:
       - name: Setup database
         run: bin/rails db:schema:load
 
+      # 뷰를 렌더하는 테스트는 tailwind.css 를 요구한다(에셋 파이프라인).
+      # 빌드 없이 돌리면 130건이 ActionView::Template::Error로 죽는다 —
+      # 테스트 결함이 아니라 CI 셋업 누락이다. (개발환경은 Procfile.dev의
+      # tailwindcss:watch 가 만들어주므로 로컬에서는 드러나지 않는다)
+      - name: Build CSS
+        run: bin/rails tailwindcss:build
+
       - name: Run tests
         run: bin/rails test
 
