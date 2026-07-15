@@ -99,12 +99,15 @@
     <span class="text-[10px] text-gray-400 dark:text-gray-500 ml-auto"><%= t("calendar.sources.toggle_hint") %></span>
   </div>
 
+  <%# 요일 라벨은 월간/주간 두 뷰가 함께 쓴다. monthly 블록 안에서 정의하면
+      weekly 뷰에서 nil이 되어 216행 weekday_labels[i] 가 터진다. %>
+  <% weekday_labels = [t("calendar.weekday.sun"), t("calendar.weekday.mon"), t("calendar.weekday.tue"), t("calendar.weekday.wed"), t("calendar.weekday.thu"), t("calendar.weekday.fri"), t("calendar.weekday.sat")] %>
+
   <% if @view == "monthly" %>
     <%# =========== 월간 뷰 =========== %>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
       <%# 요일 헤더 %>
       <div class="grid grid-cols-7 border-b border-gray-200 dark:border-gray-700">
-        <% weekday_labels = [t("calendar.weekday.sun"), t("calendar.weekday.mon"), t("calendar.weekday.tue"), t("calendar.weekday.wed"), t("calendar.weekday.thu"), t("calendar.weekday.fri"), t("calendar.weekday.sat")] %>
         <% weekday_labels.each_with_index do |day, i| %>
           <div class="py-3 text-center text-xs font-semibold <%= i == 0 ? 'text-red-400' : i == 6 ? 'text-blue-400' : 'text-gray-500 dark:text-gray-500' %>">
             <%= day %>
