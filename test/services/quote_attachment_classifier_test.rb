@@ -43,12 +43,16 @@ class QuoteAttachmentClassifierTest < ActiveSupport::TestCase
     assert_equal :not_quote, QuoteAttachmentClassifier.call(fake("docs.zip", "application/zip"))
   end
 
-  test "PDF without keyword → ambiguous" do
-    assert_equal :ambiguous, QuoteAttachmentClassifier.call(fake("doc-12.pdf", "application/pdf"))
+  # 옵션 C (대표님 결정 2026-05-11): :ambiguous 폐지 — 명백한 negative(MIME/키워드)만
+  # 차단하고 나머지는 전부 :quote_candidate 로 [분석] 노출. 사용자 자율 판단.
+  # 그때 구현만 바꾸고 이 테스트는 :ambiguous 기대를 유지해 2개월간 깨진 채였다.
+  # (CI에서 테스트를 돌리지 않아 드러나지 않음 — 2026-07-15 게이트 도입으로 발견)
+  test "PDF without keyword → quote_candidate" do
+    assert_equal :quote_candidate, QuoteAttachmentClassifier.call(fake("doc-12.pdf", "application/pdf"))
   end
 
-  test "XLSX without keyword → ambiguous" do
-    assert_equal :ambiguous, QuoteAttachmentClassifier.call(fake("data.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+  test "XLSX without keyword → quote_candidate" do
+    assert_equal :quote_candidate, QuoteAttachmentClassifier.call(fake("data.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
   end
 
   test "negative keyword overrides positive MIME" do

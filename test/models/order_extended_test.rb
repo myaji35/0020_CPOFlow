@@ -87,15 +87,18 @@ class OrderExtendedTest < ActiveSupport::TestCase
     assert_equal :overdue, order.due_urgency
   end
 
-  test "due_urgency: 7일 이내면 :urgent" do
+  # 임계값은 D-7 기본 정책(D-3/D-7/그외) 기준. 커밋 3ad8f70(2026-04-29)에서
+  # order.rb만 7/14 → 3/7로 바꾸고 이 테스트는 함께 고치지 않아 3개월간 깨진 채였다.
+  # (CI에서 테스트를 돌리지 않아 드러나지 않았음 — 2026-07-15 게이트 도입으로 발견)
+  test "due_urgency: 3일 이내면 :urgent" do
     order = Order.new(title: "Test", customer_name: "Test Co",
-                      due_date: 5.days.from_now.to_date)
+                      due_date: 2.days.from_now.to_date)
     assert_equal :urgent, order.due_urgency
   end
 
-  test "due_urgency: 14일 이내면 :warning" do
+  test "due_urgency: 7일 이내면 :warning" do
     order = Order.new(title: "Test", customer_name: "Test Co",
-                      due_date: 10.days.from_now.to_date)
+                      due_date: 5.days.from_now.to_date)
     assert_equal :warning, order.due_urgency
   end
 

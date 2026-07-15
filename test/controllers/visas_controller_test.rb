@@ -5,7 +5,8 @@ require "test_helper"
 class VisasControllerTest < ActionDispatch::IntegrationTest
   def setup
     @user = User.find_or_create_by(email: "visas_ctrl_test@example.com") do |u|
-      u.name = "Visas Test User"; u.password = "password123"; u.role = :member
+      u.name = "Visas Test User"; u.password = "password123"; u.role = :manager  # ISS-300: 비자/고용계약은 민감정보 — manager 이상만 CRUD.
+      # 권한 강화 시 컨트롤러만 바꾸고 테스트는 :member로 남아 302 리다이렉트로 깨졌다.
     end
     login_as(@user)
     @employee = Employee.create!(name: "Visa Test Employee", nationality: "KR", employment_type: "regular")
