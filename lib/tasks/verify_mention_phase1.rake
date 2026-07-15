@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 # ISS-353 Phase 1 — T17: 실 클릭 3-op 검증 rake (CPOFlow 룰 충족)
 #
 # CPOFlow 룰: UI CRUD 기능 배포 후 반드시 실제 핵심 플로우 검증.

@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 # AUDIT-008: notification_type NULL 백필 태스크
 # 실행: bin/rails notifications:backfill_nil_types
 
@@ -22,17 +23,17 @@ namespace :notifications do
 
       inferred = if text.match?(/오버듀|overdue|긴급.*경과/)
                    "overdue_escalation"
-                 elsif text.match?(/비자|visa/)
+      elsif text.match?(/비자|visa/)
                    "visa"
-                 elsif text.match?(/계약|contract/)
+      elsif text.match?(/계약|contract/)
                    "contract"
-                 elsif text.match?(/ecount|전표/)
+      elsif text.match?(/ecount|전표/)
                    "ecount_slip_failed"
-                 elsif text.match?(/환영|oauth|가입/)
+      elsif text.match?(/환영|oauth|가입/)
                    "oauth_signup"
-                 else
+      else
                    "system"
-                 end
+      end
 
       n.update_column(:notification_type, inferred)
       counts[inferred] += 1

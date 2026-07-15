@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 # ISS-353 Phase 1 백필 — notifications.viewed_at = read_at 복사 + Order 카운터 캐시 재계산
 #
 # 사용:
@@ -13,7 +14,7 @@
 
 namespace :mentions do
   desc "Phase 1 백필: notifications.viewed_at = read_at 복사 + 영향 Order recompute"
-  task :backfill_phase1, [:dry_run] => :environment do |_, args|
+  task :backfill_phase1, [ :dry_run ] => :environment do |_, args|
     dry = args[:dry_run] == "true"
 
     puts "[mention:backfill] dry_run=#{dry} 시작"
