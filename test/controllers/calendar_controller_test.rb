@@ -17,16 +17,19 @@ class CalendarControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  # 9335fab "feat(i18n): ISS-324 Part 2 — calendar 영역 i18n" 이후 뷰는
+  # I18n.l(@month, format: "%Y-%m") 를 쓴다. 표시 형식이 "2026년 03월" → "2026-03"으로
+  # 바뀌었는데 테스트만 옛 형식에 남아 깨졌다. (로케일과 무관한 형식이다)
   test "calendar index — 이번 달 표시" do
     get calendar_path
     assert_response :success
-    assert_match Date.today.strftime("%Y년 %m월"), response.body
+    assert_match Date.today.strftime("%Y-%m"), response.body
   end
 
   test "calendar index — 특정 월 파라미터" do
     get calendar_path(month: "2026-03-01")
     assert_response :success
-    assert_match "2026년 03월", response.body
+    assert_match "2026-03", response.body
   end
 
   test "calendar index — 캘린더 그리드 렌더링" do
