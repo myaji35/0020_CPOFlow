@@ -224,6 +224,8 @@ module RfqAuto
       items = (raw.is_a?(Hash) ? raw["items"] : nil) || []
       llm_cost = raw.is_a?(Hash) ? raw["_cost_usd"].to_f : 0.0
       llm_model = raw.is_a?(Hash) ? raw["_model"] : nil
+      # ISS-397: 체크리스트 추출 결과 보존 (기존에는 버려져 화면에 노출되지 않았음)
+      checklist = raw.is_a?(Hash) ? raw["checklist"] : nil
       @total_cost += llm_cost
 
       # Sonnet escalation — Haiku가 0건이면 Sonnet으로 1회 재시도 (Opus는 너무 비쌈, 양식 컨텍스트 있으면 Sonnet으로 충분)
@@ -238,6 +240,7 @@ module RfqAuto
             escalated = true
             escalation_cost = retry_raw["_cost_usd"].to_f
             llm_model = retry_raw["_model"]
+            checklist = retry_raw["checklist"] if retry_raw["checklist"].present?
             @total_cost += escalation_cost
             Rails.logger.info "[RfqAuto::Analyzer] Sonnet escalation 성공: #{items.size}품 cost=$#{escalation_cost}"
           end
@@ -312,9 +315,13 @@ module RfqAuto
         end
       end
 
+      # ISS-397: 체크리스트를 orders.rfp_checklist_json에 저장 — 값 없으면 저장하지 않는다(가짜 채우기 금지)
+      compacted_checklist = persist_checklist(checklist)
+
       {
         items:                    enriched,
         count:                    enriched.size,
+        checklist:                compacted_checklist,
         text_chars:               text_chars,
         text_preview:             text_preview,
         llm_error:                llm_error,
@@ -333,6 +340,20 @@ module RfqAuto
         vision_model:             vision_model,
         vision_error:             vision_error
       }
+    end
+
+    # ISS-397: 체크리스트 값을 정리 후 저장. 빈 값은 제거하고, 남은 게 없으면 저장하지 않는다.
+    # 저장 실패는 분석을 중단시키지 않되 반드시 로그를 남긴다(무음 실패 금지).
+    def persist_checklist(checklist)
+      return {} unless checklist.is_a?(Hash)
+      compacted = checklist.reject { |_k, v| v.nil? || v.to_s.strip.empty? || (v.is_a?(Array) && v.reject(&:blank?).empty?) }
+      return {} if compacted.empty?
+      @order.update_columns(rfp_checklist_json: compacted.to_json)
+      Rails.logger.info "[RfqAuto::Analyzer] order=#{@order.id} checklist 저장 #{compacted.keys.join(',')}"
+      compacted
+    rescue StandardError => e
+      Rails.logger.warn "[RfqAuto::Analyzer] order=#{@order&.id} checklist 저장 실패: #{e.class}: #{e.message}"
+      {}
     end
 
     # ItemExtractor 호출 + 예외 격리 — 잔액 부족은 위로 전파.

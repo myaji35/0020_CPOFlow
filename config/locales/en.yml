@@ -521,6 +521,8 @@ en:
       rfp_processing: "Analyzing RFP attachments..."
       rfp_failed: "RFP analysis failed — check fallback tasks below"
       rfp_skipped: "No attachments — auto analysis skipped"
+      rfp_checklist: "RFP Checklist"
+      rfp_checklist_missing: "Not extracted"
       ai_auto_tasks: "AI Auto Tasks (%{count})"
       manual_tasks: "Manual Tasks (%{count})"
       source_excerpt_prefix: "Source: "

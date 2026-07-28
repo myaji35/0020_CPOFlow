@@ -420,6 +420,28 @@ class Order < ApplicationRecord
     tags.to_s.split(",").map(&:strip).reject(&:blank?)
   end
 
+  # ISS-397: RFP 체크리스트 추출 결과 JSON → Hash
+  def rfp_checklist
+    return {} if rfp_checklist_json.blank?
+    parsed = JSON.parse(rfp_checklist_json)
+    parsed.is_a?(Hash) ? parsed : {}
+  rescue JSON::ParserError
+    {}
+  end
+
+  # ISS-397: 화면 표시용 행 목록 — 값이 없으면 nil(미추출)로 정직하게 표기
+  def rfp_checklist_rows
+    data = rfp_checklist
+    defs = ChecklistItem.active.ordered.to_a
+    defs = data.keys.map { |k| ChecklistItem.new(code: k, name: k) } if defs.empty?
+    defs.map do |ci|
+      raw = data[ci.code]
+      value = raw.is_a?(Array) ? raw.reject(&:blank?).join(", ") : raw.to_s
+      value = nil if value.blank?
+      { code: ci.code, name: ci.name.presence || ci.code, value: value, present: value.present? }
+    end
+  end
+
   # 이메일 서명 JSON → Hash
   def email_signature
     return {} if email_signature_json.blank?

@@ -521,6 +521,8 @@ ko:
       rfp_processing: "RFP 첨부파일 자동 분석 중..."
       rfp_failed: "RFP 자동 분석 실패 — 아래 폴백 태스크를 확인하세요"
       rfp_skipped: "첨부파일 없음 — 자동 분석 건너뜀"
+      rfp_checklist: "RFP 체크리스트"
+      rfp_checklist_missing: "미추출"
       ai_auto_tasks: "AI 자동 분석 태스크 (%{count})"
       manual_tasks: "수동 태스크 (%{count})"
       source_excerpt_prefix: "원문: "
