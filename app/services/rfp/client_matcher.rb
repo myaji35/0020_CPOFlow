@@ -63,8 +63,18 @@ module Rfp
 
     private
 
+    # ISS-399: Client.website 가 "https://foo.com/about" 형태로 저장돼도
+    # sender_domain "foo.com" 과 매칭되도록 스킴/www/경로/포트를 제거한다.
     def normalize_domain(d)
-      d.downcase.strip.sub(/\A.*@/, "").sub(/\A.*</, "").sub(/[>"'].*\z/, "")
+      d.downcase.strip
+       .sub(/\A.*@/, "")
+       .sub(/\A.*</, "")
+       .sub(/[>"'].*\z/, "")
+       .sub(%r{\Ahttps?://}, "")
+       .sub(/\Awww\./, "")
+       .sub(%r{[/?#].*\z}, "")
+       .sub(/:.*\z/, "")
+       .sub(/\.+\z/, "")
     end
 
     def extract_real_sender_domain(from_str)

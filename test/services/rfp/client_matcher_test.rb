@@ -44,9 +44,8 @@ class Rfp::ClientMatcherTest < ActiveSupport::TestCase
     assert_match(/enec/i, "#{result[:client].name}#{result[:client].website}")
   end
 
-  # NOTE: ClientMatcher#normalize_domain 은 URL 스킴(https://)을 제거하지 않는다.
-  #       따라서 website 는 스킴 없는 도메인으로 저장된 경우에만 매칭된다.
-  #       스킴 포함 저장값 미매칭은 ISS-388 로 분리.
+  # NOTE: ISS-399 부터 normalize_domain 이 URL 스킴/www./경로/포트를 제거한다.
+  #       website 가 스킴 포함 URL 로 저장돼 있어도 매칭된다 (아래 스킴 케이스 테스트 참고).
   test "website 가 정확히 일치하면 website_match 로 매칭된다" do
     client = Client.create!(
       name: "UniqueCorp Test",
@@ -81,6 +80,35 @@ class Rfp::ClientMatcherTest < ActiveSupport::TestCase
 
     order = build_order(sender_domain: "Some Name <buyer@UNIQUECORP-TEST.EXAMPLE.COM>")
     result = Rfp::ClientMatcher.call(order)
+
+    assert_equal "website_match", result[:source]
+    assert_equal client, result[:client]
+  end
+
+  # ISS-399: website 가 스킴 포함 URL 로 저장돼 있어도 매칭되어야 한다.
+  test "website 에 https:// 스킴이 있어도 website_match 로 매칭된다" do
+    client = Client.create!(
+      name: "SchemeTest Corp",
+      code: uniq_code,
+      country: "AE",
+      website: "https://schemetest-xyz.example.com"
+    )
+
+    result = Rfp::ClientMatcher.call(build_order(sender_domain: "schemetest-xyz.example.com"))
+
+    assert_equal "website_match", result[:source]
+    assert_equal client, result[:client]
+  end
+
+  test "website 에 www. 와 경로/쿼리가 있어도 website_match 로 매칭된다" do
+    client = Client.create!(
+      name: "PathTest Corp",
+      code: uniq_code,
+      country: "AE",
+      website: "https://www.pathtest-xyz.example.com/about?a=1"
+    )
+
+    result = Rfp::ClientMatcher.call(build_order(sender_domain: "pathtest-xyz.example.com"))
 
     assert_equal "website_match", result[:source]
     assert_equal client, result[:client]
