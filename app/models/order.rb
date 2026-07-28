@@ -258,13 +258,16 @@ class Order < ApplicationRecord
   end
 
   # ISS-039: urgent/high + 마감일 경과 + 담당자 미배정 = 즉시 조치 필요
+  # ISS-410: 미배정 판정은 `assignees`(employee) 기준 — `critical?`와 동일하게 맞춘다.
+  #   AutoAssignerService가 만드는 Assignment는 user_id만 채우고 employee_id는 nil이라,
+  #   레코드 존재(assignments.id IS NULL)로 판정하면 admin이 있는 지점의 모든 신규 주문이
+  #   '배정됨'으로 취급돼 에스컬레이션이 영구히 발화하지 않았다.
   scope :critical, -> {
     joins(:card_status)
       .where(card_statuses: { key: %w[urgent high overdue] })
       .where("due_date < ?", Date.today)
       .where.not(status: [ :get_grn, :give_up, :done ])
-      .left_joins(:assignments)
-      .where(assignments: { id: nil })
+      .where.not(id: Assignment.where.not(employee_id: nil).select(:order_id))
       .distinct
   }
 

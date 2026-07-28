@@ -73,4 +73,27 @@ class OverdueEscalationJobTest < ActiveJob::TestCase
     Assignment.where(order: @critical_order).delete_all
     Employee.where(id: employee.id).delete_all if defined?(employee)
   end
+
+  # ISS-410: AutoAssignerService가 만드는 user-only Assignment(employee_id: nil)는
+  # '실담당 직원 배정'이 아니다. 이걸 배정으로 취급하면 admin이 있는 지점의 모든
+  # 신규 주문에서 escalation이 영구히 발화하지 않는다.
+  test "user만 배정된 Assignment는 미배정으로 보고 escalation 발화" do
+    # AutoAssignerService(after_create_commit)가 이미 user-only Assignment를 만들어 둔다.
+    # 없는 환경(admin 부재 등)에서도 조건을 동일하게 맞춘다.
+    Assignment.find_or_create_by!(order: @critical_order, employee_id: nil) do |a|
+      a.user = @owner
+      a.role = "auto"
+    end
+    assert Assignment.where(order: @critical_order, employee_id: nil).exists?
+
+    assert @critical_order.reload.critical?, "employee 미배정이므로 critical이어야 함"
+    assert_includes Order.critical.pluck(:id), @critical_order.id,
+                    "critical 스코프도 critical?와 동일하게 판정해야 함"
+
+    assert_difference "Notification.count", 1 do
+      OverdueEscalationJob.perform_now
+    end
+  ensure
+    Assignment.where(order: @critical_order).delete_all
+  end
 end
