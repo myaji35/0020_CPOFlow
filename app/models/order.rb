@@ -430,8 +430,10 @@ class Order < ApplicationRecord
   end
 
   # ISS-397: 화면 표시용 행 목록 — 값이 없으면 nil(미추출)로 정직하게 표기
+  # ISS-407: 추출 결과가 아예 없으면(분석 미수행 포함) 빈 배열 — '미추출'은 시도했을 때만 쓸 수 있는 말이다
   def rfp_checklist_rows
     data = rfp_checklist
+    return [] if data.empty?
     defs = ChecklistItem.active.ordered.to_a
     defs = data.keys.map { |k| ChecklistItem.new(code: k, name: k) } if defs.empty?
     defs.map do |ci|

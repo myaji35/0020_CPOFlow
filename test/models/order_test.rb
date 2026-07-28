@@ -657,4 +657,37 @@ class OrderTest < ActiveSupport::TestCase
     Order.where(user: user).each { |o| o.attachment_quote_analyses.delete_all; o.reload.destroy rescue nil }
     user&.destroy
   end
+
+  # ISS-407: 분석 미수행 주문에 '미추출' 행이 뜨면 안 된다.
+  # '미추출'은 추출을 시도했을 때만 성립하는 표현이다.
+  test "rfp_checklist_rows — rfp_checklist_json 없으면 빈 배열" do
+    ci = ChecklistItem.create!(code: "TST_#{SecureRandom.hex(2).upcase}", name: "테스트항목",
+                               prompt_hint: "hint", category: "general", active: true, position: 10)
+    order = Order.create!(user: @owner, title: "No Checklist", customer_name: "X", status: :new_rfq)
+    assert_equal [], order.rfp_checklist_rows
+  ensure
+    order&.reload&.destroy
+    ci&.destroy
+  end
+
+  test "rfp_checklist_rows — 일부만 추출되면 값 행 + 미추출 행이 함께 나온다" do
+    code_a = "TSTA_#{SecureRandom.hex(2).upcase}"
+    code_b = "TSTB_#{SecureRandom.hex(2).upcase}"
+    ci_a = ChecklistItem.create!(code: code_a, name: "항목A", prompt_hint: "h", category: "general", active: true, position: 10)
+    ci_b = ChecklistItem.create!(code: code_b, name: "항목B", prompt_hint: "h", category: "general", active: true, position: 20)
+    order = Order.create!(user: @owner, title: "Partial Checklist", customer_name: "X", status: :new_rfq)
+    order.update_columns(rfp_checklist_json: { code_a => "AQ1" }.to_json)
+
+    rows = order.reload.rfp_checklist_rows
+    row_a = rows.find { |r| r[:code] == code_a }
+    row_b = rows.find { |r| r[:code] == code_b }
+    assert row_a[:present], "추출된 항목은 present여야 함"
+    assert_equal "AQ1", row_a[:value]
+    assert_not row_b[:present], "미추출 항목은 present:false여야 함"
+    assert_nil row_b[:value]
+  ensure
+    order&.reload&.destroy
+    ci_a&.destroy
+    ci_b&.destroy
+  end
 end
