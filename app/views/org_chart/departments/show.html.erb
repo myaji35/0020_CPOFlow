@@ -14,13 +14,13 @@
             <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-500"><%= @department.code %></span>
           <% end %>
           <% unless @department.active? %>
-            <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-500">비활성</span>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-500"><%= t("org_chart.inactive") %></span>
           <% end %>
         </div>
         <p class="text-sm text-gray-500 dark:text-gray-500 mt-0.5">
           <%= @company.name %>
           <% if @department.parent %>
-            · <%= @department.parent.name %> 하위 부서
+            <%= t("org_chart.departments.show.parent_department", name: @department.parent.name) %>
           <% end %>
         </p>
       </div>
@@ -30,12 +30,12 @@
         <%= link_to new_org_chart_company_department_path(@company, parent_id: @department.id),
             class: "inline-flex items-center gap-1.5 px-3 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors" do %>
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          하위 부서 추가
+          <%= t("org_chart.departments.show.add_sub_department") %>
         <% end %>
         <%= link_to edit_org_chart_company_department_path(@company, @department),
             class: "inline-flex items-center gap-1.5 px-3 py-2 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-500 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" do %>
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          수정
+          <%= t("actions.edit") %>
         <% end %>
       </div>
     <% end %>
@@ -44,28 +44,28 @@
   <%# 통계 카드 %>
   <div class="grid grid-cols-3 gap-4">
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-      <p class="text-xs text-gray-500 dark:text-gray-500">총 직원</p>
-      <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><%= @employees.count %><span class="text-sm font-normal text-gray-500 dark:text-gray-500 ml-1">명</span></p>
+      <p class="text-xs text-gray-500 dark:text-gray-500"><%= t("org_chart.departments.show.total_employees") %></p>
+      <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><%= @employees.count %><span class="text-sm font-normal text-gray-500 dark:text-gray-500 ml-1"><%= t("org_chart.units.person") %></span></p>
     </div>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-      <p class="text-xs text-gray-500 dark:text-gray-500">하위 부서</p>
-      <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><%= @department.sub_departments.active.count %><span class="text-sm font-normal text-gray-500 dark:text-gray-500 ml-1">개</span></p>
+      <p class="text-xs text-gray-500 dark:text-gray-500"><%= t("org_chart.departments.show.sub_departments") %></p>
+      <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><%= @department.sub_departments.active.count %><span class="text-sm font-normal text-gray-500 dark:text-gray-500 ml-1"><%= t("org_chart.units.item") %></span></p>
     </div>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-      <p class="text-xs text-gray-500 dark:text-gray-500">비자 보유</p>
-      <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><%= @employees.count(&:active_visa) %><span class="text-sm font-normal text-gray-500 dark:text-gray-500 ml-1">명</span></p>
+      <p class="text-xs text-gray-500 dark:text-gray-500"><%= t("org_chart.departments.show.visa_holders") %></p>
+      <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><%= @employees.count(&:active_visa) %><span class="text-sm font-normal text-gray-500 dark:text-gray-500 ml-1"><%= t("org_chart.units.person") %></span></p>
     </div>
   </div>
 
   <%# 직원 목록 %>
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
     <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">소속 직원</h2>
+      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300"><%= t("org_chart.departments.show.assigned_employees") %></h2>
     </div>
 
     <% if @employees.empty? %>
       <div class="p-8 text-center text-sm text-gray-500 dark:text-gray-500">
-        배속된 직원이 없습니다.
+        <%= t("org_chart.departments.show.no_assigned_employees") %>
       </div>
     <% else %>
       <div class="divide-y divide-gray-50 dark:divide-gray-700">
@@ -86,7 +86,7 @@
               <% if emp.active_visa %>
                 <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full <%= emp.visa_expiring_soon? ? 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400' : 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400' %>">
                   <span class="w-1.5 h-1.5 rounded-full <%= emp.visa_expiring_soon? ? 'bg-red-400' : 'bg-green-400' %>"></span>
-                  비자 <%= emp.visa_expiring_soon? ? '만료임박' : '정상' %>
+                  <%= t("org_chart.departments.show.visa_status", status: emp.visa_expiring_soon? ? t("org_chart.visa_expiring") : t("org_chart.visa_normal")) %>
                 </span>
               <% end %>
               <svg class="w-4 h-4 text-gray-300 dark:text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
@@ -102,7 +102,7 @@
   <% if sub_depts.any? %>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
       <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">하위 부서</h2>
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300"><%= t("org_chart.departments.show.sub_departments") %></h2>
       </div>
       <div class="divide-y divide-gray-50 dark:divide-gray-700">
         <% sub_depts.each do |sub| %>
@@ -117,10 +117,10 @@
               <% end %>
             </div>
             <div class="flex items-center gap-3">
-              <span class="text-xs text-gray-500 dark:text-gray-500"><%= sub.employee_count %>명</span>
+              <span class="text-xs text-gray-500 dark:text-gray-500"><%= t("org_chart.units.people", count: sub.employee_count) %></span>
               <% if current_user.manager? || current_user.admin? %>
                 <%= link_to edit_org_chart_company_department_path(@company, sub),
-                    class: "text-xs text-gray-500 hover:text-primary px-1.5 py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700" do %>수정<% end %>
+                    class: "text-xs text-gray-500 hover:text-primary px-1.5 py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700" do %><%= t("actions.edit") %><% end %>
               <% end %>
             </div>
           </div>

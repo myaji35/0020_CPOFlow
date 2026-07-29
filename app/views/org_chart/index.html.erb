@@ -1,4 +1,4 @@
-<% content_for :title, "조직도" %>
+<% content_for :title, t("org_chart.title") %>
 
 <div class="flex flex-col gap-6"
      x-data="{
@@ -13,19 +13,19 @@
   <%# Header %>
   <div class="flex items-center justify-between">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">조직도</h1>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">국가 · 법인 · 부서 · 직원 계층 구조</p>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white"><%= t("org_chart.title") %></h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1"><%= t("org_chart.index.subtitle") %></p>
     </div>
     <% if current_user.manager? || current_user.admin? %>
       <div class="flex gap-2">
         <%= link_to new_org_chart_company_path, class: "inline-flex items-center gap-1.5 px-3 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors" do %>
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          법인 추가
+          <%= t("org_chart.companies.new.title") %>
         <% end %>
         <% if current_user.admin? %>
           <%= link_to org_chart_countries_path, class: "inline-flex items-center gap-1.5 px-3 py-2 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" do %>
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-            국가 관리
+            <%= t("org_chart.countries.index.title") %>
           <% end %>
         <% end %>
       </div>
@@ -41,7 +41,7 @@
         </div>
         <div>
           <p class="text-2xl font-bold text-gray-900 dark:text-white"><%= @stats[:countries] %></p>
-          <p class="text-xs text-gray-500 dark:text-gray-400">국가</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400"><%= t("org_chart.index.countries") %></p>
         </div>
       </div>
     </div>
@@ -52,7 +52,7 @@
         </div>
         <div>
           <p class="text-2xl font-bold text-gray-900 dark:text-white"><%= @stats[:companies] %></p>
-          <p class="text-xs text-gray-500 dark:text-gray-400">법인</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400"><%= t("org_chart.index.companies") %></p>
         </div>
       </div>
     </div>
@@ -63,7 +63,7 @@
         </div>
         <div>
           <p class="text-2xl font-bold text-gray-900 dark:text-white"><%= @stats[:departments] %></p>
-          <p class="text-xs text-gray-500 dark:text-gray-400">부서</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400"><%= t("org_chart.index.departments") %></p>
         </div>
       </div>
     </div>
@@ -74,7 +74,7 @@
         </div>
         <div>
           <p class="text-2xl font-bold text-gray-900 dark:text-white"><%= @stats[:employees] %></p>
-          <p class="text-xs text-gray-500 dark:text-gray-400">재직 직원</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400"><%= t("org_chart.index.active_employees") %></p>
         </div>
       </div>
     </div>
@@ -84,10 +84,10 @@
     <%# 데이터 없음 %>
     <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-12 text-center">
       <svg class="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-      <p class="text-gray-500 dark:text-gray-400 text-sm">등록된 조직이 없습니다.</p>
+      <p class="text-gray-500 dark:text-gray-400 text-sm"><%= t("org_chart.index.empty") %></p>
       <% if current_user.admin? %>
         <%= link_to new_org_chart_country_path, class: "mt-3 inline-flex text-sm text-primary hover:underline" do %>
-          국가 먼저 추가하기 →
+          <%= t("org_chart.index.add_country_first") %>
         <% end %>
       <% end %>
     </div>
@@ -97,7 +97,7 @@
       <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text"
              x-model="search"
-             placeholder="직원명, 부서명으로 검색..."
+             placeholder="<%= t("org_chart.index.search_placeholder") %>"
              class="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-[#00A1E0] focus:ring-1 focus:ring-[#00A1E0]">
       <button x-show="search.length > 0" @click="search = ''" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -123,9 +123,9 @@
           <% companies = country.companies.select(&:active?) %>
           <% if companies.empty? %>
             <div class="bg-white dark:bg-gray-800 rounded-xl border border-dashed border-gray-200 dark:border-gray-600 p-8 text-center text-sm text-gray-500 dark:text-gray-400">
-              이 국가에 등록된 법인이 없습니다.
+              <%= t("org_chart.countries.show.no_companies") %>
               <% if current_user.manager? || current_user.admin? %>
-                <%= link_to new_org_chart_company_path(country_id: country.id), class: "ml-2 text-primary hover:underline" do %>법인 추가<% end %>
+                <%= link_to new_org_chart_company_path(country_id: country.id), class: "ml-2 text-primary hover:underline" do %><%= t("org_chart.companies.new.title") %><% end %>
               <% end %>
             </div>
           <% end %>
@@ -137,9 +137,9 @@
                  x-data x-ref="unassigned" x-show="matchesSearch($refs.unassigned)">
               <div class="flex items-center gap-2 px-5 py-3 border-b border-gray-200 dark:border-gray-700">
                 <svg class="w-4 h-4 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400">부서 미배정 (<%= unassigned.count %>명)</h3>
+                <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400"><%= t("org_chart.index.unassigned_employees", count: unassigned.count) %></h3>
               </div>
-              <div class="px-5 py-4 org-dept-dropzone" data-dept-id="" data-dept-name="부서 미배정">
+              <div class="px-5 py-4 org-dept-dropzone" data-dept-id="" data-dept-name="<%= t("org_chart.index.unassigned_department") %>">
                 <div class="flex flex-wrap gap-2">
                   <% unassigned.each do |emp| %>
                     <div class="org-employee-chip flex items-center gap-2 px-3 py-1.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:border-primary/50 hover:shadow-sm transition-all <%= (current_user.manager? || current_user.admin?) ? 'cursor-move' : 'cursor-pointer' %>"
@@ -195,17 +195,17 @@
                   <div class="flex items-center gap-2">
                     <span class="inline-flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">
                       <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                      <%= company_dept_count %>개 부서
+                      <%= t("org_chart.units.departments", count: company_dept_count) %>
                     </span>
                     <span class="inline-flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">
                       <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                      <%= company_emp_count %>명
+                      <%= t("org_chart.units.people", count: company_emp_count) %>
                     </span>
                   </div>
                   <% if current_user.manager? || current_user.admin? %>
                     <%= link_to edit_org_chart_company_path(company),
                         class: "text-xs text-gray-500 dark:text-gray-400 hover:text-primary px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700",
-                        onclick: "event.stopPropagation()" do %>수정<% end %>
+                        onclick: "event.stopPropagation()" do %><%= t("actions.edit") %><% end %>
                   <% end %>
                   <svg :class="open ? 'rotate-180' : ''" class="w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                 </div>
@@ -216,9 +216,9 @@
                 <% root_depts = company.departments.select { |d| d.active? && d.parent_id.nil? }.sort_by { |d| [d.sort_order, d.name] } %>
                 <% if root_depts.empty? %>
                   <div class="px-5 py-4 text-sm text-gray-500 dark:text-gray-400 text-center">
-                    등록된 부서가 없습니다.
+                    <%= t("org_chart.companies.show.no_departments") %>
                     <% if current_user.manager? || current_user.admin? %>
-                      <%= link_to new_org_chart_company_department_path(company), class: "ml-1 text-primary hover:underline" do %>부서 추가<% end %>
+                      <%= link_to new_org_chart_company_department_path(company), class: "ml-1 text-primary hover:underline" do %><%= t("org_chart.departments.new.title") %><% end %>
                     <% end %>
                   </div>
                 <% else %>
@@ -247,12 +247,12 @@
                           <div class="flex items-center gap-3">
                             <span class="inline-flex items-center gap-1 text-xs <%= dept_employees.empty? ? 'text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-700/50' : 'text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700' %> px-2 py-0.5 rounded-full">
                               <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                              <%= dept_employees.empty? ? '직원 없음' : "#{dept_employees.count}명" %>
+                              <%= dept_employees.empty? ? t("org_chart.index.no_employees") : t("org_chart.units.people", count: dept_employees.count) %>
                             </span>
                             <% if current_user.manager? || current_user.admin? %>
                               <%= link_to edit_org_chart_company_department_path(company, dept),
                                   class: "text-xs text-gray-500 dark:text-gray-400 hover:text-primary px-1.5 py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700",
-                                  onclick: "event.stopPropagation()" do %>수정<% end %>
+                                  onclick: "event.stopPropagation()" do %><%= t("actions.edit") %><% end %>
                             <% end %>
                             <svg :class="deptOpen ? 'rotate-180' : ''" class="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                           </div>
@@ -263,7 +263,7 @@
                              data-dept-id="<%= dept.id %>"
                              data-dept-name="<%= dept.name %>">
                           <% if dept_employees.empty? %>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">배속된 직원이 없습니다. <span class="text-[10px] text-primary">(드래그로 추가 가능)</span></p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400"><%= t("org_chart.departments.show.no_assigned_employees") %> <span class="text-[10px] text-primary"><%= t("org_chart.index.drag_to_add") %></span></p>
                           <% else %>
                             <div class="flex flex-wrap gap-2">
                               <% dept_employees.each do |emp| %>
@@ -305,7 +305,7 @@
                                     <svg class="w-3 h-3 text-gray-500 dark:text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
                                   </div>
                                   <span class="text-xs font-medium text-gray-600 dark:text-gray-400"><%= sub.name %></span>
-                                  <span class="text-xs text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded-full"><%= sub_employees.count %>명</span>
+                                  <span class="text-xs text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded-full"><%= t("org_chart.units.people", count: sub_employees.count) %></span>
                                 </div>
                                 <svg :class="subOpen ? 'rotate-180' : ''" class="w-3 h-3 text-gray-400 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                               </div>
@@ -318,7 +318,7 @@
                                     <% end %>
                                   <% end %>
                                   <% if sub_employees.empty? %>
-                                    <p class="text-xs text-gray-400 dark:text-gray-500">배속된 직원이 없습니다.</p>
+                                    <p class="text-xs text-gray-400 dark:text-gray-500"><%= t("org_chart.departments.show.no_assigned_employees") %></p>
                                   <% end %>
                                 </div>
                               </div>
@@ -328,7 +328,7 @@
                           <% if current_user.manager? || current_user.admin? %>
                             <div class="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700 flex gap-2">
                               <%= link_to new_org_chart_company_department_path(company, parent_id: dept.id),
-                                  class: "text-xs text-gray-400 dark:text-gray-500 hover:text-primary" do %>+ 하위 부서<% end %>
+                                  class: "text-xs text-gray-400 dark:text-gray-500 hover:text-primary" do %><%= t("org_chart.companies.show.add_sub_department") %><% end %>
                             </div>
                           <% end %>
                         </div>
@@ -342,7 +342,7 @@
                       <%= link_to new_org_chart_company_department_path(company),
                           class: "inline-flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-primary transition-colors" do %>
                         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        부서 추가
+                        <%= t("org_chart.departments.new.title") %>
                       <% end %>
                     </div>
                   <% end %>
@@ -398,7 +398,7 @@
           zone.classList.remove('ring-2','ring-primary','ring-inset','bg-primary/5');
           if (!dragEl) return;
           var newDeptId = zone.dataset.deptId || '';
-          var newDeptName = zone.dataset.deptName || '부서 없음';
+          var newDeptName = zone.dataset.deptName || '<%= j t("org_chart.index.no_department") %>';
           var url = dragEl.dataset.updateUrl;
           // 낙관적 UI: 즉시 이동 (success 여부는 서버 응답으로 확정)
           fetch(url, {
@@ -409,10 +409,10 @@
             if (r.ok) {
               window.location.reload();
             } else {
-              alert('부서 이동 실패 (HTTP ' + r.status + ')');
+              alert('<%= j t("org_chart.index.move_failed_http") %> ' + r.status + ')');
             }
           }).catch(function(err) {
-            alert('네트워크 오류: ' + err.message);
+            alert('<%= j t("org_chart.index.network_error") %> ' + err.message);
           });
         });
       });

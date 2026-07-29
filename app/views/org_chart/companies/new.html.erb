@@ -1,14 +1,14 @@
-<% content_for :title, "법인 추가" %>
+<% content_for :title, t("org_chart.companies.new.title") %>
 
 <div class="max-w-2xl mx-auto py-8 px-4">
   <div class="flex items-center gap-2 text-sm text-gray-500 mb-6">
-    <%= link_to "조직도", org_chart_path, class: "hover:text-primary" %>
+    <%= link_to t("org_chart.title"), org_chart_path, class: "hover:text-primary" %>
     <span>/</span>
-    <span>법인 추가</span>
+    <span><%= t("org_chart.companies.new.title") %></span>
   </div>
 
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-    <h1 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">법인 추가</h1>
+    <h1 class="text-lg font-semibold text-gray-900 dark:text-white mb-6"><%= t("org_chart.companies.new.title") %></h1>
     <%= render "form", company: @company %>
   </div>
 </div>

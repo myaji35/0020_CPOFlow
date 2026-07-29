@@ -1669,18 +1669,120 @@ en:
 
   # ── Org Chart ─────────────────────────────────────────────────────
   org_chart:
+    title: "Org Chart"
+    inactive: "Inactive"
+    visa_expiring: "Expiring Soon"
+    visa_normal: "Valid"
+    units:
+      person: "person"
+      item: "item"
+      people: "%{count} people"
+      items: "%{count} items"
+      departments: "%{count} departments"
+    index:
+      subtitle: "Country · Company · Department · Employee Hierarchy"
+      countries: "Countries"
+      companies: "Companies"
+      departments: "Departments"
+      active_employees: "Active Employees"
+      empty: "No organizations found."
+      add_country_first: "Add a country first →"
+      search_placeholder: "Search employees or departments..."
+      unassigned_employees: "Unassigned (%{count})"
+      unassigned_department: "Unassigned"
+      no_employees: "No employees"
+      drag_to_add: "(Drag to add)"
+      no_department: "No department"
+      move_failed_http: "Failed to move department (HTTP"
+      network_error: "Network error:"
     countries:
       create_success: "Country added."
       update_success: "Country updated."
       delete_success: "Country deleted."
+      index:
+        title: "Manage Countries"
+        empty: "No countries found."
+        country: "Country"
+        region: "Region"
+        company_count: "Companies"
+        confirm_delete: "Delete %{name}?"
+      new:
+        title: "Add Country"
+        add: "Add"
+      edit:
+        title: "Edit Country"
+        page_title: "Edit %{name}"
+      form:
+        country_code_iso: "Country Code (ISO)"
+        country_code: "Country Code"
+        emoji: "Emoji"
+        sort_order: "Sort Order"
+        name_ko: "Name (Korean)"
+        name_en: "Name (English)"
+        region: "Region"
+        select: "Select"
+      show:
+        companies: "Companies"
+        total_employees: "Total Employees"
+        total_departments: "Total Departments"
+        no_companies: "No companies found in this country."
     companies:
       create_success: "Company added."
       update_success: "Company updated."
       delete_success: "Company deleted."
+      index:
+        title: "Companies"
+        subtitle: "Manage All Companies"
+        empty: "No companies found."
+        add_company: "Add a company →"
+      new:
+        title: "Add Company"
+      edit:
+        title: "Edit Company"
+        page_title: "Edit %{name}"
+      form:
+        name_ko: "Name (Korean)"
+        name_en: "Name (English)"
+        name_placeholder: "Gagahoho Inc."
+        company_type: "Company Type"
+        country: "Country"
+        select_country: "Select Country"
+        registration_number: "Business Registration Number"
+        address: "Address"
+        active: "Active Company"
+      show:
+        company_info: "Company Information"
+        total_employees: "Total Employees"
+        registration_number: "Registration Number"
+        department_list: "Departments (%{count})"
+        no_departments: "No departments found."
+        add_sub_department: "+ Subdepartment"
     departments:
       create_success: "Department added."
       update_success: "Department updated."
       delete_success: "Department deleted."
+      new:
+        title: "Add Department"
+        page_title: "Add Department — %{company}"
+      edit:
+        title: "Edit Department"
+        page_title: "Edit %{name}"
+      form:
+        name: "Department Name"
+        code: "Department Code"
+        parent_optional: "Parent Department (Optional)"
+        top_level: "Top Level"
+        sort_order: "Sort Order"
+        active: "Active Department"
+      show:
+        parent_department: "· Subdepartment of %{name}"
+        add_sub_department: "Add Subdepartment"
+        total_employees: "Total Employees"
+        sub_departments: "Subdepartments"
+        visa_holders: "Visa Holders"
+        assigned_employees: "Assigned Employees"
+        no_assigned_employees: "No assigned employees."
+        visa_status: "Visa %{status}"
 
   # ── Admin ─────────────────────────────────────────────────────────
   admin:
