@@ -66,7 +66,9 @@ module Rfp
         head = file.read(2048).to_s
         NOISE_PDF_TITLES.any? { |title| head.include?("/Title (#{title}") }
       end
-    rescue
+    rescue => e
+      filename = @attachment.blob.filename.to_s rescue "(unknown filename)"
+      Rails.logger.warn("[Rfp::AttachmentRelevanceFilter] pdf_noise_title? #{filename}: #{e.class}: #{e.message}")
       false
     end
   end
