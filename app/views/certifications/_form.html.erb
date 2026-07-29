@@ -8,32 +8,32 @@
   <%= render "shared/form_with_documents", f: f, record: certification do %>
     <div class="grid grid-cols-2 gap-4">
       <div class="col-span-2">
-        <%= f.label :name, "자격증명 *", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
-        <%= f.text_field :name, required: true, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary", placeholder: "산업안전산업기사" %>
+        <%= f.label :name, t("certifications.form.name"), class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.text_field :name, required: true, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary", placeholder: t("certifications.form.name_placeholder") %>
       </div>
       <div>
-        <%= f.label :issuing_body, "발급 기관", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.label :issuing_body, t("certifications.form.issuing_body"), class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
         <%= f.text_field :issuing_body, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
       </div>
       <div></div>
       <div>
-        <%= f.label :issued_date, "취득일", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.label :issued_date, t("certifications.form.issued_date"), class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
         <%= f.date_field :issued_date, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
       </div>
       <div>
-        <%= f.label :expiry_date, "만료일", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.label :expiry_date, t("certifications.form.expiry_date"), class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
         <%= f.date_field :expiry_date, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
       </div>
       <div class="col-span-2">
-        <%= f.label :notes, "메모", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.label :notes, t("certifications.form.notes"), class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
         <%= f.text_area :notes, rows: 2, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary resize-none" %>
       </div>
     </div>
   <% end %>
 
   <div class="flex justify-end gap-3">
-    <%= link_to "취소", @employee, class: "px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-500 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700" %>
-    <%= f.submit certification.new_record? ? "자격증 등록" : "저장",
+    <%= link_to t("actions.cancel"), @employee, class: "px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-500 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700" %>
+    <%= f.submit certification.new_record? ? t("certifications.form.submit_create") : t("actions.save"),
         class: "px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-dark cursor-pointer" %>
   </div>
 <% end %>

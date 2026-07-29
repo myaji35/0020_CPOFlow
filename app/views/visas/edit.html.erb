@@ -1,13 +1,13 @@
-<% content_for :title, "비자 수정" %>
+<% content_for :title, t("visas.edit.title") %>
 <div class="flex flex-col gap-4">
   <div class="flex items-center gap-2 text-sm text-gray-500">
-    <%= link_to "직원 관리", employees_path, class: "hover:text-primary" %>
+    <%= link_to t("nav.employees"), employees_path, class: "hover:text-primary" %>
     <span>/</span>
     <%= link_to @employee.name, @employee, class: "hover:text-primary" %>
     <span>/</span>
-    <span>비자 수정</span>
+    <span><%= t("visas.edit.title") %></span>
   </div>
-  <h1 class="text-2xl font-bold text-gray-900 dark:text-white">비자 수정</h1>
+  <h1 class="text-2xl font-bold text-gray-900 dark:text-white"><%= t("visas.edit.title") %></h1>
   <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
     <%= render "form", visa: @visa %>
   </div>

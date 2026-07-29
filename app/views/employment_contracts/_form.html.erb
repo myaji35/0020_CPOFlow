@@ -8,49 +8,49 @@
   <%= render "shared/form_with_documents", f: f, record: contract do %>
     <div class="grid grid-cols-2 gap-4">
       <div>
-        <%= f.label :start_date, "계약 시작일 *", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.label :start_date, t("employment_contracts.form.start_date"), class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
         <%= f.date_field :start_date, required: true, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
       </div>
       <div>
-        <%= f.label :end_date, "계약 종료일", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.label :end_date, t("employment_contracts.form.end_date"), class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
         <%= f.date_field :end_date, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
       </div>
       <div>
-        <%= f.label :base_salary, "기본급", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.label :base_salary, t("employment_contracts.form.base_salary"), class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
         <%= f.number_field :base_salary, step: "any", class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
       </div>
       <div>
-        <%= f.label :currency, "통화", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.label :currency, t("employment_contracts.form.currency"), class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
         <%= f.select :currency, [["AED", "AED"], ["USD", "USD"], ["KRW", "KRW"], ["EUR", "EUR"]], {},
             class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
       </div>
       <div>
-        <%= f.label :pay_frequency, "지급 주기", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
-        <%= f.select :pay_frequency, [["월급", "monthly"], ["격월", "bi-monthly"], ["주급", "weekly"]], {},
+        <%= f.label :pay_frequency, t("employment_contracts.form.pay_frequency"), class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.select :pay_frequency, [[t("employment_contracts.pay_frequency.monthly"), "monthly"], [t("employment_contracts.pay_frequency.bi_monthly"), "bi-monthly"], [t("employment_contracts.pay_frequency.weekly"), "weekly"]], {},
             class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
       </div>
       <div>
-        <%= f.label :status, "상태", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
-        <%= f.select :status, [["계약중", "active"], ["만료", "expired"], ["해지", "terminated"], ["갱신됨", "renewed"]], {},
+        <%= f.label :status, t("employment_contracts.form.status"), class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.select :status, [[t("employment_contracts.status.active"), "active"], [t("employment_contracts.status.expired"), "expired"], [t("employment_contracts.status.terminated"), "terminated"], [t("employment_contracts.status.renewed"), "renewed"]], {},
             class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
       </div>
       <div class="col-span-2">
-        <%= f.label :project_id, "배정 현장 (선택)", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.label :project_id, t("employment_contracts.form.project"), class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
         <%= f.select :project_id,
             @projects.map { |p| [p.name, p.id] },
-            { include_blank: "현장 없음" },
+            { include_blank: t("employment_contracts.form.no_project") },
             class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" %>
       </div>
       <div class="col-span-2">
-        <%= f.label :notes, "메모", class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
+        <%= f.label :notes, t("employment_contracts.form.notes"), class: "block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1" %>
         <%= f.text_area :notes, rows: 2, class: "w-full border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary resize-none" %>
       </div>
     </div>
   <% end %>
 
   <div class="flex justify-end gap-3">
-    <%= link_to "취소", @employee, class: "px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-500 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700" %>
-    <%= f.submit contract.new_record? ? "계약 등록" : "저장",
+    <%= link_to t("actions.cancel"), @employee, class: "px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-500 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700" %>
+    <%= f.submit contract.new_record? ? t("employment_contracts.form.submit_create") : t("actions.save"),
         class: "px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-dark cursor-pointer" %>
   </div>
 <% end %>

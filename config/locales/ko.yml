@@ -1491,18 +1491,93 @@ ko:
     create_success: "비자가 등록되었습니다."
     update_success: "비자가 수정되었습니다."
     delete_success: "비자가 삭제되었습니다."
+    new:
+      title: "비자 추가"
+    edit:
+      title: "비자 수정"
+    form:
+      visa_type: "비자 종류 *"
+      issuing_country: "발급 국가 (ISO) *"
+      select_country: "선택"
+      country_default_hint: "기본값: 직원 국적"
+      visa_number: "비자 번호"
+      status: "상태 *"
+      issue_date: "발급일"
+      expiry_date: "만료일 *"
+      notes: "메모"
+      submit_create: "비자 등록"
+    status:
+      active: "활성"
+      expired: "만료"
+      pending: "신청중"
+      cancelled: "취소"
   employment_contracts:
     create_success: "계약이 등록되었습니다."
     update_success: "계약이 수정되었습니다."
     delete_success: "계약이 삭제되었습니다."
+    new:
+      title: "계약 추가"
+    edit:
+      title: "계약 수정"
+    form:
+      start_date: "계약 시작일 *"
+      end_date: "계약 종료일"
+      base_salary: "기본급"
+      currency: "통화"
+      pay_frequency: "지급 주기"
+      status: "상태"
+      project: "배정 현장 (선택)"
+      no_project: "현장 없음"
+      notes: "메모"
+      submit_create: "계약 등록"
+    pay_frequency:
+      monthly: "월급"
+      bi_monthly: "격월"
+      weekly: "주급"
+    status:
+      active: "계약중"
+      expired: "만료"
+      terminated: "해지"
+      renewed: "갱신됨"
   employee_assignments:
     create_success: "현장 배정이 등록되었습니다."
     update_success: "현장 배정이 수정되었습니다."
     delete_success: "현장 배정이 삭제되었습니다."
+    new:
+      title: "현장 배정"
+    edit:
+      title: "현장 배정 수정"
+      breadcrumb: "배정 수정"
+    form:
+      project: "현장 *"
+      select_project: "현장 선택"
+      role: "역할"
+      role_placeholder: "구매 담당자"
+      status: "상태"
+      start_date: "시작일 *"
+      end_date: "종료일"
+      notes: "메모"
+      submit_create: "배정 등록"
+    status:
+      active: "배정중"
+      completed: "완료"
+      cancelled: "취소"
   certifications:
     create_success: "자격증이 등록되었습니다."
     update_success: "자격증이 수정되었습니다."
     delete_success: "자격증이 삭제되었습니다."
+    new:
+      title: "자격증 추가"
+    edit:
+      title: "자격증 수정"
+    form:
+      name: "자격증명 *"
+      name_placeholder: "산업안전산업기사"
+      issuing_body: "발급 기관"
+      issued_date: "취득일"
+      expiry_date: "만료일"
+      notes: "메모"
+      submit_create: "자격증 등록"
   contact_persons:
     create_success: "담당자가 등록되었습니다."
     update_success: "담당자 정보가 수정되었습니다."

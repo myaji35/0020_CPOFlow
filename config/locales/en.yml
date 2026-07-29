@@ -1493,18 +1493,93 @@ en:
     create_success: "Visa added successfully."
     update_success: "Visa updated successfully."
     delete_success: "Visa deleted successfully."
+    new:
+      title: "Add Visa"
+    edit:
+      title: "Edit Visa"
+    form:
+      visa_type: "Visa Type *"
+      issuing_country: "Issuing Country (ISO) *"
+      select_country: "Select"
+      country_default_hint: "Default: Employee nationality"
+      visa_number: "Visa Number"
+      status: "Status *"
+      issue_date: "Issue Date"
+      expiry_date: "Expiry Date *"
+      notes: "Notes"
+      submit_create: "Add Visa"
+    status:
+      active: "Active"
+      expired: "Expired"
+      pending: "Pending"
+      cancelled: "Cancelled"
   employment_contracts:
     create_success: "Contract added successfully."
     update_success: "Contract updated successfully."
     delete_success: "Contract deleted successfully."
+    new:
+      title: "Add Employment Contract"
+    edit:
+      title: "Edit Employment Contract"
+    form:
+      start_date: "Contract Start Date *"
+      end_date: "Contract End Date"
+      base_salary: "Base Salary"
+      currency: "Currency"
+      pay_frequency: "Pay Frequency"
+      status: "Status"
+      project: "Assigned Project (Optional)"
+      no_project: "No Project"
+      notes: "Notes"
+      submit_create: "Add Contract"
+    pay_frequency:
+      monthly: "Monthly"
+      bi_monthly: "Every Two Months"
+      weekly: "Weekly"
+    status:
+      active: "Active"
+      expired: "Expired"
+      terminated: "Terminated"
+      renewed: "Renewed"
   employee_assignments:
     create_success: "Assignment added successfully."
     update_success: "Assignment updated successfully."
     delete_success: "Assignment deleted successfully."
+    new:
+      title: "Assign to Project"
+    edit:
+      title: "Edit Project Assignment"
+      breadcrumb: "Edit Assignment"
+    form:
+      project: "Project *"
+      select_project: "Select Project"
+      role: "Role"
+      role_placeholder: "Procurement Assignee"
+      status: "Status"
+      start_date: "Start Date *"
+      end_date: "End Date"
+      notes: "Notes"
+      submit_create: "Add Assignment"
+    status:
+      active: "Active"
+      completed: "Completed"
+      cancelled: "Cancelled"
   certifications:
     create_success: "Certification added successfully."
     update_success: "Certification updated successfully."
     delete_success: "Certification deleted successfully."
+    new:
+      title: "Add Certification"
+    edit:
+      title: "Edit Certification"
+    form:
+      name: "Certification Name *"
+      name_placeholder: "Industrial Safety Engineer"
+      issuing_body: "Issuing Body"
+      issued_date: "Issue Date"
+      expiry_date: "Expiry Date"
+      notes: "Notes"
+      submit_create: "Add Certification"
   contact_persons:
     create_success: "Contact added successfully."
     update_success: "Contact updated successfully."
@@ -1883,9 +1958,68 @@ en:
   rfq_auto:
     items_requested: "Items Requested"
 
+  activerecord:
+    attributes:
+      order:
+        title: "Order Title"
+        customer_name: "Client Name"
+        status: "Status"
+      review:
+        rating: "Rating"
+        body: "Feedback"
+        email: "Email"
+        channel: "Channel"
+
+  datetime:
+    distance_in_words:
+      half_a_minute: "half a minute"
+      less_than_x_seconds:
+        one: "less than 1 second"
+        other: "less than %{count} seconds"
+      x_seconds:
+        one: "1 second"
+        other: "%{count} seconds"
+      less_than_x_minutes:
+        one: "less than 1 minute"
+        other: "less than %{count} minutes"
+      x_minutes:
+        one: "1 minute"
+        other: "%{count} minutes"
+      about_x_hours:
+        one: "about 1 hour"
+        other: "about %{count} hours"
+      x_days:
+        one: "1 day"
+        other: "%{count} days"
+      about_x_months:
+        one: "about 1 month"
+        other: "about %{count} months"
+      x_months:
+        one: "1 month"
+        other: "%{count} months"
+      about_x_years:
+        one: "about 1 year"
+        other: "about %{count} years"
+      over_x_years:
+        one: "over 1 year"
+        other: "over %{count} years"
+      almost_x_years:
+        one: "almost 1 year"
+        other: "almost %{count} years"
+
+  support:
+    array:
+      words_connector: ", "
+      two_words_connector: " and "
+      last_word_connector: ", "
+
   # ── Errors ────────────────────────────────────────────────────────
   errors:
     messages:
       not_saved:
         one: "1 error prohibited this record from being saved:"
         other: "%{count} errors prohibited this record from being saved:"
+      blank: "can't be blank"
+      inclusion: "is not included in the list"
+      too_short: "is too short (minimum is %{count} characters)"
+      too_long: "is too long (maximum is %{count} characters)"
