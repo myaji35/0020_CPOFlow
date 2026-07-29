@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_11_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_29_120000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -640,7 +640,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_100000) do
     t.text "original_email_html_body"
     t.string "original_email_subject"
     t.integer "parent_order_id"
+    t.datetime "po_detected_at"
     t.string "po_no"
+    t.string "po_source_email_id"
     t.integer "project_id"
     t.integer "quantity"
     t.string "quo_no"
@@ -649,6 +651,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_100000) do
     t.string "rfp_analysis_state", default: "pending"
     t.datetime "rfp_analyzed_at"
     t.text "rfp_checklist_json"
+    t.text "rfp_summary_en"
+    t.datetime "rfp_summary_generated_at"
+    t.text "rfp_summary_ko"
     t.string "rfq_confidence", default: "none"
     t.string "rfq_no"
     t.integer "rfq_score", default: 0
@@ -694,6 +699,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_100000) do
     t.index ["lab_sandbox"], name: "index_orders_on_lab_sandbox"
     t.index ["mention_total_count"], name: "idx_orders_mention_total", where: "mention_total_count > 0"
     t.index ["parent_order_id"], name: "index_orders_on_parent_order_id"
+    t.index ["po_detected_at"], name: "index_orders_on_po_detected_at"
     t.index ["project_id"], name: "index_orders_on_project_id"
     t.index ["reference_no"], name: "index_orders_on_reference_no"
     t.index ["rfp_analysis_state"], name: "index_orders_on_rfp_analysis_state"

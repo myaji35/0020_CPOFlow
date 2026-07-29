@@ -103,6 +103,8 @@ module Rfp
 
       # ISS-328: 마감 D-1 긴급 알림
       check_urgent_deadline(order, result)
+      # ISS-329: 한/영 요약 보고서 생성 + Google Chat 발송
+      generate_summary_report(order, result) if created_count.positive?
 
     rescue => e
       Rails.logger.error("[Rfp::AnalyzeAttachmentsJob] order=#{order_id} #{e.class}: #{e.message}\n#{e.backtrace&.first(5)&.join("\n")}")
@@ -115,6 +117,15 @@ module Rfp
     end
 
     private
+
+    def generate_summary_report(order, result)
+      report = Rfp::SummaryReportService.call(order, result)
+      return if report.blank?
+      order.update_columns(rfp_summary_ko: report[:markdown_ko], rfp_summary_en: report[:summary_en], rfp_summary_generated_at: Time.current)
+      Rfp::SummaryChatNotifier.call(order, report)
+    rescue => e
+      Rails.logger.error("[Rfp::AnalyzeAttachmentsJob] summary report fail: #{e.class}: #{e.message}")
+    end
 
     # ISS-334: Ariba 첨부 메타데이터 자동 추출 → Order 업데이트
     # 기존 값 보존 (덮어쓰기 안 함). due_date 미설정 + Ariba에서 발견 시에만 채움.
