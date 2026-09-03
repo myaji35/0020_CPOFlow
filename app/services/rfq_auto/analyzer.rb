@@ -68,6 +68,7 @@ module RfqAuto
         latency_ms:   ((Time.current - @t0) * 1000).round,
         completed_at: Time.current
       )
+      mirror_agent_run
       broadcast_progress!  # 최종 — completed 상태 + 메트릭 카드 표시
     rescue StandardError => e
       Rails.logger.error "[RfqAuto::Analyzer] FATAL #{e.class}: #{e.message}\n#{e.backtrace.first(3).join("\n")}"
@@ -78,10 +79,28 @@ module RfqAuto
         latency_ms:    ((Time.current - @t0) * 1000).round,
         completed_at:  Time.current
       )
+      mirror_agent_run
       broadcast_progress!
     end
 
     private
+
+    def mirror_agent_run
+      attrs = {
+        agent_name: "rfq_auto.analyze", kind: "job",
+        status: (@analysis.status == "completed" ? "success" : "failure"),
+        started_at: @analysis.started_at || @analysis.created_at,
+        finished_at: @analysis.completed_at || Time.current,
+        duration_ms: @analysis.latency_ms, model: @analysis.llm_model,
+        order_id: @analysis.order_id, cost_usd: @analysis.cost_usd,
+        error_message: @analysis.error_message&.first(1000),
+        source_type: "RfqAutoAnalysis", source_id: @analysis.id
+      }
+      run = AgentRun.find_by(source_type: attrs[:source_type], source_id: attrs[:source_id])
+      run ? run.update!(attrs) : AgentRun.create!(attrs)
+    rescue StandardError => e
+      Rails.logger.warn "[AgentRun] rfq_auto.analyze mirror failed: #{e.class}: #{e.message.to_s.first(200)}"
+    end
 
     # Turbo Stream 진행률 broadcast — 단계 완료 직후 호출.
     # rfq_auto_analysis_<id> 채널로 partial 부분 갱신 송출.

@@ -208,6 +208,21 @@ module Gmail
         model:              result.model
       )
       @last_log_id = log.id # ISS-056: 특정 row ID 캡처 (재시도/병렬 오염 방지)
+      begin
+        started = Time.current - (total_latency_ms(result) / 1000.0)
+        AgentRun.create!(
+          agent_name: "gmail.classify", kind: "service", status: agent_run_status_for(result),
+          started_at: started, finished_at: Time.current, duration_ms: total_latency_ms(result),
+          model: result.model, order_id: @order&.id,
+          cost_usd: (result.model.to_s.start_with?("rule-only") ? nil : result.cost_usd),
+          source_type: "ClassificationLog", source_id: log.id,
+          meta: { verdict: result.verdict, stage_reached: result.stage_reached,
+                  reason: result.reason.to_s.first(300), confidence: result.confidence,
+                  cache_hit: result.cache_hit }.to_json.first(4096)
+        )
+      rescue StandardError => e
+        Rails.logger.warn "[AgentRun] gmail.classify mirror failed: #{e.class}: #{e.message.to_s.first(200)}"
+      end
       result
     rescue StandardError => e
       Rails.logger.warn "[ClassificationOrchestrator] log insert failed: #{e.class} — #{e.message}"
@@ -217,6 +232,14 @@ module Gmail
     def total_latency_ms(result)
       stage_sum = (@stage1_ms || 0) + (@stage2_ms || 0) + (@stage3_ms || 0)
       stage_sum.positive? ? stage_sum : (result.latency_ms || 0)
+    end
+
+    def agent_run_status_for(result)
+      reason = result.reason.to_s
+      return "fallback" if reason.start_with?("stage3_fallback_to_stage2", "credit_exhausted", "stage2_failed")
+      return "failure" if reason.start_with?("safety_fallback", "stage3_total_failure")
+
+      "success"
     end
 
     # "high"/"medium"/"low"/"none" → 0.0..1.0 decimal

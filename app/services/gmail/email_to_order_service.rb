@@ -101,6 +101,7 @@ module Gmail
             if @v2_log_id
               ClassificationLog.where(id: @v2_log_id)
                                .update_all(order_id: order.id, would_exclude: would_exclude_flag)
+              AgentRun.where(source_type: "ClassificationLog", source_id: @v2_log_id).update_all(order_id: order.id) if @v2_log_id
             else
               # Fallback: Orchestrator 실패 등으로 log_id 없을 때 기존 동작 유지 (방어적)
               Rails.logger.warn "[EmailToOrder] v2_log_id missing — falling back to email_message_id scan"

@@ -23,6 +23,7 @@ class QuoteAttachmentAnalyzeJob < ApplicationJob
       latency_ms: result[:latency_ms],
       completed_at: Time.current
     )
+    mirror_agent_run(aqa)
     seed_items(aqa, items) if items.any?
     broadcast_badge(aqa)
     broadcast_items_frame(aqa.order)
@@ -34,10 +35,26 @@ class QuoteAttachmentAnalyzeJob < ApplicationJob
       error_message: "#{e.class.name.demodulize}: #{e.message}",
       completed_at: Time.current
     )
+    mirror_agent_run(aqa)
     broadcast_badge(aqa)
   end
 
   private
+
+  def mirror_agent_run(aqa)
+    attrs = {
+      agent_name: "quote.attachment_analyze", kind: "job",
+      status: (aqa.status == "completed" ? "success" : "failure"),
+      started_at: aqa.started_at || aqa.created_at, finished_at: aqa.completed_at || Time.current,
+      duration_ms: aqa.latency_ms, model: aqa.llm_model, order_id: aqa.order_id,
+      cost_usd: aqa.cost_usd, error_message: aqa.error_message&.first(1000),
+      source_type: "AttachmentQuoteAnalysis", source_id: aqa.id
+    }
+    run = AgentRun.find_by(source_type: attrs[:source_type], source_id: attrs[:source_id])
+    run ? run.update!(attrs) : AgentRun.create!(attrs)
+  rescue StandardError => e
+    Rails.logger.warn "[AgentRun] quote.attachment_analyze mirror failed: #{e.class}: #{e.message.to_s.first(200)}"
+  end
 
   # 시드 정책: 새 분석 결과를 max(row_no)+1부터 순차 append.
   # 기존 행(사용자 편집 포함)은 절대 update/delete 하지 않음.

@@ -71,4 +71,74 @@ class EmailSyncJobTest < ActiveJob::TestCase
     end
     account.destroy
   end
+
+  # ISS-309: record_po_receipt — status를 절대 바꾸지 않는다는 것을 검증
+  test "record_po_receipt — Order status를 변경하지 않는다" do
+    account = EmailAccount.create!(
+      user: @user, email: "iss309_job_#{SecureRandom.hex(3)}@example.com", connected: true
+    )
+    order = Order.create!(
+      title: "ISS-309 status guard", customer_name: "Client", user_id: @user.id,
+      status: :pending_po, gmail_thread_id: "thread-iss309-job"
+    )
+    parsed = { id: "gmail-msg-iss309-1", subject: "Purchase Order confirmed", thread_id: "thread-iss309-job" }
+    po_result = { is_po: true, po_number: "PO-JOB-001", matched_keyword: "Purchase Order", confidence: "high" }
+
+    EmailSyncJob.new.send(:record_po_receipt, order, parsed, po_result, account)
+    order.reload
+
+    assert_equal "pending_po", order.status
+    assert order.po_detected_at.present?
+    assert_equal "gmail-msg-iss309-1", order.po_source_email_id
+    assert_equal "PO-JOB-001", order.po_no
+
+    order.destroy
+    account.destroy
+  end
+
+  test "record_po_receipt — 멱등: 동일 메일 재처리 시 아무것도 하지 않는다" do
+    account = EmailAccount.create!(
+      user: @user, email: "iss309_job2_#{SecureRandom.hex(3)}@example.com", connected: true
+    )
+    detected_at = 1.day.ago.change(usec: 0)
+    order = Order.create!(
+      title: "ISS-309 idempotent", customer_name: "Client", user_id: @user.id,
+      po_detected_at: detected_at, po_source_email_id: "gmail-msg-iss309-2"
+    )
+    parsed = { id: "gmail-msg-iss309-2", subject: "Purchase Order confirmed" }
+    po_result = { is_po: true, po_number: "PO-JOB-002", matched_keyword: "Purchase Order", confidence: "high" }
+
+    activity_count_before = Activity.where(order_id: order.id).count
+    EmailSyncJob.new.send(:record_po_receipt, order, parsed, po_result, account)
+    order.reload
+
+    assert_equal detected_at, order.po_detected_at
+    assert_nil order.po_no # 재처리로 덮어써지지 않음
+    assert_equal activity_count_before, Activity.where(order_id: order.id).count
+
+    order.destroy
+    account.destroy
+  end
+
+  test "record_po_receipt — Activity를 생성한다" do
+    account = EmailAccount.create!(
+      user: @user, email: "iss309_job3_#{SecureRandom.hex(3)}@example.com", connected: true
+    )
+    order = Order.create!(
+      title: "ISS-309 activity", customer_name: "Client", user_id: @user.id
+    )
+    parsed = { id: "gmail-msg-iss309-3", subject: "PO Number: PO-JOB-003" }
+    po_result = { is_po: true, po_number: "PO-JOB-003", matched_keyword: "PO Number", confidence: "high" }
+
+    assert_difference -> { Activity.where(order_id: order.id).count }, 1 do
+      EmailSyncJob.new.send(:record_po_receipt, order, parsed, po_result, account)
+    end
+
+    activity = Activity.where(order_id: order.id).last
+    assert_equal "po_email_detected", activity.action
+    assert_equal @user.id, activity.user_id
+
+    order.destroy
+    account.destroy
+  end
 end

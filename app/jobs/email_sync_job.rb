@@ -69,6 +69,17 @@ class EmailSyncJob < ApplicationJob
       parsed = svc.parse_message(msg)
       next unless parsed
 
+      # ── ISS-309: PO 수신 메일 탐지 (기존 카드에 기록, 신규 Order 생성 안 함) ──
+      po_result = Gmail::PoDetectorService.detect(parsed)
+      if po_result
+        matched = Gmail::PoOrderMatcher.match(parsed, po_result)
+        if matched
+          record_po_receipt(matched, parsed, po_result, account)
+          next # PO 메일은 신규 Order를 만들지 않는다
+        end
+        # 매칭 실패 → 아래 기존 RFQ 경로로 흘려보낸다(고아 PO도 카드로는 들어오게)
+      end
+
       # Idempotency 가드: 이미 동일 Gmail id로 Order가 있으면 스킵
       if Order.exists?(source_email_id: parsed[:id])
         Rails.logger.info "[EmailSyncJob] skip already-imported message #{parsed[:id]}"
@@ -108,6 +119,17 @@ class EmailSyncJob < ApplicationJob
             Rails.logger.warn "[EmailSyncJob] v2 classify failed: #{e.class} — #{e.message}"
             nil
           end
+        end
+      else
+        begin
+          AgentRun.create!(
+            agent_name: "gmail.rfq_number_gate", kind: "service", status: "skipped",
+            started_at: Time.current, finished_at: Time.current, duration_ms: 0,
+            model: "rule-only", cost_usd: nil,
+            meta: { ref_no: ref_no.to_s.first(100) }.to_json
+          )
+        rescue StandardError => e
+          Rails.logger.warn "[AgentRun] rfq_number_gate failed: #{e.class}: #{e.message.to_s.first(200)}"
         end
       end
       v2_log_id = v2_result ? orchestrator&.last_log_id : nil
@@ -149,5 +171,33 @@ class EmailSyncJob < ApplicationJob
     account.mark_synced!
 
     Rails.logger.info "[EmailSyncJob] #{account.email}: processed=#{total_processed}, new_rfqs=#{new_rfq_count}"
+  end
+
+  # ISS-309: PO 메일이 기존 Order와 매칭됐을 때 플래그/필드만 기록한다.
+  # status는 절대 건드리지 않는다 (pending_po → new_po 자동 전이 금지 — eCount 전표 부작용 방지).
+  def record_po_receipt(order, parsed, po_result, account)
+    if order.po_detected_at.present? && order.po_source_email_id == parsed[:id]
+      Rails.logger.info "[EmailSyncJob] ISS-309 PO already recorded → Order##{order.id} (idempotent skip)"
+      return
+    end
+
+    order.po_detected_at = Time.current
+    order.po_source_email_id = parsed[:id]
+    order.po_no = po_result[:po_number] if order.po_no.blank? && po_result[:po_number].present?
+
+    unless order.save
+      Rails.logger.warn "[EmailSyncJob] ISS-309 PO 기록 저장 실패 → Order##{order.id}: #{order.errors.full_messages.join(', ')}"
+      return
+    end
+
+    Activity.create!(
+      order: order,
+      user: account.user,
+      action: "po_email_detected",
+      field: "po_detected_at",
+      new_value: "PO 메일 감지: #{parsed[:subject]} (PO번호: #{po_result[:po_number] || '미추출'})"
+    )
+
+    Rails.logger.info "[EmailSyncJob] ISS-309 PO detected → Order##{order.id} (po_no=#{order.po_no})"
   end
 end

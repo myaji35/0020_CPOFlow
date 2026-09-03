@@ -8,17 +8,21 @@ module Rfp
     def perform(order_id)
       order = Order.find_by(id: order_id)
       return unless order
+      parent_run = AgentRun.start!(agent: "rfp.analyze_attachments", kind: "job", order: order, parent: nil, source: nil)
+      @parent_run = parent_run
 
       # 첨부파일 없으면 skip
       if order.attachments.none?
         Rails.logger.info("[Rfp::AnalyzeAttachmentsJob] order=#{order_id} — 첨부 없음, skip")
         order.update_columns(rfp_analysis_state: "skipped")
+        parent_run.finish!(status: "success")
         return
       end
 
       # 24시간 중복 분석 차단
       if order.rfp_analyzed_at && order.rfp_analyzed_at > 24.hours.ago
         Rails.logger.info("[Rfp::AnalyzeAttachmentsJob] order=#{order_id} — 24h 내 이미 분석됨, skip")
+        parent_run.finish!(status: "success")
         return
       end
 
@@ -37,6 +41,7 @@ module Rfp
         Rails.logger.info("[Rfp::AnalyzeAttachmentsJob] order=#{order_id} — 모든 첨부가 필터에서 제외됨 (login capture 등)")
         create_fallback_task(order, "첨부파일 모두 시스템 자동 캡처(ariba_page 등)로 분류되어 분석 대상 없음. 원본 메일을 직접 확인하세요.")
         order.update_columns(rfp_analysis_state: "skipped", rfp_analyzed_at: Time.current)
+        parent_run.finish!(status: "success")
         return
       end
 
@@ -56,17 +61,30 @@ module Rfp
         Rails.logger.warn("[Rfp::AnalyzeAttachmentsJob] order=#{order_id} — 텍스트 추출 실패 (스캔본/미지원 형식)")
         create_fallback_task(order, "첨부파일 텍스트 추출 실패 (스캔본이거나 지원되지 않는 형식)")
         order.update_columns(rfp_analysis_state: "failed", rfp_analyzed_at: Time.current)
+        parent_run.finish!(status: "success")
         return
       end
 
       # 2) LLM 분석
       combined = valid_texts.map { |e| "[#{e[:filename]}]\n#{e[:text]}" }.join("\n\n---\n\n")
-      result = Rfp::ItemExtractor.call(combined)
+      item_run = AgentRun.start!(agent: "rfp.item_extract", kind: "stage", order: order,
+                                 parent: parent_run.is_a?(AgentRun) ? parent_run : nil, source: nil)
+      begin
+        item_model = ENV.fetch("RFP_ITEM_MODEL", Rfp::ItemExtractor::DEFAULT_MODEL)
+        result = Rfp::ItemExtractor.call(combined)
+        item_run.note(model: item_model, cost_usd: result&.fetch("_cost_usd", nil),
+                      input_tokens: result&.fetch("_input_tokens", nil), output_tokens: result&.fetch("_output_tokens", nil))
+        item_run.finish!(status: "success")
+      rescue StandardError => e
+        item_run.fail!(e)
+        raise
+      end
 
       if result.nil? || result["items"].blank?
         Rails.logger.warn("[Rfp::AnalyzeAttachmentsJob] order=#{order_id} — LLM 품목 추출 실패")
         create_fallback_task(order, "LLM 품목 추출 실패 또는 문서에서 품목을 인식하지 못함")
         order.update_columns(rfp_analysis_state: "failed", rfp_analyzed_at: Time.current)
+        parent_run.finish!(status: "success")
         return
       end
 
@@ -105,8 +123,10 @@ module Rfp
       check_urgent_deadline(order, result)
       # ISS-329: 한/영 요약 보고서 생성 + Google Chat 발송
       generate_summary_report(order, result) if created_count.positive?
+      parent_run.finish!(status: "success")
 
     rescue => e
+      parent_run&.fail!(e)
       Rails.logger.error("[Rfp::AnalyzeAttachmentsJob] order=#{order_id} #{e.class}: #{e.message}\n#{e.backtrace&.first(5)&.join("\n")}")
       begin
         order&.update_columns(rfp_analysis_state: "failed", rfp_analyzed_at: Time.current)
@@ -119,11 +139,19 @@ module Rfp
     private
 
     def generate_summary_report(order, result)
+      summary_run = AgentRun.start!(agent: "rfp.summary_report", kind: "stage", order: order,
+                                    parent: @parent_run.is_a?(AgentRun) ? @parent_run : nil, source: nil)
       report = Rfp::SummaryReportService.call(order, result)
+      summary_run.note(model: Rfp::SummaryReportService::MODEL,
+                       cost_usd: report&.fetch(:cost_usd, nil),
+                       input_tokens: report&.fetch(:input_tokens, nil),
+                       output_tokens: report&.fetch(:output_tokens, nil))
+      summary_run.finish!(status: "success")
       return if report.blank?
       order.update_columns(rfp_summary_ko: report[:markdown_ko], rfp_summary_en: report[:summary_en], rfp_summary_generated_at: Time.current)
       Rfp::SummaryChatNotifier.call(order, report)
     rescue => e
+      summary_run&.fail!(e)
       Rails.logger.error("[Rfp::AnalyzeAttachmentsJob] summary report fail: #{e.class}: #{e.message}")
     end
 

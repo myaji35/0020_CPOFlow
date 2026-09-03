@@ -63,7 +63,39 @@ module RfqAuto
       assert_nil analyzer.send(:pick, {}, :manufacturer, :maker)
     end
 
+    test "completed analysis is mirrored and rerun updates one row" do
+      analysis = create_analysis
+      analysis.update!(status: "completed", llm_model: "claude-test", cost_usd: 0.03,
+                       latency_ms: 12, completed_at: Time.current)
+      analyzer = RfqAuto::Analyzer.new(analysis)
+
+      2.times { analyzer.send(:mirror_agent_run) }
+
+      runs = AgentRun.where(source_type: "RfqAutoAnalysis", source_id: analysis.id)
+      assert_equal 1, runs.count
+      assert_equal "success", runs.first.status
+      assert_equal "rfq_auto.analyze", runs.first.agent_name
+    end
+
+    test "agent run write failure is swallowed" do
+      analysis = create_analysis
+      analysis.update!(status: "completed", completed_at: Time.current)
+
+      with_agent_run_create_failure do
+        RfqAuto::Analyzer.new(analysis).send(:mirror_agent_run)
+      end
+      assert_equal "completed", analysis.reload.status
+    end
+
     private
+
+    def with_agent_run_create_failure
+      original = AgentRun.method(:create!)
+      AgentRun.define_singleton_method(:create!) { |*| raise ActiveRecord::StatementInvalid, "boom" }
+      yield
+    ensure
+      AgentRun.define_singleton_method(:create!, original)
+    end
 
     # Analyzer 인스턴스 빌드 (실 DB 분석은 호출하지 않음 — pick helper 검증 전용).
     # OpenStruct 로 minimal stub.
@@ -71,6 +103,12 @@ module RfqAuto
       stub_order    = OpenStruct.new(attachments: [], reference_no: nil, rfq_no: nil, original_email_body: nil)
       stub_analysis = OpenStruct.new(order: stub_order, id: 0)
       RfqAuto::Analyzer.new(stub_analysis)
+    end
+
+    def create_analysis
+      user = User.create!(email: "rfq-auto-#{SecureRandom.hex(4)}@x.com", password: "Pass1234!", name: "RFQ")
+      order = Order.create!(reference_no: "RA-#{SecureRandom.hex(3)}", title: "T", user: user, customer_name: "CN")
+      RfqAutoAnalysis.create!(order: order, user: user, status: "running", started_at: Time.current)
     end
   end
 end

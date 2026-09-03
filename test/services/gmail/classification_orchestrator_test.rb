@@ -295,4 +295,53 @@ class Gmail::ClassificationOrchestratorTest < ActiveSupport::TestCase
     # 동일 email_message_id로 2개 row 존재
     assert_equal 2, ClassificationLog.where(email_message_id: "msg-iss056-dup").count
   end
+
+  test "classification mirrors rule-only run with nil cost" do
+    email = build_email(from: "user@atoz2010.com", subject: "Internal")
+
+    assert_difference -> { AgentRun.where(agent_name: "gmail.classify").count }, 1 do
+      with_haiku_forbidden { Gmail::ClassificationOrchestrator.new(email).classify }
+    end
+
+    run = AgentRun.where(agent_name: "gmail.classify").order(:id).last
+    assert_equal "success", run.status
+    assert_equal "rule-only", run.model
+    assert_nil run.cost_usd
+  end
+
+  test "fallback reason is mirrored as fallback" do
+    email = build_email(from: "buyer@somewhere.com", subject: "quote for waterproofing",
+                        body: "need waterproofing admixture urgently")
+    haiku = { is_rfq: true, confidence: "medium", reason: "weak" }
+    fallback = Gmail::ClassificationResult.new(
+      verdict: :confirmed, is_rfq: true, confidence: "medium", stage_reached: 3,
+      classifier_version: "v2", reason: "stage3_fallback_to_stage2: timeout",
+      extracted: {}, cost_usd: 0.01, latency_ms: 5, cache_hit: false, model: "haiku-4.5"
+    )
+
+    with_haiku_stub(haiku) do
+      with_sonnet_stub(fallback) { Gmail::ClassificationOrchestrator.new(email).classify }
+    end
+
+    assert_equal "fallback", AgentRun.where(agent_name: "gmail.classify").order(:id).last.status
+  end
+
+  test "agent run write failure does not change classification result" do
+    email = build_email(from: "user@atoz2010.com", subject: "Internal")
+
+    result = with_agent_run_create_failure do
+      with_haiku_forbidden { Gmail::ClassificationOrchestrator.new(email).classify }
+    end
+
+    assert_equal :excluded, result.verdict
+    assert_equal "stage0_own_sender", result.reason
+  end
+
+  def with_agent_run_create_failure
+    original = AgentRun.method(:create!)
+    AgentRun.define_singleton_method(:create!) { |*| raise ActiveRecord::StatementInvalid, "boom" }
+    yield
+  ensure
+    AgentRun.define_singleton_method(:create!, original)
+  end
 end

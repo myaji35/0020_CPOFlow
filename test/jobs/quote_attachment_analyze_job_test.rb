@@ -34,6 +34,9 @@ class QuoteAttachmentAnalyzeJobTest < ActiveJob::TestCase
     assert_equal 1, @order.quote_items.count
     assert_equal "SPILL TRAY", @order.quote_items.first.item
     assert_equal 16, @order.quote_items.first.qty.to_i
+    run = AgentRun.find_by(source_type: "AttachmentQuoteAnalysis", source_id: @aqa.id)
+    assert_equal "success", run.status
+    assert_equal 0.02, run.cost_usd.to_f
   end
 
   test "marks failed on AnthropicCreditError" do
@@ -44,6 +47,7 @@ class QuoteAttachmentAnalyzeJobTest < ActiveJob::TestCase
     @aqa.reload
     assert_equal "failed", @aqa.status
     assert_match(/insufficient/, @aqa.error_message)
+    assert_equal "failure", AgentRun.find_by(source_type: "AttachmentQuoteAnalysis", source_id: @aqa.id).status
   end
 
   test "completed but is_quote_doc=false on empty items" do
@@ -85,7 +89,35 @@ class QuoteAttachmentAnalyzeJobTest < ActiveJob::TestCase
     assert_equal 2, items[1].row_no
   end
 
+  test "rerun updates the existing agent run" do
+    result = { items: [], cost_usd: 0.01, llm_model: "claude-sonnet-4-6",
+               page_count: 1, latency_ms: 50 }
+    with_extractor_result(result) do
+      2.times { QuoteAttachmentAnalyzeJob.perform_now(@aqa.id) }
+    end
+
+    assert_equal 1, AgentRun.where(source_type: "AttachmentQuoteAnalysis", source_id: @aqa.id).count
+  end
+
+  test "agent run write failure does not change completed result" do
+    result = { items: [], cost_usd: 0.01, llm_model: "claude-sonnet-4-6",
+               page_count: 1, latency_ms: 50 }
+    with_agent_run_create_failure do
+      with_extractor_result(result) { QuoteAttachmentAnalyzeJob.perform_now(@aqa.id) }
+    end
+
+    assert_equal "completed", @aqa.reload.status
+  end
+
   private
+
+  def with_agent_run_create_failure
+    original = AgentRun.method(:create!)
+    AgentRun.define_singleton_method(:create!) { |*| raise ActiveRecord::StatementInvalid, "boom" }
+    yield
+  ensure
+    AgentRun.define_singleton_method(:create!, original)
+  end
 
   # QuoteItemExtractor.new(...)를 가로채 call 시 result 반환하도록 패치
   def with_extractor_result(result)
