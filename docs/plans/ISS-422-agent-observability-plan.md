@@ -1,8 +1,9 @@
-# ISS-422 [Agent관제] 에이전트 실행 모니터링 단일 페이지 — 기획 (v2, 운영DB 실측 반영)
+# ISS-422 [Agent관제] 에이전트 실행 모니터링 단일 페이지 — 기획 (v3, 운영 실측 + Sonnet 400 원인 축소)
 
 > 2026-09-03 · plan-harness:product (Fable 5.1) · 입력: `docs/proposals/agent-observability-제안_260903.md`
-> 검증: 코드(`app/`)·스키마(`db/schema.rb`)·`config/recurring.yml`·git log 직접 대조 + **운영DB 실측(Opus, 158.247.235.31 `cpoflow_storage/production.sqlite3`, 133MB, 최종수정 2026-05-30)**.
+> 검증: 코드(`app/`)·스키마(`db/schema.rb`)·`config/recurring.yml`·git log·anthropic gem 1.23.0 `dump_request` 실측 + `claude-api` 스킬 모델표 + **운영DB 실측(Opus, 158.247.235.31 `cpoflow_storage/production.sqlite3`, 133MB, 최종수정 2026-05-30)**.
 > v1(개발DB 기준 "테이블이 비어 있다") 전제는 폐기. 개발DB(orders 6건)는 운영과 무관했다.
+> **registry 매핑**: 422-A=ISS-423 · B=ISS-424 · C=ISS-425 · D=ISS-426 · E=ISS-427 · F=ISS-428 · G=ISS-429 (부모 등록 완료)
 
 ## 판정: 된다 — 지금 있는 14,247행으로 페이지를 먼저 띄운다
 `agent_runs` 1개 테이블 신설(C안) + 운영 `classification_logs` 14,247행 백필 → `/admin/agent_runs` 단일 페이지. 기존 테이블·CostGuard 무수정.
@@ -21,17 +22,68 @@
 | attachment_quote_analyses | 3 | |
 | rfq_auto_analyses | 17 | |
 
+**classification_logs stage별 분포 (운영, 2026-09-03 Opus 조회)** — 화면 "처리 경로" 타일의 근거
+| stage_reached | 건수 | 비율 | cost 합계 | 의미 (코드 기준) |
+|---|---|---|---|---|
+| 0 | 9,070 | 63.7% | $0.0 | `run_stage0` — Ariba 발신자 confirmed / 자사·제외 패턴 excluded (rule-only) |
+| 1 | 4,834 | 33.9% | $0.0 | `Stage1::RuleGate` reject_no_signal → uncertain (rule-only) |
+| 2 | 106 | 0.7% | $0.0 | Haiku confidence high 확정 (`haiku-4.5`) — **실호출인데 비용 0 = 버그** |
+| 3 | 237 | 1.7% | $0.0 | Sonnet 에스컬레이션 — 성공 `sonnet-4.5` **0건**, 전부 `haiku-4.5-fallback`(confidence 0·verdict uncertain 237/237) |
+
+**일자별 LLM 경로 분포 (운영)**: 04-09~04-26 fallback 229 · haiku 성공 0 / **04-27 haiku 20 + fallback 3(혼재)** / 04-28~04-30 haiku 82 · fallback 0(전부 high → stage 3 미호출, `classification_orchestrator.rb:67`) / 05-01 fallback 8 / 05-06 haiku 4. → Haiku 성공 106건은 모두 confidence 0.95·stage 2. **stage 3에 도달한 237건은 예외 없이 실패.**
+| 합계 | 14,247 | | $0.0 | rule-only 13,904(97.6%) / LLM 경로 343(2.4%) |
+
+**fallback 사유 (운영)**: `stage3_fallback_to_stage2: exception:Anthropic::Errors::BadRequestError` **237/237 전건 동일**. `api_returned_nil`·`parse_failed` 0건.
+
 | # | 주장 (제안서 / v1) | 실측 | 판정 / 기획 반영 |
 |---|---|---|---|
 | 1 | "데이터가 없어 화면을 먼저 못 만든다"(v1 전제) | classification_logs 14,247행이 order_id로 orders 11,971건과 연결됨 | **틀림. 화면이 1순위.** 백필(멱등 rake) → 페이지. 계측 확대는 화면을 본 뒤 |
 | 2 | 비용 집계가 2곳뿐 | 산출 코드는 12파일, 저장은 3테이블. 그러나 **운영 classification_logs cost 합계 $0** — Haiku 실호출 343건(106+237)이 전부 0. 원인은 코드로 확정: `Gmail::LlmRfqAnalyzerService#parse_response`가 `response.usage`를 파싱하지 않아 cost 키가 없음 → `ClassificationOrchestrator#normalize_haiku`의 `haiku_hash[:cost_usd].to_f` = 0.0 → `log_and_return`이 0을 기록. fallback 행도 `haiku_value(:cost_usd)` = 0. Sonnet만 `compute_cost`가 있는데 성공 행이 0건이라 합계가 정확히 $0 | **P0 결함.** `Gmail::CostGuard.today_cost = ClassificationLog.v2.sum(:cost_usd)`가 항상 0 → **일 $0.35 예산 가드가 운영 기간 내내 무력화**돼 있었다. 이슈 422-B |
-| 3 | (신규 발견) Stage 3 Sonnet | 모델 라벨 `sonnet-4.5`(성공 시 `sonnet_escalator_service.rb:204`) 행이 **0건**, `haiku-4.5-fallback`(Sonnet 실패 → Haiku 결과 채택, L226) 237건 | **Sonnet 에스컬레이션이 운영에서 한 번도 성공하지 못했다(0/237).** reason 컬럼에 원인이 남아 있다: `stage3_fallback_to_stage2: api_returned_nil \| parse_failed \| exception:<Class>`. 부모 확인 쿼리 §⑤-1. 422-B에 포함 |
+| 3 | (신규 발견) Stage 3 Sonnet | 성공 라벨 `sonnet-4.5`(`sonnet_escalator_service.rb:204`) **0건**, `haiku-4.5-fallback`(L226) 237건, 사유 **`exception:Anthropic::Errors::BadRequestError` 237/237 동일**(운영 쿼리로 확정) | **Sonnet 에스컬레이션 0/237 — API가 매번 400을 반환한 고정 결함.** 코드 대조로 후보를 좁힌 결과는 아래 "Sonnet 400 원인 축소" 참조. 422-B(ISS-424)에 포함 |
 | 4 | agent_runs 신설 필요 | classification_logs 존재. 단 **input/output_tokens 컬럼 없음**(cost_usd 10,6 · latency_ms만), 분류 도메인 전용(verdict/is_rfq/would_exclude), `ClassificationLog.v2` 스코프 소비자 5곳(CostGuard·ClassifyV2Day3Gate·ShadowFnDetectorJob·Admin::RfqStats·EmailToOrderService 백링크) | **C안**(§③). classification_logs에는 컬럼을 추가하지 않는다. 토큰 컬럼은 agent_runs가 가진다 |
 | 5 | LLM 호출 18곳 / 잡 23개 | 참조 파일 16개, 실 API 호출 서비스 10개, 잡 27개 | 수치 정정. 계측 단위는 "실행 경로" |
 | 6 | 비용 큰 곳부터 계측 | 운영 실측상 처리량의 97.6%는 **rule-only(LLM 미경유)**. LLM 경로는 343건(2.4%) | "LLM 비용"만 보여주면 화면이 빈다. **처리량(규칙/Haiku/Sonnet/RFQ번호 직행)** 을 1급 지표로 올린다(§②-S2·S3) |
 | 7 | 사각지대 | `EmailSyncJob` L98: `has_rfq_number`면 Orchestrator를 아예 건너뛰어 **로그가 남지 않는다**. 이 주문은 `orders.classifier_version='v1'`, `rfq_no` present로만 식별 가능 | 신규 유입은 422-C에서 `gmail.rfq_number_gate` 행(rule-only, cost 0) 1줄 추가로 봉합. 과거분은 orders에서 카운트해 S2 타일에 "RFQ번호 직행 N건"으로 표시 |
 | 8 | 최종 기록 2026-05-06 (약 4개월 정지) | git: 05-08 `fix(prod): 500 에러 안정화 — Kamal 자동 게이트`, 05-10 recurring.yml 변경, recurring 주석 "2026-05-07 BusyException → 15분→1시간", **05-30 `02caf09` 자동 Gmail sync 명시 비활성화**. DB 최종수정도 05-30 → 05-30 이후엔 앱 자체가 안 쓰였다. 05-06~05-30 사이 24일간 로그 0건의 코드상 후보: (a) `EmailAccount#ready?` false(토큰 만료·refresh 불가) → `sync_account`가 warn만 남기고 return(L37~40) — **가장 유력**(사용자 화면엔 아무 표시 없음) (b) 05-07 BusyException 대응 중 recurring 잡 미등록 (c) 모든 메일이 idempotency/`has_rfq_number`로 skip(가능성 낮음 — 그래도 gate 행은 없으니 식별 불가) | 코드만으로는 (a)/(b) 확정 불가 → 운영 로그·`EmailAccount` 상태 조회가 필요. **별도 이슈로 쪼개지 않고 422-F(유입 정지 진단 + 재개 결정)에 통합** — 재개 결정의 선행 조건이라 같은 사람이 같은 시점에 본다 |
 | 9 | 부수 발견 | `Rfp::AnalyzeAttachmentsJob#bump_opus_counter`가 운영 런타임에 `.claude/issue-db/registry.json`을 직접 쓴다 | 범위 밖. REFACTOR 후보로 보고만 |
+
+### Sonnet 400 원인 축소 — 코드·SDK·모델표 대조 결과 (2026-09-03)
+호출부 `sonnet_escalator_service.rb:56-64`: `client.messages.create(model: ENV.fetch("RFQ_SONNET_MODEL", "claude-sonnet-4-5-20250929"), max_tokens: 2048, system: [2개 text 블록 + cache_control ephemeral], messages: [user 1건])`. 클라이언트는 Haiku와 같은 `ClaudeTokenResolver.create_client`.
+
+| 후보 | 검증 | 판정 |
+|---|---|---|
+| (a) 모델 ID 무효 | `claude-api` 스킬 `shared/models.md`: `claude-sonnet-4-5-20250929` = Sonnet 4.5 Full ID, **Active**. `RFQ_SONNET_MODEL` 환경변수는 deploy.yml·secrets에 없음(기본값 사용) | **제외** |
+| (b) OAuth bearer/티어 미허용 | Haiku(106건 성공)와 **동일 클라이언트** 공유. `create_client`는 bearer면 API 키로 폴백, 없으면 nil → nil이면 `api_returned_nil`이어야 하는데 0건 | **제외** |
+| (b′) Ruby SDK 파라미터명 (`system:` vs SDK 정식 `system_:`) | gem 1.23.0 `MessageCreateParams.dump_request`를 dev에서 실행 → 본문 키 `[:model, :max_tokens, :system, :messages]`, `system` 블록 그대로 통과(`base_model.rb` dump: 미정의 키는 `acc.store(name, val)`로 보존). **운영 gem 버전 = dev와 동일**: `Gemfile.lock` 이력 2026-02-22 이후 전 커밋 `anthropic (1.23.0)`, Dockerfile `BUNDLE_DEPLOYMENT=1`로 lock 고정 | **제외** |
+| (c) max_tokens/파라미터 상한 | 2048 — Sonnet 4.5 상한 내. cache_control 브레이크포인트 2개(≤4). 최소 캐시 토큰 미만이면 **캐시가 안 될 뿐 400이 아니다**. 환경변수 `RFQ_SONNET_MODEL`/`RFQ_LLM_MODEL`은 deploy.yml·.kamal/secrets·.env(.dockerignore로 이미지 제외)에 없음 | **제외** |
+| (d) 크레딧 소진 400 (Haiku·Sonnet 공통 실패) | **구간 ①(04-09~04-26)의 `haiku-4.5` 0건은 Haiku 실패를 뜻하지 않는다** — `classification_orchestrator.rb:67`은 confidence "high"일 때만 stage 2 행을 남기고, high가 아니면 로그 없이 곧장 Stage 3로 간다. 따라서 "Haiku가 매번 실패했다"와 "Haiku가 살아서 uncertain을 냈다"는 **stage 2 행 수만으로는 구별 불가**이며, 구간 ①과 ②는 단일 원인(Sonnet 고유 400)으로도 설명 가능하다 — 잔액설을 끌어올 필요는 이 근거만으로는 없다(부모 지적 반영). 다만 그 둘을 가르는 **다른 데이터가 있다**: **fallback 237행의 confidence가 전부 0.0**이다. `fallback_to_haiku`는 `confidence: haiku_value(:confidence)`(L214)로 **Haiku 결과의 confidence를 그대로 물려받고**, `confidence_to_decimal`은 "medium"→0.75, "low"→0.40, "none"→0.0. 즉 237건 모두 Haiku 결과가 **"none"** 이었다. "none"의 출처는 `LlmRfqAnalyzerService#fallback_result`(API 예외·JSON 파싱 실패 시, L23-27·L192) 또는 모델이 JSON에 literal "none"을 쓴 경우뿐. **LLM 경로 343건 중 medium/low가 0건** — Haiku가 살아서 "애매하다"고 답한 경우가 한 번도 없다는 뜻이고, 이는 literal "none" 237회보다 **Haiku API 실패 237회**가 훨씬 그럴듯하다. 그러면 에스컬레이션 전건이 "Haiku 실패 → Sonnet도 400"이며, 두 모델이 같은 순간 400을 받는 원인은 잔액(Anthropic은 잔액 부족을 HTTP 400으로 반환)이 유일하게 자연스럽다. 04-27 혼재는 **일 단위가 아니라 시각 단위**로 봐야 한다: 20건 성공 뒤 3건 연속 실패면 당일 소진, 섞여 있으면 기각. 메모리 2026-05-08 "토큰 충전했어요"는 반복 충전 패턴과 정합. 키는 04-02 등록 후 무변경(`app_settings` created_at==updated_at)이므로 키 교체로는 구간 전환을 설명할 수 없고, 잔액 변동으로는 설명된다 | **최유력(판별 쿼리 4·5 결과, 부모 실측)**. 쿼리 4: 04-27 fallback 3건은 00:30~02:15, 성공 21건은 05:00~14:30 — **시간대가 완전히 분리**되고 성공 사이에 실패가 끼지 않음 → 02:15~05:00 사이 회복(충전). 쿼리 5: fallback latency min 557ms·avg 1,316ms(Haiku+Sonnet **2회 호출 합**) < haiku 성공 min 1,400ms·avg 2,393ms(1회) → 두 호출 모두 **생성 없이 즉시 거부**. 전 기간 서사: 04-09~04-26 잔액 0 → 04-27 새벽 충전 → 05-01 재소진 → 05-06 재충전 → 05-08 "충전했어요"(메모리). 최종 확정은 400 본문("credit balance")이며, 진단 코드(422-B ⓐ) 배포 후 재개 시점에 자동으로 남는다. 진단은 여기서 멈춘다(대표님 지시 대기) |
+| (e) 키의 Sonnet 모델 접근 불가 | 운영 키 = `app_settings.anthropic_api_key`(`sk-ant-api03-…`, 108자, 04-02 등록 후 무변경 — 부모 실측). **키 등록 화면의 검증 호출(`settings/api_keys_controller.rb:31-32`)은 Haiku 4.5로만 검증**하므로 Sonnet이 막힌 키도 "정상" 통과. 04-02 고정 키 + Sonnet 0/237은 정합. **그러나 이 가설은 Haiku까지 "none"(=실패)인 237건을 설명하지 못한다** — 키 접근 문제면 Haiku는 medium/low를 정상 반환했어야 한다 | **차순위.** (d)가 기각될 때만 남는다. E3로 확정 |
+| (f) `system` 배열 직렬화 / cache_control 배치 | 스펙(`claude-api` 스킬 ruby README·`shared/prompt-caching.md`): `system`은 `[{type:"text", text:…, cache_control:{type:"ephemeral"}}]` 배열, `cache_control`은 **블록 안**, 브레이크포인트 ≤4 — 코드(L69-83)와 정확히 일치. 두 블록 모두에 붙이는 것도 허용(각각이 브레이크포인트). gem 1.23.0 dump는 `system` 값을 변형 없이 통과(부모도 `system:`/`system_:` 동일 출력 재확인). 코드 주석 "gem 1.23+ 배열 system 지원"의 근거는 gem의 `MessageCreateParams::System` union(String \| Array<TextBlockParam>)이다. 최소 캐시 토큰 미달(SYSTEM_PROMPT ≈200토큰 < Sonnet 4.5 최소 1024)은 **캐시가 안 걸릴 뿐 400이 아니다** | **제외** (스펙·SDK 모두 적합). 단 (d)도 기각되면 E2가 최종 판별 |
+| (g) few-shot 문자열의 제어문자·깨진 UTF-8 | Ruby `JSON.generate`는 잘못된 UTF-8이면 **클라이언트에서 `JSON::GeneratorError`를 던진다** → 예외 클래스가 `BadRequestError`일 수 없다. 제어문자는 JSON 이스케이프되어 API가 수용. 게다가 **Haiku 프롬프트도 같은 `few_shot_examples`(limit 5)를 보간**하는데 Haiku는 106건 성공 | **제외** |
+
+**정적 분석의 한계 — Haiku 호출부와 Sonnet 호출부의 실제 diff는 3가지뿐**: ① `system:` 블록 2개(+cache_control) 유무 ② `max_tokens` 1024 vs 2048 ③ 모델 ID. 셋 다 스펙·SDK 안에 있다. 남는 것은 "서버가 왜 400을 줬는가"이며 **400 본문 메시지 없이는 더 못 좁힌다**(L50이 `e.class`만 저장). 테스트도 `call_sonnet_api` 자체를 stub해 요청 형태를 한 번도 검증하지 않았다. 다만 위 (d)의 confidence 논증으로 **"Sonnet만의 결함"이 아니라 "Haiku·Sonnet 동시 실패"가 데이터의 기본형**임은 코드로 확정된다.
+
+**판별 쿼리 4·5 (운영 DB 직접, 컨테이너 불요) — (d) 확정용**
+4. `select created_at, model, confidence, latency_ms from classification_logs where model<>'rule-only' and date(created_at) in ('2026-04-27','2026-05-01','2026-05-06') order by created_at;` → 04-27의 fallback 3건이 성공 20건 **뒤에 연속**이면 당일 잔액 소진(=d), 성공 사이에 **끼어** 있으면 Sonnet 고유(=e/f).
+5. `select model, count(*), min(latency_ms), avg(latency_ms), max(latency_ms) from classification_logs where model<>'rule-only' group by 1;` → fallback 행 latency가 수백 ms대(400 두 번 = 생성 없음)면 Haiku가 생성조차 못 한 것(=d), 수 초대면 Haiku가 실제로 답을 만든 것(=literal none, e/f 재검토).
+
+**재현 실험 (422-B 첫 작업, 비용 < $0.02, 운영 키 필요)** — dev에서 `AppSetting.set("anthropic_api_key", <운영 키>)` 또는 `ANTHROPIC_API_KEY` 후 `bin/rails runner`:
+| 실험 | 요청 | 판정 |
+|---|---|---|
+| E1 | `SonnetEscalatorService#call_sonnet_api` 그대로 + `rescue Anthropic::Errors::BadRequestError => e; puts e.message` | 400 본문이 곧 답(예: `credit balance`, `model`, `system`, `cache_control` 중 어느 단어가 나오는가) |
+| E2 | E1에서 `system:` 제거 | 성공하면 system/cache_control 형태 문제 |
+| E3 | E1에서 model만 `claude-haiku-4-5-20251001` | 성공하면 모델 접근(e) 문제 |
+
+~~운영 DB 추가 쿼리~~ → **완료(부모)**: `anthropic_api_key` = `sk-ant-api03-…` 108자, created_at == updated_at = 2026-04-02 09:34 (등록 후 무변경).
+
+**이번 진단의 실제 소득 — 원인이 잔액이면 코드 결함이 아니지만, 시스템은 그것을 알리지 못했다.** RFQ 분류가 18일간 죽어 있었는데 아무도 몰랐다. 전역 규칙 '실패경로 4문항' 위반 3건: ①가짜 채우기(Haiku 실패를 uncertain으로 위장해 rfq_pending으로 흘려보냄) ②무음 실패(reason에 원인 없음) ③사용자 미인지(화면 어디에도 표시 없음). 관제 페이지(ISS-426)의 존재 이유가 정확히 이것이다 — **잔액이 떨어지면 화면에 뜬다.**
+
+**코드 결함 2건(원인과 무관하게 수정 — 진단 코드가 먼저다)**
+1. `SonnetEscalatorService#escalate` rescue(L50)가 `reason`에 `e.class`만 남긴다. `e.message` 200자를 함께 저장했다면 이 조사는 쿼리 1건으로 끝났다.
+2. `ClassificationOrchestrator#normalize_haiku`(L149-165)가 Haiku 실패(`llm_unavailable: true`, reason "LLM 분석 불가…")를 **confidence "none"으로만 넘기고 실패 사실을 버린다** → Sonnet으로 에스컬레이션되면 로그 행의 reason은 Sonnet 것으로 덮인다. Haiku 실패 여부·사유를 `reason` 접두("stage2_failed:…")나 agent_runs meta에 남겨야 (d)/(e)를 다음부터는 쿼리 1건으로 가른다.
++ 키 검증(`api_keys_controller#verify`)이 Haiku만 호출 → Sonnet 검증 추가(어느 모델이 막혔는지 화면 표시). 부수 관찰(범위 밖): API 키가 `app_settings.value`에 평문 저장 — Lockbox 암호화 후보.
+
+**비용 손실 규모 정정**: Sonnet은 한 번도 성공하지 못했고(실패 호출은 과금 없음) Haiku 성공은 106건 → **운영 기간 실제 LLM 지출 ≈ Haiku 106건분(수십 센트 수준)**. "예산 가드 무력"의 실제 위험은 과거 유출이 아니라 **재개 시점부터 상한 없이 지출된다**는 것. 422-F에서 대표님께 이렇게 설명한다.
 
 **비용 산출 현황(계측 설계 근거)**: Sonnet Stage 3 `compute_cost`(cache_read 포함) ✔ 있으나 성공 0건 / Vision(QuoteItemExtractor·RfqAuto::VisionItemExtractor) 상수 산출 ✔ 저장 ✔ / `Rfp::ItemExtractor`·`Rfp::SummaryReportService` 산출 ✔ **저장 ✘**(잡이 버림·logger.info만) / **Haiku Stage 2 산출 ✘(0 고정)** / `RfqReplyDraftService`·`Rfp::AttachmentClassifier`·`Rfp::UrgentQuoteEmailDrafter` 산출 ✘.
 
@@ -168,13 +220,13 @@ run = AgentRun.start!(agent:, order:, source:) … run.finish!(…) / run.fallba
 
 | ID | 제목 | type | P | 하는 일 | 완료 판정 기준 | 선행 | h |
 |---|---|---|---|---|---|---|---|
-| **422-A** | [Agent관제] agent_runs 테이블 + AgentRun.track 헬퍼 + 운영 classification_logs 14,247행 백필 | GENERATE_CODE | P0 | §③ 마이그레이션, `AgentRun` 모델(track/start!/finish!/fallback!/fail!/NullRun, 스코프), `lib/tasks/agent_runs.rake`. 기존 코드 무수정 | ① `schema.rb`에 agent_runs+인덱스 6개. ② 모델 테스트: 블록 예외 → failure 기록 후 재발생 / 쓰기 실패 stub → raise 없이 warn 1회, 블록 반환값 유지. ③ fixture(classification_logs: rule-only·haiku-4.5 cost 0·haiku-4.5-fallback·safety_fallback 각 1 + aqa 1 + rfq_auto 1) rake 2회 → 6행(멱등), 상태 매핑 success/fallback/failure, LLM cost 0 → NULL. ④ 전체 테스트 0 failure. ⑤ **운영에서 1회 실행 → `AgentRun.count == 14,267`, `where(status:"fallback").count == 237`** | — | 4 |
-| **422-B** | [Agent관제] 분류 파이프라인 결함 2건 — Haiku 비용 $0 고정(예산 가드 무력) + Sonnet 에스컬레이션 0/237 성공 | FIX_BUG | **P0** | (1) `LlmRfqAnalyzerService#parse_response`가 `response.usage`(input/output/cache_read)를 파싱해 `cost_usd`·토큰 반환(단가는 `SonnetEscalatorService#compute_cost` 패턴 + `claude-api` 스킬로 확인). `normalize_haiku` 무수정. (2) 운영 `reason` 분포(§⑤-1)로 Sonnet 실패 원인 특정 → 수정. 후보: `api_returned_nil`(ClaudeTokenResolver `create_client` nil·OAuth bearer가 Sonnet 미허용) / `exception:<Class>` / `parse_failed`. **P0 근거**: CostGuard가 무력해 재개 시 비용 상한 없음 + 에스컬레이션 전건 실패 = 모호 메일 판정 품질 저하 | ① usage stub → `cost_usd > 0`·토큰 일치; fallback 경로 cost 0 유지; orchestrator 테스트 stage 2 행 `cost_usd > 0`; `cost_guard_test` 통과. ② Sonnet: 원인 재현 테스트 작성 → 통과, `SonnetEscalatorService` 성공 경로가 `model: "sonnet-4.5"` 행 생성. ③ 운영 재개 후 첫 에스컬레이션 10건 중 `sonnet-4.5` ≥ 1(0/10이면 재진단). ④ S2 CostGuard 게이지 금일 비용 > 0 | 422-A(운영 원인 조회는 A와 무관, 즉시 가능) | 3 |
-| **422-C** | [Agent관제] 1차 계측 — 분류 미러·RFQ번호 게이트·Rfp 첨부분석·견적첨부·RFQ Auto | GENERATE_CODE | P1 | §③ 표 5경로. 모든 write rescue+warn. Rfp 잡은 부모+자식 2행으로 비용을 처음 저장 | ① 경로별 테스트: 실행 1회당 행수·agent_name·status·cost(Rfp: 부모1+자식2, item_extract cost=`_cost_usd`; rfq_number 메일 → gate 행 1, classify 행 0). ② AgentRun 쓰기 강제 실패 시 본 기능 결과 동일 + warn만. ③ 기존 테스트 회귀 0. ④ 개발서버 칸반 첨부분석 1회 → S4 부모·자식 막대 스크린샷 | 422-A | 4 |
-| **422-D** | [Agent관제] 단일 페이지 /admin/agent_runs — 헤더·상태 스트립·KPI(처리 경로 포함)·에이전트×모델 집계·최근 실행 피드·빈 상태·사이드바 | GENERATE_CODE | **P0** | §② S1·S2·S3·S5 + 빈 상태 + 라우트/컨트롤러(require_admin!)/사이드바/ko·en. 기본 window `all`. brand-dna 토큰. **백필 데이터만으로 완성되는 이슈 — 대표님 첫 화면** | ① 컨트롤러 테스트: admin 200 / manager·member 리다이렉트 / 0행 빈 상태 문구 / window·agent·model·status 필터 / rule-only 13,904·fallback 237 같은 집계값이 fixture 기준으로 정확. ② admin 저니(Playwright 스크린샷 4장): 사이드바 → 페이지(백필 데이터: 처리 경로 타일·에이전트×모델 표·피드) → 필터 → CTA 토스트. ③ brand-guardian 4항목. ④ 페이지 로드 SQL ≤ 12 | 422-A | 6 |
-| **422-E** | [Agent관제] 주문별 타임라인(막대·중첩·폴백/실패) + 실행 상세 패널 (Turbo Frame) | GENERATE_CODE | P1 | §② S4·S6. 백필 데이터로 검증 가능(주문 11,971건 연결). rule-only 행도 표시 | ① `orders/:order_id` 프레임이 해당 주문 run만·부모→자식 순·폭 계산·fallback 색; `show`가 meta(reason·verdict·stage)·error 렌더. ② 저니 스크린샷 3장(펼침 → fallback 행 주황 + reason → 클릭 → 패널). ③ 카드 20개 초기 렌더 시 타임라인 SQL 0회 | 422-D | 4 |
-| **422-F** | [Agent관제] 유입 정지 진단(2026-05-06) + 자동 Gmail sync 재개 결정 [CONFIRM] | FEATURE_PLAN | P1 | (1) 진단: 운영 `EmailAccount`(connected/토큰/refresh_token/last_synced_at) + 컨테이너 로그 `[EmailSyncJob]` warn 유무로 §①-8 (a)/(b) 확정. (2) 결정: 재개 여부·주기. 권고 **"된다"** — 단 **422-B 완료가 선행 조건**(가드가 무력한 채 재개하면 상한 없음). 시작은 하루 2회(09:05·15:05, BusyException 사유). T2 BUDGET → `request-user-confirm.sh`, `payload.requires_user_confirm: true` | ① 정지 원인이 (a)/(b)/(c) 중 하나로 registry에 기록. ② 승인 시 `recurring.yml` 4줄·재인증(필요 시) 후 24h 내 `gmail.classify` 행 ≥ 1, S1 상태 스트립 "자동 동기화: 실행 중". ③ 거부 시 S1 문구 "수동 동기화 운영 중" | 422-B(재개 실행), 진단은 즉시 | 1 |
-| **422-G** | [Agent관제] 2차 계측 확대 — 답변초안·Rfp 분류/긴급초안·분류 stage 자식·RFQ Auto step 자식·insight 잡 | GENERATE_CODE | P2 | usage 파싱 없는 4서비스 산출+기록, `gmail.classify` stage 1/2/3 자식, rfq_auto step 자식, `AgentInsightJob`(kind job, 비용 0). **422-D 화면을 본 뒤 대표님 판단으로 착수** | ① 서비스별 행·cost>0. ② S3에 신규 agent 6개. ③ 회귀 0 | 422-E | 3 |
+| **422-A** (ISS-423) | [Agent관제] agent_runs 테이블 + AgentRun.track 헬퍼 + 운영 classification_logs 14,247행 백필 | GENERATE_CODE | P0 | §③ 마이그레이션, `AgentRun` 모델(track/start!/finish!/fallback!/fail!/NullRun, 스코프), `lib/tasks/agent_runs.rake`. 기존 코드 무수정 | ① `schema.rb`에 agent_runs+인덱스 6개. ② 모델 테스트: 블록 예외 → failure 기록 후 재발생 / 쓰기 실패 stub → raise 없이 warn 1회, 블록 반환값 유지. ③ fixture(classification_logs: rule-only·haiku-4.5 cost 0·haiku-4.5-fallback·safety_fallback 각 1 + aqa 1 + rfq_auto 1) rake 2회 → 6행(멱등), 상태 매핑 success/fallback/failure, LLM cost 0 → NULL. ④ 전체 테스트 0 failure. ⑤ **운영에서 1회 실행 → `AgentRun.count == 14,267`, `where(status:"fallback").count == 237`** | — | 4 |
+| **422-B** (ISS-424) | [Agent관제] 분류 파이프라인 결함 2건 — Haiku 비용 $0 고정(예산 가드 무력) + Sonnet 에스컬레이션 0/237 BadRequestError | FIX_BUG | **P0** | (1) `LlmRfqAnalyzerService#parse_response`가 `response.usage`(input/output/cache_read)를 파싱해 `cost_usd`·토큰 반환(단가 Haiku 4.5 $1/$5 per MTok — `claude-api` 스킬 표; `SonnetEscalatorService#compute_cost` 패턴 재사용). `normalize_haiku` 무수정. (2) Sonnet 400: 모델 ID·SDK 파라미터·gem 버전·인증 방식·max_tokens·system 형태·few-shot 인코딩은 **제외됨**(§①). 남은 후보 = (d) 잔액 소진(Haiku·Sonnet 동시 400, 최우선) / (e) 키의 Sonnet 접근(차순위). **진단 코드가 먼저다**: ⓐ `escalate` rescue의 reason에 `e.message` 200자 저장 + credit 계열 `AnthropicCreditError` 매핑 통일 + `normalize_haiku`가 Haiku 실패 사실(`llm_unavailable`)을 reason/meta에 보존 ⓑ 키 검증 화면(`api_keys_controller#verify`)에 Sonnet 검증 추가 — 한쪽만 실패해도 어느 모델이 막혔는지 표시 ⓒ 판별 쿼리 4·5(DB 직접) + 배포 후 실제 400 본문 확보 → 원인 확정 ⓓ (d)면 코드 수정 없음 → 422-F 선행 항목 "잔액 확인"; (e)면 키 권한 문제 → 대표님 콘솔 확인 보고; 그 외면 호출부 수정 ⓔ `call_sonnet_api` 요청 형태 검증 테스트 추가(현재는 메서드 전체 stub). **P0 근거**: CostGuard 무력 → 재개 시 상한 없음; 에스컬레이션 전건 실패 = 모호 메일 판정 품질 저하 | ① usage stub → `cost_usd > 0`·토큰 일치; fallback 경로 cost 0 유지; orchestrator 테스트 stage 2 행 `cost_usd > 0`; `cost_guard_test` 통과. ② `BadRequestError("credit balance is too low")` stub → reason에 메시지 포함 + `model: "haiku-4.5-fallback"`, `meta/reason`에 credit 표식(테스트). ③ **운영 로그/DB에서 400 본문 메시지 1건 확보**(reason 컬럼 또는 E1 출력)되어 registry payload에 기록되고 원인이 1개로 확정. ③′ 키 검증이 Haiku·Sonnet 두 모델로 이뤄지고, 한쪽만 실패해도 화면에 어느 모델이 막혔는지 표시된다(컨트롤러 테스트). ③″ Haiku 실패 시 classification_logs.reason에 `stage2_failed:` 접두가 남는다(orchestrator 테스트). ④ 운영 재개 후 첫 에스컬레이션 10건 중 `sonnet-4.5` ≥ 1(0/10이면 재진단). ⑤ S2 CostGuard 게이지 금일 비용 > 0 | 판별 쿼리는 즉시(DB 직접), 코드는 422-A와 독립 | 3 |
+| **422-C** (ISS-425) | [Agent관제] 1차 계측 — 분류 미러·RFQ번호 게이트·Rfp 첨부분석·견적첨부·RFQ Auto | GENERATE_CODE | P1 | §③ 표 5경로. 모든 write rescue+warn. Rfp 잡은 부모+자식 2행으로 비용을 처음 저장 | ① 경로별 테스트: 실행 1회당 행수·agent_name·status·cost(Rfp: 부모1+자식2, item_extract cost=`_cost_usd`; rfq_number 메일 → gate 행 1, classify 행 0). ② AgentRun 쓰기 강제 실패 시 본 기능 결과 동일 + warn만. ③ 기존 테스트 회귀 0. ④ 개발서버 칸반 첨부분석 1회 → S4 부모·자식 막대 스크린샷 | 422-A | 4 |
+| **422-D** (ISS-426) | [Agent관제] 단일 페이지 /admin/agent_runs — 헤더·상태 스트립·KPI(처리 경로 포함)·에이전트×모델 집계·최근 실행 피드·빈 상태·사이드바 | GENERATE_CODE | **P0** | §② S1·S2·S3·S5 + 빈 상태 + 라우트/컨트롤러(require_admin!)/사이드바/ko·en. 기본 window `all`. brand-dna 토큰. **백필 데이터만으로 완성되는 이슈 — 대표님 첫 화면** | ① 컨트롤러 테스트: admin 200 / manager·member 리다이렉트 / 0행 빈 상태 문구 / window·agent·model·status 필터 / rule-only 13,904·fallback 237 같은 집계값이 fixture 기준으로 정확. ② admin 저니(Playwright 스크린샷 4장): 사이드바 → 페이지(백필 데이터: 처리 경로 타일·에이전트×모델 표·피드) → 필터 → CTA 토스트. ③ brand-guardian 4항목. ④ 페이지 로드 SQL ≤ 12 | 422-A | 6 |
+| **422-E** (ISS-427) | [Agent관제] 주문별 타임라인(막대·중첩·폴백/실패) + 실행 상세 패널 (Turbo Frame) | GENERATE_CODE | P1 | §② S4·S6. 백필 데이터로 검증 가능(주문 11,971건 연결). rule-only 행도 표시 | ① `orders/:order_id` 프레임이 해당 주문 run만·부모→자식 순·폭 계산·fallback 색; `show`가 meta(reason·verdict·stage)·error 렌더. ② 저니 스크린샷 3장(펼침 → fallback 행 주황 + reason → 클릭 → 패널). ③ 카드 20개 초기 렌더 시 타임라인 SQL 0회 | 422-D | 4 |
+| **422-F** (ISS-428) | [Agent관제] 유입 정지 진단(2026-05-06) + 자동 Gmail sync 재개 결정 [CONFIRM] | FEATURE_PLAN | P1 | (1) 진단(앱 기동 선행): 운영 `EmailAccount`(connected/토큰/refresh_token/last_synced_at) + 컨테이너 로그 `[EmailSyncJob]` warn 유무로 §①-8 (a)/(b) 확정 + **Anthropic 콘솔에서 잔액 확인 + 운영 키(`sk-ant-api03-…`, 04-02 등록)의 Sonnet 4.5 모델 접근 권한 확인**(422-B 판별 결과에 따라 하나가 원인). (2) 결정: 재개 여부·주기. 권고 **"된다"** — 단 **422-B 완료가 선행 조건**. 대표님께 설명할 문장: *"지금까지 새어나간 돈은 Haiku 106건분(수십 센트)뿐이다. 문제는 가드 없이 재개하면 상한이 없다는 것"*. 시작은 하루 2회(09:05·15:05, BusyException 사유). T2 BUDGET → `request-user-confirm.sh`, `payload.requires_user_confirm: true` | ① 정지 원인이 (a)/(b)/(c) 중 하나로 registry에 기록. ② 승인 시 `recurring.yml` 4줄·재인증(필요 시) 후 24h 내 `gmail.classify` 행 ≥ 1, S1 상태 스트립 "자동 동기화: 실행 중". ③ 거부 시 S1 문구 "수동 동기화 운영 중" | 422-B(재개 실행), 진단은 즉시 | 1 |
+| **422-G** (ISS-429) | [Agent관제] 2차 계측 확대 — 답변초안·Rfp 분류/긴급초안·분류 stage 자식·RFQ Auto step 자식·insight 잡 | GENERATE_CODE | P2 | usage 파싱 없는 4서비스 산출+기록, `gmail.classify` stage 1/2/3 자식, rfq_auto step 자식, `AgentInsightJob`(kind job, 비용 0). **422-D 화면을 본 뒤 대표님 판단으로 착수** | ① 서비스별 행·cost>0. ② S3에 신규 agent 6개. ③ 회귀 0 | 422-E | 3 |
 
 ### 실행 순서
 ```
@@ -189,10 +241,14 @@ run = AgentRun.start!(agent:, order:, source:) … run.finish!(…) / run.fallba
 
 **총 estimated_hours = 25h** (A4 + B3 + C4 + D6 + E4 + F1 + G3). 첫 화면 구간 A·D = 10h, 1차 가치 구간 A·B·D·E = 17h.
 
-**부모(Opus) 확인 항목 — read-only 운영 쿼리 (컨테이너 기동 후)**
-1. Sonnet 실패 원인: `select reason, count(*) from classification_logs where model='haiku-4.5-fallback' group by 1 order by 2 desc;` → `api_returned_nil` / `parse_failed` / `exception:<Class>` 분포가 422-B (2)의 출발점.
-2. 유입 정지 원인: `select id, email, connected, last_synced_at, gmail_token_expires_at, (refresh_token is not null) from email_accounts;` + `kamal app logs | grep "\[EmailSyncJob\]"` → 422-F 진단.
-3. 디자인 토큰: brand-dna `#166c72` vs 지시 `#1E3A5F` — 본 기획은 brand-dna.
+**부모(Opus) 확인 항목 — read-only 운영 쿼리**
+1. ~~Sonnet 실패 사유 분포~~ → **완료**: `exception:Anthropic::Errors::BadRequestError` 237/237.
+2. ~~판별 쿼리 1·2~~ → **완료**: fallback 237건 confidence 0·uncertain / 04-27 혼재 → 04-27 이후 Sonnet 고유 결함 확정.
+3. ~~app_settings 조회~~ → **완료**: `sk-ant-api03-…` 108자, 04-02 등록 후 무변경.
+4. **판별 쿼리 4·5(§①, DB 직접)** — 04-27 시각순 배열 + 모델별 latency 분포. (d) 잔액 소진을 확정/기각하는 마지막 데이터 근거.
+5. **재현 실험 E1~E3**(§①) — 운영 키를 dev에 넣고 1회(< $0.02). 4·5로 (d)가 확정되면 E1 하나로 충분(400 본문에 "credit balance"가 나오면 종결).
+6. 유입 정지 원인(앱 기동 후): `select id, email, connected, last_synced_at, gmail_token_expires_at, (refresh_token is not null) from email_accounts;` + `kamal app logs | grep "\[EmailSyncJob\]"` → 422-F 진단. **지금 단계에서는 보류**(컨테이너 정지).
+7. ~~디자인 토큰~~ → **확정**: brand-dna `#166c72`.
 
 **범위 밖 발견(별도 이슈 후보)**: `Rfp::AnalyzeAttachmentsJob#bump_opus_counter`의 런타임 registry.json 직접 쓰기 → agent_runs 도입 후 제거(REFACTOR). 운영 컨테이너 정지·도메인 타 프로젝트 서빙은 부모 인프라 이슈(본 기획은 "앱이 떠 있어야 운영 확인 가능" 의존성만 인지).
 
