@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_29_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_03_000000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -76,6 +76,34 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_120000) do
     t.index ["order_id", "insight_type"], name: "idx_insights_order_type"
     t.index ["order_id"], name: "index_agent_insights_on_order_id"
     t.index ["supplier_id"], name: "index_agent_insights_on_supplier_id"
+  end
+
+  create_table "agent_runs", force: :cascade do |t|
+    t.string "agent_name", null: false
+    t.integer "cache_read_tokens"
+    t.decimal "cost_usd", precision: 10, scale: 6
+    t.datetime "created_at", null: false
+    t.integer "duration_ms"
+    t.text "error_message"
+    t.datetime "finished_at"
+    t.integer "input_tokens"
+    t.string "kind", default: "service", null: false
+    t.text "meta"
+    t.string "model"
+    t.integer "order_id"
+    t.integer "output_tokens"
+    t.integer "parent_run_id"
+    t.bigint "source_id"
+    t.string "source_type"
+    t.datetime "started_at", null: false
+    t.string "status", default: "running", null: false
+    t.datetime "updated_at", null: false
+    t.index ["agent_name", "created_at"], name: "index_agent_runs_on_agent_name_and_created_at"
+    t.index ["created_at"], name: "index_agent_runs_on_created_at"
+    t.index ["order_id", "started_at"], name: "index_agent_runs_on_order_id_and_started_at"
+    t.index ["parent_run_id"], name: "index_agent_runs_on_parent_run_id"
+    t.index ["source_type", "source_id"], name: "index_agent_runs_on_source_type_and_source_id", unique: true
+    t.index ["status"], name: "index_agent_runs_on_status"
   end
 
   create_table "agent_trust_levels", force: :cascade do |t|
