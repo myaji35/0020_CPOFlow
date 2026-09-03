@@ -51,6 +51,7 @@ en:
     leaves: "Leave"
     menu_permissions: "Menu Permissions"
     feedback_admin: "Feedback Admin"
+    agent_runs: "Agent Monitor"
     trash: "Trash"
 
   # ── Kanban ───────────────────────────────────────────────────────

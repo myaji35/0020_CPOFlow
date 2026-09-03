@@ -150,6 +150,7 @@ Rails.application.routes.draw do
 
   # Admin namespace
   namespace :admin do
+    resources :agent_runs, only: %i[index]
     resources :imports, only: %i[index new create show] do
       member { get :download_errors; post :retry_errors }
     end

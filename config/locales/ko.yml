@@ -51,6 +51,7 @@ ko:
     leaves: "휴가 관리"
     menu_permissions: "메뉴 권한"
     feedback_admin: "피드백 관리"
+    agent_runs: "Agent 관제"
     trash: "휴지통"
 
   # ── 칸반 ─────────────────────────────────────────────────────────

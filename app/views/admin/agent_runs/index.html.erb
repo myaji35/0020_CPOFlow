@@ -1,0 +1,90 @@
+<% content_for :title, t("admin.agent_runs.title", default: "Agent 관제") %>
+<% empty_result = @total_runs.zero? %>
+<% no_runs_at_all = @agent_options.empty? %>
+<% empty_message = capture do %>
+  <div class="rounded-md border border-[#e7eaee] bg-[#f5f6f8] px-5 py-8 text-center text-[13px] text-[#6b7585]">
+    <%= t("admin.agent_runs.no_filtered_data", default: "선택한 조건에 해당하는 실행이 없습니다") %>
+    — <%= link_to t("admin.agent_runs.show_all", default: "전체 기간으로 보기"), admin_agent_runs_path, class: "font-semibold text-[#166c72] hover:text-[#11555a]" %>
+  </div>
+<% end %>
+
+<div class="min-h-full bg-[#f5f6f8] p-4 text-[13px] text-[#151a21] lg:p-6">
+  <section class="mb-4 rounded-md border border-[#e7eaee] bg-white p-4">
+    <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+      <div>
+        <h1 class="text-xl font-bold tracking-tight"><%= t("admin.agent_runs.title", default: "Agent 관제") %></h1>
+        <p class="mt-1 text-[#6b7585]"><%= t("admin.agent_runs.subtitle", default: "어떤 에이전트가 어느 주문에 관여해 얼마를 썼는지") %></p>
+      </div>
+      <div class="flex flex-col gap-2 lg:flex-row lg:items-end">
+        <%= form_with url: admin_agent_runs_path, method: :get, class: "flex flex-wrap items-end gap-2" do |form| %>
+          <div class="flex rounded-md border border-[#e7eaee] bg-[#f5f6f8] p-0.5">
+            <% { "all" => "전체", "24h" => "24시간", "7d" => "7일", "30d" => "30일" }.each do |value, label| %>
+              <label class="cursor-pointer rounded px-2.5 py-1.5 font-medium <%= @window == value ? 'bg-[#166c72] text-white' : 'text-[#6b7585] hover:text-[#151a21]' %>">
+                <%= radio_button_tag :window, value, @window == value, class: "sr-only" %>
+                <%= t("admin.agent_runs.window.#{value}", default: label) %>
+              </label>
+            <% end %>
+          </div>
+          <%= form.select :agent, options_for_select([[t("admin.agent_runs.all_agents", default: "전체 에이전트"), ""]] + @agent_options, @agent_filter), {}, class: "rounded-md border border-[#e7eaee] bg-white px-2.5 py-2 text-[13px]" %>
+          <%= form.select :model, options_for_select([[t("admin.agent_runs.all_models", default: "전체 모델"), ""]] + @model_options, @model_filter), {}, class: "rounded-md border border-[#e7eaee] bg-white px-2.5 py-2 text-[13px]" %>
+          <%= form.select :status, options_for_select([[t("admin.agent_runs.all_statuses", default: "전체 상태"), ""]] + Admin::AgentRunsController::STATUSES.map { |status| [status, status] }, @status_filter), {}, class: "rounded-md border border-[#e7eaee] bg-white px-2.5 py-2 text-[13px]" %>
+          <%= form.submit t("admin.agent_runs.apply", default: "적용"), class: "cursor-pointer rounded-md bg-[#166c72] px-4 py-2 font-semibold text-white hover:bg-[#11555a]" %>
+        <% end %>
+        <%= button_to inbox_sync_path, method: :post, class: "rounded-md bg-[#166c72] px-4 py-2 font-semibold text-white hover:bg-[#11555a]" do %>
+          <i class="lni lni-reload mr-1"></i><%= t("admin.agent_runs.sync_gmail", default: "Gmail 동기화 실행") %>
+        <% end %>
+      </div>
+    </div>
+  </section>
+
+  <section class="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-5">
+    <div class="rounded-md border border-[#e7eaee] bg-white p-4"><p class="text-[#6b7585]"><%= t("admin.agent_runs.runs", default: "실행 수") %></p><p class="mt-1 text-2xl font-bold tabular-nums"><%= number_with_delimiter(@total_runs) %></p></div>
+    <div class="rounded-md border border-[#e7eaee] bg-white p-4"><p class="text-[#6b7585]"><%= t("admin.agent_runs.total_cost", default: "총 비용") %></p><p class="mt-1 text-2xl font-bold tabular-nums">$<%= format("%.4f", @total_cost) %></p><p class="mt-1 text-[11px] text-[#6b7585]"><%= t("admin.agent_runs.cost_counts", default: "집계 %{measured}건 / 미집계 %{unmeasured}건", measured: @measured_cnt, unmeasured: @total_runs - @measured_cnt) %></p></div>
+    <div class="rounded-md border border-[#e7eaee] bg-white p-4"><p class="text-[#6b7585]"><%= t("admin.agent_runs.fail_rate", default: "실패율") %></p><p class="mt-1 text-2xl font-bold tabular-nums"><%= @fail_rate ? "#{format('%.1f', @fail_rate)}%" : "—" %></p></div>
+    <div class="rounded-md border border-[#e7eaee] bg-white p-4"><p class="text-[#6b7585]"><%= t("admin.agent_runs.avg_duration", default: "평균 소요") %></p><p class="mt-1 text-2xl font-bold tabular-nums"><%= @avg_duration ? "#{format('%.1f', @avg_duration.to_f / 1000)}s" : "—" %></p></div>
+    <div class="rounded-md border border-[#e7eaee] bg-white p-4">
+      <p class="text-[#6b7585]"><%= t("admin.agent_runs.today_budget", default: "오늘 분류 예산") %></p>
+      <% if @cost_guard %>
+        <% utilization = @cost_guard[:utilization_pct].to_f %>
+        <% guard_label, guard_color = @cost_guard[:exceeded] ? ["BLOCKED", "#c84431"] : (utilization >= 80 ? ["WARN", "#d99a2a"] : ["OK", "#2e9856"]) %>
+        <div class="mt-1 flex items-center justify-between"><strong class="tabular-nums">$<%= format("%.4f", @cost_guard[:today_cost]) %> / $<%= format("%.2f", @cost_guard[:budget]) %></strong><span class="rounded px-1.5 py-0.5 text-[10px] font-bold text-white" style="background-color:<%= guard_color %>"><%= guard_label %></span></div>
+        <div class="mt-2 h-2 overflow-hidden rounded bg-[#e7eaee]"><div class="h-full rounded" style="width:<%= [utilization, 100].min %>%;background-color:<%= guard_color %>"></div></div>
+      <% else %><p class="mt-1 text-2xl font-bold">—</p><% end %>
+    </div>
+  </section>
+
+  <% if no_runs_at_all %>
+    <section class="rounded-md border border-[#e7eaee] bg-white px-6 py-10 text-center">
+      <i class="lni lni-pulse text-3xl text-[#166c72]"></i>
+      <p class="mx-auto mt-3 max-w-2xl text-[#6b7585]"><%= t("admin.agent_runs.no_runs", default: "기록된 에이전트 실행이 없습니다. 자동 Gmail 동기화는 2026-05-30 비용 절감으로 중지된 상태입니다(config/recurring.yml).") %></p>
+      <div class="mt-4 flex flex-wrap items-center justify-center gap-3"><%= button_to t("admin.agent_runs.sync_gmail", default: "Gmail 동기화 실행"), inbox_sync_path, method: :post, class: "rounded-md bg-[#166c72] px-4 py-2 font-semibold text-white hover:bg-[#11555a]" %><span class="text-[#6b7585]"><code class="text-[#151a21]">bin/rails agent_runs:backfill</code> <%= t("admin.agent_runs.backfill", default: "로 기존 이력을 불러올 수 있습니다") %></span></div>
+    </section>
+  <% else %>
+    <section class="mb-4 rounded-md border border-[#e7eaee] bg-white p-4">
+      <h2 class="mb-3 font-bold"><%= t("admin.agent_runs.model_paths", default: "처리 경로 (모델별 분포)") %></h2>
+      <% if empty_result %><%= empty_message %><% elsif @by_model.empty? %><p class="text-[#6b7585]"><%= t("admin.agent_runs.no_data", default: "데이터 없음") %></p><% else %>
+        <div class="flex h-5 overflow-hidden rounded bg-[#e7eaee]">
+          <% @by_model.each do |model, count| %><% color = model == "rule-only" ? "#6b7585" : (model == "haiku-4.5" ? "#2e9856" : (model == "haiku-4.5-fallback" ? "#d99a2a" : "#3d5cc9")) %><div title="<%= model.presence || '미지정' %>: <%= count %>" style="width:<%= count * 100.0 / @total_runs %>%;background-color:<%= color %>"></div><% end %>
+        </div>
+        <div class="mt-3 flex flex-wrap gap-x-4 gap-y-2"><% @by_model.sort_by { |_model, count| -count }.each do |model, count| %><% color = model == "rule-only" ? "#6b7585" : (model == "haiku-4.5" ? "#2e9856" : (model == "haiku-4.5-fallback" ? "#d99a2a" : "#3d5cc9")) %><span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded" style="background-color:<%= color %>"></span><%= model.presence || t("admin.agent_runs.unspecified", default: "미지정") %> <strong><%= number_with_delimiter(count) %></strong> (<%= format("%.1f", count * 100.0 / @total_runs) %>%)</span><% end %></div>
+      <% end %>
+    </section>
+
+    <section class="mb-4 rounded-md border border-[#e7eaee] bg-white p-4"><h2 class="mb-3 font-bold"><%= t("admin.agent_runs.aggregate", default: "에이전트 × 모델 집계") %></h2>
+      <% if empty_result %><%= empty_message %><% elsif @agg.empty? %><p class="text-[#6b7585]"><%= t("admin.agent_runs.no_data", default: "데이터 없음") %></p><% else %>
+        <div class="overflow-x-auto"><table class="w-full whitespace-nowrap text-left"><thead class="bg-[#f5f6f8] text-[11px] uppercase text-[#6b7585]"><tr><% ["에이전트", "모델", "실행수", "총비용", "비용 비중", "평균 소요", "실패율", "마지막 실행"].each do |heading| %><th class="px-3 py-2 font-semibold"><%= t("admin.agent_runs.columns.#{heading}", default: heading) %></th><% end %></tr></thead><tbody class="divide-y divide-[#e7eaee]">
+          <% @agg.each do |row| %><tr><td class="px-3 py-2 font-semibold"><%= row[:agent_name] %></td><td class="px-3 py-2"><%= row[:model].presence || "—" %></td><td class="px-3 py-2 tabular-nums"><%= number_with_delimiter(row[:count]) %></td><td class="px-3 py-2 tabular-nums"><%= row[:cost] ? "$#{format('%.4f', row[:cost])}" : "—" %></td><td class="min-w-40 px-3 py-2"><div class="flex items-center gap-2"><div class="h-2 flex-1 overflow-hidden rounded bg-[#e7eaee]"><div class="h-full rounded bg-[#166c72]" style="width:<%= [row[:cost_pct].to_f, 100].min %>%"></div></div><span class="rounded bg-[#166c72] px-1.5 py-0.5 text-[10px] font-bold text-white"><%= format("%.1f", row[:cost_pct]) %>%</span></div></td><td class="px-3 py-2 tabular-nums"><%= row[:avg_duration] ? "#{format('%.1f', row[:avg_duration].to_f / 1000)}s" : "—" %></td><td class="px-3 py-2 tabular-nums"><%= row[:fail_rate] ? "#{format('%.1f', row[:fail_rate])}%" : "—" %></td><td class="px-3 py-2 text-[#6b7585]"><%= row[:last_run] ? l(row[:last_run], format: :short) : "—" %></td></tr><% end %>
+        </tbody></table></div>
+      <% end %>
+    </section>
+
+    <section class="rounded-md border border-[#e7eaee] bg-white p-4"><h2 class="mb-3 font-bold"><%= t("admin.agent_runs.recent", default: "최근 실행 피드") %></h2>
+      <% if empty_result %><%= empty_message %><% elsif @runs.empty? %><p class="text-[#6b7585]"><%= t("admin.agent_runs.no_data", default: "데이터 없음") %></p><% else %>
+        <div class="overflow-x-auto"><table class="w-full whitespace-nowrap text-left"><thead class="bg-[#f5f6f8] text-[11px] uppercase text-[#6b7585]"><tr><% ["시각", "에이전트", "모델", "주문", "소요", "비용", "상태", "오류/사유"].each do |heading| %><th class="px-3 py-2 font-semibold"><%= t("admin.agent_runs.columns.#{heading}", default: heading) %></th><% end %></tr></thead><tbody class="divide-y divide-[#e7eaee]">
+          <% status_colors = { "success" => "#2e9856", "fallback" => "#d99a2a", "failure" => "#c84431", "running" => "#3d5cc9", "skipped" => "#6b7585" } %>
+          <% @runs.each do |run| %><tr><td class="px-3 py-2 text-[#6b7585]"><%= l(run.started_at, format: :short) %></td><td class="px-3 py-2 font-semibold"><%= run.agent_name %></td><td class="px-3 py-2"><%= run.model.presence || "—" %></td><td class="max-w-56 truncate px-3 py-2"><% if run.order %><%= link_to(run.order.title.presence || "##{run.order.id}", order_path(run.order), class: "font-medium text-[#166c72] hover:text-[#11555a]") %><% else %>—<% end %></td><td class="px-3 py-2 tabular-nums"><%= run.duration_ms ? "#{format('%.1f', run.duration_ms / 1000.0)}s" : "—" %></td><td class="px-3 py-2 tabular-nums"><%= run.cost_usd.nil? ? "—" : "$#{format('%.4f', run.cost_usd)}" %></td><td class="px-3 py-2"><span class="rounded px-1.5 py-0.5 text-[10px] font-bold text-white" style="background-color:<%= status_colors.fetch(run.status, '#6b7585') %>"><%= run.status %></span></td><td class="max-w-80 truncate px-3 py-2 text-[#6b7585]" title="<%= run.error_message %>"><%= truncate(run.error_message, length: 60).presence || "—" %></td></tr><% end %>
+        </tbody></table></div>
+      <% end %>
+    </section>
+  <% end %>
+</div>
