@@ -12,6 +12,9 @@ module Gmail
   class LlmRfqAnalyzerService
     MAX_BODY_CHARS = 4000  # 토큰 절약을 위해 본문 첫 4000자만 전송
 
+    HAIKU_INPUT_PER_1M  = 1.0   # USD, claude-haiku-4-5
+    HAIKU_OUTPUT_PER_1M = 5.0   # USD
+
     def initialize(parsed_email)
       @email = parsed_email
     end
@@ -159,6 +162,7 @@ module Gmail
       rescue
         nil
       end
+      usage = extract_usage(response)
 
       {
         is_rfq:            parsed["is_rfq"] == true,
@@ -174,6 +178,9 @@ module Gmail
         currency:          parsed.dig("extracted", "currency"),
         estimated_value:   parsed.dig("extracted", "estimated_value"),
         urgency:           parsed.dig("extracted", "urgency") || "normal",
+        cost_usd:          compute_cost_from_usage(usage),
+        input_tokens:      usage&.dig(:input_tokens),
+        output_tokens:     usage&.dig(:output_tokens),
         raw:               parsed
       }
     rescue JSON::ParserError => e
@@ -190,8 +197,40 @@ module Gmail
         customer_name: nil, due_date: nil, items: [], quantities: [],
         project_name: nil, delivery_location: nil,
         currency: nil, estimated_value: nil,
-        urgency: "normal", raw: {}
+        urgency: "normal", cost_usd: 0.0, input_tokens: nil, output_tokens: nil,
+        raw: {}
       }
+    end
+
+    def compute_cost_from_usage(usage)
+      return 0.0 if usage.nil?
+
+      input_cached  = usage[:cache_read_input_tokens].to_i
+      input_fresh   = usage[:input_tokens].to_i
+      output        = usage[:output_tokens].to_i
+
+      # cached input은 10% 가격 (90% 할인)
+      input_cost  = (input_fresh * HAIKU_INPUT_PER_1M + input_cached * HAIKU_INPUT_PER_1M * 0.1) / 1_000_000.0
+      output_cost = output * HAIKU_OUTPUT_PER_1M / 1_000_000.0
+      (input_cost + output_cost).round(6)
+    end
+
+    def extract_usage(response)
+      if response.respond_to?(:usage) && response.usage
+        u = response.usage
+        {
+          input_tokens:            u.respond_to?(:input_tokens) ? u.input_tokens : u[:input_tokens],
+          output_tokens:           u.respond_to?(:output_tokens) ? u.output_tokens : u[:output_tokens],
+          cache_read_input_tokens: (u.respond_to?(:cache_read_input_tokens) ? u.cache_read_input_tokens : u[:cache_read_input_tokens]).to_i
+        }
+      elsif response.is_a?(Hash) && response[:usage]
+        u = response[:usage]
+        { input_tokens: u[:input_tokens], output_tokens: u[:output_tokens],
+          cache_read_input_tokens: u[:cache_read_input_tokens].to_i }
+      end
+    rescue StandardError => e
+      Rails.logger.warn "[LlmRfqAnalyzer] usage 파싱 실패 — 비용 미집계: #{e.class}: #{e.message.to_s.first(120)}"
+      nil
     end
   end
 end

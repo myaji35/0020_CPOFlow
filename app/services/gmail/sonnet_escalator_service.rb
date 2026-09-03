@@ -47,7 +47,12 @@ module Gmail
       build_result(parsed, latency: latency, response: response)
     rescue StandardError => e
       Rails.logger.warn "[SonnetEscalator] API error: #{e.class} — #{e.message}"
-      fallback_to_haiku(reason: "exception:#{e.class}")
+      reason = if e.message.to_s.match?(/credit|balance|insufficient/i)
+        "credit_exhausted: #{e.message.to_s.first(200)}"
+      else
+        "exception:#{e.class}: #{e.message.to_s.first(200)}"
+      end
+      fallback_to_haiku(reason: reason)
     end
 
     private

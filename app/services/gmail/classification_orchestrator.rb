@@ -157,7 +157,7 @@ module Gmail
         confidence: haiku_hash[:confidence] || "low",
         stage_reached: 2,
         classifier_version: CLASSIFIER_VERSION,
-        reason: (haiku_hash[:reason].to_s.first(500).presence || "stage2_haiku"),
+        reason: ((haiku_hash[:llm_unavailable] ? "stage2_failed: " : "") + (haiku_hash[:reason].to_s.presence || "stage2_haiku")).first(500),
         extracted: haiku_hash[:extracted] || build_extracted_from_hash(haiku_hash),
         cost_usd: haiku_hash[:cost_usd].to_f,
         latency_ms: @stage2_ms || 0,

@@ -171,6 +171,26 @@ class Gmail::ClassificationOrchestratorTest < ActiveSupport::TestCase
     assert_equal "RandomCorp", result.extracted[:customer_name]
   end
 
+  test "stage2_haiku_failure: llm_unavailable reason 에 실패 접두어 추가" do
+    email = build_email(
+      from: "buyer@randomcorp.com",
+      subject: "Please send RFQ for Sika products",
+      body: "We need 100 kg MonoTop 107 Seal urgently."
+    )
+    haiku_hash = {
+      is_rfq: nil, confidence: "high", llm_unavailable: true,
+      reason: "LLM 분석 불가 (API 키 미설정 또는 크레딧 부족)"
+    }
+
+    result = with_haiku_stub(haiku_hash) do
+      with_sonnet_forbidden do
+        Gmail::ClassificationOrchestrator.new(email).classify
+      end
+    end
+
+    assert_match(/\Astage2_failed: /, result.reason)
+  end
+
   # ===== 6. Stage 3: Haiku medium → Sonnet escalated confirmed =====
   test "stage3_escalated_confirmed: Haiku medium → Sonnet 승격 후 confirmed" do
     email = build_email(

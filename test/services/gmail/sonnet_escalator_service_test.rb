@@ -72,6 +72,27 @@ class Gmail::SonnetEscalatorServiceTest < ActiveSupport::TestCase
     assert_equal "medium", result.confidence
   end
 
+  test "escalate: 크레딧 부족 에러 reason 식별" do
+    error = Anthropic::Errors::BadRequestError.new(
+      url: "https://api.anthropic.com/v1/messages", status: 400,
+      headers: {}, body: {}, request: nil, response: nil,
+      message: "Your credit balance is too low"
+    )
+    result = run_escalate(haiku_medium, stub_kind: :error,
+                          error: error)
+
+    assert_match(/\Astage3_fallback_to_stage2: credit_exhausted:/, result.reason)
+    assert_equal "haiku-4.5-fallback", result.model
+  end
+
+  test "escalate: 일반 에러 reason 에 클래스와 메시지 포함" do
+    result = run_escalate(haiku_medium, stub_kind: :error,
+                          error: StandardError.new("upstream connection failed"))
+
+    assert_includes result.reason, "exception:"
+    assert_includes result.reason, "upstream connection failed"
+  end
+
   test "escalate: API nil 응답 → Haiku fallback" do
     result = run_escalate(haiku_medium, stub_kind: :nil)
     assert_equal "haiku-4.5-fallback", result.model

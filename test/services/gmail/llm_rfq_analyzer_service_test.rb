@@ -38,6 +38,35 @@ class Gmail::LlmRfqAnalyzerServiceTest < ActiveSupport::TestCase
     assert result.is_a?(Hash)
   end
 
+  test "analyze — usage 토큰과 Haiku 비용을 반환" do
+    payload = {
+      is_rfq: true, confidence: "high", score: 95, reason: "RFQ",
+      extracted: {}
+    }
+    response = OpenStruct.new(
+      content: [ OpenStruct.new(text: payload.to_json) ],
+      usage: OpenStruct.new(input_tokens: 1000, output_tokens: 200, cache_read_input_tokens: 500)
+    )
+    @service.define_singleton_method(:api_key_configured?) { true }
+    @service.define_singleton_method(:call_claude_api) { response }
+
+    result = @service.analyze
+
+    assert_operator result[:cost_usd], :>, 0
+    assert_equal 1000, result[:input_tokens]
+    assert_equal 200, result[:output_tokens]
+  end
+
+  test "fallback_result 경로는 비용 0" do
+    @service.define_singleton_method(:api_key_configured?) { false }
+
+    result = @service.analyze
+
+    assert_equal 0.0, result[:cost_usd]
+    assert_nil result[:input_tokens]
+    assert_nil result[:output_tokens]
+  end
+
   test "api_key_configured? — ClaudeTokenResolver 위임" do
     result = @service.send(:api_key_configured?)
     assert_includes [ true, false ], result

@@ -28,12 +28,32 @@ module Settings
 
       begin
         client = ClaudeTokenResolver.create_client
-        client.messages.create(
-          model: "claude-haiku-4-5-20251001",
-          max_tokens: 10,
-          messages: [ { role: "user", content: "Say OK" } ]
-        )
-        render json: { status: "ok", message: "API 연결 정상 — #{source_label} 토큰 사용 중 (#{token_status[:masked]})" }
+        errors = {}
+        {
+          haiku: "claude-haiku-4-5-20251001",
+          sonnet: Gmail::SonnetEscalatorService::DEFAULT_MODEL
+        }.each do |name, model|
+          begin
+            client.messages.create(
+              model: model,
+              max_tokens: 10,
+              messages: [ { role: "user", content: "Say OK" } ]
+            )
+          rescue => e
+            errors[name] = e
+          end
+        end
+
+        if errors.empty?
+          render json: { status: "ok", message: "API 연결 정상 — #{source_label} 토큰 사용 중 (#{token_status[:masked]}) (Haiku·Sonnet 확인)" }
+        elsif errors.size == 1
+          failed_name = errors.key?(:haiku) ? "Haiku" : "Sonnet"
+          normal_name = errors.key?(:haiku) ? "Sonnet" : "Haiku"
+          error_msg = errors.values.first.message.to_s.first(120)
+          render json: { status: "error", message: "#{failed_name} 모델 접근 실패 — #{normal_name}은 정상. 키의 모델 권한을 확인하세요: #{error_msg}" }
+        else
+          raise(errors.values.find { |e| e.message.to_s.match?(/credit|balance|insufficient/i) } || errors.values.first)
+        end
       rescue => e
         error_msg = e.message.to_s
         if error_msg.include?("credit balance is too low")
